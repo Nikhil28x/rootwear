@@ -849,3 +849,126 @@ a:focus-visible {
 		transform: none;
 	}
 }
+
+/* Homepage copy, Impact palette and its Know Your Roots subsection. */
+.hero-headline {
+	font-size: clamp(2.2rem, 7.4vw, 7.4rem);
+	line-height: 0.9;
+	letter-spacing: -0.055em;
+}
+
+.impact-section .impact-icon,
+.impact-section .stat-cell > .display {
+	color: #92702c;
+}
+
+.roots-jump {
+	display: inline-flex;
+	gap: 1rem;
+	margin-bottom: 2rem;
+	padding-bottom: 0.4rem;
+	border-bottom: 1px solid #92702c;
+	font-size: 10px;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+
+.roots-section {
+	display: grid;
+	grid-template-columns: 0.72fr 1.28fr;
+	gap: clamp(2rem, 6vw, 6rem);
+	margin-top: clamp(4rem, 8vw, 8rem);
+	padding-top: clamp(3rem, 6vw, 6rem);
+	border-top: 1px solid rgba(31, 56, 42, 0.25);
+	scroll-margin-top: 7rem;
+}
+
+.roots-eyebrow,
+.roots-era {
+	font-size: 10px;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: #806126;
+}
+
+.roots-intro h3 {
+	margin: 1.5rem 0;
+	font-size: clamp(2.8rem, 4.5vw, 5rem);
+	line-height: 0.95;
+	letter-spacing: -0.045em;
+}
+
+.roots-intro > p:last-child,
+.roots-timeline li > p:not(.roots-era) {
+	max-width: 36rem;
+	font-size: 14px;
+	line-height: 1.8;
+}
+
+.roots-timeline {
+	margin: 0;
+	padding: 0 0 0 1.75rem;
+	border-left: 1px solid rgba(146, 112, 44, 0.4);
+	list-style: none;
+}
+
+.roots-timeline li {
+	position: relative;
+	padding-bottom: 2.75rem;
+}
+
+.roots-timeline li:last-child {
+	padding-bottom: 0;
+}
+
+.roots-timeline li::before {
+	position: absolute;
+	top: 0.25rem;
+	left: calc(-1.75rem - 4px);
+	width: 7px;
+	height: 7px;
+	background: #92702c;
+	border-radius: 50%;
+	content: '';
+}
+
+.roots-timeline h4 {
+	margin: 0.75rem 0;
+	font-size: clamp(1.9rem, 3vw, 2.8rem);
+	line-height: 1.1;
+}
+
+.roots-timeline a {
+	display: inline-block;
+	margin-top: 1rem;
+	font-size: 11px;
+	text-decoration: underline;
+	text-underline-offset: 4px;
+}
+
+.brand-footer__artwork {
+	position: relative;
+}
+
+.brand-footer__desktop-tagline {
+	position: absolute;
+	top: 82%;
+	left: 72%;
+	width: 21%;
+	padding: 0.25em 0;
+	background: #1c3023;
+	font-family: Didot, 'Bodoni 72', 'Times New Roman', serif;
+	font-size: clamp(0.75rem, 1.65vw, 2.3rem);
+	font-style: italic;
+	line-height: 1.3;
+	text-align: center;
+}
+
+@media (max-width: 720px) {
+	.roots-section {
+		grid-template-columns: 1fr;
+	}
+	.brand-footer__desktop-tagline {
+		display: none;
+	}
+}

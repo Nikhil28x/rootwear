@@ -231,8 +231,8 @@
 						<p class="mb-4 text-[10px] tracking-[0.28em] text-stone-300 uppercase">
 							Drop 01 · The first growth
 						</p>
-						<h1 class="display text-[clamp(3.5rem,10vw,9.5rem)] leading-[0.76] tracking-[-0.065em]">
-							Rooted<br />forward.
+						<h1 class="display hero-headline">
+							Grown, not<br />manufactured.
 						</h1>
 					</div>
 					<div
@@ -396,7 +396,7 @@
 	<section
 		id="impact"
 		data-header-theme="light"
-		class="relative bg-[#c9a554] px-5 py-24 text-[#1f382a] sm:px-10 sm:py-36 lg:px-14"
+		class="impact-section relative bg-[#f6efdd] px-5 py-24 text-[#1f382a] sm:px-10 sm:py-36 lg:px-14"
 	>
 		<div class="impact-rings absolute inset-0 overflow-hidden" aria-hidden="true">
 			<span></span><span></span><span></span>
@@ -405,6 +405,9 @@
 			<div use:reveal class="reveal-grid grid gap-12 lg:grid-cols-[0.72fr_1.28fr] lg:gap-24">
 				<div>
 					<p class="mb-7 text-[10px] tracking-[0.25em] uppercase">03 / Impact receipt</p>
+					<a class="roots-jump" href="#know-your-roots"
+						>Know Your Roots <span aria-hidden="true">↘</span></a
+					>
 					<h2 class="display text-[clamp(3.8rem,7vw,8rem)] leading-[0.82] tracking-[-0.06em]">
 						What this order leaves behind.
 					</h2>
@@ -444,6 +447,54 @@
 				Sample impact profile. Replace with Rootwear's independently verified lifecycle figures
 				before launch.
 			</div>
+			<section
+				id="know-your-roots"
+				class="roots-section"
+				data-header-theme="light"
+				aria-labelledby="roots-title"
+			>
+				<div class="roots-intro">
+					<p class="roots-eyebrow">Impact / Know Your Roots</p>
+					<h3 id="roots-title" class="display">An ancient fibre.<br />A new chapter.</h3>
+					<p>
+						Before it became a garment, it was a plant. Follow hemp through its early uses, India's
+						material history, and the clothes we choose today.
+					</p>
+				</div>
+				<ol class="roots-timeline">
+					<li>
+						<p class="roots-era">c. 6000 BCE / East Asia</p>
+						<h4 class="display">The first threads</h4>
+						<p>
+							Archaeological evidence places the use of cannabis seeds and fibres in East Asia
+							around 8,000 years ago. Hemp's material story began long before modern fashion.
+						</p>
+						<a href="https://www.nature.com/articles/s41586-025-09065-0"
+							>Read the research in Nature ↗</a
+						>
+					</li>
+					<li>
+						<p class="roots-era">1885 / Punjab, India</p>
+						<h4 class="display">India, in the fibre</h4>
+						<p>
+							A hemp fibre sample from Punjab, given by the Royal Botanic Gardens, Kew, in 1885, is
+							preserved in the Smithsonian's collection—a tangible record of India's place in this
+							material's history.
+						</p>
+						<a href="https://americanhistory.si.edu/collections/object/nmah_648677"
+							>Explore the Smithsonian archive ↗</a
+						>
+					</li>
+					<li>
+						<p class="roots-era">Today / Rootwear</p>
+						<h4 class="display">Grown, not manufactured.</h4>
+						<p>
+							Our chapter starts with hemp-led fabrics and everyday pieces. Knowing the roots of a
+							material is part of choosing what comes next.
+						</p>
+					</li>
+				</ol>
+			</section>
 		</div>
 	</section>
 
@@ -474,16 +525,17 @@
 			alt="Rootwear's illustrated tree manifesto: before we build, we listen; built from the ground up"
 			loading="lazy"
 		/>
+		<figcaption class="brand-footer__desktop-tagline">Established in Process</figcaption>
 	</figure>
 
 	<div class="brand-footer__mobile-lockup" aria-hidden="true">
 		<p>ROOTWEAR</p>
-		<span>Grown, not made.</span>
+		<span>Established in Process</span>
 		<small>Built from the ground up.</small>
 	</div>
 
 	<div class="brand-footer__legal">
-		<span>© 2026 Rootwear · Est. in process</span>
+		<span>© 2026 Rootwear · Established in Process</span>
 		<nav aria-label="Footer navigation">
 			<a href="#about">Story</a>
 			<a href="/new-collection">Drop 01</a>

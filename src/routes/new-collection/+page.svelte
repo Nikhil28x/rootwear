@@ -1,4 +1,7 @@
 <script lang="ts">
+	import DropCountdown from '$lib/DropCountdown.svelte';
+	import type { PageData } from './$types';
+	let { data }: { data: PageData } = $props();
 	const campaignViews = [
 		{
 			index: '01',
@@ -60,6 +63,7 @@
 	</header>
 
 	<main>
+		<DropCountdown serverNow={data.serverNow} />
 		<section class="collection-intro" aria-labelledby="collection-title">
 			<div class="collection-kicker">
 				<span>New collection</span>
@@ -67,7 +71,7 @@
 			</div>
 
 			<div class="collection-intro__grid">
-				<h1 id="collection-title"><span>Pineapple</span><span>Haze.</span></h1>
+				<h2 id="collection-title"><span>Pineapple</span><span>Haze.</span></h2>
 				<div class="collection-intro__copy">
 					<p>
 						Our first growth: a tactile everyday uniform made with hemp-led fabric, quiet colour and
@@ -141,7 +145,7 @@
 
 				<div class="collection-piece__note">
 					<span>Release status</span>
-					<strong>Coming soon · limited to 25</strong>
+					<strong>Drop 001 · limited to 25</strong>
 				</div>
 			</div>
 		</section>
@@ -212,7 +216,7 @@
 		padding-top: 2rem;
 	}
 
-	.collection-intro h1,
+	.collection-intro h2,
 	.collection-piece h2 {
 		margin: 0;
 		font-family: Didot, 'Bodoni 72', 'Times New Roman', serif;
@@ -220,16 +224,16 @@
 		letter-spacing: -0.07em;
 	}
 
-	.collection-intro h1 {
+	.collection-intro h2 {
 		font-size: clamp(5rem, 13vw, 14rem);
 		line-height: 0.7;
 	}
 
-	.collection-intro h1 span {
+	.collection-intro h2 span {
 		display: block;
 	}
 
-	.collection-intro h1 span + span {
+	.collection-intro h2 span + span {
 		margin-top: 0.09em;
 	}
 
@@ -545,7 +549,7 @@
 			gap: 1rem;
 		}
 
-		.collection-intro h1 {
+		.collection-intro h2 {
 			font-size: 24vw;
 		}
 
