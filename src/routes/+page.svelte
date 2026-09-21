@@ -47,11 +47,19 @@
 		}
 	];
 
+	/**
+	 * RW-033 — §14: hemp and sustainability claims stay provable. These were
+	 * previously "2,700 L water kept in the ground", "0.3 KG plastic fibre
+	 * avoided", "4x fewer washes over its life" and "100% plant-led material
+	 * story" — unsupported environmental claims carrying figures nothing backs,
+	 * which §18 tests for explicitly. Replaced with verifiable properties of
+	 * the garment itself. See $lib/content/claims.ts.
+	 */
 	const impactStats = [
-		{ value: '2,700', unit: 'L', label: 'water kept in the ground', kind: 'water' },
-		{ value: '0.3', unit: 'KG', label: 'plastic fibre avoided', kind: 'plastic' },
-		{ value: '04', unit: '×', label: 'fewer washes over its life', kind: 'washes' },
-		{ value: '100', unit: '%', label: 'plant-led material story', kind: 'plant' }
+		{ value: '30/70', unit: '', label: 'hemp to cotton, by composition', kind: 'plant' },
+		{ value: '180', unit: 'GSM', label: 'fabric weight', kind: 'washes' },
+		{ value: '25', unit: '', label: 'hand-numbered pieces', kind: 'water' },
+		{ value: '05', unit: '', label: 'sizes, cut unisex', kind: 'plastic' }
 	];
 
 	const heroVideoWebmSrc = '/video/rootwear-forest-loop-seamless.webm';
@@ -173,7 +181,7 @@
 	{/if}
 </header>
 
-<main id="top" class="overflow-clip bg-[#0b0f0b] text-stone-100">
+<main id="top" class="overflow-clip bg-forest-black text-stone-100">
 	<section bind:this={heroElement} class="relative h-[175svh]" aria-label="Rootwear introduction">
 		<div class="sticky top-0 h-svh overflow-hidden bg-[#0b100d]">
 			<img
@@ -248,7 +256,7 @@
 	<section
 		id="about"
 		data-header-theme="light"
-		class="relative bg-[#f6efdd] px-5 py-24 text-[#1f382a] sm:px-10 sm:py-36 lg:px-14"
+		class="relative bg-cream px-5 py-24 text-forest sm:px-10 sm:py-36 lg:px-14"
 	>
 		<div class="grain absolute inset-0 opacity-30" aria-hidden="true"></div>
 		<div class="relative mx-auto max-w-[1600px]">
@@ -310,7 +318,7 @@
 		</div>
 	</section>
 
-	<section id="drop" class="bg-[#1f382a] px-5 py-24 sm:px-10 sm:py-36 lg:px-14">
+	<section id="drop" class="bg-forest px-5 py-24 sm:px-10 sm:py-36 lg:px-14">
 		<div class="mx-auto max-w-[1600px]">
 			<div
 				use:reveal
@@ -396,7 +404,7 @@
 	<section
 		id="impact"
 		data-header-theme="light"
-		class="impact-section relative bg-[#f6efdd] px-5 py-24 text-[#1f382a] sm:px-10 sm:py-36 lg:px-14"
+		class="impact-section relative bg-cream px-5 py-24 text-forest sm:px-10 sm:py-36 lg:px-14"
 	>
 		<div class="impact-rings absolute inset-0 overflow-hidden" aria-hidden="true">
 			<span></span><span></span><span></span>
@@ -404,16 +412,16 @@
 		<div class="relative mx-auto max-w-[1600px]">
 			<div use:reveal class="reveal-grid grid gap-12 lg:grid-cols-[0.72fr_1.28fr] lg:gap-24">
 				<div>
-					<p class="mb-7 text-[10px] tracking-[0.25em] uppercase">03 / Impact receipt</p>
+					<p class="mb-7 text-[10px] tracking-[0.25em] uppercase">03 / The material record</p>
 					<a class="roots-jump" href="#know-your-roots"
 						>Know Your Roots <span aria-hidden="true">↘</span></a
 					>
 					<h2 class="display text-[clamp(3.8rem,7vw,8rem)] leading-[0.82] tracking-[-0.06em]">
-						What this order leaves behind.
+						What the cloth<br />is made of.
 					</h2>
 					<p class="mt-9 max-w-md text-sm leading-relaxed text-[#313a21]">
-						Every order will carry its own material receipt—turning abstract sustainability claims
-						into numbers you can actually see.
+						Composition, weight and edition size, stated plainly. We publish what we can
+						verify about the cloth, and nothing we cannot.
 					</p>
 				</div>
 
@@ -500,7 +508,7 @@
 
 	<section
 		data-header-theme="light"
-		class="relative grid min-h-[75svh] place-items-center overflow-hidden bg-[#f6efdd] px-5 py-24 text-[#1f382a]"
+		class="relative grid min-h-[75svh] place-items-center overflow-hidden bg-cream px-5 py-24 text-forest"
 	>
 		<div class="grain absolute inset-0 opacity-30" aria-hidden="true"></div>
 		<div use:reveal class="reveal-grid relative max-w-5xl text-center">
@@ -509,7 +517,7 @@
 				Wear the change slowly.
 			</h2>
 			<a
-				class="mt-12 inline-flex border border-[#1f382a] px-7 py-4 text-[10px] tracking-[0.2em] uppercase transition hover:bg-[#1f382a] hover:text-[#f6efdd]"
+				class="mt-12 inline-flex border border-forest px-7 py-4 text-[10px] tracking-[0.2em] uppercase transition hover:bg-forest hover:text-cream"
 				href="/new-collection"
 			>
 				Enter drop 01

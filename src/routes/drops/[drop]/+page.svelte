@@ -1,7 +1,14 @@
 <script lang="ts">
 	import DropCountdown from '$lib/DropCountdown.svelte';
+	import { formatInr } from '$lib/money';
+	import { SIZE_RANGE_LABEL, FIT_DISCLAIMER } from '$lib/drop/sizes';
 	import type { PageData } from './$types';
+
 	let { data }: { data: PageData } = $props();
+
+	/** RW-032 — every price is read from the product record and formatted here,
+	    at the render edge. No page holds its own price string. */
+	let price = $derived(formatInr(data.displayPrice));
 	const campaignViews = [
 		{
 			index: '01',
@@ -35,13 +42,15 @@
 		}
 	];
 
-	const specifications = [
-		['Fibre', 'Hemp-cotton blend'],
-		['Weight', '180 GSM'],
-		['Fit', 'Relaxed oversized'],
-		['Edition', '25 numbered pieces'],
-		['Sizes', 'XS — XXL']
-	];
+	/** §09 — fabric, GSM, care and fit are FIELDS on the record, so the spec
+	    table, the size guide and invoices cannot drift apart. */
+	let specifications = $derived([
+		['Fibre', data.product.fabric],
+		['Weight', `${data.product.gsm} GSM`],
+		['Fit', data.product.fit],
+		['Edition', `${data.editionSize} numbered pieces`],
+		['Sizes', SIZE_RANGE_LABEL]
+	]);
 </script>
 
 <svelte:head>
@@ -62,7 +71,7 @@
 	</header>
 
 	<main>
-		<DropCountdown serverNow={data.serverNow} />
+		<DropCountdown stage={data.stage} />
 		<section class="collection-intro" aria-labelledby="collection-title">
 			<div class="collection-kicker">
 				<span>New collection</span>
@@ -78,7 +87,7 @@
 					</p>
 					<div class="collection-price">
 						<span>Pineapple Haze Tee</span>
-						<strong>₹3,490</strong>
+						<strong>{price}</strong>
 					</div>
 				</div>
 			</div>
@@ -108,7 +117,7 @@
 							<strong>{view.label}</strong>
 							<p>{view.detail}</p>
 						</div>
-						<span>₹3,490</span>
+						<span>{price}</span>
 					</figcaption>
 				</figure>
 			{/each}
@@ -126,7 +135,7 @@
 						<span>Drop 001</span>
 						<h3>Pineapple Haze Tee</h3>
 					</div>
-					<strong>₹3,490</strong>
+					<strong>{price}</strong>
 				</div>
 				<p class="collection-piece__description">
 					Cut loose through the body with a dropped shoulder and substantial hand-feel. Designed for

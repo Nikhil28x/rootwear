@@ -1,29 +1,40 @@
-@import 'tailwindcss' source('.');
-@source inline(
-	'-translate-x-1/2 -translate-y-1/2 absolute aspect-[4/5] backdrop-blur-md backdrop-blur-xl bg-[#0b0f0b] bg-[#0b100d] bg-[#11160f]/95 bg-[#1a2019] bg-[#1f382a] bg-[#c9a554] bg-[#f6efdd] bg-black/10 block border border-[#13190e]/30 border-[#152016]/25 border-[#1f382a] border-[#c9a554]/30 border-b border-l border-r border-t border-white/10 border-white/15 border-white/25 border-white/35 bottom-0 bottom-8 cursor-pointer duration-700 ease-out fixed flex flex-col gap-12 gap-16 gap-3 gap-4 gap-6 gap-8 grid group group-hover:scale-[1.035] h-[175svh] h-svh hidden hover:bg-[#1f382a] hover:bg-white hover:border-white hover:text-[#f6efdd] hover:text-black hover:text-white inline-flex inset-0 inset-x-0 items-center items-end items-start justify-between justify-center last:border-0 leading-[0.75] leading-[0.76] leading-[0.78] leading-[0.82] leading-[0.9] leading-none leading-relaxed left-0 left-1/2 lg:block lg:gap-24 lg:grid-cols-3 lg:grid-cols-[0.72fr_1.28fr] lg:grid-cols-[0.9fr_1.1fr] lg:min-h-[48rem] lg:p-14 lg:px-14 lg:py-12 lg:right-14 max-w-2xl max-w-4xl max-w-5xl max-w-[12rem] max-w-[15rem] max-w-[1600px] max-w-[18rem] max-w-md max-w-sm mb-14 mb-4 mb-6 mb-7 md:flex md:flex-row md:hidden md:items-end min-h-[32rem] min-h-[75svh] ml-2 mt-12 mt-2 mt-3 mt-5 mt-8 mt-9 mx-auto object-center object-cover opacity-30 opacity-65 overflow-clip overflow-hidden p-5 p-6 pb-7 pb-8 pl-5 place-items-center pt-4 pt-5 pt-7 px-4 px-5 px-7 py-12 py-2 py-24 py-3 py-4 py-9 relative right-5 shrink-0 size-9 size-full sm:block sm:flex sm:flex-row sm:grid-cols-2 sm:items-end sm:justify-between sm:p-10 sm:p-8 sm:pb-10 sm:pt-6 sm:px-10 sm:px-6 sm:px-7 sm:py-36 sm:text-xl space-y-5 sticky text-2xl text-[#1f382a] text-[#313a21] text-[#354035] text-[#aeb6a0] text-[0.16em] text-[10px] text-[11px] text-[9px] text-[clamp(3.5rem,10vw,9.5rem)] text-[clamp(3.8rem,7vw,8rem)] text-[clamp(3rem,6vw,7.2rem)] text-[clamp(4rem,10vw,11rem)] text-[clamp(4rem,7vw,8rem)] text-[clamp(4rem,9vw,10rem)] text-base text-center text-lg text-sm text-stone-100 text-stone-300 text-stone-400 text-stone-500 text-stone-600 text-xs top-0 top-[47%] tracking-[-0.01em] tracking-[-0.055em] tracking-[-0.065em] tracking-[-0.06em] tracking-[-0.07em] tracking-[0.05em] tracking-[0.08em] tracking-[0.12em] tracking-[0.14em] tracking-[0.15em] tracking-[0.16em] tracking-[0.18em] tracking-[0.22em] tracking-[0.25em] tracking-[0.28em] tracking-[0.2em] transition uppercase w-full z-10 z-20 z-30 z-50'
-);
+@import 'tailwindcss' source('../');
 
 @theme {
+	/* Brand palette — the single source of truth for Rootwear colour.
+	   Utilities: bg-forest-black, bg-forest, bg-cream, text-gold, border-forest, ... */
+	--color-forest-black: #0b0f0b;
+	--color-forest: #1f382a;
+	--color-cream: #f6efdd;
+	--color-gold: #c9a554;
+
+	/* §07: the tease uses the per-drop STRAIN accent at 5-10% of the surface,
+	   never the house gold. Kept deliberately separate so the two cannot be
+	   used interchangeably. Overridden per drop via --color-strain. */
+	--color-strain: #e0b23c;
+
+	/* Type stacks — previously written out in four places. */
 	--font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	--font-display: Didot, 'Bodoni 72', 'Bodoni MT', 'Times New Roman', serif;
 }
 
 :root {
 	font-family: var(--font-sans);
 	font-synthesis: none;
 	color-scheme: dark;
-	background: #0b0f0b;
+	background: var(--color-forest-black);
 	text-rendering: optimizeLegibility;
 }
 
 html {
 	scroll-behavior: smooth;
-	background: #0b0f0b;
+	background: var(--color-forest-black);
 }
 
 body {
 	margin: 0;
 	min-width: 320px;
-	background: #0b0f0b;
+	background: var(--color-forest-black);
 }
 
 button,
@@ -38,8 +49,8 @@ a:focus-visible {
 }
 
 ::selection {
-	background: #c9a554;
-	color: #1f382a;
+	background: var(--color-gold);
+	color: var(--color-forest);
 }
 
 .display {
@@ -64,7 +75,7 @@ a:focus-visible {
 }
 
 .site-header--light {
-	color: #1f382a;
+	color: var(--color-forest);
 }
 
 .site-header--light .site-header__shell {
@@ -77,7 +88,7 @@ a:focus-visible {
 }
 
 .site-header--light .nav-link:hover {
-	color: #1f382a;
+	color: var(--color-forest);
 }
 
 .site-header--light .site-header__cta,
@@ -86,13 +97,13 @@ a:focus-visible {
 }
 
 .site-header--light .site-header__cta:hover {
-	color: #f6efdd;
-	background: #1f382a;
-	border-color: #1f382a;
+	color: var(--color-cream);
+	background: var(--color-forest);
+	border-color: var(--color-forest);
 }
 
 .site-header--light .site-header__mobile {
-	color: #1f382a;
+	color: var(--color-forest);
 	background: rgba(246, 239, 221, 0.96);
 	border-color: rgba(31, 56, 42, 0.2);
 }
@@ -372,8 +383,8 @@ a:focus-visible {
 .brand-footer {
 	position: relative;
 	overflow: hidden;
-	color: #f6efdd;
-	background: #1f382a;
+	color: var(--color-cream);
+	background: var(--color-forest);
 }
 
 .brand-footer__artwork {
@@ -416,7 +427,7 @@ a:focus-visible {
 }
 
 .brand-footer__legal a:hover {
-	color: #c9a554;
+	color: var(--color-gold);
 }
 
 .product-card {
@@ -441,7 +452,7 @@ a:focus-visible {
 	padding: 1.05rem 1.2rem;
 	font-size: 9px;
 	letter-spacing: 0.2em;
-	color: #f6efdd;
+	color: var(--color-cream);
 	text-transform: uppercase;
 	border: 1px solid rgba(246, 239, 221, 0.36);
 	transition:
@@ -451,9 +462,9 @@ a:focus-visible {
 }
 
 .drop-collection-link:hover {
-	color: #1f382a;
-	background: #f6efdd;
-	border-color: #f6efdd;
+	color: var(--color-forest);
+	background: var(--color-cream);
+	border-color: var(--color-cream);
 }
 
 .product-stage {
