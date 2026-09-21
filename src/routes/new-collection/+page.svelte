@@ -48,7 +48,7 @@
 	<title>Drop 01 — Pineapple Haze | Rootwear</title>
 	<meta
 		name="description"
-		content="Discover Pineapple Haze, Rootwear's first limited hemp-led clothing drop."
+		content="Discover Pineapple Haze, Rootwear's first limited drop: 25 numbered hemp-cotton pieces."
 	/>
 	<meta name="theme-color" content="#faf9f5" />
 </svelte:head>
@@ -56,7 +56,6 @@
 <div class="collection-page">
 	<header class="collection-header">
 		<a class="collection-wordmark" href="/" aria-label="Rootwear home">ROOTWEAR</a>
-		<div class="collection-header__drop">Drop 001 · The first growth</div>
 		<a class="collection-header__back" href="/"
 			>Back to the forest <span aria-hidden="true">↖</span></a
 		>
@@ -168,7 +167,7 @@
 
 	.collection-header {
 		display: grid;
-		grid-template-columns: 1fr auto 1fr;
+		grid-template-columns: 1fr auto;
 		align-items: center;
 		gap: 2rem;
 		padding: 1.4rem clamp(1.25rem, 3vw, 3.5rem);
@@ -182,10 +181,6 @@
 		font-family: Didot, 'Bodoni 72', 'Times New Roman', serif;
 		font-size: 1.25rem;
 		letter-spacing: 0.22em;
-	}
-
-	.collection-header__drop {
-		color: rgba(23, 52, 38, 0.58);
 	}
 
 	.collection-header__back {
@@ -507,17 +502,9 @@
 	}
 
 	@media (max-width: 900px) {
-		.collection-header {
-			grid-template-columns: 1fr auto;
-		}
-
-		.collection-header__drop {
-			display: none;
-		}
-
 		.collection-intro__grid,
 		.collection-piece {
-			grid-template-columns: 1fr;
+			grid-template-columns: minmax(0, 1fr);
 		}
 
 		.collection-intro__grid {
@@ -550,7 +537,13 @@
 		}
 
 		.collection-intro h2 {
-			font-size: 24vw;
+			font-size: 22vw;
+		}
+
+		.collection-piece h2 {
+			max-width: 100%;
+			font-size: clamp(2.75rem, 13vw, 4rem);
+			line-height: 0.92;
 		}
 
 		.collection-campaign {

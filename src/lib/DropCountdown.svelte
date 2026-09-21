@@ -1,17 +1,24 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { DROP_START, DROP_LAUNCH, DAY_MS, GROWTH_STAGES, getDropState } from './drop-timeline';
+	import { DROP_LAUNCH, GROWTH_STAGES, getDropState } from './drop-timeline';
 
 	let { serverNow }: { serverNow: number } = $props();
 	let clockNow = $state<number | null>(null);
+	let motionEnabled = $state(false);
 	let now = $derived(clockNow ?? serverNow);
 	let growth = $derived(getDropState(now));
-	const dateLabel = (time: number) =>
-		new Intl.DateTimeFormat('en-IN', {
-			day: 'numeric',
-			month: 'short',
-			timeZone: 'Asia/Kolkata'
-		}).format(time);
+	const launchDate = new Intl.DateTimeFormat('en-IN', {
+		day: 'numeric',
+		month: 'long',
+		year: 'numeric',
+		timeZone: 'Asia/Kolkata'
+	}).format(DROP_LAUNCH);
+	const launchTime = new Intl.DateTimeFormat('en-IN', {
+		hour: 'numeric',
+		minute: '2-digit',
+		hour12: true,
+		timeZone: 'Asia/Kolkata'
+	}).format(DROP_LAUNCH);
 	const pad = (number: number) => String(number).padStart(2, '0');
 
 	onMount(() => {
@@ -19,91 +26,81 @@
 		const tick = () => {
 			clockNow = Date.now() + serverOffset;
 		};
+		const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+		const updateMotion = () => {
+			motionEnabled = !motion.matches;
+		};
+		updateMotion();
 		const timer = window.setInterval(tick, 1000);
 		document.addEventListener('visibilitychange', tick);
+		motion.addEventListener('change', updateMotion);
 		return () => {
 			clearInterval(timer);
 			document.removeEventListener('visibilitychange', tick);
+			motion.removeEventListener('change', updateMotion);
 		};
 	});
 
-	// Each visit reveals just the current chapter, then holds that growth stage.
-	function playChapter(video: HTMLVideoElement, stageIndex: number) {
-		const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
-		let frame = 0;
+	// Reveal only today's growth, then return to the matching high-resolution still.
+	function playChapter(video: HTMLVideoElement) {
+		let disposed = false;
 		let started = false;
-		let preparing = false;
-		let target = 0;
-		const hold = () => {
-			video.pause();
-			cancelAnimationFrame(frame);
-			if (Number.isFinite(target)) video.currentTime = target;
+		const hide = () => {
+			video.style.opacity = '0';
 		};
-		const track = () => {
-			if (video.currentTime >= target) {
-				hold();
-				return;
-			}
-			frame = requestAnimationFrame(track);
+		const show = () => {
+			if (!disposed) video.style.opacity = '1';
 		};
-		const reveal = () => {
-			if (!preparing) return;
-			preparing = false;
-			if (motion.matches) return;
-			video.style.opacity = '1';
-			video.playbackRate = 0.5;
-			video
-				.play()
-				.then(track)
-				.catch(() => {
-					video.style.opacity = '0';
-				});
-		};
-		const prepare = () => {
-			if (started || motion.matches || !Number.isFinite(video.duration)) return;
+		const play = () => {
+			if (started || disposed) return;
 			started = true;
-			target = Math.min(video.duration - 1 / 24, (stageIndex * 32) / 24);
-			preparing = true;
-			const from = Math.max(0, ((stageIndex - 1) * 32) / 24);
-			if (Math.abs(video.currentTime - from) < 0.01) reveal();
-			else video.currentTime = from;
+			video.playbackRate = 0.5;
+			void video.play().catch(hide);
 		};
-		const updateMotion = () => {
-			if (motion.matches) {
-				hold();
-				video.style.opacity = '0';
-			} else {
-				started = false;
-				prepare();
-			}
-		};
-		video.addEventListener('loadeddata', prepare);
-		video.addEventListener('seeked', reveal);
-		motion.addEventListener('change', updateMotion);
-		if (video.readyState >= 2) prepare();
+		video.addEventListener('loadeddata', play);
+		video.addEventListener('playing', show);
+		video.addEventListener('ended', hide);
+		video.addEventListener('error', hide);
+		if (video.readyState >= 2) play();
 		return {
 			destroy() {
-				cancelAnimationFrame(frame);
+				disposed = true;
 				video.pause();
-				video.removeEventListener('loadeddata', prepare);
-				video.removeEventListener('seeked', reveal);
-				motion.removeEventListener('change', updateMotion);
+				video.removeEventListener('loadeddata', play);
+				video.removeEventListener('playing', show);
+				video.removeEventListener('ended', hide);
+				video.removeEventListener('error', hide);
 			}
 		};
 	}
 </script>
 
 <section class="drop-countdown" aria-labelledby="growth-title">
-	<div class="growth-scene">
+	<div class="growth-intro">
+		<p class="eyebrow">Pineapple Haze</p>
+		<h1 id="growth-title">Drop<br />001.</h1>
+		<p class="growth-explanation" id="growth-explanation">
+			{growth.launched
+				? 'Pineapple Haze is here. A limited release of 25 numbered hemp-cotton pieces.'
+				: 'A limited release of 25 numbered hemp-cotton pieces, arriving at full growth.'}
+		</p>
+	</div>
+
+	<figure class="growth-scene" aria-describedby="growth-explanation">
 		<img
-			src={`/images/drop-growth/stage-${growth.stageIndex}.jpg`}
-			alt={`${growth.stage.label}: a plant growing in Rootwear's misty forest`}
+			src={`/images/drop-growth/hd/stage-${growth.stageIndex}-1920.webp`}
+			srcset={`/images/drop-growth/hd/stage-${growth.stageIndex}-960.webp 960w, /images/drop-growth/hd/stage-${growth.stageIndex}-1920.webp 1920w, /images/drop-growth/hd/stage-${growth.stageIndex}-3840.webp 3840w`}
+			sizes="(max-width: 760px) 180vw, max(60vw, 1680px)"
+			width="3840"
+			height="1600"
+			fetchpriority="high"
+			alt={`${growth.stage.label}: the plant in our misty forest, at stage ${growth.stageIndex + 1} of ${GROWTH_STAGES.length} on its journey to the Pineapple Haze launch`}
 		/>
-		{#if growth.stageIndex > 0}
+		{#if motionEnabled && growth.stageIndex > 0}
 			{#key growth.stageIndex}
 				<video
-					use:playChapter={growth.stageIndex}
-					src="/video/rootwear-tree-growth.mp4"
+					use:playChapter
+					src={`/video/drop-growth/hd/stage-${growth.stageIndex}.mp4`}
 					muted
 					playsinline
 					preload="auto"
@@ -112,84 +109,128 @@
 				></video>
 			{/key}
 		{/if}
-		<div class="growth-shade"></div>
-		<div class="growth-topline">
-			<span>Drop 001 / The first growth</span><span>Rooted in time</span>
-		</div>
-		<div class="growth-copy">
-			<p class="eyebrow">
-				{growth.launched
-					? 'Full growth / Drop day'
-					: `Chapter 0${growth.stageIndex + 1} / ${growth.stage.label}`}
-			</p>
-			<h1 id="growth-title">{growth.launched ? 'The wait is over.' : 'Good things grow.'}</h1>
-			<p>{growth.stage.note}</p>
-			<a href="#collection-title"
-				>{growth.launched ? 'Explore the drop' : 'Meet the coming drop'}
-				<span aria-hidden="true">↘</span></a
-			>
-		</div>
-	</div>
-	<div class="growth-calendar">
-		<div class="launch-heading">
-			<div>
-				<p class="eyebrow">Pineapple Haze / Drop 001</p>
-				<h2>{growth.launched ? 'Fully grown.' : 'A little closer, every day.'}</h2>
-			</div>
-			<p class="launch-date">
-				{growth.launched ? 'Launch date' : 'Arriving'}<time
-					datetime={new Date(DROP_LAUNCH).toISOString()}>11 October 2026 · 6:00 PM IST</time
-				>
-			</p>
-		</div>
+	</figure>
+
+	<div class="launch-panel">
 		{#if !growth.launched}
-			<div class="countdown-digits" role="timer" aria-label="Time until the drop">
-				{#each [[growth.days, 'Days'], [growth.hours, 'Hours'], [growth.minutes, 'Minutes'], [growth.seconds, 'Seconds']] as [value, label]}
+			<div
+				class="countdown-digits"
+				role="timer"
+				aria-label="Time until Drop 001 launches"
+				aria-live="off"
+			>
+				{#each [[growth.days, 'Days'], [growth.hours, 'Hours'], [growth.minutes, 'Minutes']] as [value, label]}
 					<div><strong>{pad(Number(value))}</strong><span>{label}</span></div>
 				{/each}
 			</div>
 		{/if}
-		<div
-			class="growth-progress"
-			role="progressbar"
-			aria-label="Journey to launch"
-			aria-valuemin="0"
-			aria-valuemax="100"
-			aria-valuenow={Math.round(growth.progress * 100)}
-		>
-			<span style:width={`${growth.progress * 100}%`}></span>
-		</div>
-		<ol class="growth-stages">
-			{#each GROWTH_STAGES as stage, index}
-				<li
-					class:reached={index <= growth.stageIndex}
-					aria-current={index === growth.stageIndex ? 'step' : undefined}
-				>
-					<span class="stage-dot"></span><time
-						datetime={new Date(DROP_START + stage.day * DAY_MS).toISOString()}
-						>{dateLabel(DROP_START + stage.day * DAY_MS)}</time
-					><span>{stage.label}</span>
-				</li>
-			{/each}
-		</ol>
-		<p class="growth-return">
-			{#if growth.nextGrowthAt}A new stage every five days. Come back on <strong
-					>{dateLabel(growth.nextGrowthAt)}</strong
-				> to watch the next chapter unfold.{:else}From a small beginning to our first drop. Explore
-				Pineapple Haze below.{/if}
+		<p class="launch-date">
+			<time datetime={new Date(DROP_LAUNCH).toISOString()}
+				>{launchDate} · {launchTime.toUpperCase()} IST</time
+			>
 		</p>
+		<a class="drop-link" href="#collection-title">
+			Explore the drop<span aria-hidden="true">↗</span>
+		</a>
 	</div>
 </section>
 
 <style>
 	.drop-countdown {
+		display: grid;
+		grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr);
+		grid-template-rows: 1fr 1fr;
+		grid-template-areas: 'intro scene' 'launch scene';
+		min-height: clamp(580px, 72svh, 740px);
 		color: #f6efdd;
 		background: #12251b;
 	}
+	.growth-intro {
+		grid-area: intro;
+		align-self: end;
+		padding: 4rem clamp(2rem, 5vw, 6rem) 0;
+	}
+	.eyebrow {
+		font-size: 9px;
+		line-height: 1.6;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: #b6c0b3;
+	}
+	.growth-intro h1 {
+		margin: 1.5rem 0 1.25rem;
+		font-family: Didot, 'Bodoni 72', 'Times New Roman', serif;
+		font-size: clamp(3rem, 4.5vw, 5.25rem);
+		font-weight: 400;
+		line-height: 1.02;
+		letter-spacing: -0.045em;
+	}
+	.growth-explanation {
+		max-width: 31ch;
+		font-size: 13px;
+		line-height: 1.8;
+		text-wrap: pretty;
+		color: #b6c0b3;
+	}
+	.launch-panel {
+		grid-area: launch;
+		align-self: start;
+		padding: 2.5rem clamp(2rem, 5vw, 6rem) 4rem;
+	}
+	.countdown-digits {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 1.5rem;
+		max-width: 245px;
+		margin-bottom: 1.5rem;
+	}
+	.countdown-digits strong {
+		display: block;
+		font-size: 2.1rem;
+		font-weight: 300;
+		line-height: 1;
+		letter-spacing: -0.035em;
+		font-variant-numeric: tabular-nums;
+	}
+	.countdown-digits span {
+		display: block;
+		margin-top: 0.5rem;
+		font-size: 8px;
+		line-height: 1.5;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: #b6c0b3;
+	}
+	.launch-date {
+		font-size: 10px;
+		line-height: 1.8;
+		color: #b6c0b3;
+	}
+	.drop-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 1.5rem;
+		margin-top: 2rem;
+		padding: 0.4rem 0;
+		border-bottom: 1px solid #f6efdd50;
+		font-size: 11px;
+		line-height: 1.5;
+		transition:
+			color 180ms ease,
+			border-color 180ms ease;
+	}
+	.drop-link:hover {
+		color: #d6b76d;
+		border-color: currentColor;
+	}
+	.drop-link > span {
+		font-size: 16px;
+	}
 	.growth-scene {
+		grid-area: scene;
 		position: relative;
-		height: min(78svh, 880px);
-		min-height: 540px;
+		min-width: 0;
+		margin: 0;
 		overflow: hidden;
 		background: #101a14;
 	}
@@ -204,211 +245,57 @@
 	}
 	.growth-scene > video {
 		opacity: 0;
+		transition: opacity 300ms ease;
 	}
-	.growth-shade {
-		position: absolute;
-		inset: 0;
-		background: linear-gradient(180deg, #07130a66, transparent 25%, transparent 48%, #07130adb);
+	@media (min-width: 761px) and (max-width: 1020px) {
+		.drop-countdown {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+		}
+		.growth-intro,
+		.launch-panel {
+			padding-left: 2rem;
+			padding-right: 2rem;
+		}
 	}
-	.growth-topline {
-		position: absolute;
-		top: 2rem;
-		left: 4%;
-		right: 4%;
-		display: flex;
-		justify-content: space-between;
-		font-size: 9px;
-		letter-spacing: 0.2em;
-		text-transform: uppercase;
-	}
-	.growth-copy {
-		position: absolute;
-		bottom: 3rem;
-		left: 4%;
-		right: 4%;
-	}
-	.eyebrow {
-		font-size: 10px;
-		letter-spacing: 0.18em;
-		text-transform: uppercase;
-		color: #d6b76d;
-	}
-	.growth-copy h1 {
-		margin: 1rem 0;
-		font-family: Didot, 'Bodoni 72', serif;
-		font-size: clamp(3.4rem, 7vw, 7.5rem);
-		font-weight: 400;
-		line-height: 0.94;
-		letter-spacing: -0.055em;
-	}
-	.growth-copy > p:not(.eyebrow) {
-		font-size: 14px;
-		color: #f6efddc9;
-	}
-	.growth-copy a {
-		display: inline-flex;
-		gap: 2rem;
-		margin-top: 1.5rem;
-		padding-bottom: 0.5rem;
-		border-bottom: 1px solid #c9a55499;
-		font-size: 10px;
-		text-transform: uppercase;
-		letter-spacing: 0.14em;
-	}
-	.growth-calendar {
-		padding: 3.5rem 4% 2.5rem;
-	}
-	.launch-heading {
-		display: flex;
-		align-items: end;
-		justify-content: space-between;
-		gap: 2rem;
-	}
-	.launch-heading h2 {
-		margin: 0.75rem 0 0;
-		font-family: Didot, 'Bodoni 72', serif;
-		font-size: clamp(2rem, 3vw, 3rem);
-		font-weight: 400;
-		line-height: 1.1;
-	}
-	.launch-date {
-		font-size: 10px;
-		text-transform: uppercase;
-		letter-spacing: 0.12em;
-		color: #f6efddaa;
-		text-align: right;
-	}
-	.launch-date time {
-		display: block;
-		margin-top: 0.6rem;
-		color: #f6efdd;
-	}
-	.countdown-digits {
-		display: grid;
-		grid-template-columns: repeat(4, 1fr);
-		max-width: 760px;
-		margin: 3rem 0;
-	}
-	.countdown-digits > div {
-		border-right: 1px solid #f6efdd26;
-		padding-left: 2rem;
-	}
-	.countdown-digits > div:first-child {
-		padding-left: 0;
-	}
-	.countdown-digits > div:last-child {
-		border: 0;
-	}
-	.countdown-digits strong {
-		display: block;
-		font-family: Didot, 'Bodoni 72', serif;
-		font-size: clamp(3rem, 6vw, 6rem);
-		font-weight: 400;
-		line-height: 1;
-		font-variant-numeric: tabular-nums;
-	}
-	.countdown-digits span {
-		display: block;
-		margin-top: 0.75rem;
-		font-size: 9px;
-		text-transform: uppercase;
-		letter-spacing: 0.2em;
-		color: #f6efdd99;
-	}
-	.growth-progress {
-		height: 1px;
-		background: #f6efdd26;
-		margin-top: 3rem;
-	}
-	.growth-progress > span {
-		display: block;
-		height: 1px;
-		background: #c9a554;
-	}
-	.growth-stages {
-		display: grid;
-		grid-template-columns: repeat(7, 1fr);
-		list-style: none;
-		padding: 0;
-		margin: 0;
-		gap: 0.5rem;
-	}
-	.growth-stages li {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-		font-size: 10px;
-		color: #f6efdd80;
-	}
-	.stage-dot {
-		width: 7px;
-		height: 7px;
-		border: 1px solid #9caa9f;
-		border-radius: 50%;
-		margin-top: -4px;
-		background: #12251b;
-	}
-	.growth-stages .reached {
-		color: #e4c887;
-	}
-	.reached .stage-dot {
-		background: #c9a554;
-		border-color: #c9a554;
-	}
-	.growth-stages time {
-		margin-top: 0.75rem;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-	}
-	.growth-return {
-		margin: 2.5rem 0 0;
-		font-size: 12px;
-		line-height: 1.7;
-		color: #f6efddaa;
-	}
-	.growth-return strong {
-		font-weight: 400;
-		color: #e4c887;
-	}
-	@media (max-width: 680px) {
+	@media (max-width: 760px) {
+		.drop-countdown {
+			grid-template-columns: minmax(0, 1fr);
+			grid-template-rows: auto auto auto;
+			grid-template-areas: 'intro' 'scene' 'launch';
+			min-height: 0;
+		}
+		.growth-intro {
+			padding: 2.5rem 1.5rem 2rem;
+		}
+		.growth-intro h1 {
+			margin: 1rem 0;
+			font-size: clamp(2.8rem, 9vw, 4rem);
+		}
+		.growth-explanation {
+			max-width: 36ch;
+			font-size: 12px;
+		}
 		.growth-scene {
-			height: 72svh;
-			min-height: 500px;
+			aspect-ratio: 4 / 3;
+			max-height: 460px;
 		}
-		.growth-copy {
-			bottom: 2rem;
+		.launch-panel {
+			padding: 2rem 1.5rem 2.5rem;
 		}
-		.growth-copy h1 {
-			max-width: 7ch;
+		.countdown-digits {
+			max-width: 230px;
 		}
-		.growth-topline > span:last-child {
-			display: none;
-		}
-		.launch-heading {
-			align-items: start;
-			flex-direction: column;
-		}
-		.launch-date {
-			text-align: left;
-			line-height: 1.7;
-		}
-		.countdown-digits > div {
-			padding-left: 0.8rem;
-		}
-		.growth-stages {
-			grid-template-columns: repeat(4, 1fr);
-			row-gap: 1.5rem;
-		}
-		.growth-stages li {
-			font-size: 9px;
-		}
-		.growth-calendar {
-			padding-top: 2.5rem;
+		.drop-link {
+			margin-top: 1.5rem;
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.growth-scene > video {
 			display: none;
+		}
+		.growth-scene > video,
+		.drop-link {
+			transition: none;
 		}
 	}
 </style>
