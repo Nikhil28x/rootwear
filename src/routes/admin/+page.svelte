@@ -97,7 +97,7 @@
 		<article class="flex flex-col gap-6 border-t border-white/10 pt-8">
 			<div class="flex flex-wrap items-center justify-between gap-4">
 				<div class="flex flex-wrap items-center gap-4">
-					<h3 class="display text-2xl leading-none tracking-[-0.03em] text-cream">
+					<h3 class="display text-2xl leading-none tracking-[-0.03em] text-paper">
 						Drop {String(drop.number).padStart(2, '0')} — {drop.name}
 					</h3>
 					<StatePill
@@ -136,7 +136,7 @@
 							<tr class="text-stone-200">
 								<th
 									scope="row"
-									class="border-b border-white/5 px-4 py-3 text-left text-[15px] font-normal text-cream"
+									class="border-b border-white/5 px-4 py-3 text-left text-[15px] font-normal text-paper"
 								>
 									{row.size}
 								</th>
@@ -171,7 +171,7 @@
 						{/each}
 					</tbody>
 					<tfoot>
-						<tr class="text-cream">
+						<tr class="text-paper">
 							<th scope="row" class="px-4 py-3 text-left text-[11px] tracking-[0.2em] uppercase font-medium">
 								Total
 							</th>
@@ -201,7 +201,7 @@
 
 			<p class="flex flex-wrap gap-6 text-[13px] text-stone-400">
 				<span class="flex items-center gap-2"
-					><span class="inline-block h-2 w-4 bg-cream"></span> Sold</span
+					><span class="inline-block h-2 w-4 bg-paper"></span> Sold</span
 				>
 				<span class="flex items-center gap-2"
 					><span class="inline-block h-2 w-4 bg-gold"></span> Reserved</span
@@ -294,17 +294,17 @@
 				<tr class="text-stone-200">
 					<td class="border-b border-white/5 px-4 py-3">
 						<a
-							class="underline decoration-white/25 underline-offset-4 hover:decoration-cream"
+							class="underline decoration-white/25 underline-offset-4 hover:decoration-paper"
 							href="/admin/demand?drop={row.dropId}">{row.dropName}</a
 						>
 					</td>
-					<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal text-cream">
+					<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal text-paper">
 						{row.size}
 					</th>
 					<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">{row.requests}</td>
 					<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">{row.notifyMe}</td>
 					<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">{row.waitlist}</td>
-					<td class="border-b border-white/5 px-4 py-3 text-right text-cream tabular-nums">
+					<td class="border-b border-white/5 px-4 py-3 text-right text-paper tabular-nums">
 						{row.total}
 					</td>
 				</tr>
@@ -347,7 +347,7 @@
 		<tbody>
 			{#each data.revenue as row (row.dropId)}
 				<tr class="text-stone-200">
-					<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal text-cream">
+					<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal text-paper">
 						{row.dropName}
 					</th>
 					<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">
@@ -359,7 +359,7 @@
 					<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">
 						{formatInr(row.orders)}
 					</td>
-					<td class="border-b border-white/5 px-4 py-3 text-right text-cream tabular-nums">
+					<td class="border-b border-white/5 px-4 py-3 text-right text-paper tabular-nums">
 						{formatInr(row.total)}
 					</td>
 				</tr>

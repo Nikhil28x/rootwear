@@ -77,7 +77,7 @@
 			<button
 				type="submit"
 				disabled={busy}
-				class="border border-forest/60 px-5 py-2 text-[11px] tracking-[0.2em] text-forest uppercase transition hover:bg-forest hover:text-cream disabled:opacity-40 font-medium"
+				class="border border-forest/60 px-5 py-2 text-[11px] tracking-[0.2em] text-forest uppercase transition hover:bg-forest hover:text-paper disabled:opacity-40 font-medium"
 			>
 				Apply
 			</button>

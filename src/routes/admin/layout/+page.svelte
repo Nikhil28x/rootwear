@@ -103,7 +103,7 @@
 		<tbody>
 			{#each data.slots as slot (slot.id)}
 				<tr class="text-stone-200">
-					<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal text-cream">
+					<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal text-paper">
 						Drop {String(slot.number).padStart(2, '0')} — {slot.name}
 					</th>
 					<td class="border-b border-white/5 px-4 py-3">
@@ -120,7 +120,7 @@
 					</td>
 					<td class="border-b border-white/5 px-4 py-3 text-right">
 						<a
-							class="text-[13px] tracking-[0.16em] text-stone-300 uppercase underline underline-offset-4 hover:text-cream font-medium"
+							class="text-[13px] tracking-[0.16em] text-stone-300 uppercase underline underline-offset-4 hover:text-paper font-medium"
 							href="/drops/{slot.slug}"
 						>
 							Open
@@ -144,7 +144,7 @@
 		{#each layoutSurfaces as surface (surface.title)}
 			<li class="flex flex-col gap-3 bg-forest/40 px-5 py-6">
 				<a
-					class="text-[15px] text-cream underline decoration-white/25 underline-offset-4 hover:decoration-cream"
+					class="text-[15px] text-paper underline decoration-white/25 underline-offset-4 hover:decoration-paper"
 					href={surface.href}
 				>
 					{surface.title}

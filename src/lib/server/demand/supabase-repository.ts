@@ -16,7 +16,9 @@
  * trip instead of two.
  */
 import type { DemandRepository } from './repository';
-import type { DemandRow, DemandWriteStatus, DropRequestInput, NotifyRequestInput } from './types';
+import type { DemandRow, DemandWriteStatus, DropRequestInput, NotifyRequestInput,
+	PreOrderInput
+} from './types';
 import type { Size } from '$lib/drop/sizes';
 import { getServiceClient } from '$lib/server/db/clients';
 
@@ -69,6 +71,27 @@ export const supabaseDemandRepository: DemandRepository = {
 		if (error) {
 			if (error.code === UNIQUE_VIOLATION) return 'already';
 			throw new Error(`notifyMe failed: ${error.message}`);
+		}
+		return 'recorded';
+	},
+
+	async preorderSignup(input: PreOrderInput): Promise<DemandWriteStatus> {
+		const { error } = await getServiceClient()
+			.from('preorder_signups')
+			.insert({
+				drop_id: input.dropId,
+				variant_id: input.variantId,
+				name: input.name,
+				email: input.email,
+				phone: input.phone,
+				customer_id: input.customerId ?? null,
+				consented_at: new Date(input.consentedAt).toISOString(),
+				consent_source: input.consentSource
+			});
+
+		if (error) {
+			if (error.code === UNIQUE_VIOLATION) return 'already';
+			throw new Error(`preorderSignup failed: ${error.message}`);
 		}
 		return 'recorded';
 	},

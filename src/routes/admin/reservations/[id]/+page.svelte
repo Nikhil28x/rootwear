@@ -52,7 +52,7 @@
 	<p class="text-[13px] text-stone-400">{r.sku} · size {r.size}</p>
 	{#if r.orderId}
 		<a
-			class="text-[13px] tracking-[0.16em] text-stone-300 uppercase underline underline-offset-4 hover:text-cream font-medium"
+			class="text-[13px] tracking-[0.16em] text-stone-300 uppercase underline underline-offset-4 hover:text-paper font-medium"
 			href="/admin/orders/{r.orderId}"
 		>
 			Order {r.orderNumber} →
@@ -77,15 +77,15 @@
 			<dl class="grid gap-px bg-white/10 sm:grid-cols-3">
 				<div class="flex flex-col gap-2 bg-forest/40 px-5 py-6">
 					<dt class="text-[11px] tracking-[0.24em] text-stone-400 uppercase font-medium">Locked price</dt>
-					<dd class="text-xl text-cream tabular-nums">{formatInr(r.lockedPrice)}</dd>
+					<dd class="text-xl text-paper tabular-nums">{formatInr(r.lockedPrice)}</dd>
 				</div>
 				<div class="flex flex-col gap-2 bg-forest/40 px-5 py-6">
 					<dt class="text-[11px] tracking-[0.24em] text-stone-400 uppercase font-medium">Deposit</dt>
-					<dd class="text-xl text-cream tabular-nums">{formatInr(r.deposit)}</dd>
+					<dd class="text-xl text-paper tabular-nums">{formatInr(r.deposit)}</dd>
 				</div>
 				<div class="flex flex-col gap-2 bg-forest/40 px-5 py-6">
 					<dt class="text-[11px] tracking-[0.24em] text-stone-400 uppercase font-medium">Balance</dt>
-					<dd class="text-xl text-cream tabular-nums">{formatInr(r.balance)}</dd>
+					<dd class="text-xl text-paper tabular-nums">{formatInr(r.balance)}</dd>
 				</div>
 			</dl>
 
@@ -114,7 +114,7 @@
 							class="absolute -left-[1.6875rem] top-1.5 block h-2 w-2 bg-gold"
 							aria-hidden="true"
 						></span>
-						<p class="text-[15px] text-cream">{step.label}</p>
+						<p class="text-[15px] text-paper">{step.label}</p>
 						<p class="mt-1 text-[13px] text-stone-400 tabular-nums">{shortDateTime(step.at)} IST</p>
 						{#if step.detail}
 							<p class="mt-2 max-w-[42rem] text-[15px] leading-relaxed text-stone-400">{step.detail}</p>
@@ -165,7 +165,7 @@
 			{/if}
 
 			{#if r.balanceDueBy !== null && canRequestBalance}
-				<p class="text-[15px] {overdue ? 'text-cream' : 'text-stone-400'} tabular-nums">
+				<p class="text-[15px] {overdue ? 'text-paper' : 'text-stone-400'} tabular-nums">
 					Balance due {shortDateTime(r.balanceDueBy)} IST — {relativeDays(r.balanceDueBy, data.now)}{overdue
 						? ', overdue'
 						: ''}.
@@ -191,7 +191,7 @@
 								<StatePill label={humanise(payment.state)} tone={paymentTone(payment.state)} />
 								<span class="text-[15px] text-stone-300">{humanise(payment.kind)}</span>
 							</span>
-							<span class="text-[15px] text-cream tabular-nums">{formatInr(payment.amount)}</span>
+							<span class="text-[15px] text-paper tabular-nums">{formatInr(payment.amount)}</span>
 							<span class="w-full text-[13px] text-stone-400 tabular-nums">
 								{shortDateTime(payment.createdAt)} · {payment.gateway}
 							</span>
@@ -211,7 +211,7 @@
 								<StatePill label={humanise(refund.state)} tone="outline" />
 								<span class="text-[15px] text-stone-300">{humanise(refund.reason)}</span>
 							</span>
-							<span class="text-[15px] text-cream tabular-nums">{formatInr(refund.amount)}</span>
+							<span class="text-[15px] text-paper tabular-nums">{formatInr(refund.amount)}</span>
 							<span class="w-full text-[13px] text-stone-400 tabular-nums">
 								{shortDateTime(refund.createdAt)}
 							</span>

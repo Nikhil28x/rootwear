@@ -204,3 +204,60 @@ export async function handleNotifyMe(
 
 	return { ok: true, intent: 'notify', target: variantId, status, email };
 }
+
+/** §10 India: ten digits starting 6-9. Same rule as the checkout address form. */
+const INDIAN_MOBILE = /^[6-9][0-9]{9}$/;
+
+/**
+ * A pre-order SIGNUP — name, email, phone, size.
+ *
+ * Deliberately NOT a §08 reservation: no money is taken, no piece number is
+ * allocated, nothing is held. It records that a named person wants a size when
+ * the drop opens. Validated against the catalogue like every other handler
+ * here — the drop is resolved by slug and the variant must belong to it, so a
+ * posted id cannot reach a piece from another drop (§04).
+ */
+export async function handlePreOrder(
+	event: Pick<RequestEvent, 'request' | 'locals'>,
+	defaultSource: ConsentSource
+): Promise<DemandActionResult> {
+	const data = await event.request.formData();
+	const dropSlug = String(data.get('dropSlug') ?? '');
+	const variantId = String(data.get('variantId') ?? '');
+	const name = String(data.get('name') ?? '').trim();
+	const email = normaliseEmail(String(data.get('email') ?? ''));
+	const phone = String(data.get('phone') ?? '').replace(/[\s-]/g, '');
+
+	const fail_ = (field: DemandField, message: string) => ({
+		...reject('preorder', dropSlug, field, message, email, variantId),
+		name,
+		phone
+	});
+
+	const drop = await drops.findBySlug(dropSlug);
+	const variant = drop && variantId ? findVariant(drop, variantId) : null;
+	if (!drop || !variant) return fail_('form', 'That piece no longer exists.');
+
+	if (!variantId) return fail_('size', 'Choose a size.');
+	if (name.length < 2) return fail_('name', 'Tell us who to put the piece aside for.');
+	if (name.length > 120) return fail_('name', 'That name is longer than we can store.');
+	if (!isValidEmail(email)) return fail_('email', 'Enter an email address we can reach you on.');
+	if (!INDIAN_MOBILE.test(phone)) {
+		return fail_('phone', 'Ten digits, starting 6, 7, 8 or 9. We ship within India only.');
+	}
+	if (data.get('consent') !== 'on') {
+		return fail_('consent', 'Tick the box so we can contact you about this drop.');
+	}
+
+	const status = await demand.preorderSignup({
+		dropId: drop.id,
+		variantId: variant.id,
+		name,
+		email,
+		phone,
+		consentSource: readSource(data.get('source'), defaultSource),
+		consentedAt: event.locals.now
+	});
+
+	return { ok: true, intent: 'preorder', target: dropSlug, status, email };
+}

@@ -51,7 +51,7 @@
 	<meta name="robots" content="noindex" />
 </svelte:head>
 
-<main class="relative isolate overflow-hidden bg-cream text-forest">
+<main class="relative isolate overflow-hidden bg-paper text-forest">
 	<div class="mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
 		<div class="max-w-[46rem]">
 			<Eyebrow tone="strong" class="text-forest/70">Order {data.order.orderNumber}</Eyebrow>

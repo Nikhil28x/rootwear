@@ -27,11 +27,11 @@
 			<p class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">{eyebrow}</p>
 		{/if}
 		{#if level === 1}
-			<h1 class="display text-[clamp(2.2rem,4.4vw,3.6rem)] leading-[0.9] tracking-[-0.045em] text-cream">
+			<h1 class="display text-[clamp(2.2rem,4.4vw,3.6rem)] leading-[0.9] tracking-[-0.045em] text-paper">
 				{title}
 			</h1>
 		{:else}
-			<h2 class="display text-[clamp(1.6rem,2.6vw,2.3rem)] leading-[0.95] tracking-[-0.035em] text-cream">
+			<h2 class="display text-[clamp(1.6rem,2.6vw,2.3rem)] leading-[0.95] tracking-[-0.035em] text-paper">
 				{title}
 			</h2>
 		{/if}

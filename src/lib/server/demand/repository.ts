@@ -7,7 +7,13 @@
  *
  * Under src/lib/server, so it can never be bundled into client code.
  */
-import type { DemandRow, DemandWriteStatus, DropRequestInput, NotifyRequestInput } from './types';
+import type {
+	DemandRow,
+	DemandWriteStatus,
+	DropRequestInput,
+	NotifyRequestInput,
+	PreOrderInput
+} from './types';
 
 export interface DemandRepository {
 	/**
@@ -21,6 +27,12 @@ export interface DemandRepository {
 	 * (variant, email).
 	 */
 	notifyMe(input: NotifyRequestInput): Promise<DemandWriteStatus>;
+
+	/**
+	 * A pre-order signup. Idempotent on (variant, email): a repeat submission
+	 * returns 'already' rather than inflating the count admin reads.
+	 */
+	preorderSignup(input: PreOrderInput): Promise<DemandWriteStatus>;
 
 	/**
 	 * Per-size demand for one drop. §07: these numbers are real and live.

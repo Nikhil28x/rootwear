@@ -16,7 +16,7 @@
 	/>
 </svelte:head>
 
-<main class="bg-cream text-forest">
+<main class="bg-paper text-forest">
 	<!-- ─────────────────────────────────────────────────────────── the opening -->
 	<section
 		data-header-theme="light"
@@ -95,7 +95,7 @@
 		class="relative isolate overflow-hidden bg-forest-black px-5 py-24 text-stone-300 sm:px-10 sm:py-32 lg:px-14"
 	>
 		<div
-			class="pointer-events-none absolute top-0 -left-[10%] aspect-square w-[60%] max-w-[680px] text-cream"
+			class="pointer-events-none absolute top-0 -left-[10%] aspect-square w-[60%] max-w-[680px] text-paper"
 			aria-hidden="true"
 		>
 			<HempMotif opacity={0.06} seed={7} />

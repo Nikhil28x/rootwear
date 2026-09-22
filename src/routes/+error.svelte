@@ -31,21 +31,21 @@
 	let tone = $derived(
 		light
 			? {
-					shell: 'bg-cream text-forest',
+					shell: 'bg-paper text-forest',
 					art: 'text-forest',
 					heading: 'text-forest',
 					body: 'text-forest/70',
 					micro: 'text-forest/70',
 					rule: 'border-forest/15',
 					field: 'border-forest/25 text-forest placeholder:text-forest/60 focus:border-forest',
-					button: 'border-forest text-forest hover:bg-forest hover:text-cream',
+					button: 'border-forest text-forest hover:bg-forest hover:text-paper',
 					link: 'text-forest/75 hover:text-forest',
 					anchor:
 						'text-forest underline decoration-gold decoration-1 underline-offset-[5px] hover:decoration-forest'
 				}
 			: {
 					shell: 'bg-forest-black text-stone-100',
-					art: 'text-cream',
+					art: 'text-paper',
 					heading: 'text-stone-100',
 					body: 'text-stone-400',
 					micro: 'text-stone-400',

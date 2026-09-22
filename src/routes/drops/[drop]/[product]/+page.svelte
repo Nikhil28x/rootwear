@@ -221,7 +221,7 @@
 
 	{#if notifyOffers.length > 0}
 		<section class="relative mt-28 border-t border-white/12 pt-12" aria-labelledby="notify-title">
-			<div class="pointer-events-none absolute inset-x-0 top-0 h-80 text-cream" aria-hidden="true">
+			<div class="pointer-events-none absolute inset-x-0 top-0 h-80 text-paper" aria-hidden="true">
 				<HempMotif opacity={0.04} seed={5} />
 			</div>
 

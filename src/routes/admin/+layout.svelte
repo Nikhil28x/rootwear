@@ -31,7 +31,7 @@
 				<aside class="admin-sidebar lg:w-56 lg:shrink-0">
 					<div class="flex flex-col gap-8 lg:sticky lg:top-24">
 						<div class="flex flex-col gap-2 border-b border-white/10 pb-6">
-							<p class="wordmark text-[15px] tracking-[0.22em] text-cream uppercase font-medium">Rootwear</p>
+							<p class="wordmark text-[15px] tracking-[0.22em] text-paper uppercase font-medium">Rootwear</p>
 							<p class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">Operations</p>
 						</div>
 
@@ -45,7 +45,7 @@
 											class="flex flex-col gap-1 border-l-2 py-3 pl-4 transition-colors {isCurrent(
 												item.href
 											)
-												? 'border-l-cream text-cream'
+												? 'border-l-cream text-paper'
 												: 'border-l-white/10 text-stone-400 hover:border-l-gold hover:text-stone-100'}"
 										>
 											<span class="text-[12px] tracking-[0.2em] uppercase font-medium">{item.label}</span>

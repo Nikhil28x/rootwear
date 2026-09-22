@@ -24,7 +24,7 @@
 	<link rel="canonical" href="https://rootwear.in/policies/{data.policy.slug}" />
 </svelte:head>
 
-<main class="relative isolate overflow-hidden bg-cream text-forest">
+<main class="relative isolate overflow-hidden bg-paper text-forest">
 	<!-- Background field. Decorative, aria-hidden inside each component. -->
 	<div class="pointer-events-none absolute inset-0 -z-10 select-none" aria-hidden="true">
 		<div class="absolute -top-24 -right-28 h-[34rem] w-[34rem] text-forest">

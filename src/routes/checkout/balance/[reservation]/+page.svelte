@@ -44,7 +44,7 @@
 	<meta name="referrer" content="no-referrer" />
 </svelte:head>
 
-<main class="relative isolate overflow-hidden bg-cream text-forest">
+<main class="relative isolate overflow-hidden bg-paper text-forest">
 	<div class="pointer-events-none absolute inset-0 -z-10 select-none" aria-hidden="true">
 		<div class="absolute -bottom-28 -left-32 hidden h-[26rem] w-[46rem] text-forest sm:block">
 			<RootSystem opacity={0.06} depth={6} />

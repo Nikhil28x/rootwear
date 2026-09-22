@@ -42,7 +42,7 @@
 	/**
 	 * Scroll-aware theming.
 	 *
-	 * `surface` is only the DEFAULT. A page that alternates cream and
+	 * `surface` is only the DEFAULT. A page that alternates white and
 	 * forest-black sections would otherwise pin one ink and go invisible over
 	 * half its own content. Any section may declare data-header-theme.
 	 */

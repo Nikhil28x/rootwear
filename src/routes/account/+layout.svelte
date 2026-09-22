@@ -18,7 +18,7 @@
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 </script>
 
-<main class="relative isolate min-h-svh overflow-hidden bg-cream text-forest">
+<main class="relative isolate min-h-svh overflow-hidden bg-paper text-forest">
 	<div
 		class="pointer-events-none absolute inset-0 -z-10 text-forest select-none"
 		aria-hidden="true"

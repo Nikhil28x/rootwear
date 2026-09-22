@@ -187,7 +187,7 @@
 						<!-- The hero had no way out of it but the nav. -->
 						<div class="mt-9 flex flex-wrap items-center gap-4">
 							<a
-								class="inline-flex border border-cream bg-cream px-7 py-4 text-[11px] font-medium tracking-[0.2em] text-forest uppercase transition hover:bg-white"
+								class="inline-flex border border-paper bg-paper px-7 py-4 text-[11px] font-medium tracking-[0.2em] text-forest uppercase transition hover:bg-white"
 								href="/drops/01-pineapple-haze">Shop Drop 01</a
 							>
 							<a
@@ -209,7 +209,7 @@
 	<section
 		id="about"
 		data-header-theme="light"
-		class="relative bg-cream px-5 py-24 text-forest sm:px-10 sm:py-36 lg:px-14"
+		class="relative bg-paper px-5 py-24 text-forest sm:px-10 sm:py-36 lg:px-14"
 	>
 		<div class="grain absolute inset-0 opacity-30" aria-hidden="true"></div>
 		<div class="relative mx-auto max-w-[1600px]">
@@ -359,7 +359,7 @@
 	<section
 		id="impact"
 		data-header-theme="light"
-		class="impact-section relative bg-cream px-5 pt-20 pb-16 text-forest sm:px-10 sm:pt-24 sm:pb-20 lg:px-14"
+		class="impact-section relative bg-paper px-5 pt-20 pb-16 text-forest sm:px-10 sm:pt-24 sm:pb-20 lg:px-14"
 	>
 		<div class="impact-rings absolute inset-0 overflow-hidden" aria-hidden="true">
 			<span></span><span></span><span></span>
@@ -379,7 +379,7 @@
 						verify about the cloth, and nothing we cannot.
 					</p>
 					<a
-						class="mt-8 inline-flex border border-forest px-7 py-4 text-[11px] font-medium tracking-[0.2em] uppercase transition hover:bg-forest hover:text-cream"
+						class="mt-8 inline-flex border border-forest px-7 py-4 text-[11px] font-medium tracking-[0.2em] uppercase transition hover:bg-forest hover:text-paper"
 						href="/impact">Read the material record</a
 					>
 				</div>
@@ -413,7 +413,7 @@
 
 	<section
 		data-header-theme="light"
-		class="relative grid min-h-[52svh] place-items-center overflow-hidden bg-cream px-5 pt-16 pb-24 text-forest"
+		class="relative grid min-h-[52svh] place-items-center overflow-hidden bg-paper px-5 pt-16 pb-24 text-forest"
 	>
 		<div class="grain absolute inset-0 opacity-30" aria-hidden="true"></div>
 		<div use:reveal class="reveal-grid relative max-w-5xl text-center">
@@ -429,11 +429,11 @@
 			     path, which only survives as a redirect. -->
 			<div class="mt-10 flex flex-wrap items-center justify-center gap-4">
 				<a
-					class="inline-flex border border-forest bg-forest px-8 py-4 text-[11px] font-medium tracking-[0.2em] text-cream uppercase transition hover:bg-forest-black"
+					class="inline-flex border border-forest bg-forest px-8 py-4 text-[11px] font-medium tracking-[0.2em] text-paper uppercase transition hover:bg-forest-black"
 					href="/drops/01-pineapple-haze">Shop Drop 01</a
 				>
 				<a
-					class="inline-flex border border-forest px-8 py-4 text-[11px] font-medium tracking-[0.2em] uppercase transition hover:bg-forest hover:text-cream"
+					class="inline-flex border border-forest px-8 py-4 text-[11px] font-medium tracking-[0.2em] uppercase transition hover:bg-forest hover:text-paper"
 					href="/impact">Read the material record</a
 				>
 			</div>

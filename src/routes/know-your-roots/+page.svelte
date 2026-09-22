@@ -27,7 +27,7 @@
 	let making = $derived(content.movements[2]);
 
 	/**
-	 * This page alternates cream and forest-black movements, so the header ink
+	 * This page alternates white and forest-black movements, so the header ink
 	 * has to change with them. Each section declares `data-header-theme` and the
 	 * shared SiteHeader probes what sits behind it — the same convention the
 	 * homepage hero uses. No page-local override, no :global rule.
@@ -39,9 +39,9 @@
 	<meta name="description" content={content.seo.description} />
 </svelte:head>
 
-<main class="roots-page bg-cream">
+<main class="roots-page bg-paper">
 	<!-- ───────────────────────────────────────────────────────── the opening -->
-	<section data-header-theme="light" class="relative isolate overflow-hidden bg-cream text-forest">
+	<section data-header-theme="light" class="relative isolate overflow-hidden bg-paper text-forest">
 		<div
 			class="pointer-events-none absolute -top-[16%] -right-[22%] aspect-square w-[92%] max-w-[1000px] text-forest sm:-right-[10%] sm:w-[70%]"
 		>
@@ -88,7 +88,7 @@
 		<!-- Aspect-locked to the motif's own viewBox so `slice` never has to crop
 		     hard and magnify two stalks into wallpaper on a narrow screen. -->
 		<div
-			class="pointer-events-none absolute inset-x-0 bottom-0 aspect-[8/5] max-h-[72%] text-cream"
+			class="pointer-events-none absolute inset-x-0 bottom-0 aspect-[8/5] max-h-[72%] text-paper"
 		>
 			<HempField opacity={0.055} density={11} seed={5} />
 		</div>
@@ -188,7 +188,7 @@
 		id={label.id}
 		aria-labelledby="movement-{label.id}"
 		data-header-theme="light"
-		class="relative isolate scroll-mt-28 overflow-hidden bg-cream text-forest"
+		class="relative isolate scroll-mt-28 overflow-hidden bg-paper text-forest"
 	>
 		<div class="pointer-events-none absolute inset-x-0 top-0 aspect-[4/3] max-h-[78%] text-forest">
 			<RootSystem opacity={0.08} depth={8} />
@@ -241,7 +241,7 @@
 		class="relative isolate scroll-mt-28 overflow-hidden bg-forest-black text-stone-300"
 	>
 		<div
-			class="pointer-events-none absolute -top-[8%] -right-[18%] aspect-square w-[86%] max-w-[820px] text-cream sm:-right-[4%] sm:w-[52%]"
+			class="pointer-events-none absolute -top-[8%] -right-[18%] aspect-square w-[86%] max-w-[820px] text-paper sm:-right-[4%] sm:w-[52%]"
 		>
 			<HempMotif opacity={0.055} seed={9} />
 		</div>
@@ -273,9 +273,9 @@
 	</section>
 
 	<!-- ─────────────────────────────────────────────────────────── the close -->
-	<section data-header-theme="dark" class="relative isolate overflow-hidden bg-forest text-cream">
+	<section data-header-theme="dark" class="relative isolate overflow-hidden bg-forest text-paper">
 		<div
-			class="pointer-events-none absolute inset-x-0 bottom-0 aspect-[8/5] max-h-[85%] text-cream"
+			class="pointer-events-none absolute inset-x-0 bottom-0 aspect-[8/5] max-h-[85%] text-paper"
 		>
 			<HempField opacity={0.07} density={7} seed={17} />
 		</div>
@@ -289,7 +289,7 @@
 				{#each close.line as line, i (i)}<span class="block">{line}</span>{/each}
 			</p>
 
-			<p class="mt-9 max-w-xl text-[15px] leading-[1.95] text-cream/75">{close.body}</p>
+			<p class="mt-9 max-w-xl text-[15px] leading-[1.95] text-paper/75">{close.body}</p>
 
 			<div class="mt-12 flex flex-wrap items-center gap-5">
 				{#each close.actions as action (action.href)}

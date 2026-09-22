@@ -12,7 +12,9 @@
  * so "submitting twice is idempotent" behaves identically in both sources.
  */
 import type { DemandRepository } from './repository';
-import type { DemandRow, DemandWriteStatus, DropRequestInput, NotifyRequestInput } from './types';
+import type { DemandRow, DemandWriteStatus, DropRequestInput, NotifyRequestInput,
+	PreOrderInput
+} from './types';
 import type { Size } from '$lib/drop/sizes';
 import { drops } from '$lib/server/drops';
 
@@ -20,6 +22,7 @@ type StoredRequest = DropRequestInput & { readonly id: string };
 type StoredNotify = NotifyRequestInput & { readonly id: string };
 
 const requests = new Map<string, StoredRequest>();
+const preorders = new Map<string, PreOrderInput & { id: string }>();
 const notifies = new Map<string, StoredNotify>();
 
 const requestKey = (i: DropRequestInput) => `${i.dropId}|${i.variantId}|${i.email}`;
@@ -50,6 +53,15 @@ export const mockDemandRepository: DemandRepository = {
 		const key = notifyKey(input);
 		if (notifies.has(key)) return 'already';
 		notifies.set(key, { ...input, id: `ntf-${notifies.size + 1}` });
+		return 'recorded';
+	},
+
+	async preorderSignup(input: PreOrderInput): Promise<DemandWriteStatus> {
+		// Idempotent on (variant, email), matching the unique constraint in
+		// 0017 — a repeat submission must not inflate what admin reads.
+		const key = `${input.variantId}|${input.email.toLowerCase()}`;
+		if (preorders.has(key)) return 'already';
+		preorders.set(key, { ...input, id: `pre-${preorders.size + 1}` });
 		return 'recorded';
 	},
 

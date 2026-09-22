@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { drops } from '$lib/server/drops';
 import { demand } from '$lib/server/demand';
-import { handleNotifyMe, handleRequestDrop } from '$lib/server/demand/actions';
+import { handleNotifyMe, handlePreOrder, handleRequestDrop } from '$lib/server/demand/actions';
 import { resolveStage } from '$lib/drop/stage-resolver';
 import { DROP_01_SCHEDULE } from '$lib/drop/schedule';
 import { acceptsDeposits, acceptsNotifyMe, isOnSale } from '$lib/domain/drop-state';
@@ -127,5 +127,10 @@ export const actions: Actions = {
 	/** §06 — notify-me sits on every sold-out piece and size. */
 	notify: (event) => handleNotifyMe(event, 'drop_page'),
 	/** §12 — a finished drop can be asked for again, by size. */
-	requestDrop: (event) => handleRequestDrop(event, 'drop_page')
+	requestDrop: (event) => handleRequestDrop(event, 'drop_page'),
+	/**
+	 * A pre-order signup — name, email, phone, size. No money, nothing held;
+	 * §08's deposit reservation is a different record entirely.
+	 */
+	preorder: (event) => handlePreOrder(event, 'drop_page')
 };

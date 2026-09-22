@@ -56,7 +56,7 @@
 			{#each data.rows as row (row.id)}
 				<tr class="text-stone-200">
 					<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal">
-						<span class="block text-cream">
+						<span class="block text-paper">
 							Drop {String(row.number).padStart(2, '0')} — {row.name}
 						</span>
 						<span class="block text-[13px] text-stone-400">/drops/{row.slug}</span>
@@ -82,7 +82,7 @@
 					</td>
 					<td class="border-b border-white/5 px-4 py-3 text-right">
 						<a
-							class="text-[13px] tracking-[0.16em] text-stone-300 uppercase underline underline-offset-4 hover:text-cream font-medium"
+							class="text-[13px] tracking-[0.16em] text-stone-300 uppercase underline underline-offset-4 hover:text-paper font-medium"
 							href="/admin/drops/{row.slug}">Open</a
 						>
 					</td>

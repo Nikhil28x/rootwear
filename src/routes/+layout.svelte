@@ -47,10 +47,10 @@
 		The shell is translucent by design, so it shows whatever is behind it —
 		and behind a sticky header is this wrapper, not the page content below
 		it. Without an explicit background here it showed `body`, which is
-		forest-black, and a cream route's header came out muddy olive. Painting
+		forest-black, and a light route's header came out muddy olive. Painting
 		the wrapper to match the route keeps the glass reading as glass.
 	-->
-	<div class="min-h-svh {surface === 'light' ? 'bg-cream' : 'bg-forest-black'}">
+	<div class="min-h-svh {surface === 'light' ? 'bg-paper' : 'bg-forest-black'}">
 		<SiteHeader {surface} />
 		{@render children()}
 	</div>

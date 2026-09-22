@@ -67,7 +67,7 @@
 		<article class="packing-card grid gap-8 border border-white/15 p-6 sm:grid-cols-[minmax(0,1fr)_minmax(0,18rem)]">
 			<div class="flex flex-col gap-5">
 				<div class="flex flex-wrap items-baseline justify-between gap-3">
-					<p class="text-[15px] tracking-[0.2em] text-cream uppercase tabular-nums font-medium">
+					<p class="text-[15px] tracking-[0.2em] text-paper uppercase tabular-nums font-medium">
 						{String(index + 1).padStart(2, '0')} · {entry.orderNumber}
 					</p>
 					{#if entry.isPreOrder}
@@ -86,7 +86,7 @@
 									{line.sku}
 								</span>
 							</span>
-							<span class="text-[15px] text-cream tabular-nums">
+							<span class="text-[15px] text-paper tabular-nums">
 								Size {line.size ?? '—'} · ×{line.quantity}
 								{#if line.pieceNumber !== null}
 									· piece {line.pieceNumber}

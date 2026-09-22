@@ -31,7 +31,7 @@
 
 <div class="flex flex-col gap-3 bg-forest/40 {stripe} px-5 py-6">
 	<p class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">{label}</p>
-	<p class="display text-[clamp(1.9rem,3.2vw,2.9rem)] leading-[0.9] tracking-[-0.03em] text-cream tabular-nums">
+	<p class="display text-[clamp(1.9rem,3.2vw,2.9rem)] leading-[0.9] tracking-[-0.03em] text-paper tabular-nums">
 		{value}
 	</p>
 	{#if note}

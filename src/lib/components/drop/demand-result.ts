@@ -11,8 +11,8 @@
  * form compares `target` against its own id and ignores everyone else's result.
  */
 
-export type DemandIntent = 'request' | 'notify';
-export type DemandField = 'email' | 'size' | 'consent' | 'form';
+export type DemandIntent = 'request' | 'notify' | 'preorder';
+export type DemandField = 'email' | 'size' | 'consent' | 'form' | 'name' | 'phone';
 
 export type DemandSuccess = {
 	readonly ok: true;
@@ -36,6 +36,9 @@ export type DemandProblem = {
 	/** Echoed back so a no-JS visitor does not retype a valid address. */
 	readonly email: string;
 	readonly variantId: string;
+	/** Pre-order only: echoed for the same reason as the address. */
+	readonly name?: string;
+	readonly phone?: string;
 };
 
 export type DemandFormResult = DemandSuccess | DemandProblem;
@@ -46,7 +49,9 @@ export function isDemandResult(value: unknown): value is DemandFormResult {
 	const candidate = value as Record<string, unknown>;
 	return (
 		typeof candidate.ok === 'boolean' &&
-		(candidate.intent === 'request' || candidate.intent === 'notify') &&
+		(candidate.intent === 'request' ||
+			candidate.intent === 'notify' ||
+			candidate.intent === 'preorder') &&
 		typeof candidate.target === 'string'
 	);
 }

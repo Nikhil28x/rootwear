@@ -97,7 +97,7 @@
 			{#each data.orders as order (order.id)}
 				<tr class="text-stone-200">
 					<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal">
-						<a class="text-cream underline decoration-white/25 underline-offset-4 hover:decoration-cream" href="/admin/orders/{order.id}">
+						<a class="text-paper underline decoration-white/25 underline-offset-4 hover:decoration-paper" href="/admin/orders/{order.id}">
 							{order.orderNumber}
 						</a>
 						{#if order.isPreOrder}

@@ -69,3 +69,19 @@ export type DemandRow = {
 	readonly notifyMe: number;
 	readonly waitlist: number;
 };
+
+/**
+ * A pre-order SIGNUP — name, email, phone and size. No money, no piece number,
+ * nothing held: that is §08's reservation, which is a different record with a
+ * locked price and a cancellation rule attached. This is a lead.
+ */
+export type PreOrderInput = {
+	readonly dropId: string;
+	readonly variantId: string;
+	readonly name: string;
+	readonly email: string;
+	readonly phone: string;
+	readonly consentedAt: number;
+	readonly consentSource: ConsentSource;
+	readonly customerId?: string | null;
+};

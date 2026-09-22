@@ -18,7 +18,7 @@
 	const styles = {
 		info: 'border-white/15 text-stone-300',
 		warning: 'border-gold text-gold',
-		error: 'border-cream bg-cream/10 text-cream',
+		error: 'border-paper bg-paper/10 text-paper',
 		success: 'border-stone-400 text-stone-200'
 	} as const;
 

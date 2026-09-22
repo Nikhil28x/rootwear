@@ -25,7 +25,7 @@
 	role="img"
 	aria-label={label || `${sold} sold, ${reserved} reserved, ${remaining} remaining`}
 >
-	<span class="block h-full bg-cream" style="width: {pctSold}%"></span>
+	<span class="block h-full bg-paper" style="width: {pctSold}%"></span>
 	<span class="block h-full bg-gold" style="width: {pctReserved}%"></span>
 	<span class="block h-full bg-white/15" style="width: {pctRemaining}%"></span>
 </span>

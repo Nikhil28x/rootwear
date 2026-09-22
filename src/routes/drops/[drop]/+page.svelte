@@ -15,6 +15,7 @@
 	 * is exactly what stops one template serving a second drop.
 	 */
 	import DropCountdown from '$lib/DropCountdown.svelte';
+	import PreOrderForm from '$lib/components/drop/PreOrderForm.svelte';
 	import DropStateMark from '$lib/components/drop/DropStateMark.svelte';
 	import SizeSelector from '$lib/components/drop/SizeSelector.svelte';
 	import SizeChart from '$lib/components/drop/SizeChart.svelte';
@@ -36,6 +37,21 @@
 	/** RW-032 — every price is read from the record and formatted at the render
 	    edge. No page holds its own price string. */
 	let price = $derived(formatInr(data.displayPrice));
+
+	/**
+	 * A PREVIEW toggle, not a customer setting.
+	 *
+	 * The drop can be presented two ways — priced, with the normal cart and
+	 * checkout behind it, or open for pre-order, where nothing is charged and
+	 * we take a name, email, phone and size instead. Both are real behaviours;
+	 * this switches which one the page is showing so the difference can be
+	 * seen side by side rather than described.
+	 *
+	 * Client-side only: it changes nothing on the server, and the pre-order
+	 * form posts to a real action either way.
+	 */
+	type DropView = 'price' | 'preorder';
+	let view = $state<DropView>('price');
 
 	let dropNumber = $derived(String(data.drop.number).padStart(2, '0'));
 
@@ -110,7 +126,7 @@
 	<div class="mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
 		<header class="relative mb-20 overflow-hidden">
 			<div
-				class="pointer-events-none absolute inset-x-0 -top-10 h-56 text-cream"
+				class="pointer-events-none absolute inset-x-0 -top-10 h-56 text-paper"
 				aria-hidden="true"
 			>
 				<RootSystem opacity={0.09} depth={6} />
@@ -147,20 +163,47 @@
 						{DROP_STATE_DESCRIPTION[data.drop.state]}
 					</p>
 
-					<div
-						class="flex items-baseline justify-between gap-4 border-t border-white/15 pt-4 text-[11px] tracking-[0.2em] uppercase font-medium"
-					>
-						<span class="text-stone-400">{data.product.name}</span>
-						<strong class="font-normal text-stone-100">{price}</strong>
+					<!-- Preview toggle: priced, or open for pre-order. -->
+					<div class="flex flex-col gap-3 border-t border-white/15 pt-4">
+						<div
+							class="flex items-center gap-2 text-[11px] font-medium tracking-[0.2em] uppercase"
+							role="group"
+							aria-label="Preview this drop as"
+						>
+							<span class="mr-1 text-stone-500">Preview</span>
+							{#each [{ id: 'price', label: 'Price' }, { id: 'preorder', label: 'Pre-order' }] as option (option.id)}
+								<button
+									type="button"
+									class="border px-3 py-2 transition {view === option.id
+										? 'border-stone-100 bg-stone-100 text-forest'
+										: 'border-white/25 text-stone-400 hover:border-white/60 hover:text-stone-100'}"
+									aria-pressed={view === option.id}
+									onclick={() => (view = option.id as DropView)}
+								>
+									{option.label}
+								</button>
+							{/each}
+						</div>
+
+						<div
+							class="flex items-baseline justify-between gap-4 pt-1 text-[11px] font-medium tracking-[0.2em] uppercase"
+						>
+							<span class="text-stone-400">{data.product.name}</span>
+							{#if view === 'price'}
+								<strong class="font-normal text-stone-100">{price}</strong>
+							{:else}
+								<strong class="font-normal text-strain">Open for pre-order</strong>
+							{/if}
+						</div>
 					</div>
 
-					{#if data.showPrelaunchPrice}
+					{#if view === 'price' && data.showPrelaunchPrice}
 						<p class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
 							Pre-launch price, locked for anyone who reserves now.
 						</p>
 					{/if}
 
-					{#if data.acceptsDeposits}
+					{#if view === 'price' && data.acceptsDeposits}
 						<!-- §08: a deposit. The percentage is an unanswered open item and
 						     is deliberately not printed here. -->
 						<p class="border-l-2 border-strain pl-4 text-[13px] leading-relaxed text-stone-400">
@@ -171,6 +214,14 @@
 							<span class="text-strain tabular-nums">{data.claimed}</span>
 							of {data.editionSize} claimed
 						</p>
+					{/if}
+					{#if view === 'preorder'}
+						<PreOrderForm
+							dropSlug={data.drop.slug}
+							sizeOptions={data.sizeOptions}
+							surface="dark"
+							{form}
+						/>
 					{/if}
 				</div>
 			</div>
@@ -229,8 +280,14 @@
 						<div class="flex flex-col gap-6">
 							<div class="flex flex-wrap items-baseline justify-between gap-4">
 								<h3 class="display text-3xl leading-none tracking-[-0.03em]">{piece.name}</h3>
-								<strong class="text-[11px] font-normal tracking-[0.2em] text-stone-100 uppercase">
-									{formatInr(piece.price)}
+								<!-- Follows the preview toggle, or the page would offer a piece
+								     for pre-order and quote its price in the same breath. -->
+								<strong
+									class="text-[11px] font-normal tracking-[0.2em] uppercase {view === 'price'
+										? 'text-stone-100'
+										: 'text-strain'}"
+								>
+									{view === 'price' ? formatInr(piece.price) : 'Open for pre-order'}
 								</strong>
 							</div>
 
@@ -267,7 +324,7 @@
 		{#if notifyOffers.length > 0}
 			<section class="relative mb-24 border-t border-white/12 pt-12" aria-labelledby="notify-title">
 				<div
-					class="pointer-events-none absolute inset-x-0 top-0 h-80 text-cream"
+					class="pointer-events-none absolute inset-x-0 top-0 h-80 text-paper"
 					aria-hidden="true"
 				>
 					<HempMotif opacity={0.04} seed={7} />

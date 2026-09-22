@@ -12,7 +12,7 @@
 	 * heading block below is an <h2>, so the outline stays legal whatever the
 	 * content does.
 	 *
-	 * `surface` says what the body sits ON — cream for the policy pages,
+	 * `surface` says what the body sits ON — white for the policy pages,
 	 * forest-black for search and the error page. One renderer, both grounds.
 	 */
 	let {

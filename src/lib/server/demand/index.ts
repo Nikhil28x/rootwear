@@ -28,6 +28,7 @@ function selectRepository(): DemandRepository {
 export const demand: DemandRepository = {
 	requestDrop: (input) => selectRepository().requestDrop(input),
 	notifyMe: (input) => selectRepository().notifyMe(input),
+	preorderSignup: (input) => selectRepository().preorderSignup(input),
 	demandForDrop: (dropId) => selectRepository().demandForDrop(dropId)
 };
 

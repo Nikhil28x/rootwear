@@ -20,7 +20,7 @@
 
 <main class="relative isolate overflow-hidden">
 	<div class="pointer-events-none absolute inset-0 -z-10 select-none" aria-hidden="true">
-		<div class="absolute -top-40 -right-32 h-[40rem] w-[40rem] text-cream">
+		<div class="absolute -top-40 -right-32 h-[40rem] w-[40rem] text-paper">
 			<HempMotif opacity={0.045} seed={8} />
 		</div>
 	</div>

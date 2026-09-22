@@ -13,7 +13,7 @@
 	}: { label: string; tone?: Tone; title?: string } = $props();
 
 	const styles: Record<Tone, string> = {
-		solid: 'bg-cream text-forest-black border-cream',
+		solid: 'bg-paper text-forest-black border-paper',
 		attention: 'border-gold text-gold',
 		outline: 'border-stone-500 text-stone-200',
 		quiet: 'border-stone-700 text-stone-400'

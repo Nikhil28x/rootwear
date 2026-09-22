@@ -38,8 +38,8 @@
 
 	let open = $derived(
 		surface === 'light'
-			? 'border-forest/60 text-forest peer-checked:bg-forest peer-checked:text-cream peer-hover:border-forest'
-			: 'border-white/30 text-stone-100 peer-checked:bg-cream peer-checked:text-forest peer-hover:border-white'
+			? 'border-forest/60 text-forest peer-checked:bg-forest peer-checked:text-paper peer-hover:border-forest'
+			: 'border-white/30 text-stone-100 peer-checked:bg-paper peer-checked:text-forest peer-hover:border-white'
 	);
 	let gone = $derived(
 		surface === 'light' ? 'border-forest/10 text-forest/60' : 'border-white/10 text-stone-400'

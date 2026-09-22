@@ -5,7 +5,7 @@
 	 * The one button. Collapses the three near-identical inline treatments that
 	 * were scattered across the homepage and drop page.
 	 *
-	 * `surface` says what it sits ON, not what colour it is — a button on cream
+	 * `surface` says what it sits ON, not what colour it is — a button on white
 	 * and a button on forest-black need inverted treatments to read the same.
 	 */
 	let {
@@ -37,9 +37,9 @@
 
 	const styles = {
 		'outline-dark': 'border border-white/35 text-stone-100 hover:bg-white hover:text-black',
-		'outline-light': 'border border-forest text-forest hover:bg-forest hover:text-cream',
-		'solid-dark': 'bg-cream text-forest hover:bg-white',
-		'solid-light': 'bg-forest text-cream hover:bg-forest-black',
+		'outline-light': 'border border-forest text-forest hover:bg-forest hover:text-paper',
+		'solid-dark': 'bg-paper text-forest hover:bg-white',
+		'solid-light': 'bg-forest text-paper hover:bg-forest-black',
 		'quiet-dark': 'text-stone-300 underline-offset-4 hover:text-white hover:underline',
 		'quiet-light': 'text-forest/70 underline-offset-4 hover:text-forest hover:underline'
 	} as const;

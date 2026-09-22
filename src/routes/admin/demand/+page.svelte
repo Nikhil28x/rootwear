@@ -167,7 +167,7 @@
 	{#each boards as board (board.dropId)}
 		<div class="flex flex-col gap-4">
 			<div class="flex flex-wrap items-center gap-4">
-				<h3 class="display text-xl leading-none tracking-[-0.03em] text-cream">{board.dropName}</h3>
+				<h3 class="display text-xl leading-none tracking-[-0.03em] text-paper">{board.dropName}</h3>
 				<StatePill label={humanise(board.dropState)} tone={dropTone(board.dropState)} />
 			</div>
 
@@ -187,7 +187,7 @@
 						<tr class="text-stone-200">
 							<th
 								scope="row"
-								class="border-b border-white/5 px-4 py-3 text-left font-normal text-cream"
+								class="border-b border-white/5 px-4 py-3 text-left font-normal text-paper"
 							>
 								{row.size}
 							</th>
@@ -196,7 +196,7 @@
 							<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">{row.waitlist}</td>
 							<td
 								class="border-b border-white/5 px-4 py-3 text-right tabular-nums {total > 0
-									? 'text-cream'
+									? 'text-paper'
 									: 'text-stone-400'}"
 							>
 								{total}
@@ -244,7 +244,7 @@
 						/>
 					</td>
 					<td class="border-b border-white/5 px-4 py-3 text-[15px]">{entry.dropName}</td>
-					<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal text-cream">
+					<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal text-paper">
 						{entry.size ?? '—'}
 					</th>
 					<td class="border-b border-white/5 px-4 py-3 text-[15px]">

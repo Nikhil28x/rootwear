@@ -38,14 +38,14 @@ export type RootsLineage = {
 	readonly source: { readonly label: string; readonly href: string };
 };
 
-/** One of the three movements. `surface` drives the cream/dark alternation. */
+/** One of the three movements. `surface` drives the light/dark alternation. */
 export type RootsMovement = {
 	readonly id: string;
 	readonly index: string;
 	readonly eyebrow: string;
 	readonly title: readonly string[];
 	readonly lede: string;
-	readonly surface: 'cream' | 'dark';
+	readonly surface: 'light' | 'dark';
 };
 
 export const KNOW_YOUR_ROOTS_SEO = {
@@ -86,7 +86,7 @@ export const ROOTS_MOVEMENTS: readonly RootsMovement[] = [
 		lede:
 			'Rootwear is not a catalogue. It is a sequence of drops, one at a time, each one ' +
 			'finished before the next begins. The drop is the object.',
-		surface: 'cream'
+		surface: 'light'
 	},
 	{
 		id: 'the-making',

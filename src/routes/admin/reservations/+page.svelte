@@ -103,7 +103,7 @@
 				<tr class="text-stone-200">
 					<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal">
 						<a
-							class="text-cream underline decoration-white/25 underline-offset-4 hover:decoration-cream tabular-nums"
+							class="text-paper underline decoration-white/25 underline-offset-4 hover:decoration-paper tabular-nums"
 							href="/admin/reservations/{row.id}"
 						>
 							{row.pieceNumber === null ? 'No piece' : `Piece ${row.pieceNumber}`}
@@ -133,7 +133,7 @@
 						{#if row.balanceDueBy === null}
 							<span class="text-stone-400">—</span>
 						{:else if overdue(row.balanceDueBy, row.state)}
-							<span class="text-cream">
+							<span class="text-paper">
 								{relativeDays(row.balanceDueBy, data.now)} · overdue
 							</span>
 						{:else}

@@ -16,7 +16,7 @@
 	/>
 </svelte:head>
 
-<main class="relative isolate overflow-hidden bg-cream text-forest">
+<main class="relative isolate overflow-hidden bg-paper text-forest">
 	<div class="pointer-events-none absolute inset-0 -z-10 select-none" aria-hidden="true">
 		<div class="absolute -top-32 -right-24 h-[38rem] w-[38rem] text-forest">
 			<HempMotif opacity={0.05} seed={4} />
@@ -94,7 +94,7 @@
 					class="w-full border-b border-forest/25 bg-transparent px-0 py-3 text-[15px] text-forest transition-colors outline-none placeholder:text-forest/60 focus:border-forest"
 				/>
 				<button
-					class="self-start border border-forest px-7 py-4 text-[11px] tracking-[0.2em] text-forest uppercase transition duration-300 hover:bg-forest hover:text-cream font-medium"
+					class="self-start border border-forest px-7 py-4 text-[11px] tracking-[0.2em] text-forest uppercase transition duration-300 hover:bg-forest hover:text-paper font-medium"
 					type="submit">Search</button
 				>
 			</form>

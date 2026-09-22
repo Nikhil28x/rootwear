@@ -81,7 +81,7 @@
 		<article class="flex flex-col gap-5 border border-white/10 p-6">
 			<div class="flex flex-wrap items-start justify-between gap-4">
 				<div class="flex flex-col gap-2">
-					<h2 class="text-base text-cream">{row.subject || 'No subject'}</h2>
+					<h2 class="text-base text-paper">{row.subject || 'No subject'}</h2>
 					<p class="text-[13px] text-stone-400">
 						{row.name} ·
 						<a class="underline underline-offset-4 hover:text-stone-300" href="mailto:{row.email}">
@@ -111,7 +111,7 @@
 					{/if}
 				{/each}
 				<a
-					class="ml-auto text-[11px] tracking-[0.18em] text-stone-400 uppercase underline underline-offset-4 hover:text-cream font-medium"
+					class="ml-auto text-[11px] tracking-[0.18em] text-stone-400 uppercase underline underline-offset-4 hover:text-paper font-medium"
 					href="mailto:{row.email}?subject={encodeURIComponent(`Re: ${row.subject || 'your message'}`)}"
 				>
 					Reply by email →

@@ -76,7 +76,7 @@
 				<tbody>
 					{#each order.lines as line (line.id)}
 						<tr class="text-stone-200">
-							<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal text-cream">
+							<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal text-paper">
 								{line.name}
 								{#if line.pieceNumber !== null}
 									<span class="mt-1 block text-[13px] text-gold tabular-nums">
@@ -94,7 +94,7 @@
 								{line.priceSource === 'prelaunch_locked' ? 'Locked pre-launch' : 'Launch'}
 								{#if line.reservationId}
 									<a
-										class="mt-1 block text-stone-300 underline underline-offset-4 hover:text-cream"
+										class="mt-1 block text-stone-300 underline underline-offset-4 hover:text-paper"
 										href="/admin/reservations/{line.reservationId}"
 									>
 										Reservation →
@@ -128,7 +128,7 @@
 							<td></td>
 						</tr>
 					{/if}
-					<tr class="text-cream">
+					<tr class="text-paper">
 						<th scope="row" colspan="4" class="px-4 py-3 text-right text-[11px] tracking-[0.2em] uppercase font-medium">
 							Total
 						</th>
@@ -247,7 +247,7 @@
 					record. Open
 					{#if preOrderReservationId}
 						<a
-							class="text-stone-300 underline underline-offset-4 hover:text-cream"
+							class="text-stone-300 underline underline-offset-4 hover:text-paper"
 							href="/admin/reservations/{preOrderReservationId}">the reservation</a
 						>
 					{:else}
@@ -268,7 +268,7 @@
 								<StatePill label={humanise(payment.state)} tone={paymentTone(payment.state)} />
 								<span class="text-[15px] text-stone-300">{humanise(payment.kind)}</span>
 							</span>
-							<span class="text-[15px] text-cream tabular-nums">{formatInr(payment.amount)}</span>
+							<span class="text-[15px] text-paper tabular-nums">{formatInr(payment.amount)}</span>
 							<span class="w-full text-[13px] text-stone-400 tabular-nums">
 								{shortDateTime(payment.createdAt)} · {payment.gateway}
 								{#if payment.gatewayPaymentId}· {payment.gatewayPaymentId}{/if}

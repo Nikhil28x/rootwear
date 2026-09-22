@@ -62,7 +62,7 @@
 		stock · {totalReserved} reserved
 	</p>
 	<a
-		class="text-[13px] tracking-[0.16em] text-stone-400 uppercase underline underline-offset-4 hover:text-cream font-medium"
+		class="text-[13px] tracking-[0.16em] text-stone-400 uppercase underline underline-offset-4 hover:text-paper font-medium"
 		href="/drops/{drop.slug}"
 	>
 		View on site →
@@ -196,7 +196,7 @@
 			{/each}
 			<li class="flex min-w-[7rem] flex-1 flex-col gap-1.5 bg-forest/40 px-4 py-3">
 				<span class="text-[11px] tracking-[0.2em] text-gold uppercase font-medium">Launch</span>
-				<span class="text-[13px] text-cream tabular-nums">{shortDateTime(drop.launchInstant)}</span>
+				<span class="text-[13px] text-paper tabular-nums">{shortDateTime(drop.launchInstant)}</span>
 			</li>
 		</ol>
 		<p class="text-[13px] leading-relaxed text-stone-400">
@@ -258,7 +258,7 @@
 			{#each drop.variants as variant (variant.id)}
 				{@const sellable = Math.max(0, variant.stockCount - variant.reservedCount)}
 				<tr class="text-stone-200">
-					<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal text-cream">
+					<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal text-paper">
 						{variant.size}
 					</th>
 					<td class="border-b border-white/5 px-4 py-3 text-[13px] text-stone-400">{variant.sku}</td>

@@ -67,7 +67,7 @@
 	<meta name="referrer" content="no-referrer" />
 </svelte:head>
 
-<main class="relative isolate overflow-hidden bg-cream text-forest">
+<main class="relative isolate overflow-hidden bg-paper text-forest">
 	<div class="pointer-events-none absolute inset-0 -z-10 select-none" aria-hidden="true">
 		<div class="absolute -top-32 -right-40 h-[36rem] w-[36rem] text-forest">
 			<HempMotif opacity={0.05} seed={2} />

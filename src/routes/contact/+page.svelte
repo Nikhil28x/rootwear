@@ -80,7 +80,7 @@
 	/>
 </svelte:head>
 
-<main class="relative isolate overflow-hidden bg-cream text-forest">
+<main class="relative isolate overflow-hidden bg-paper text-forest">
 	<div class="pointer-events-none absolute inset-0 -z-10 select-none" aria-hidden="true">
 		<div class="absolute -top-28 -right-32 h-[36rem] w-[36rem] text-forest">
 			<HempMotif opacity={0.05} seed={6} />
