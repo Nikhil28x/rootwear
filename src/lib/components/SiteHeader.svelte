@@ -30,39 +30,55 @@
 	let probed = $state<'dark' | 'light' | null>(null);
 	let resolved = $derived(probed ?? surface);
 
+	/** Where the header's own ink sits, measured from the top of the viewport. */
+	const HEADER_LINE = 44;
+
+	/** Cheap guard: only re-read when the scroll position has actually moved. */
+	let lastY = -1;
+
+	/**
+	 * Resolve what is behind the header by GEOMETRY, not hit-testing.
+	 *
+	 * An earlier version used document.elementsFromPoint(). That is a hit test,
+	 * so it answers differently depending on pointer-events, stacking context
+	 * and — the case that actually bit — a zero-sized viewport, where it
+	 * returns nothing at all. Reading rectangles is deterministic and asks the
+	 * question we actually mean: which themed section spans the header's line?
+	 *
+	 * Read synchronously rather than inside requestAnimationFrame. rAF does not
+	 * run in a background tab, which would leave the header showing the wrong
+	 * ink for the section behind it on return. At five sections the layout read
+	 * costs less than the bookkeeping to defer it.
+	 */
+	function probeSurface() {
+		const y = window.scrollY;
+		if (y === lastY) return;
+		lastY = y;
+
+		let answer: 'dark' | 'light' | null = null;
+		for (const section of document.querySelectorAll<HTMLElement>('[data-header-theme]')) {
+			// The header carries the attribute it is resolving; skip itself.
+			if (section.closest('[data-site-header]')) continue;
+			const box = section.getBoundingClientRect();
+			if (box.top <= HEADER_LINE && box.bottom > HEADER_LINE) {
+				// Later siblings paint over earlier ones, so the last match wins.
+				answer = section.dataset.headerTheme === 'dark' ? 'dark' : 'light';
+			}
+		}
+		probed = answer;
+	}
+
+	/** Force a re-read even when scrollY has not changed (resize, late images). */
+	function reprobe() {
+		lastY = -1;
+		probeSurface();
+	}
+
 	$effect(() => {
-		let frame = 0;
-
-		const probe = () => {
-			frame = 0;
-			// Sample just below the header's own vertical centre.
-			const y = Math.min(44, window.innerHeight - 1);
-			const found = document
-				.elementsFromPoint(window.innerWidth / 2, y)
-				.find(
-					(el) =>
-						el instanceof HTMLElement &&
-						el.dataset.headerTheme &&
-						// The header sits at this point too and carries the attribute it
-						// is trying to resolve — skip itself, or it never changes.
-						!el.closest('[data-site-header]')
-				) as HTMLElement | undefined;
-			probed = (found?.dataset.headerTheme as 'dark' | 'light' | undefined) ?? null;
-		};
-
-		const schedule = () => {
-			if (frame) return;
-			frame = requestAnimationFrame(probe);
-		};
-
-		probe();
-		window.addEventListener('scroll', schedule, { passive: true });
-		window.addEventListener('resize', schedule);
-		return () => {
-			if (frame) cancelAnimationFrame(frame);
-			window.removeEventListener('scroll', schedule);
-			window.removeEventListener('resize', schedule);
-		};
+		reprobe();
+		// Late-loading images shift what sits under the header.
+		window.addEventListener('load', reprobe);
+		return () => window.removeEventListener('load', reprobe);
 	});
 
 	const nav = [
@@ -155,4 +171,8 @@
 	{/if}
 </header>
 
-<svelte:window onkeydown={(e) => e.key === 'Escape' && (menuOpen = false)} />
+<svelte:window
+	onscroll={probeSurface}
+	onresize={reprobe}
+	onkeydown={(e) => e.key === 'Escape' && (menuOpen = false)}
+/>
