@@ -95,7 +95,7 @@
 				<h1
 					class="display mt-6 text-[clamp(3rem,7vw,7rem)] leading-[0.82] tracking-[-0.055em] text-forest"
 				>
-					Say it<br />plainly.
+					Reach out<br />to us.
 				</h1>
 				<p class="mt-8 max-w-[52ch] text-[15px] leading-[1.85] text-forest/70">
 					There is no ticket queue and no autoresponder. A message sent here is read by the person

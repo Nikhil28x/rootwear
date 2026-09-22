@@ -71,16 +71,35 @@
 		{ label: 'Contact', href: '/contact' }
 	];
 
+	/**
+	 * Each tone carries its own GROUND as well as its ink.
+	 *
+	 * The header previously set only a text colour and let whatever sat behind
+	 * it show through. On a light route that ground is `body`, which is
+	 * forest-black — so dark green ink landed on near-black and the nav was
+	 * effectively invisible. A header must never be transparent over a ground
+	 * it does not control.
+	 */
 	let tone = $derived(
 		resolved === 'light'
-			? { text: 'text-forest', rule: 'border-forest/20', hover: 'hover:text-forest' }
-			: { text: 'text-stone-100', rule: 'border-white/20', hover: 'hover:text-white' }
+			? {
+					text: 'text-forest',
+					bg: 'bg-cream',
+					rule: 'border-forest/20',
+					hover: 'hover:text-forest'
+				}
+			: {
+					text: 'text-stone-100',
+					bg: 'bg-forest-black',
+					rule: 'border-white/20',
+					hover: 'hover:text-white'
+				}
 	);
 </script>
 
 <header
 	data-site-header
-	class="{floating ? 'fixed' : 'sticky'} inset-x-0 top-0 z-50 transition-colors duration-300 {tone.text}"
+	class="{floating ? 'fixed' : 'sticky'} inset-x-0 top-0 z-50 transition-colors duration-300 {tone.text} {floating ? '' : tone.bg}"
 	data-header-theme={resolved}
 >
 	<div class="mx-auto flex max-w-[1600px] items-center justify-between gap-6 px-5 py-5 sm:px-10 lg:px-14">
@@ -91,7 +110,7 @@
 		<nav class="hidden items-center gap-9 md:flex" aria-label="Primary">
 			{#each nav as item (item.href)}
 				<a
-					class="text-[10px] tracking-[0.2em] uppercase opacity-70 transition hover:opacity-100 {tone.hover}"
+					class="text-[10px] tracking-[0.2em] uppercase opacity-80 transition hover:opacity-100 {tone.hover}"
 					href={item.href}>{item.label}</a
 				>
 			{/each}
@@ -118,7 +137,7 @@
 	{#if menuOpen}
 		<nav
 			id="mobile-nav"
-			class="border-t {tone.rule} bg-forest-black/95 px-5 py-6 backdrop-blur-xl md:hidden"
+			class="border-t {tone.rule} {tone.bg} px-5 py-6 backdrop-blur-xl md:hidden"
 			aria-label="Mobile"
 		>
 			<ul class="flex flex-col gap-5">
