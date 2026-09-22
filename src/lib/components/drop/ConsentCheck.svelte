@@ -30,7 +30,7 @@
 </script>
 
 <div class="flex flex-col gap-2">
-	<label class="flex cursor-pointer items-start gap-3 text-xs leading-relaxed {tone}" for={id}>
+	<label class="flex cursor-pointer items-start gap-3 text-[13px] leading-relaxed {tone}" for={id}>
 		<input
 			{id}
 			class="mt-0.5 size-4 shrink-0 {box}"
@@ -42,6 +42,6 @@
 		<span>{label}</span>
 	</label>
 	{#if error}
-		<p id="{id}-error" class="text-xs {alert}">{error}</p>
+		<p id="{id}-error" class="text-[13px] {alert}">{error}</p>
 	{/if}
 </div>

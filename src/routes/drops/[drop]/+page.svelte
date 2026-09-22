@@ -119,7 +119,7 @@
 			<div class="relative flex flex-wrap items-center gap-4">
 				<Eyebrow>Drop {dropNumber}</Eyebrow>
 				<DropStateMark state={data.drop.state} />
-				<span class="text-[10px] tracking-[0.2em] text-stone-500 uppercase">
+				<span class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
 					<time datetime={new Date(releasedAt).toISOString()}>{released.format(releasedAt)}</time>
 				</span>
 			</div>
@@ -142,20 +142,20 @@
 				{/if}
 
 				<div class="flex flex-col justify-end gap-6">
-					<p class="max-w-prose text-sm leading-relaxed text-stone-300">{data.drop.story}</p>
-					<p class="text-xs leading-relaxed text-stone-500">
+					<p class="max-w-prose text-[15px] leading-relaxed text-stone-300">{data.drop.story}</p>
+					<p class="text-[13px] leading-relaxed text-stone-400">
 						{DROP_STATE_DESCRIPTION[data.drop.state]}
 					</p>
 
 					<div
-						class="flex items-baseline justify-between gap-4 border-t border-white/15 pt-4 text-[10px] tracking-[0.2em] uppercase"
+						class="flex items-baseline justify-between gap-4 border-t border-white/15 pt-4 text-[11px] tracking-[0.2em] uppercase font-medium"
 					>
 						<span class="text-stone-400">{data.product.name}</span>
 						<strong class="font-normal text-stone-100">{price}</strong>
 					</div>
 
 					{#if data.showPrelaunchPrice}
-						<p class="text-[10px] tracking-[0.2em] text-stone-500 uppercase">
+						<p class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
 							Pre-launch price, locked for anyone who reserves now.
 						</p>
 					{/if}
@@ -163,11 +163,11 @@
 					{#if data.acceptsDeposits}
 						<!-- §08: a deposit. The percentage is an unanswered open item and
 						     is deliberately not printed here. -->
-						<p class="border-l-2 border-strain pl-4 text-xs leading-relaxed text-stone-400">
+						<p class="border-l-2 border-strain pl-4 text-[13px] leading-relaxed text-stone-400">
 							Reserve now with a deposit. The balance is settled before your piece is dispatched,
 							and your hand number is allocated when payment confirms — never before.
 						</p>
-						<p class="text-[10px] tracking-[0.2em] text-stone-500 uppercase">
+						<p class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
 							<span class="text-strain tabular-nums">{data.claimed}</span>
 							of {data.editionSize} claimed
 						</p>
@@ -178,7 +178,7 @@
 
 		<!-- §03 template 04: the lookbook stays intact once the drop is finished. -->
 		<section class="mb-24" aria-labelledby="lookbook-title">
-			<h2 id="lookbook-title" class="mb-8 text-[10px] tracking-[0.28em] text-stone-400 uppercase">
+			<h2 id="lookbook-title" class="mb-8 text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
 				The lookbook
 			</h2>
 
@@ -194,7 +194,7 @@
 								decoding="async"
 							/>
 						</div>
-						<p class="text-[10px] tracking-[0.2em] text-stone-500 uppercase">
+						<p class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
 							{ROLE_LABEL[shot.role] ?? shot.role} · {shot.piece}
 						</p>
 					</li>
@@ -204,7 +204,7 @@
 
 		<!-- The pieces. §06: sold-out sizes are greyed and still visible here too. -->
 		<section class="mb-24 border-t border-white/12 pt-12" aria-labelledby="pieces-title">
-			<h2 id="pieces-title" class="mb-10 text-[10px] tracking-[0.28em] text-stone-400 uppercase">
+			<h2 id="pieces-title" class="mb-10 text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
 				{data.pieces.length === 1 ? 'The piece' : 'The pieces'}
 			</h2>
 
@@ -229,16 +229,16 @@
 						<div class="flex flex-col gap-6">
 							<div class="flex flex-wrap items-baseline justify-between gap-4">
 								<h3 class="display text-3xl leading-none tracking-[-0.03em]">{piece.name}</h3>
-								<strong class="text-[10px] font-normal tracking-[0.2em] text-stone-100 uppercase">
+								<strong class="text-[11px] font-normal tracking-[0.2em] text-stone-100 uppercase">
 									{formatInr(piece.price)}
 								</strong>
 							</div>
 
-							<p class="max-w-prose text-sm leading-relaxed text-stone-400">{piece.summary}</p>
+							<p class="max-w-prose text-[15px] leading-relaxed text-stone-400">{piece.summary}</p>
 
 							{#if piece.allSoldOut}
 								<p
-									class="border-l-2 border-white/25 pl-4 text-[10px] tracking-[0.28em] text-stone-400 uppercase"
+									class="border-l-2 border-white/25 pl-4 text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium"
 								>
 									Every size gone
 								</p>
@@ -274,10 +274,10 @@
 				</div>
 
 				<div class="relative flex flex-col gap-3">
-					<h2 id="notify-title" class="text-[10px] tracking-[0.28em] text-stone-400 uppercase">
+					<h2 id="notify-title" class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
 						Notify me
 					</h2>
-					<p class="max-w-lg text-sm leading-relaxed text-stone-400">
+					<p class="max-w-lg text-[15px] leading-relaxed text-stone-400">
 						Every size keeps its own list. One message, for the size you pick, when it is available
 						— and nothing else.
 					</p>
@@ -300,12 +300,12 @@
 
 		{#if data.canRequest}
 			<section class="mb-24 border-t border-white/12 pt-12" aria-labelledby="request-title">
-				<h2 id="request-title" class="mb-8 text-[10px] tracking-[0.28em] text-stone-400 uppercase">
+				<h2 id="request-title" class="mb-8 text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
 					Bring it back
 				</h2>
 
 				{#if requestedTotal > 0}
-					<p class="mb-6 text-[10px] tracking-[0.28em] text-stone-500 uppercase">
+					<p class="mb-6 text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
 						<span class="text-gold tabular-nums">{requestedTotal}</span>
 						{requestedTotal === 1 ? 'request' : 'requests'} on the board for this drop
 					</p>
@@ -328,7 +328,7 @@
 							<caption class="sr-only">Requests on the board, by size</caption>
 							<thead>
 								<tr
-									class="border-b border-white/12 text-[10px] tracking-[0.28em] text-stone-500 uppercase"
+									class="border-b border-white/12 text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium"
 								>
 									<th scope="col" class="py-3 pr-4 font-normal">Size</th>
 									<th scope="col" class="py-3 pr-4 font-normal">Requests</th>
@@ -340,12 +340,12 @@
 									<tr class="border-b border-white/8">
 										<th
 											scope="row"
-											class="py-3 pr-4 text-xs font-normal tracking-[0.18em] uppercase"
+											class="py-3 pr-4 text-[13px] font-normal tracking-[0.18em] uppercase"
 										>
 											{row.size}
 										</th>
-										<td class="py-3 pr-4 text-sm text-stone-400 tabular-nums">{row.requests}</td>
-										<td class="py-3 text-sm text-stone-400 tabular-nums">{row.notifyMe}</td>
+										<td class="py-3 pr-4 text-[15px] text-stone-400 tabular-nums">{row.requests}</td>
+										<td class="py-3 text-[15px] text-stone-400 tabular-nums">{row.notifyMe}</td>
 									</tr>
 								{/each}
 							</tbody>
@@ -356,7 +356,7 @@
 		{/if}
 
 		<section class="border-t border-white/12 pt-12" aria-labelledby="spec-title">
-			<h2 id="spec-title" class="mb-8 text-[10px] tracking-[0.28em] text-stone-400 uppercase">
+			<h2 id="spec-title" class="mb-8 text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
 				The specification
 			</h2>
 
@@ -364,10 +364,10 @@
 				<dl class="m-0">
 					{#each specifications as specification (specification[0])}
 						<div
-							class="flex justify-between gap-4 border-t border-white/12 py-4 text-[10px] tracking-[0.18em] uppercase"
+							class="flex justify-between gap-4 border-t border-white/12 py-4 text-[11px] tracking-[0.18em] uppercase font-medium"
 						>
 							<dt class="text-stone-300">{specification[0]}</dt>
-							<dd class="m-0 text-stone-500">{specification[1]}</dd>
+							<dd class="m-0 text-stone-400">{specification[1]}</dd>
 						</div>
 					{/each}
 				</dl>

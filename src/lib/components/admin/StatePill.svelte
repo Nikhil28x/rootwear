@@ -16,15 +16,15 @@
 		solid: 'bg-cream text-forest-black border-cream',
 		attention: 'border-gold text-gold',
 		outline: 'border-stone-500 text-stone-200',
-		quiet: 'border-stone-700 text-stone-500'
+		quiet: 'border-stone-700 text-stone-400'
 	};
 </script>
 
 <span
 	{title}
-	class="inline-flex items-center border px-2.5 py-1 text-[9px] leading-none tracking-[0.18em] whitespace-nowrap uppercase {styles[
+	class="inline-flex items-center border px-2.5 py-1 text-[11px] leading-none tracking-[0.18em] whitespace-nowrap uppercase {styles[
 		tone
-	]}"
+	]} font-medium"
 >
 	{label}
 </span>

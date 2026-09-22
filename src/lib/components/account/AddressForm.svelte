@@ -79,7 +79,7 @@
 		{title}
 	</h2>
 	{#if note}
-		<p class="mt-4 max-w-[52ch] text-sm leading-[1.8] text-forest/70">{note}</p>
+		<p class="mt-4 max-w-[52ch] text-[15px] leading-[1.8] text-forest/70">{note}</p>
 	{/if}
 
 	<div class="mt-8">
@@ -184,15 +184,15 @@
 		</div>
 
 		{#if errors.country}
-			<p class="text-xs text-alert" role="alert">{errors.country}</p>
+			<p class="text-[13px] text-alert" role="alert">{errors.country}</p>
 		{/if}
 
-		<label class="flex cursor-pointer items-start gap-3 text-sm leading-relaxed text-forest/75">
+		<label class="flex cursor-pointer items-start gap-3 text-[15px] leading-relaxed text-forest/75">
 			<input
 				type="checkbox"
 				name="isDefault"
 				checked={start.isDefault}
-				class="mt-1 h-4 w-4 shrink-0 appearance-none border border-forest/40 bg-transparent checked:border-forest checked:bg-forest focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-forest"
+				class="mt-1 h-4 w-4 shrink-0 appearance-none border border-forest/65 bg-transparent checked:border-forest checked:bg-forest focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-forest"
 			/>
 			<span>Use this as my default delivery address.</span>
 		</label>
@@ -203,7 +203,7 @@
 			</Button>
 			<a
 				href={cancelHref}
-				class="text-[10px] tracking-[0.2em] text-forest/60 uppercase underline-offset-4 hover:text-forest hover:underline"
+				class="text-[11px] tracking-[0.2em] text-forest/75 uppercase underline-offset-4 hover:text-forest hover:underline font-medium"
 			>
 				Cancel
 			</a>

@@ -15,13 +15,13 @@
 	<meta name="robots" content="noindex, nofollow" />
 </svelte:head>
 
-<Eyebrow tone="strong" class="text-forest/50">Account</Eyebrow>
+<Eyebrow tone="strong" class="text-forest/70">Account</Eyebrow>
 <h1
 	class="display mt-6 text-[clamp(2.8rem,6.4vw,5.4rem)] leading-[0.86] tracking-[-0.055em] text-forest"
 >
 	Pre-orders.
 </h1>
-<p class="mt-8 max-w-[56ch] text-[15px] leading-[1.85] text-forest/70">
+<p class="mt-8 max-w-[56ch] text-[16px] leading-[1.85] text-forest/70">
 	One card for each piece you have reserved. The deposit, the balance, the piece number and the
 	order it becomes are all one record here, because that is what they are — a reservation does not
 	turn into a separate order behind your back.
@@ -48,7 +48,7 @@
 	</div>
 {:else}
 	<!-- §09: the fit disclaimer accompanies every screen that shows a size. -->
-	<p class="mt-12 max-w-[54ch] text-xs leading-relaxed text-forest/55">{FIT_DISCLAIMER}</p>
+	<p class="mt-12 max-w-[54ch] text-[13px] leading-relaxed text-forest/70">{FIT_DISCLAIMER}</p>
 
 	<div class="mt-6 flex flex-col gap-10">
 		{#each data.records as record (record.id)}
@@ -56,7 +56,7 @@
 		{/each}
 	</div>
 
-	<p class="mt-12 max-w-[62ch] text-xs leading-[1.9] text-forest/50">
+	<p class="mt-12 max-w-[62ch] text-[13px] leading-[1.9] text-forest/70">
 		Cards are ordered by what needs you first, then by when you reserved. Nothing is ever removed
 		from this list — a cancelled or released reservation stays, so the history stays readable.
 	</p>

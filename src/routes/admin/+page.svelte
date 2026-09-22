@@ -109,7 +109,7 @@
 						<StatePill label="Unpublished" tone="quiet" />
 					{/if}
 				</div>
-				<p class="text-xs text-stone-500 tabular-nums">
+				<p class="text-[13px] text-stone-400 tabular-nums">
 					Launch {shortDateTime(drop.launchInstant)} IST · edition of {drop.editionSize}
 				</p>
 			</div>
@@ -120,7 +120,7 @@
 					note="cut = remaining + reserved + sold"
 				>
 					<thead>
-						<tr class="text-[10px] tracking-[0.2em] text-stone-500 uppercase">
+						<tr class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
 							<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Size</th>
 							<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">SKU</th>
 							<th scope="col" class="border-b border-white/10 px-4 py-3 text-right">Cut</th>
@@ -136,11 +136,11 @@
 							<tr class="text-stone-200">
 								<th
 									scope="row"
-									class="border-b border-white/5 px-4 py-3 text-left text-sm font-normal text-cream"
+									class="border-b border-white/5 px-4 py-3 text-left text-[15px] font-normal text-cream"
 								>
 									{row.size}
 								</th>
-								<td class="border-b border-white/5 px-4 py-3 text-xs text-stone-500">{row.sku}</td>
+								<td class="border-b border-white/5 px-4 py-3 text-[13px] text-stone-400">{row.sku}</td>
 								<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">{row.cut}</td>
 								<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">
 									{row.reserved}
@@ -156,7 +156,7 @@
 											— sold out</span
 										>{/if}
 								</td>
-								<td class="border-b border-white/5 px-4 py-3 text-right text-stone-500 tabular-nums">
+								<td class="border-b border-white/5 px-4 py-3 text-right text-stone-400 tabular-nums">
 									{row.reserveCap}
 								</td>
 								<td class="w-40 border-b border-white/5 px-4 py-3">
@@ -172,7 +172,7 @@
 					</tbody>
 					<tfoot>
 						<tr class="text-cream">
-							<th scope="row" class="px-4 py-3 text-left text-[10px] tracking-[0.2em] uppercase">
+							<th scope="row" class="px-4 py-3 text-left text-[11px] tracking-[0.2em] uppercase font-medium">
 								Total
 							</th>
 							<td></td>
@@ -188,7 +188,7 @@
 
 				<div class="border border-white/10">
 					<div class="border-b border-white/10 px-5 py-4">
-						<p class="text-[10px] tracking-[0.28em] text-stone-300 uppercase">Sell-out curve</p>
+						<p class="text-[11px] tracking-[0.28em] text-stone-300 uppercase font-medium">Sell-out curve</p>
 					</div>
 					<ClaimCurve
 						points={[...drop.curve]}
@@ -199,7 +199,7 @@
 				</div>
 			</div>
 
-			<p class="flex flex-wrap gap-6 text-xs text-stone-500">
+			<p class="flex flex-wrap gap-6 text-[13px] text-stone-400">
 				<span class="flex items-center gap-2"
 					><span class="inline-block h-2 w-4 bg-cream"></span> Sold</span
 				>
@@ -257,7 +257,7 @@
 		/>
 	</div>
 
-	<p class="text-sm leading-relaxed text-stone-400">
+	<p class="text-[15px] leading-relaxed text-stone-400">
 		A reservation, its deposit, its balance payment and its final order are one continuous record.
 		Open any row in
 		<a class="underline underline-offset-4 hover:text-stone-200" href="/admin/reservations"
@@ -280,7 +280,7 @@
 		note="{demandTotal} signal{demandTotal === 1 ? '' : 's'} recorded · heaviest first"
 	>
 		<thead>
-			<tr class="text-[10px] tracking-[0.2em] text-stone-500 uppercase">
+			<tr class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Drop</th>
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Size</th>
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-right">Requests</th>
@@ -310,7 +310,7 @@
 				</tr>
 			{:else}
 				<tr>
-					<td colspan="6" class="px-4 py-8 text-sm text-stone-500">
+					<td colspan="6" class="px-4 py-8 text-[15px] text-stone-400">
 						Nobody has asked for anything yet. Requests appear here the moment a drop is finished and
 						someone asks for it back.
 					</td>
@@ -319,7 +319,7 @@
 		</tbody>
 	</TableShell>
 
-	<p class="text-sm text-stone-400">
+	<p class="text-[15px] text-stone-400">
 		<a class="underline underline-offset-4 hover:text-stone-200" href="/admin/demand">
 			Open the full demand board, with every individual entry and a CSV export →
 		</a>
@@ -336,7 +336,7 @@
 
 	<TableShell caption="Captured revenue by drop" note="Total {formatInr(revenueTotal)}">
 		<thead>
-			<tr class="text-[10px] tracking-[0.2em] text-stone-500 uppercase">
+			<tr class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Drop</th>
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-right">Deposits</th>
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-right">Balances</th>
@@ -365,13 +365,13 @@
 				</tr>
 			{:else}
 				<tr>
-					<td colspan="5" class="px-4 py-8 text-sm text-stone-500">Nothing captured yet.</td>
+					<td colspan="5" class="px-4 py-8 text-[15px] text-stone-400">Nothing captured yet.</td>
 				</tr>
 			{/each}
 		</tbody>
 	</TableShell>
 
-	<p class="text-xs leading-relaxed text-stone-500">
+	<p class="text-[13px] leading-relaxed text-stone-400">
 		Prices are shown inclusive of tax, as they are to the customer. A payment appears here only once
 		the gateway has confirmed capture — the browser redirect is never treated as proof of payment.
 	</p>

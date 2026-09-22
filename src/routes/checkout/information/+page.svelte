@@ -84,7 +84,7 @@
 	</div>
 
 	<div class="mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
-		<Eyebrow tone="strong" class="text-forest/50">Checkout · Step one of two</Eyebrow>
+		<Eyebrow tone="strong" class="text-forest/70">Checkout · Step one of two</Eyebrow>
 		<h1
 			class="display mt-6 text-[clamp(3rem,7vw,7rem)] leading-[0.82] tracking-[-0.055em] text-forest"
 		>
@@ -96,7 +96,7 @@
 				{#if problem}
 					<p
 						role="alert"
-						class="mb-10 border-l-2 border-alert bg-alert/[0.06] px-6 py-5 text-sm leading-relaxed text-alert"
+						class="mb-10 border-l-2 border-alert bg-alert/[0.06] px-6 py-5 text-[15px] leading-relaxed text-alert"
 					>
 						{problem}
 					</p>
@@ -110,11 +110,11 @@
 						class="mb-10 border-l-2 border-alert bg-alert/[0.06] px-6 py-5"
 						aria-labelledby="errors-title"
 					>
-						<h2 id="errors-title" class="text-[10px] tracking-[0.28em] text-alert uppercase">
+						<h2 id="errors-title" class="text-[11px] tracking-[0.28em] text-alert uppercase font-medium">
 							{errorList.length}
 							{errorList.length === 1 ? 'thing needs' : 'things need'} fixing
 						</h2>
-						<ul class="mt-3 flex list-none flex-col gap-1 p-0 text-sm text-alert">
+						<ul class="mt-3 flex list-none flex-col gap-1 p-0 text-[15px] text-alert">
 							{#each errorList as [key, text] (key)}
 								<li>{text}</li>
 							{/each}
@@ -124,7 +124,7 @@
 
 				{#if data.saved.length > 0}
 					<section class="mb-12 border-b border-forest/15 pb-8" aria-labelledby="saved-title">
-						<h2 id="saved-title" class="text-[10px] tracking-[0.28em] text-forest/60 uppercase">
+						<h2 id="saved-title" class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 							Saved addresses
 						</h2>
 						<div class="mt-5 flex flex-wrap gap-3">
@@ -132,9 +132,9 @@
 								<button
 									type="button"
 									onclick={() => useSaved(address.id)}
-									class="border border-forest/25 px-5 py-3 text-left text-xs leading-relaxed text-forest/80 transition hover:border-forest hover:text-forest"
+									class="border border-forest/25 px-5 py-3 text-left text-[13px] leading-relaxed text-forest/80 transition hover:border-forest hover:text-forest"
 								>
-									<span class="block text-[10px] tracking-[0.2em] text-forest uppercase">
+									<span class="block text-[11px] tracking-[0.2em] text-forest uppercase font-medium">
 										{address.label}
 									</span>
 									<span class="mt-1 block">{address.line1}, {address.city} {address.pincode}</span>
@@ -161,7 +161,7 @@
 					<input type="hidden" name="country" value={SHIP_COUNTRY} />
 
 					<fieldset class="flex flex-col gap-8 border-0 p-0">
-						<legend class="text-[10px] tracking-[0.28em] text-forest/60 uppercase">Contact</legend>
+						<legend class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">Contact</legend>
 
 						<Field
 							label="Email"
@@ -191,7 +191,7 @@
 					</fieldset>
 
 					<fieldset class="flex flex-col gap-8 border-0 p-0">
-						<legend class="text-[10px] tracking-[0.28em] text-forest/60 uppercase">
+						<legend class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 							Delivery address
 						</legend>
 
@@ -254,11 +254,11 @@
 						/>
 
 						<div class="flex flex-col gap-2">
-							<p class="text-[10px] tracking-[0.2em] text-forest/60 uppercase">Country</p>
-							<p class="border-b border-forest/25 py-3 text-sm text-forest">
+							<p class="text-[11px] tracking-[0.2em] text-forest/75 uppercase font-medium">Country</p>
+							<p class="border-b border-forest/25 py-3 text-[15px] text-forest">
 								{SHIP_COUNTRY_LABEL}
 							</p>
-							<p class="text-xs text-forest/50">
+							<p class="text-[13px] text-forest/70">
 								We ship within India only at the moment. Nothing else can be selected, and the same
 								rule is applied again when the order is created.
 							</p>
@@ -266,7 +266,7 @@
 					</fieldset>
 
 					<fieldset class="flex flex-col gap-8 border-0 p-0">
-						<legend class="text-[10px] tracking-[0.28em] text-forest/60 uppercase">
+						<legend class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 							Order notes
 						</legend>
 						<Field
@@ -299,15 +299,15 @@
 				{/if}
 
 				<section aria-labelledby="items-heading">
-					<h2 id="items-heading" class="text-[10px] tracking-[0.28em] text-forest/60 uppercase">
+					<h2 id="items-heading" class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 						In this order
 					</h2>
 					<ul class="mt-5 flex list-none flex-col gap-4 p-0">
 						{#each data.cart.lines as line (line.variantId)}
-							<li class="flex justify-between gap-4 border-b border-forest/10 pb-4 text-sm">
+							<li class="flex justify-between gap-4 border-b border-forest/10 pb-4 text-[15px]">
 								<span class="text-forest/80">
 									{line.productName}
-									<span class="block text-[10px] tracking-[0.2em] text-forest/50 uppercase">
+									<span class="block text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">
 										Size {line.size} · {line.quantity} ×
 									</span>
 								</span>
@@ -316,7 +316,7 @@
 						{/each}
 					</ul>
 					<!-- §09: the fit disclaimer follows the size wherever it appears. -->
-					<p class="mt-4 text-xs leading-relaxed text-forest/60">{FIT_DISCLAIMER}</p>
+					<p class="mt-4 text-[13px] leading-relaxed text-forest/75">{FIT_DISCLAIMER}</p>
 				</section>
 
 				<CartSummary totals={data.cart.totals} shipping={data.cart.shipping} />
@@ -324,8 +324,8 @@
 				{#if data.cart.hasPreOrderLine}
 					<!-- §03 template 07: the pre-order dispatch note, where a line is
 					     a pre-order. It states the drop instant and nothing more. -->
-					<p class="border-l-2 border-gold pl-4 text-xs leading-relaxed text-forest/75">
-						<span class="block text-[10px] tracking-[0.28em] text-forest uppercase">
+					<p class="border-l-2 border-gold pl-4 text-[13px] leading-relaxed text-forest/75">
+						<span class="block text-[11px] tracking-[0.28em] text-forest uppercase font-medium">
 							Pre-order dispatch
 						</span>
 						<span class="mt-2 block">
@@ -339,7 +339,7 @@
 				{#if !data.codEnabled}
 					<!-- §10: COD is off for Drop 01. Said before the payment step, not
 					     discovered at it. -->
-					<p class="text-xs leading-relaxed text-forest/60">
+					<p class="text-[13px] leading-relaxed text-forest/75">
 						Cash on delivery is not available for this drop.
 					</p>
 				{/if}
@@ -347,10 +347,10 @@
 				<!-- §11: the SAME returns wording as the product page, the
 				     confirmation email and the returns policy page. -->
 				<section class="border-t border-forest/15 pt-6" aria-labelledby="returns-heading">
-					<h2 id="returns-heading" class="text-[10px] tracking-[0.28em] text-forest/60 uppercase">
+					<h2 id="returns-heading" class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 						Returns
 					</h2>
-					<p class="mt-4 text-xs leading-relaxed text-forest/70">{RETURNS_WORDING}</p>
+					<p class="mt-4 text-[13px] leading-relaxed text-forest/70">{RETURNS_WORDING}</p>
 				</section>
 			</div>
 		</div>

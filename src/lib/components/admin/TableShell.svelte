@@ -21,12 +21,12 @@
 <div class="border border-white/10">
 	{#if captionVisible}
 		<div class="flex flex-wrap items-baseline justify-between gap-3 border-b border-white/10 px-5 py-4">
-			<p class="text-[10px] tracking-[0.28em] text-stone-300 uppercase">{caption}</p>
-			{#if note}<p class="text-xs text-stone-500">{note}</p>{/if}
+			<p class="text-[11px] tracking-[0.28em] text-stone-300 uppercase font-medium">{caption}</p>
+			{#if note}<p class="text-[13px] text-stone-400">{note}</p>{/if}
 		</div>
 	{/if}
 	<div class="admin-scroll overflow-x-auto">
-		<table class="w-full min-w-[46rem] border-collapse text-sm">
+		<table class="w-full min-w-[46rem] border-collapse text-[15px]">
 			<caption class="sr-only">{caption}</caption>
 			{@render children()}
 		</table>

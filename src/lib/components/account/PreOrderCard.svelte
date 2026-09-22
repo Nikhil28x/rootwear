@@ -42,7 +42,7 @@
 		class="flex flex-wrap items-start justify-between gap-4 border-b border-forest/15 px-6 py-5 sm:px-8"
 	>
 		<div>
-			<p class="text-[10px] tracking-[0.28em] text-forest/45 uppercase">
+			<p class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">
 				Drop {String(record.dropNumber).padStart(2, '0')} · {record.dropName}
 			</p>
 			<h3 class="display mt-2 text-[clamp(1.5rem,2.6vw,2.1rem)] leading-[1.05] text-forest">
@@ -53,12 +53,12 @@
 	</header>
 
 	<div class="px-6 py-7 sm:px-8">
-		<p class="max-w-[54ch] text-sm leading-[1.8] text-forest/75">{copy.sentence}</p>
+		<p class="max-w-[54ch] text-[15px] leading-[1.8] text-forest/75">{copy.sentence}</p>
 
 		<dl class="mt-8 grid grid-cols-2 gap-x-8 gap-y-7 sm:grid-cols-3 lg:grid-cols-4">
 			<div>
-				<dt class="text-[10px] tracking-[0.28em] text-forest/45 uppercase">Piece</dt>
-				<dd class="mt-2 text-sm text-forest">
+				<dt class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">Piece</dt>
+				<dd class="mt-2 text-[15px] text-forest">
 					{#if piece}
 						<span class="display text-[1.35rem] leading-none">{piece}</span>
 					{:else}
@@ -68,48 +68,48 @@
 			</div>
 
 			<div>
-				<dt class="text-[10px] tracking-[0.28em] text-forest/45 uppercase">Size</dt>
-				<dd class="mt-2 text-sm text-forest">
+				<dt class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">Size</dt>
+				<dd class="mt-2 text-[15px] text-forest">
 					{record.size ?? '—'}
 					{#if record.sku}
-						<span class="block text-xs text-forest/50">{record.sku}</span>
+						<span class="block text-[13px] text-forest/70">{record.sku}</span>
 					{/if}
 				</dd>
 			</div>
 
 			<div>
-				<dt class="text-[10px] tracking-[0.28em] text-forest/45 uppercase">Locked price</dt>
-				<dd class="mt-2 text-sm text-forest">
+				<dt class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">Locked price</dt>
+				<dd class="mt-2 text-[15px] text-forest">
 					{formatInr(record.lockedPrice)}
-					<span class="block text-xs text-forest/50">Held for you. Inclusive of tax.</span>
+					<span class="block text-[13px] text-forest/70">Held for you. Inclusive of tax.</span>
 				</dd>
 			</div>
 
 			<div>
-				<dt class="text-[10px] tracking-[0.28em] text-forest/45 uppercase">Deposit</dt>
-				<dd class="mt-2 text-sm text-forest">
+				<dt class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">Deposit</dt>
+				<dd class="mt-2 text-[15px] text-forest">
 					{formatInr(record.depositPaid)} paid
 					{#if depositOutstanding > 0}
-						<span class="block text-xs text-forest/50">
+						<span class="block text-[13px] text-forest/70">
 							{formatInr(depositOutstanding)} of the deposit is not yet confirmed.
 						</span>
 					{:else}
-						<span class="block text-xs text-forest/50">Deposit of {formatInr(record.deposit)}.</span
+						<span class="block text-[13px] text-forest/70">Deposit of {formatInr(record.deposit)}.</span
 						>
 					{/if}
 				</dd>
 			</div>
 
 			<div>
-				<dt class="text-[10px] tracking-[0.28em] text-forest/45 uppercase">Balance</dt>
-				<dd class="mt-2 text-sm text-forest">
+				<dt class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">Balance</dt>
+				<dd class="mt-2 text-[15px] text-forest">
 					{#if outstanding > 0}
 						{formatInr(outstanding)} due
 					{:else}
 						<span class="text-forest/70">Nothing outstanding</span>
 					{/if}
 					{#if record.balanceDueBy !== null && outstanding > 0}
-						<span class="block text-xs text-forest/50">
+						<span class="block text-[13px] text-forest/70">
 							By {shortDateTime(record.balanceDueBy)}
 						</span>
 					{/if}
@@ -117,18 +117,18 @@
 			</div>
 
 			<div>
-				<dt class="text-[10px] tracking-[0.28em] text-forest/45 uppercase">Dispatch</dt>
-				<dd class="mt-2 text-sm text-forest">{isoDate(record.dispatchDate)}</dd>
+				<dt class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">Dispatch</dt>
+				<dd class="mt-2 text-[15px] text-forest">{isoDate(record.dispatchDate)}</dd>
 			</div>
 
 			<div>
-				<dt class="text-[10px] tracking-[0.28em] text-forest/45 uppercase">Reserved</dt>
-				<dd class="mt-2 text-sm text-forest">{shortDate(record.createdAt)}</dd>
+				<dt class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">Reserved</dt>
+				<dd class="mt-2 text-[15px] text-forest">{shortDate(record.createdAt)}</dd>
 			</div>
 
 			<div>
-				<dt class="text-[10px] tracking-[0.28em] text-forest/45 uppercase">Order</dt>
-				<dd class="mt-2 text-sm text-forest">
+				<dt class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">Order</dt>
+				<dd class="mt-2 text-[15px] text-forest">
 					{#if record.orderNumber}
 						<a
 							class="underline underline-offset-4 hover:text-forest/70"
@@ -137,7 +137,7 @@
 							{record.orderNumber}
 						</a>
 					{:else}
-						<span class="text-forest/50">Opens when the balance clears</span>
+						<span class="text-forest/70">Opens when the balance clears</span>
 					{/if}
 				</dd>
 			</div>
@@ -149,11 +149,11 @@
 					<Button href="/checkout/balance/{record.id}" variant="solid" surface="light">
 						Pay the balance
 					</Button>
-					<p class="max-w-[38ch] text-xs leading-relaxed text-forest/60">
+					<p class="max-w-[38ch] text-[13px] leading-relaxed text-forest/75">
 						{formatInr(outstanding)} to clear. Your piece is held until then.
 					</p>
 				{:else}
-					<p class="max-w-[46ch] text-xs leading-relaxed text-forest/60">
+					<p class="max-w-[46ch] text-[13px] leading-relaxed text-forest/75">
 						We will confirm by email the moment the deposit clears. Nothing further is needed from
 						you right now.
 					</p>
@@ -167,12 +167,12 @@
 			later change to the terms cannot rewrite what they were shown.
 		-->
 		<div class="mt-9 border-t border-forest/15 pt-7">
-			<p class="text-[10px] tracking-[0.28em] text-forest/45 uppercase">Cancellation</p>
-			<p class="mt-3 max-w-[62ch] text-xs leading-[1.9] text-forest/65">
+			<p class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">Cancellation</p>
+			<p class="mt-3 max-w-[62ch] text-[13px] leading-[1.9] text-forest/75">
 				{record.cancellationRule}
 			</p>
 			{#if !DEPOSIT_PERCENT_CONFIRMED}
-				<p class="mt-3 max-w-[62ch] text-xs leading-[1.9] text-forest/50">
+				<p class="mt-3 max-w-[62ch] text-[13px] leading-[1.9] text-forest/70">
 					The figures above are the exact amounts on your reservation.
 				</p>
 			{/if}

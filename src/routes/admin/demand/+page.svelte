@@ -95,12 +95,12 @@
 <!-- Filter / sort. A GET form, so it works with no JavaScript. -->
 <form method="GET" class="mt-12 flex flex-wrap items-end gap-6 border-y border-white/10 py-6">
 	<div class="flex min-w-[12rem] flex-col gap-2">
-		<label for="f-drop" class="text-[10px] tracking-[0.2em] text-stone-400 uppercase">Drop</label>
+		<label for="f-drop" class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">Drop</label>
 		<select
 			id="f-drop"
 			name="drop"
 			value={data.filter.dropId}
-			class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-sm text-stone-100 outline-none focus:border-white"
+			class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-[15px] text-stone-100 outline-none focus:border-white"
 		>
 			<option value="">Every drop</option>
 			{#each data.drops as drop (drop.id)}
@@ -110,12 +110,12 @@
 	</div>
 
 	<div class="flex min-w-[10rem] flex-col gap-2">
-		<label for="f-kind" class="text-[10px] tracking-[0.2em] text-stone-400 uppercase">Kind</label>
+		<label for="f-kind" class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">Kind</label>
 		<select
 			id="f-kind"
 			name="kind"
 			value={data.filter.kind}
-			class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-sm text-stone-100 outline-none focus:border-white"
+			class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-[15px] text-stone-100 outline-none focus:border-white"
 		>
 			<option value="">All three</option>
 			<option value="request">Drop requests</option>
@@ -125,12 +125,12 @@
 	</div>
 
 	<div class="flex min-w-[10rem] flex-col gap-2">
-		<label for="f-sort" class="text-[10px] tracking-[0.2em] text-stone-400 uppercase">Sort</label>
+		<label for="f-sort" class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">Sort</label>
 		<select
 			id="f-sort"
 			name="sort"
 			value={data.filter.sort}
-			class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-sm text-stone-100 outline-none focus:border-white"
+			class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-[15px] text-stone-100 outline-none focus:border-white"
 		>
 			{#each SORTS as option (option.value)}
 				<option value={option.value}>{option.label}</option>
@@ -140,21 +140,21 @@
 
 	<button
 		type="submit"
-		class="border border-white/35 px-7 py-3 text-[10px] tracking-[0.2em] text-stone-100 uppercase transition hover:bg-white hover:text-black"
+		class="border border-white/35 px-7 py-3 text-[11px] tracking-[0.2em] text-stone-100 uppercase transition hover:bg-white hover:text-black font-medium"
 	>
 		Apply
 	</button>
 
 	<a
 		href={exportHref}
-		class="border border-gold px-7 py-3 text-[10px] tracking-[0.2em] text-gold uppercase transition hover:bg-gold hover:text-forest-black"
+		class="border border-gold px-7 py-3 text-[11px] tracking-[0.2em] text-gold uppercase transition hover:bg-gold hover:text-forest-black font-medium"
 		data-sveltekit-reload
 	>
 		Export CSV
 	</a>
 	<a
 		href="/admin/demand"
-		class="text-[10px] tracking-[0.2em] text-stone-500 uppercase underline underline-offset-4 hover:text-stone-200"
+		class="text-[11px] tracking-[0.2em] text-stone-400 uppercase underline underline-offset-4 hover:text-stone-200 font-medium"
 	>
 		Clear
 	</a>
@@ -173,7 +173,7 @@
 
 			<TableShell caption="{board.dropName} demand by size" captionVisible={false}>
 				<thead>
-					<tr class="text-[10px] tracking-[0.2em] text-stone-500 uppercase">
+					<tr class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
 						<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Size</th>
 						<th scope="col" class="border-b border-white/10 px-4 py-3 text-right">Requests</th>
 						<th scope="col" class="border-b border-white/10 px-4 py-3 text-right">Notify-me</th>
@@ -197,7 +197,7 @@
 							<td
 								class="border-b border-white/5 px-4 py-3 text-right tabular-nums {total > 0
 									? 'text-cream'
-									: 'text-stone-600'}"
+									: 'text-stone-400'}"
 							>
 								{total}
 							</td>
@@ -224,7 +224,7 @@
 		note="{data.entries.length} entr{data.entries.length === 1 ? 'y' : 'ies'}"
 	>
 		<thead>
-			<tr class="text-[10px] tracking-[0.2em] text-stone-500 uppercase">
+			<tr class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Kind</th>
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Drop</th>
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Size</th>
@@ -243,14 +243,14 @@
 							tone={entry.kind === 'request' ? 'attention' : 'outline'}
 						/>
 					</td>
-					<td class="border-b border-white/5 px-4 py-3 text-sm">{entry.dropName}</td>
+					<td class="border-b border-white/5 px-4 py-3 text-[15px]">{entry.dropName}</td>
 					<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal text-cream">
 						{entry.size ?? '—'}
 					</th>
-					<td class="border-b border-white/5 px-4 py-3 text-sm">
+					<td class="border-b border-white/5 px-4 py-3 text-[15px]">
 						{entry.email}
 						{#if entry.note}
-							<span class="mt-1 block max-w-[28rem] text-xs leading-relaxed text-stone-500">
+							<span class="mt-1 block max-w-[28rem] text-[13px] leading-relaxed text-stone-400">
 								{entry.note}
 							</span>
 						{/if}
@@ -258,16 +258,16 @@
 					<td class="border-b border-white/5 px-4 py-3 text-right text-stone-400 tabular-nums">
 						{entry.position ?? '—'}
 					</td>
-					<td class="border-b border-white/5 px-4 py-3 text-xs tracking-[0.12em] text-stone-400 uppercase">
+					<td class="border-b border-white/5 px-4 py-3 text-[13px] tracking-[0.12em] text-stone-400 uppercase font-medium">
 						{humanise(entry.state)}
 					</td>
-					<td class="border-b border-white/5 px-4 py-3 text-xs whitespace-nowrap text-stone-400 tabular-nums">
+					<td class="border-b border-white/5 px-4 py-3 text-[13px] whitespace-nowrap text-stone-400 tabular-nums">
 						{shortDateTime(entry.createdAt)}
 					</td>
 				</tr>
 			{:else}
 				<tr>
-					<td colspan="7" class="px-4 py-10 text-sm text-stone-500">
+					<td colspan="7" class="px-4 py-10 text-[15px] text-stone-400">
 						Nothing recorded for this filter. Clear the filter, or wait for the first request.
 					</td>
 				</tr>

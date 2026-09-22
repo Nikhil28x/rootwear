@@ -14,17 +14,17 @@
 
 	const styles: Record<RecordTone, string> = {
 		attention: 'border-gold bg-gold/10 text-forest',
-		settled: 'border-forest/40 text-forest',
-		quiet: 'border-forest/20 text-forest/60',
-		closed: 'border-forest/15 text-forest/45'
+		settled: 'border-forest/65 text-forest',
+		quiet: 'border-forest/20 text-forest/75',
+		closed: 'border-forest/15 text-forest/65'
 	};
 </script>
 
 <span
 	{title}
-	class="inline-flex items-center border px-2.5 py-1 text-[9px] leading-none tracking-[0.18em] whitespace-nowrap uppercase {styles[
+	class="inline-flex items-center border px-2.5 py-1 text-[11px] leading-none tracking-[0.18em] whitespace-nowrap uppercase {styles[
 		tone
-	]}"
+	]} font-medium"
 >
 	{label}
 </span>

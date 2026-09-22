@@ -28,13 +28,13 @@
 
 	<div class="mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
 		<header class="max-w-3xl">
-			<Eyebrow tone="strong" class="text-forest/50">Information</Eyebrow>
+			<Eyebrow tone="strong" class="text-forest/70">Information</Eyebrow>
 			<h1
 				class="display mt-6 text-[clamp(3rem,7vw,7rem)] leading-[0.82] tracking-[-0.055em] text-forest"
 			>
 				Everything<br />in writing.
 			</h1>
-			<p class="mt-8 max-w-[52ch] text-[15px] leading-[1.85] text-forest/70">
+			<p class="mt-8 max-w-[52ch] text-[16px] leading-[1.85] text-forest/70">
 				How a parcel reaches you, what happens if something is wrong with it, what we do with what
 				you tell us, and how to choose a size you will keep. Written to be read once and then not
 				needed again.
@@ -48,7 +48,7 @@
 						class="group grid items-baseline gap-3 py-9 transition-colors sm:grid-cols-[4rem_minmax(0,18rem)_minmax(0,1fr)] sm:gap-8"
 						href="/policies/{policy.slug}"
 					>
-						<span class="text-[10px] tracking-[0.28em] text-forest/40 tabular-nums">
+						<span class="text-[11px] tracking-[0.28em] text-forest/65 tabular-nums">
 							{String(i + 1).padStart(2, '0')}
 						</span>
 						<span
@@ -56,7 +56,7 @@
 						>
 							{policy.title}
 						</span>
-						<span class="max-w-[48ch] text-[14px] leading-[1.75] text-forest/60">
+						<span class="max-w-[48ch] text-[15px] leading-[1.75] text-forest/75">
 							{policy.summary}
 						</span>
 					</a>
@@ -75,7 +75,7 @@
 				>
 					Not here?
 				</h2>
-				<p class="mt-5 max-w-[38ch] text-[14px] leading-[1.8] text-forest/70">
+				<p class="mt-5 max-w-[38ch] text-[15px] leading-[1.8] text-forest/70">
 					Search across every page above, or write to a person. Both reach the same answer; one is
 					faster.
 				</p>
@@ -83,7 +83,7 @@
 
 			<form class="flex flex-col justify-end gap-4" action="/search" method="GET" role="search">
 				<label
-					class="text-[10px] tracking-[0.2em] text-forest/55 uppercase"
+					class="text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium"
 					for="policy-index-search">Search information</label
 				>
 				<input
@@ -91,16 +91,16 @@
 					name="q"
 					type="search"
 					placeholder="returns, pincode, deposit…"
-					class="w-full border-b border-forest/25 bg-transparent px-0 py-3 text-sm text-forest transition-colors outline-none placeholder:text-forest/35 focus:border-forest"
+					class="w-full border-b border-forest/25 bg-transparent px-0 py-3 text-[15px] text-forest transition-colors outline-none placeholder:text-forest/60 focus:border-forest"
 				/>
 				<button
-					class="self-start border border-forest px-7 py-4 text-[10px] tracking-[0.2em] text-forest uppercase transition duration-300 hover:bg-forest hover:text-cream"
+					class="self-start border border-forest px-7 py-4 text-[11px] tracking-[0.2em] text-forest uppercase transition duration-300 hover:bg-forest hover:text-cream font-medium"
 					type="submit">Search</button
 				>
 			</form>
 
-			<div class="flex flex-col justify-end gap-3 text-[13px]">
-				<p class="text-[10px] tracking-[0.2em] text-forest/55 uppercase">Talk to us</p>
+			<div class="flex flex-col justify-end gap-3 text-[14px]">
+				<p class="text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">Talk to us</p>
 				<a
 					class="text-forest underline decoration-gold decoration-1 underline-offset-[5px] transition hover:decoration-forest"
 					href="mailto:{SUPPORT_EMAIL}">{SUPPORT_EMAIL}</a

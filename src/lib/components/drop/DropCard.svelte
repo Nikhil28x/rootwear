@@ -25,8 +25,8 @@
 		timeZone: 'Asia/Kolkata'
 	});
 
-	let muted = $derived(surface === 'light' ? 'text-forest/65' : 'text-stone-400');
-	let faint = $derived(surface === 'light' ? 'text-forest/45' : 'text-stone-500');
+	let muted = $derived(surface === 'light' ? 'text-forest/75' : 'text-stone-400');
+	let faint = $derived(surface === 'light' ? 'text-forest/65' : 'text-stone-400');
 	let plate = $derived(surface === 'light' ? 'bg-forest/5' : 'bg-white/5');
 </script>
 
@@ -45,11 +45,11 @@
 		</div>
 
 		<div class="flex items-baseline justify-between gap-4">
-			<span class="text-[10px] tracking-[0.28em] uppercase">
+			<span class="text-[11px] tracking-[0.28em] uppercase font-medium">
 				Drop {String(card.number).padStart(2, '0')}
 			</span>
 			<time
-				class="text-[10px] tracking-[0.2em] uppercase {faint}"
+				class="text-[11px] tracking-[0.2em] uppercase {faint} font-medium"
 				datetime={new Date(card.releasedAt).toISOString()}
 			>
 				{released.format(card.releasedAt)}
@@ -61,10 +61,10 @@
 
 	<div class="flex flex-wrap items-center gap-3">
 		<DropStateMark state={card.state} {surface} />
-		<span class="text-[10px] tracking-[0.2em] uppercase {faint}">
+		<span class="text-[11px] tracking-[0.2em] uppercase {faint} font-medium">
 			{card.editionSize} pieces
 		</span>
 	</div>
 
-	<p class="max-w-prose text-sm leading-relaxed {muted}">{card.story}</p>
+	<p class="max-w-prose text-[15px] leading-relaxed {muted}">{card.story}</p>
 </article>

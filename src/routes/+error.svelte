@@ -35,11 +35,11 @@
 					art: 'text-forest',
 					heading: 'text-forest',
 					body: 'text-forest/70',
-					micro: 'text-forest/50',
+					micro: 'text-forest/70',
 					rule: 'border-forest/15',
-					field: 'border-forest/25 text-forest placeholder:text-forest/35 focus:border-forest',
+					field: 'border-forest/25 text-forest placeholder:text-forest/60 focus:border-forest',
 					button: 'border-forest text-forest hover:bg-forest hover:text-cream',
-					link: 'text-forest/60 hover:text-forest',
+					link: 'text-forest/75 hover:text-forest',
 					anchor:
 						'text-forest underline decoration-gold decoration-1 underline-offset-[5px] hover:decoration-forest'
 				}
@@ -48,9 +48,9 @@
 					art: 'text-cream',
 					heading: 'text-stone-100',
 					body: 'text-stone-400',
-					micro: 'text-stone-500',
+					micro: 'text-stone-400',
 					rule: 'border-white/12',
-					field: 'border-white/25 text-stone-100 placeholder:text-stone-500 focus:border-white',
+					field: 'border-white/25 text-stone-100 placeholder:text-stone-400 focus:border-white',
 					button: 'border-white/35 text-stone-100 hover:bg-white hover:text-black',
 					link: 'text-stone-400 hover:text-stone-100',
 					anchor:
@@ -87,7 +87,7 @@
 						Something<br />gave way.
 					{/if}
 				</h1>
-				<p class="mt-8 max-w-[52ch] text-[15px] leading-[1.85] {tone.body}">
+				<p class="mt-8 max-w-[52ch] text-[16px] leading-[1.85] {tone.body}">
 					{#if notFound}
 						That page has never existed, or never will. Everything we have written is still where
 						you left it — the drops, and the eight information pages.
@@ -100,7 +100,7 @@
 				{#if notFound}
 					<!-- 404 offers the two ways out: search, and the index. -->
 					<form class="mt-12 max-w-xl" method="GET" action="/search" role="search">
-						<label for="error-q" class="text-[10px] tracking-[0.2em] uppercase {tone.micro}">
+						<label for="error-q" class="text-[11px] tracking-[0.2em] uppercase {tone.micro} font-medium">
 							Search the information pages
 						</label>
 						<div class="mt-3 flex flex-wrap items-end gap-5">
@@ -113,14 +113,14 @@
 								class="min-w-0 flex-1 border-b bg-transparent px-0 py-3 text-base transition-colors outline-none {tone.field}"
 							/>
 							<button
-								class="border px-7 py-4 text-[10px] tracking-[0.2em] uppercase transition duration-300 {tone.button}"
+								class="border px-7 py-4 text-[11px] tracking-[0.2em] uppercase transition duration-300 {tone.button} font-medium"
 								type="submit">Search</button
 							>
 						</div>
 					</form>
 				{/if}
 
-				<div class="mt-12 flex flex-wrap gap-x-8 gap-y-3 text-[11px] tracking-[0.18em] uppercase">
+				<div class="mt-12 flex flex-wrap gap-x-8 gap-y-3 text-[12px] tracking-[0.18em] uppercase font-medium">
 					<a class="transition {tone.link}" href="/">Home</a>
 					<a class="transition {tone.link}" href="/drops">Drops</a>
 					<a class="transition {tone.link}" href="/policies">Information</a>
@@ -129,8 +129,8 @@
 			</div>
 
 			<aside class="border-t pt-8 {tone.rule} lg:sticky lg:top-28 lg:self-start">
-				<p class="text-[10px] tracking-[0.2em] uppercase {tone.micro}">Everything in writing</p>
-				<ul class="mt-5 flex flex-col gap-3 text-[13px]">
+				<p class="text-[11px] tracking-[0.2em] uppercase {tone.micro} font-medium">Everything in writing</p>
+				<ul class="mt-5 flex flex-col gap-3 text-[14px]">
 					{#each links as link (link.slug)}
 						<li>
 							<a class="transition {tone.link}" href="/policies/{link.slug}">{link.title} →</a>
@@ -141,8 +141,8 @@
 				</ul>
 
 				<div class="mt-10 border-t pt-8 {tone.rule}">
-					<p class="text-[10px] tracking-[0.2em] uppercase {tone.micro}">Stuck?</p>
-					<p class="mt-5 flex flex-col gap-3 text-[13px]">
+					<p class="text-[11px] tracking-[0.2em] uppercase {tone.micro} font-medium">Stuck?</p>
+					<p class="mt-5 flex flex-col gap-3 text-[14px]">
 						<a class={tone.anchor} href="mailto:{SUPPORT_EMAIL}">{SUPPORT_EMAIL}</a>
 						<a class={tone.anchor} href={INSTAGRAM_URL} rel="noreferrer noopener">
 							{INSTAGRAM_HANDLE} — DM

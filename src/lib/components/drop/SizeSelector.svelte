@@ -34,20 +34,20 @@
 	let firstOpen = $derived(offers.find((offer) => !offer.soldOut)?.variantId ?? '');
 
 	let muted = $derived(surface === 'light' ? 'text-forest/70' : 'text-stone-400');
-	let faint = $derived(surface === 'light' ? 'text-forest/50' : 'text-stone-500');
+	let faint = $derived(surface === 'light' ? 'text-forest/70' : 'text-stone-400');
 
 	let open = $derived(
 		surface === 'light'
-			? 'border-forest/30 text-forest peer-checked:bg-forest peer-checked:text-cream peer-hover:border-forest'
+			? 'border-forest/60 text-forest peer-checked:bg-forest peer-checked:text-cream peer-hover:border-forest'
 			: 'border-white/30 text-stone-100 peer-checked:bg-cream peer-checked:text-forest peer-hover:border-white'
 	);
 	let gone = $derived(
-		surface === 'light' ? 'border-forest/10 text-forest/30' : 'border-white/10 text-stone-600'
+		surface === 'light' ? 'border-forest/10 text-forest/60' : 'border-white/10 text-stone-400'
 	);
 </script>
 
 <fieldset class="flex flex-col gap-4 border-0 p-0">
-	<legend class="text-[10px] tracking-[0.28em] uppercase {faint}">Size</legend>
+	<legend class="text-[11px] tracking-[0.28em] uppercase {faint} font-medium">Size</legend>
 
 	<div class="grid grid-cols-5 gap-2">
 		{#each offers as offer (offer.variantId)}
@@ -64,9 +64,9 @@
 				/>
 				<label
 					for="{idPrefix}-{offer.variantId}"
-					class="flex h-16 flex-col items-center justify-center gap-1 border text-xs tracking-[0.18em] uppercase transition select-none peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-current {offer.soldOut
+					class="flex h-16 flex-col items-center justify-center gap-1 border text-[13px] tracking-[0.18em] uppercase transition select-none peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-current {offer.soldOut
 						? gone
-						: open}"
+						: open} font-medium"
 				>
 					<span class={offer.soldOut ? 'line-through' : ''}>{offer.size}</span>
 					{#if offer.soldOut}
@@ -80,7 +80,7 @@
 	</div>
 
 	<!-- §09: the fit disclaimer is MANDATORY wherever a size is shown. -->
-	<p class="text-xs leading-relaxed {muted}">{FIT_DISCLAIMER}</p>
+	<p class="text-[13px] leading-relaxed {muted}">{FIT_DISCLAIMER}</p>
 	<!-- §11: the same returns wording as checkout, the email and the policy page. -->
-	<p class="text-[10px] tracking-[0.2em] uppercase {faint}">{RETURNS_SHORT}</p>
+	<p class="text-[11px] tracking-[0.2em] uppercase {faint} font-medium">{RETURNS_SHORT}</p>
 </fieldset>

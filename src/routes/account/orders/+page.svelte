@@ -15,13 +15,13 @@
 	<meta name="robots" content="noindex, nofollow" />
 </svelte:head>
 
-<Eyebrow tone="strong" class="text-forest/50">Account</Eyebrow>
+<Eyebrow tone="strong" class="text-forest/70">Account</Eyebrow>
 <h1
 	class="display mt-6 text-[clamp(2.8rem,6.4vw,5.4rem)] leading-[0.86] tracking-[-0.055em] text-forest"
 >
 	Orders.
 </h1>
-<p class="mt-8 max-w-[54ch] text-[15px] leading-[1.85] text-forest/70">
+<p class="mt-8 max-w-[54ch] text-[16px] leading-[1.85] text-forest/70">
 	Every order, with the price you actually paid on the day. We keep the archive intact, so a piece
 	bought during the tease still shows its locked price here long after the drop has closed.
 </p>
@@ -39,28 +39,28 @@
 	<!-- A wide table scrolls INSIDE its own container; the page body never does. -->
 	<div class="mt-14 border border-forest/20">
 		<div class="account-scroll overflow-x-auto">
-			<table class="w-full min-w-[44rem] border-collapse text-sm">
+			<table class="w-full min-w-[44rem] border-collapse text-[15px]">
 				<caption class="sr-only">Your orders, most recent first</caption>
 				<thead>
 					<tr class="border-b border-forest/20 text-left">
-						<th scope="col" class="px-5 py-4 text-[10px] tracking-[0.2em] text-forest/50 uppercase">
+						<th scope="col" class="px-5 py-4 text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">
 							Order
 						</th>
-						<th scope="col" class="px-5 py-4 text-[10px] tracking-[0.2em] text-forest/50 uppercase">
+						<th scope="col" class="px-5 py-4 text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">
 							Placed
 						</th>
-						<th scope="col" class="px-5 py-4 text-[10px] tracking-[0.2em] text-forest/50 uppercase">
+						<th scope="col" class="px-5 py-4 text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">
 							State
 						</th>
-						<th scope="col" class="px-5 py-4 text-[10px] tracking-[0.2em] text-forest/50 uppercase">
+						<th scope="col" class="px-5 py-4 text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">
 							Pieces
 						</th>
-						<th scope="col" class="px-5 py-4 text-[10px] tracking-[0.2em] text-forest/50 uppercase">
+						<th scope="col" class="px-5 py-4 text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">
 							Tracking
 						</th>
 						<th
 							scope="col"
-							class="px-5 py-4 text-right text-[10px] tracking-[0.2em] text-forest/50 uppercase"
+							class="px-5 py-4 text-right text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium"
 						>
 							Total
 						</th>
@@ -86,10 +86,10 @@
 							<td class="px-5 py-5 text-forest/70">{order.itemCount}</td>
 							<td class="px-5 py-5 text-forest/70">
 								{#if order.trackingRef}
-									<span class="block text-xs text-forest/50">{order.courierName ?? 'Courier'}</span>
+									<span class="block text-[13px] text-forest/70">{order.courierName ?? 'Courier'}</span>
 									{order.trackingRef}
 								{:else}
-									<span class="text-forest/45">—</span>
+									<span class="text-forest/65">—</span>
 								{/if}
 							</td>
 							<td class="px-5 py-5 text-right whitespace-nowrap text-forest">
@@ -103,7 +103,7 @@
 	</div>
 
 	<!-- §11: the SAME returns wording as the product page, checkout and policy. -->
-	<p class="mt-10 max-w-[62ch] text-xs leading-[1.9] text-forest/55">{RETURNS_WORDING}</p>
+	<p class="mt-10 max-w-[62ch] text-[13px] leading-[1.9] text-forest/70">{RETURNS_WORDING}</p>
 {/if}
 
 <style>

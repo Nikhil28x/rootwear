@@ -54,14 +54,14 @@
 <main class="relative isolate overflow-hidden bg-cream text-forest">
 	<div class="mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
 		<div class="max-w-[46rem]">
-			<Eyebrow tone="strong" class="text-forest/50">Order {data.order.orderNumber}</Eyebrow>
+			<Eyebrow tone="strong" class="text-forest/70">Order {data.order.orderNumber}</Eyebrow>
 			<h1
 				class="display mt-6 text-[clamp(3rem,7vw,7rem)] leading-[0.82] tracking-[-0.055em] text-forest"
 			>
 				Confirming<br />with the bank.
 			</h1>
 
-			<p class="mt-8 max-w-[54ch] text-[15px] leading-[1.85] text-forest/70" aria-live="polite">
+			<p class="mt-8 max-w-[54ch] text-[16px] leading-[1.85] text-forest/70" aria-live="polite">
 				{#if givenUp}
 					This is taking longer than it should. Your order is recorded as
 					{data.order.orderNumber} and nothing is lost. Write to {SUPPORT_EMAIL} with that reference and
@@ -72,7 +72,7 @@
 				{/if}
 			</p>
 
-			<dl class="mt-12 flex list-none flex-col gap-3 border-t border-forest/15 pt-8 text-sm">
+			<dl class="mt-12 flex list-none flex-col gap-3 border-t border-forest/15 pt-8 text-[15px]">
 				<div class="flex justify-between gap-6">
 					<dt class="text-forest/70">Order</dt>
 					<dd class="m-0 text-forest tabular-nums">{data.order.orderNumber}</dd>
@@ -90,24 +90,24 @@
 			{#if problem}
 				<p
 					role="alert"
-					class="mt-10 border-l-2 border-alert bg-alert/[0.06] px-6 py-5 text-sm leading-relaxed text-alert"
+					class="mt-10 border-l-2 border-alert bg-alert/[0.06] px-6 py-5 text-[15px] leading-relaxed text-alert"
 				>
 					{problem}
 				</p>
 			{/if}
 
 			{#if data.payment.gatewayOrderId === null}
-				<p class="mt-10 border-l-2 border-gold pl-4 text-sm leading-relaxed text-forest/75">
+				<p class="mt-10 border-l-2 border-gold pl-4 text-[15px] leading-relaxed text-forest/75">
 					{PAYMENT_NOT_CONFIGURED_MESSAGE}
 				</p>
 			{:else if data.payment.name === 'mock'}
 				<!-- The stand-in gateway. It posts a signed body to the real webhook
 				     route, so the path exercised here is the path that runs live. -->
 				<section class="mt-12 border-t border-forest/15 pt-8" aria-labelledby="mock-heading">
-					<h2 id="mock-heading" class="text-[10px] tracking-[0.28em] text-forest/60 uppercase">
+					<h2 id="mock-heading" class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 						Stand-in gateway
 					</h2>
-					<p class="mt-4 max-w-[54ch] text-sm leading-relaxed text-forest/70">
+					<p class="mt-4 max-w-[54ch] text-[15px] leading-relaxed text-forest/70">
 						Razorpay is not switched on in this environment. Settling here posts a signed
 						notification to the same webhook the live gateway calls — raw body, HMAC, event-id
 						de-duplication and all. No money moves.
@@ -123,13 +123,13 @@
 				<!-- A link, not a button: with JavaScript off this is the whole poll. -->
 				<a
 					href="/checkout/processing?order={data.order.publicToken}"
-					class="text-[10px] tracking-[0.2em] text-forest/60 uppercase underline-offset-4 hover:text-forest hover:underline"
+					class="text-[11px] tracking-[0.2em] text-forest/75 uppercase underline-offset-4 hover:text-forest hover:underline font-medium"
 				>
 					Check again
 				</a>
 				<a
 					href="mailto:{SUPPORT_EMAIL}"
-					class="text-[10px] tracking-[0.2em] text-forest/60 uppercase underline-offset-4 hover:text-forest hover:underline"
+					class="text-[11px] tracking-[0.2em] text-forest/75 uppercase underline-offset-4 hover:text-forest hover:underline font-medium"
 				>
 					{SUPPORT_EMAIL}
 				</a>

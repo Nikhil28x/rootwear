@@ -15,7 +15,7 @@
 
 <details class="group border-b {rule}" {open}>
 	<summary
-		class="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-[11px] tracking-[0.18em] uppercase {tone} marker:hidden [&::-webkit-details-marker]:hidden"
+		class="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-[12px] tracking-[0.18em] uppercase {tone} marker:hidden [&::-webkit-details-marker]:hidden font-medium"
 	>
 		{title}
 		<span
@@ -23,7 +23,7 @@
 			aria-hidden="true">+</span
 		>
 	</summary>
-	<div class="pb-6 text-sm leading-relaxed {surface === 'light' ? 'text-forest/75' : 'text-stone-400'}">
+	<div class="pb-6 text-[15px] leading-relaxed {surface === 'light' ? 'text-forest/75' : 'text-stone-400'}">
 		{@render children()}
 	</div>
 </details>

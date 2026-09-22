@@ -53,7 +53,7 @@
 
 <Accordion {title} {surface} open={open || Boolean(mine)}>
 	{#if done}
-		<p class="text-sm leading-relaxed {muted}" role="status">
+		<p class="text-[15px] leading-relaxed {muted}" role="status">
 			{done.status === 'already'
 				? `You are already on the list for ${size}. We will write to ${done.email} the moment it comes back.`
 				: `Noted. We will write to ${done.email} when ${size} comes back, and about nothing else.`}
@@ -92,7 +92,7 @@
 			/>
 
 			{#if problem?.field === 'form'}
-				<p class="border-l-2 border-gold pl-3 text-xs {muted}" role="alert">{problem.message}</p>
+				<p class="border-l-2 border-gold pl-3 text-[13px] {muted}" role="alert">{problem.message}</p>
 			{/if}
 
 			<Button type="submit" variant="outline" {surface}>Notify me</Button>

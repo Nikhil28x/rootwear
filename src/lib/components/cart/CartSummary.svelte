@@ -29,11 +29,11 @@
 </script>
 
 <section class="flex flex-col gap-5" aria-labelledby="summary-heading">
-	<h2 id="summary-heading" class="text-[10px] tracking-[0.28em] text-forest/60 uppercase">
+	<h2 id="summary-heading" class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 		{heading}
 	</h2>
 
-	<dl class="m-0 flex flex-col gap-3 text-sm">
+	<dl class="m-0 flex flex-col gap-3 text-[15px]">
 		<div class="flex items-baseline justify-between gap-6">
 			<dt class="text-forest/70">Subtotal</dt>
 			<dd class="m-0 text-forest tabular-nums">{formatInr(totals.subtotal)}</dd>
@@ -61,7 +61,7 @@
 
 	<!-- §10: displayed prices are INCLUSIVE of GST. Stated plainly rather than
 	     left for the customer to wonder about at the last step. -->
-	<p class="text-[10px] tracking-[0.2em] text-forest/50 uppercase">
+	<p class="text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">
 		{#if GST_POSITION.registered}
 			Inclusive of GST · GSTIN {GST_POSITION.gstin}
 		{:else}

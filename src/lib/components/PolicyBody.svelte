@@ -44,7 +44,7 @@
 					heading: 'text-forest',
 					rule: 'border-forest/15',
 					callout: 'border-gold bg-forest/[0.035] text-forest',
-					tableHead: 'text-forest/55',
+					tableHead: 'text-forest/70',
 					tableRule: 'border-forest/15',
 					link: 'text-forest underline decoration-gold decoration-1 underline-offset-[5px] transition hover:decoration-forest'
 				}
@@ -53,7 +53,7 @@
 					heading: 'text-stone-100',
 					rule: 'border-white/12',
 					callout: 'border-gold bg-white/[0.03] text-stone-200',
-					tableHead: 'text-stone-500',
+					tableHead: 'text-stone-400',
 					tableRule: 'border-white/12',
 					link: 'text-stone-100 underline decoration-gold decoration-1 underline-offset-[5px] transition hover:decoration-stone-100'
 				}
@@ -69,11 +69,11 @@
 				{block.text}
 			</h2>
 		{:else if block.type === 'paragraph'}
-			<p class="max-w-[62ch] text-[15px] leading-[1.85] {tone.body}">{block.text}</p>
+			<p class="max-w-[62ch] text-[16px] leading-[1.85] {tone.body}">{block.text}</p>
 		{:else if block.type === 'list'}
 			<ul class="flex max-w-[62ch] flex-col gap-3">
 				{#each block.items as item, j (j)}
-					<li class="relative pl-7 text-[15px] leading-[1.75] {tone.body}">
+					<li class="relative pl-7 text-[16px] leading-[1.75] {tone.body}">
 						<span class="absolute top-[0.85em] left-0 block h-px w-4 bg-gold" aria-hidden="true"
 						></span>
 						{item}
@@ -81,13 +81,13 @@
 				{/each}
 			</ul>
 		{:else if block.type === 'callout'}
-			<p class="max-w-[62ch] border-l-2 px-6 py-5 text-[15px] leading-[1.75] {tone.callout}">
+			<p class="max-w-[62ch] border-l-2 px-6 py-5 text-[16px] leading-[1.75] {tone.callout}">
 				{block.text}
 			</p>
 		{:else if block.type === 'table'}
 			<!-- A wide table scrolls inside its own container; the page never does. -->
 			<div class="-mx-5 overflow-x-auto px-5 sm:mx-0 sm:px-0">
-				<table class="w-full min-w-[34rem] border-collapse text-left text-[14px]">
+				<table class="w-full min-w-[34rem] border-collapse text-left text-[15px]">
 					{#if captions[i]}
 						<caption class="sr-only">{captions[i]}</caption>
 					{/if}
@@ -96,7 +96,7 @@
 							{#each block.head as cell, j (j)}
 								<th
 									scope="col"
-									class="py-3 pr-6 text-[10px] font-normal tracking-[0.2em] uppercase {tone.tableHead}"
+									class="py-3 pr-6 text-[11px] font-normal tracking-[0.2em] uppercase {tone.tableHead}"
 								>
 									{cell}
 								</th>
@@ -110,7 +110,7 @@
 									{#if c === 0}
 										<th
 											scope="row"
-											class="py-4 pr-6 align-top text-[14px] font-normal tracking-[0.06em] {tone.heading}"
+											class="py-4 pr-6 align-top text-[15px] font-normal tracking-[0.06em] {tone.heading}"
 										>
 											{cell}
 										</th>
@@ -129,8 +129,8 @@
 				must appear wherever support is offered. Read from business.ts.
 			-->
 			<div class="mt-4 max-w-[62ch] border-t pt-8 {tone.rule}">
-				<p class="text-[15px] leading-[1.75] {tone.body}">{block.text}</p>
-				<p class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-[13px]">
+				<p class="text-[16px] leading-[1.75] {tone.body}">{block.text}</p>
+				<p class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-[14px]">
 					<a class={tone.link} href="mailto:{SUPPORT_EMAIL}">{SUPPORT_EMAIL}</a>
 					<a class={tone.link} href={INSTAGRAM_URL} rel="noreferrer noopener">
 						{INSTAGRAM_HANDLE} — DM

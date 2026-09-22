@@ -54,12 +54,12 @@
 
 <form method="GET" class="mt-12 flex flex-wrap items-end gap-6 border-y border-white/10 py-6">
 	<div class="flex min-w-[14rem] flex-col gap-2">
-		<label for="f-state" class="text-[10px] tracking-[0.2em] text-stone-400 uppercase">State</label>
+		<label for="f-state" class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">State</label>
 		<select
 			id="f-state"
 			name="state"
 			value={data.filter.state}
-			class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-sm text-stone-100 outline-none focus:border-white"
+			class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-[15px] text-stone-100 outline-none focus:border-white"
 		>
 			<option value="">Every state</option>
 			{#each data.states as state (state)}
@@ -69,13 +69,13 @@
 	</div>
 	<button
 		type="submit"
-		class="border border-white/35 px-7 py-3 text-[10px] tracking-[0.2em] text-stone-100 uppercase transition hover:bg-white hover:text-black"
+		class="border border-white/35 px-7 py-3 text-[11px] tracking-[0.2em] text-stone-100 uppercase transition hover:bg-white hover:text-black font-medium"
 	>
 		Apply
 	</button>
 	<a
 		href="/admin/reservations"
-		class="text-[10px] tracking-[0.2em] text-stone-500 uppercase underline underline-offset-4 hover:text-stone-200"
+		class="text-[11px] tracking-[0.2em] text-stone-400 uppercase underline underline-offset-4 hover:text-stone-200 font-medium"
 	>
 		Clear
 	</a>
@@ -87,7 +87,7 @@
 		note="{data.reservations.length} record{data.reservations.length === 1 ? '' : 's'}"
 	>
 		<thead>
-			<tr class="text-[10px] tracking-[0.2em] text-stone-500 uppercase">
+			<tr class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Piece</th>
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">State</th>
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Drop / size</th>
@@ -108,18 +108,18 @@
 						>
 							{row.pieceNumber === null ? 'No piece' : `Piece ${row.pieceNumber}`}
 						</a>
-						<span class="mt-1 block text-xs text-stone-500 tabular-nums">
+						<span class="mt-1 block text-[13px] text-stone-400 tabular-nums">
 							{shortDateTime(row.createdAt)}
 						</span>
 					</th>
 					<td class="border-b border-white/5 px-4 py-3">
 						<StatePill label={humanise(row.state)} tone={reservationTone(row.state)} />
 					</td>
-					<td class="border-b border-white/5 px-4 py-3 text-sm">
+					<td class="border-b border-white/5 px-4 py-3 text-[15px]">
 						{row.dropName}
-						<span class="block text-xs text-stone-500">{row.sku} · {row.size}</span>
+						<span class="block text-[13px] text-stone-400">{row.sku} · {row.size}</span>
 					</td>
-					<td class="border-b border-white/5 px-4 py-3 text-sm">{row.email}</td>
+					<td class="border-b border-white/5 px-4 py-3 text-[15px]">{row.email}</td>
 					<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">
 						{formatInr(row.lockedPrice)}
 					</td>
@@ -129,9 +129,9 @@
 					<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">
 						{formatInr(row.balance)}
 					</td>
-					<td class="border-b border-white/5 px-4 py-3 text-xs whitespace-nowrap tabular-nums">
+					<td class="border-b border-white/5 px-4 py-3 text-[13px] whitespace-nowrap tabular-nums">
 						{#if row.balanceDueBy === null}
-							<span class="text-stone-600">—</span>
+							<span class="text-stone-400">—</span>
 						{:else if overdue(row.balanceDueBy, row.state)}
 							<span class="text-cream">
 								{relativeDays(row.balanceDueBy, data.now)} · overdue
@@ -143,7 +143,7 @@
 				</tr>
 			{:else}
 				<tr>
-					<td colspan="8" class="px-4 py-10 text-sm text-stone-500">
+					<td colspan="8" class="px-4 py-10 text-[15px] text-stone-400">
 						No reservations in this view. They appear the moment a deposit is confirmed and a piece
 						number is allocated.
 					</td>

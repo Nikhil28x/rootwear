@@ -24,7 +24,7 @@
 <div class="flex flex-wrap items-end justify-between gap-6">
 	<div class="flex flex-col gap-3">
 		{#if eyebrow}
-			<p class="text-[10px] tracking-[0.28em] text-stone-500 uppercase">{eyebrow}</p>
+			<p class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">{eyebrow}</p>
 		{/if}
 		{#if level === 1}
 			<h1 class="display text-[clamp(2.2rem,4.4vw,3.6rem)] leading-[0.9] tracking-[-0.045em] text-cream">
@@ -36,7 +36,7 @@
 			</h2>
 		{/if}
 		{#if note}
-			<p class="max-w-[46rem] text-sm leading-relaxed text-stone-400">{note}</p>
+			<p class="max-w-[46rem] text-[15px] leading-relaxed text-stone-400">{note}</p>
 		{/if}
 	</div>
 	{#if actions}

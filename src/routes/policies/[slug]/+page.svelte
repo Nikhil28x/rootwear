@@ -43,16 +43,16 @@
 				move is the one a reader actually wants.
 			-->
 			<aside class="lg:sticky lg:top-28 lg:self-start">
-				<Eyebrow tone="strong" class="text-forest/50">Information</Eyebrow>
+				<Eyebrow tone="strong" class="text-forest/70">Information</Eyebrow>
 				<nav class="mt-6 border-t border-forest/15" aria-label="Policy pages">
 					<ul>
 						{#each data.siblings as sibling (sibling.slug)}
 							<li class="border-b border-forest/15">
 								<a
-									class="flex items-center justify-between gap-3 py-4 text-[11px] tracking-[0.18em] uppercase transition {sibling.slug ===
+									class="flex items-center justify-between gap-3 py-4 text-[12px] tracking-[0.18em] uppercase transition {sibling.slug ===
 									current
 										? 'text-forest'
-										: 'text-forest/55 hover:text-forest'}"
+										: 'text-forest/70 hover:text-forest'} font-medium"
 									href="/policies/{sibling.slug}"
 									aria-current={sibling.slug === current ? 'page' : undefined}
 								>
@@ -67,7 +67,7 @@
 				</nav>
 
 				<div
-					class="mt-10 flex flex-col gap-3 text-[11px] tracking-[0.16em] text-forest/55 uppercase"
+					class="mt-10 flex flex-col gap-3 text-[12px] tracking-[0.16em] text-forest/70 uppercase font-medium"
 				>
 					<a class="transition hover:text-forest" href="/search">Search these pages</a>
 					<a class="transition hover:text-forest" href="/contact">Write to us</a>
@@ -82,11 +82,11 @@
 						{data.policy.title}
 					</h1>
 					{#if data.policy.summary}
-						<p class="mt-8 max-w-[52ch] text-[15px] leading-[1.75] text-forest/70">
+						<p class="mt-8 max-w-[52ch] text-[16px] leading-[1.75] text-forest/70">
 							{data.policy.summary}
 						</p>
 					{/if}
-					<p class="mt-8 text-[10px] tracking-[0.28em] text-forest/45 uppercase">
+					<p class="mt-8 text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">
 						Revised {updated}
 					</p>
 				</header>
@@ -96,7 +96,7 @@
 				</div>
 
 				<footer
-					class="mt-20 flex flex-wrap items-center justify-between gap-6 border-t border-forest/15 pt-8 text-[10px] tracking-[0.2em] text-forest/50 uppercase"
+					class="mt-20 flex flex-wrap items-center justify-between gap-6 border-t border-forest/15 pt-8 text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium"
 				>
 					<span>/policies/{data.policy.slug}</span>
 					<a class="transition hover:text-forest" href="/policies">All information pages</a>

@@ -14,7 +14,7 @@
 		$props();
 
 	const styles = {
-		note: 'border-forest/30 text-forest/70',
+		note: 'border-forest/60 text-forest/70',
 		error: 'border-alert bg-alert/[0.06] text-forest',
 		success: 'border-gold bg-gold/[0.08] text-forest'
 	} as const;
@@ -23,7 +23,7 @@
 </script>
 
 <p
-	class="border-l-2 px-5 py-4 text-sm leading-relaxed {styles[kind]}"
+	class="border-l-2 px-5 py-4 text-[15px] leading-relaxed {styles[kind]}"
 	role={live ? 'alert' : undefined}
 >
 	{@render children()}

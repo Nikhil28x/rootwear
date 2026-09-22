@@ -73,7 +73,7 @@
 	let strong = $derived(surface === 'light' ? 'text-forest' : 'text-stone-100');
 </script>
 
-<p class="text-[10px] tracking-[0.28em] uppercase {tone} {klass}">
+<p class="text-[11px] tracking-[0.28em] uppercase {tone} {klass} font-medium">
 	{#if expired}
 		<!-- Announced, not merely greyed: the hold lapsing changes what is for
 		     sale, so it is worth a screen reader's attention. -->

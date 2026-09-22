@@ -22,13 +22,13 @@
 </svelte:head>
 
 <div class="max-w-md">
-	<Eyebrow tone="strong" class="text-forest/50">Account</Eyebrow>
+	<Eyebrow tone="strong" class="text-forest/70">Account</Eyebrow>
 	<h1
 		class="display mt-6 text-[clamp(2.6rem,6vw,4.2rem)] leading-[0.9] tracking-[-0.05em] text-forest"
 	>
 		Sign in.
 	</h1>
-	<p class="mt-7 max-w-[46ch] text-[15px] leading-[1.85] text-forest/70">
+	<p class="mt-7 max-w-[46ch] text-[16px] leading-[1.85] text-forest/70">
 		Your orders, your pre-orders and the addresses you have saved. You never need an account to buy
 		from us — this is only here to keep track afterwards.
 	</p>
@@ -95,7 +95,7 @@
 		</Button>
 	</form>
 
-	<div class="mt-12 border-t border-forest/15 pt-7 text-xs leading-[1.9] text-forest/60">
+	<div class="mt-12 border-t border-forest/15 pt-7 text-[13px] leading-[1.9] text-forest/75">
 		<p>
 			Accounts are offered after a purchase, from your order confirmation, rather than demanded
 			before one. If you have ordered as a guest and want the history attached, write to

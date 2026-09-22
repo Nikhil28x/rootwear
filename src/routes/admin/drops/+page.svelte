@@ -41,7 +41,7 @@
 <div class="mt-10">
 	<TableShell caption="Every drop" note="Newest first">
 		<thead>
-			<tr class="text-[10px] tracking-[0.2em] text-stone-500 uppercase">
+			<tr class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Drop</th>
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">State</th>
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Launch (IST)</th>
@@ -59,7 +59,7 @@
 						<span class="block text-cream">
 							Drop {String(row.number).padStart(2, '0')} — {row.name}
 						</span>
-						<span class="block text-xs text-stone-500">/drops/{row.slug}</span>
+						<span class="block text-[13px] text-stone-400">/drops/{row.slug}</span>
 					</th>
 					<td class="border-b border-white/5 px-4 py-3">
 						<StatePill
@@ -68,7 +68,7 @@
 							title={DROP_STATE_DESCRIPTION[row.state]}
 						/>
 					</td>
-					<td class="border-b border-white/5 px-4 py-3 text-xs whitespace-nowrap tabular-nums">
+					<td class="border-b border-white/5 px-4 py-3 text-[13px] whitespace-nowrap tabular-nums">
 						{shortDateTime(row.launchInstant)}
 					</td>
 					<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">{row.editionSize}</td>
@@ -82,14 +82,14 @@
 					</td>
 					<td class="border-b border-white/5 px-4 py-3 text-right">
 						<a
-							class="text-xs tracking-[0.16em] text-stone-300 uppercase underline underline-offset-4 hover:text-cream"
+							class="text-[13px] tracking-[0.16em] text-stone-300 uppercase underline underline-offset-4 hover:text-cream font-medium"
 							href="/admin/drops/{row.slug}">Open</a
 						>
 					</td>
 				</tr>
 			{:else}
 				<tr>
-					<td colspan="8" class="px-4 py-10 text-sm text-stone-500">
+					<td colspan="8" class="px-4 py-10 text-[15px] text-stone-400">
 						No drops yet. Drop 01 is seeded by the catalogue fixtures and by migration 0008.
 					</td>
 				</tr>

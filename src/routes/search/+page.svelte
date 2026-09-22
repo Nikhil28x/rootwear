@@ -31,14 +31,14 @@
 			<h1 class="display mt-6 text-[clamp(3rem,7vw,7rem)] leading-[0.82] tracking-[-0.055em]">
 				Look it up.
 			</h1>
-			<p class="mt-8 max-w-[52ch] text-[15px] leading-[1.85] text-stone-400">
+			<p class="mt-8 max-w-[52ch] text-[16px] leading-[1.85] text-stone-400">
 				Every information page — shipping, returns, sizing, care, privacy, terms and the rest —
 				searched at once.
 			</p>
 		</header>
 
 		<form class="mt-14 max-w-2xl" method="GET" role="search">
-			<label for="q" class="text-[10px] tracking-[0.2em] text-stone-400 uppercase">
+			<label for="q" class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
 				Search information pages
 			</label>
 			<div class="mt-3 flex flex-wrap items-end gap-5">
@@ -49,10 +49,10 @@
 					value={data.query}
 					placeholder="returns, pincode, deposit, chest…"
 					autocomplete="off"
-					class="min-w-0 flex-1 border-b border-white/25 bg-transparent px-0 py-3 text-lg text-stone-100 transition-colors outline-none placeholder:text-stone-500 focus:border-white"
+					class="min-w-0 flex-1 border-b border-white/25 bg-transparent px-0 py-3 text-lg text-stone-100 transition-colors outline-none placeholder:text-stone-400 focus:border-white"
 				/>
 				<button
-					class="border border-white/35 px-7 py-4 text-[10px] tracking-[0.2em] text-stone-100 uppercase transition duration-300 hover:bg-white hover:text-black"
+					class="border border-white/35 px-7 py-4 text-[11px] tracking-[0.2em] text-stone-100 uppercase transition duration-300 hover:bg-white hover:text-black font-medium"
 					type="submit">Search</button
 				>
 			</div>
@@ -61,7 +61,7 @@
 		{#if !data.searched}
 			<!-- Empty state: nothing has been asked yet, so offer the index. -->
 			<section class="mt-20 border-t border-white/12 pt-12" aria-labelledby="everything-title">
-				<h2 id="everything-title" class="text-[10px] tracking-[0.28em] text-stone-400 uppercase">
+				<h2 id="everything-title" class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
 					Everything there is
 				</h2>
 				<ul class="mt-8 grid gap-x-12 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
@@ -73,7 +73,7 @@
 								>
 									{entry.title}
 								</span>
-								<span class="mt-3 block max-w-[38ch] text-[13px] leading-[1.75] text-stone-500">
+								<span class="mt-3 block max-w-[38ch] text-[14px] leading-[1.75] text-stone-400">
 									{entry.summary}
 								</span>
 							</a>
@@ -84,11 +84,11 @@
 		{:else if count === 0}
 			<!-- No-results state: say so plainly, then give somewhere to go. -->
 			<section class="mt-20 border-t border-white/12 pt-12" aria-live="polite">
-				<p class="text-[10px] tracking-[0.28em] text-stone-400 uppercase">No matches</p>
+				<p class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">No matches</p>
 				<p class="display mt-6 text-[clamp(1.8rem,3.4vw,2.8rem)] leading-[1.05] tracking-[-0.02em]">
 					Nothing on file for “{data.query}”.
 				</p>
-				<p class="mt-6 max-w-[48ch] text-[15px] leading-[1.85] text-stone-400">
+				<p class="mt-6 max-w-[48ch] text-[16px] leading-[1.85] text-stone-400">
 					Try a plainer word — “size”, “refund”, “deposit”, “pincode”. Or read the eight pages
 					straight through; there are not many.
 				</p>
@@ -97,14 +97,14 @@
 					{#each data.everything as entry (entry.slug)}
 						<li>
 							<a
-								class="text-[11px] tracking-[0.18em] text-stone-400 uppercase transition hover:text-stone-100"
+								class="text-[12px] tracking-[0.18em] text-stone-400 uppercase transition hover:text-stone-100 font-medium"
 								href="/policies/{entry.slug}">{entry.title}</a
 							>
 						</li>
 					{/each}
 				</ul>
 
-				<p class="mt-12 flex flex-wrap items-center gap-x-6 gap-y-2 text-[13px]">
+				<p class="mt-12 flex flex-wrap items-center gap-x-6 gap-y-2 text-[14px]">
 					<a
 						class="text-stone-100 underline decoration-gold decoration-1 underline-offset-[5px] transition hover:decoration-stone-100"
 						href="/contact">Ask us instead</a
@@ -122,7 +122,7 @@
 			</section>
 		{:else}
 			<section class="mt-20 border-t border-white/12" aria-live="polite">
-				<p class="py-6 text-[10px] tracking-[0.28em] text-stone-400 uppercase">
+				<p class="py-6 text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
 					{count}
 					{count === 1 ? 'page' : 'pages'} for “{data.query}”
 				</p>
@@ -134,7 +134,7 @@
 								class="group grid items-baseline gap-3 py-9 sm:grid-cols-[4rem_minmax(0,18rem)_minmax(0,1fr)] sm:gap-8"
 								href="/policies/{result.slug}"
 							>
-								<span class="text-[10px] tracking-[0.28em] text-stone-600 tabular-nums">
+								<span class="text-[11px] tracking-[0.28em] text-stone-400 tabular-nums">
 									{String(i + 1).padStart(2, '0')}
 								</span>
 								<span
@@ -143,10 +143,10 @@
 									{result.title}
 								</span>
 								<span class="flex max-w-[52ch] flex-col gap-2">
-									<span class="text-[14px] leading-[1.75] text-stone-400">{result.summary}</span>
+									<span class="text-[15px] leading-[1.75] text-stone-400">{result.summary}</span>
 									{#if result.snippet}
 										<span
-											class="border-l border-gold/60 pl-4 text-[13px] leading-[1.75] text-stone-500"
+											class="border-l border-gold/60 pl-4 text-[14px] leading-[1.75] text-stone-400"
 										>
 											{result.snippet}
 										</span>
@@ -157,7 +157,7 @@
 					{/each}
 				</ul>
 
-				<p class="mt-12 text-[13px] leading-relaxed text-stone-500">
+				<p class="mt-12 text-[14px] leading-relaxed text-stone-400">
 					Not what you meant?
 					<a
 						class="text-stone-100 underline decoration-gold decoration-1 underline-offset-[5px] transition hover:decoration-stone-100"

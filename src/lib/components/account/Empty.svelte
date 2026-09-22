@@ -22,7 +22,7 @@
 
 <div class="border border-forest/15 px-7 py-12 sm:px-10 sm:py-16">
 	<p class="display text-[clamp(1.6rem,2.6vw,2.2rem)] leading-[1.1] text-forest">{title}</p>
-	<div class="mt-4 max-w-[46ch] text-sm leading-[1.85] text-forest/70">
+	<div class="mt-4 max-w-[46ch] text-[15px] leading-[1.85] text-forest/70">
 		{@render children()}
 	</div>
 	{#if actionHref && actionLabel}

@@ -14,10 +14,14 @@
 	--color-strain: #e0b23c;
 
 	/* Semantic status colours. Deliberately separate from the brand palette:
-	   an error is not a brand accent, and the two must never be swapped. Tuned
-	   to clear 4.5:1 on both the cream and forest-black grounds. */
-	--color-alert: #9d4526;
-	--color-alert-light: #d97a52;
+	   an error is not a brand accent, and the two must never be swapped.
+	
+	   The suffix names the GROUND, not the colour. --color-alert is dark ink
+	   for use ON CREAM; --color-alert-light is light ink for use ON
+	   FOREST-BLACK. Using the wrong one is readable-looking in isolation and
+	   fails badly in place: alert-light on cream measures 2.67:1. */
+	--color-alert: #9d4526;        /* on cream   — 6.6:1 */
+	--color-alert-light: #d97a52;  /* on near-black — 7.4:1 */
 
 	/* Type stacks — previously written out in four places. */
 	--font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -90,7 +94,7 @@ a:focus-visible {
 }
 
 .site-header--light .nav-link {
-	color: rgba(31, 56, 42, 0.72);
+	color: rgba(31, 56, 42, 0.88);
 }
 
 .site-header--light .nav-link:hover {
@@ -116,7 +120,10 @@ a:focus-visible {
 
 .nav-link {
 	position: relative;
-	color: rgba(255, 255, 255, 0.72);
+	/* Was 0.72 at weight 400. Uppercase at 11px with 0.2em tracking needs both
+	   more ink and more weight, or it reads as a grey smudge on the glass. */
+	color: rgba(255, 255, 255, 0.88);
+	font-weight: 500;
 	transition: color 180ms ease;
 }
 

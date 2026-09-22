@@ -13,7 +13,7 @@
 </script>
 
 <span
-	class="inline-flex items-center border px-3 py-1.5 text-[10px] tracking-[0.28em] uppercase {tone}"
+	class="inline-flex items-center border px-3 py-1.5 text-[11px] tracking-[0.28em] uppercase {tone} font-medium"
 >
 	{mark.label}
 </span>

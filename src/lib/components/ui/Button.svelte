@@ -31,7 +31,7 @@
 	} = $props();
 
 	const base =
-		'inline-flex items-center justify-center gap-2 px-7 py-4 text-[10px] ' +
+		'inline-flex items-center justify-center gap-2 px-7 py-4 text-[11px] ' +
 		'tracking-[0.2em] uppercase transition duration-300 ' +
 		'disabled:cursor-not-allowed disabled:opacity-40';
 

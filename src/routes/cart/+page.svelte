@@ -61,7 +61,7 @@
 	</div>
 
 	<div class="mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
-		<Eyebrow tone="strong" class="text-forest/50">Cart</Eyebrow>
+		<Eyebrow tone="strong" class="text-forest/70">Cart</Eyebrow>
 		<h1
 			class="display mt-6 text-[clamp(3rem,7vw,7rem)] leading-[0.82] tracking-[-0.055em] text-forest"
 		>
@@ -72,7 +72,7 @@
 			<!-- Announced, not merely coloured. -->
 			<p
 				role="alert"
-				class="mt-10 max-w-[56ch] border-l-2 border-alert bg-alert/[0.06] px-6 py-5 text-sm leading-relaxed text-alert"
+				class="mt-10 max-w-[56ch] border-l-2 border-alert bg-alert/[0.06] px-6 py-5 text-[15px] leading-relaxed text-alert"
 			>
 				{problem}
 			</p>
@@ -81,7 +81,7 @@
 		{#if holdLapsed && !empty}
 			<p
 				role="status"
-				class="mt-10 max-w-[56ch] border-l-2 border-gold px-6 py-5 text-sm leading-relaxed text-forest/75"
+				class="mt-10 max-w-[56ch] border-l-2 border-gold px-6 py-5 text-[15px] leading-relaxed text-forest/75"
 			>
 				{HOLD_EXPIRED_MESSAGE}
 			</p>
@@ -89,7 +89,7 @@
 
 		{#if empty}
 			<div class="mt-16 max-w-[52ch]">
-				<p class="text-[15px] leading-[1.85] text-forest/70">
+				<p class="text-[16px] leading-[1.85] text-forest/70">
 					Nothing here yet. Pieces are cut in small numbered editions, so a drop is either open or
 					it is not — the archive keeps every piece on its page either way.
 				</p>
@@ -111,7 +111,7 @@
 								onexpire={onHoldExpired}
 								surface="light"
 							/>
-							<p class="max-w-[46ch] text-xs leading-relaxed text-forest/60">
+							<p class="max-w-[46ch] text-[13px] leading-relaxed text-forest/75">
 								A drop is {cart.holdMinutes} minutes of held stock, then it goes back on sale. It keeps
 								a full basket from blocking a piece somebody is waiting for.
 							</p>
@@ -141,8 +141,8 @@
 					</CartSummary>
 
 					{#if cart.hasPreOrderLine}
-						<p class="border-l-2 border-gold pl-4 text-xs leading-relaxed text-forest/75">
-							<span class="block text-[10px] tracking-[0.28em] text-forest uppercase">
+						<p class="border-l-2 border-gold pl-4 text-[13px] leading-relaxed text-forest/75">
+							<span class="block text-[11px] tracking-[0.28em] text-forest uppercase font-medium">
 								Pre-order in this basket
 							</span>
 							<span class="mt-2 block">
@@ -156,10 +156,10 @@
 					     confirmation email and the returns policy. Imported from one
 					     module, never retyped. -->
 					<section class="border-t border-forest/15 pt-6" aria-labelledby="returns-heading">
-						<h2 id="returns-heading" class="text-[10px] tracking-[0.28em] text-forest/60 uppercase">
+						<h2 id="returns-heading" class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 							Returns
 						</h2>
-						<p class="mt-4 text-xs leading-relaxed text-forest/70">{RETURNS_WORDING}</p>
+						<p class="mt-4 text-[13px] leading-relaxed text-forest/70">{RETURNS_WORDING}</p>
 					</section>
 				</div>
 			</div>

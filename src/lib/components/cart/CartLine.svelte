@@ -48,19 +48,19 @@
 	<div class="flex flex-col gap-4">
 		<div class="flex flex-wrap items-start justify-between gap-4">
 			<div class="flex flex-col gap-2">
-				<p class="text-[10px] tracking-[0.28em] text-forest/50 uppercase">{line.dropName}</p>
+				<p class="text-[11px] tracking-[0.28em] text-forest/70 uppercase font-medium">{line.dropName}</p>
 				<h2 class="display text-2xl leading-[0.95] tracking-[-0.03em] text-forest">
 					<a {href} class="underline-offset-4 hover:underline">{line.productName}</a>
 				</h2>
-				<p class="text-[10px] tracking-[0.2em] text-forest/60 uppercase">
+				<p class="text-[11px] tracking-[0.2em] text-forest/75 uppercase font-medium">
 					Size {line.size} · {line.sku}
 				</p>
 			</div>
 
 			<div class="text-right">
-				<p class="text-sm text-forest tabular-nums">{formatInr(line.lineTotal)}</p>
+				<p class="text-[15px] text-forest tabular-nums">{formatInr(line.lineTotal)}</p>
 				{#if line.quantity > 1}
-					<p class="mt-1 text-[10px] tracking-[0.2em] text-forest/50 uppercase">
+					<p class="mt-1 text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">
 						{formatInr(line.unitPrice)} each
 					</p>
 				{/if}
@@ -68,13 +68,13 @@
 		</div>
 
 		<!-- §09: the fit disclaimer is mandatory wherever a size is shown. -->
-		<p class="text-xs leading-relaxed text-forest/60">{FIT_DISCLAIMER}</p>
+		<p class="text-[13px] leading-relaxed text-forest/75">{FIT_DISCLAIMER}</p>
 
 		{#if line.isPreOrder}
 			<!-- §07/§08: a pre-order line states what is actually known — the drop's
 			     own instant, and that the hand number lands on payment. -->
-			<p class="border-l-2 border-gold pl-4 text-xs leading-relaxed text-forest/75">
-				<span class="block text-[10px] tracking-[0.28em] text-forest uppercase">Pre-order</span>
+			<p class="border-l-2 border-gold pl-4 text-[13px] leading-relaxed text-forest/75">
+				<span class="block text-[11px] tracking-[0.28em] text-forest uppercase font-medium">Pre-order</span>
 				<span class="mt-2 block">
 					Made for the drop. Dispatch follows the drop opening on
 					{dispatchDate.format(launchInstant)}, and your hand number is allocated when your payment
@@ -86,7 +86,7 @@
 		{#if line.overSubscribed}
 			<!-- §06: stock is finite and the scarcity is the point. Said in words,
 			     not signalled by colour alone. -->
-			<p class="border-l-2 border-alert pl-4 text-xs leading-relaxed text-alert">
+			<p class="border-l-2 border-alert pl-4 text-[13px] leading-relaxed text-alert">
 				Only {line.availableNow}
 				{line.availableNow === 1 ? 'piece is' : 'pieces are'} still available in this size. Reduce the
 				quantity to continue.
@@ -99,7 +99,7 @@
 				<div class="flex flex-col gap-2">
 					<label
 						for="qty-{line.variantId}"
-						class="text-[10px] tracking-[0.2em] text-forest/60 uppercase"
+						class="text-[11px] tracking-[0.2em] text-forest/75 uppercase font-medium"
 					>
 						Quantity
 					</label>
@@ -111,13 +111,13 @@
 						min="1"
 						max={maxQuantity}
 						value={line.quantity}
-						class="w-20 border-b border-forest/25 bg-transparent px-0 py-2 text-sm text-forest tabular-nums outline-none focus:border-forest"
+						class="w-20 border-b border-forest/25 bg-transparent px-0 py-2 text-[15px] text-forest tabular-nums outline-none focus:border-forest"
 					/>
 				</div>
 				<button
 					type="submit"
 					disabled={busy}
-					class="border border-forest/30 px-4 py-2 text-[10px] tracking-[0.2em] text-forest uppercase transition hover:bg-forest hover:text-cream disabled:opacity-40"
+					class="border border-forest/60 px-4 py-2 text-[11px] tracking-[0.2em] text-forest uppercase transition hover:bg-forest hover:text-cream disabled:opacity-40 font-medium"
 				>
 					Update
 				</button>
@@ -128,7 +128,7 @@
 				<button
 					type="submit"
 					disabled={busy}
-					class="pb-2 text-[10px] tracking-[0.2em] text-forest/60 uppercase underline-offset-4 transition hover:text-forest hover:underline disabled:opacity-40"
+					class="pb-2 text-[11px] tracking-[0.2em] text-forest/75 uppercase underline-offset-4 transition hover:text-forest hover:underline disabled:opacity-40 font-medium"
 				>
 					Remove
 				</button>

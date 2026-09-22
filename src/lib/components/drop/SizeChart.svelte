@@ -17,7 +17,7 @@
 	}: { modelHeightCm?: number; modelWornSize?: string; surface?: 'dark' | 'light' } = $props();
 
 	let muted = $derived(surface === 'light' ? 'text-forest/70' : 'text-stone-400');
-	let faint = $derived(surface === 'light' ? 'text-forest/50' : 'text-stone-500');
+	let faint = $derived(surface === 'light' ? 'text-forest/70' : 'text-stone-400');
 	let rule = $derived(surface === 'light' ? 'border-forest/15' : 'border-white/12');
 </script>
 
@@ -27,7 +27,7 @@
 		<table class="w-full min-w-[26rem] border-collapse text-left">
 			<caption class="sr-only">Chest and length in centimetres, by size</caption>
 			<thead>
-				<tr class="border-b {rule} text-[10px] tracking-[0.28em] uppercase {faint}">
+				<tr class="border-b {rule} text-[11px] tracking-[0.28em] uppercase {faint} font-medium">
 					<th scope="col" class="py-3 pr-4 font-normal">Size</th>
 					<th scope="col" class="py-3 pr-4 font-normal">Chest (cm)</th>
 					<th scope="col" class="py-3 font-normal">Length (cm)</th>
@@ -36,27 +36,27 @@
 			<tbody>
 				{#each SIZES as size (size)}
 					<tr class="border-b {rule}">
-						<th scope="row" class="py-3 pr-4 text-xs font-normal tracking-[0.18em] uppercase">
+						<th scope="row" class="py-3 pr-4 text-[13px] font-normal tracking-[0.18em] uppercase">
 							{size}
 						</th>
-						<td class="py-3 pr-4 text-sm tabular-nums {muted}">{SIZE_CHART[size].chestCm}</td>
-						<td class="py-3 text-sm tabular-nums {muted}">{SIZE_CHART[size].lengthCm}</td>
+						<td class="py-3 pr-4 text-[15px] tabular-nums {muted}">{SIZE_CHART[size].chestCm}</td>
+						<td class="py-3 text-[15px] tabular-nums {muted}">{SIZE_CHART[size].lengthCm}</td>
 					</tr>
 				{/each}
 			</tbody>
 		</table>
 	</div>
 
-	<p class="text-sm leading-relaxed {muted}">{FIT_DISCLAIMER}</p>
+	<p class="text-[15px] leading-relaxed {muted}">{FIT_DISCLAIMER}</p>
 
 	{#if modelHeightCm > 0 && modelWornSize}
-		<p class="text-sm leading-relaxed {muted}">
+		<p class="text-[15px] leading-relaxed {muted}">
 			The model is {modelHeightCm} cm and wears a {modelWornSize}.
 		</p>
 	{/if}
 
 	{#if SIZE_CHART_IS_PROVISIONAL}
-		<p class="text-[10px] tracking-[0.2em] uppercase {faint}">
+		<p class="text-[11px] tracking-[0.2em] uppercase {faint} font-medium">
 			Measurements provisional until the garment spec is signed off.
 		</p>
 	{/if}

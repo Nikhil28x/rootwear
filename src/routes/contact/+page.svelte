@@ -43,7 +43,9 @@
 	 */
 	const ERROR_ACCENT = 'text-alert';
 	const ERROR_RULE = 'border-alert bg-alert/[0.06]';
-	const OUTSTANDING_ACCENT = 'text-alert-light';
+	// This page sits on cream, so it needs the DARK-ink alert. text-alert-light
+	// is the light-ink variant for forest-black grounds and measured 2.67:1 here.
+	const OUTSTANDING_ACCENT = 'text-alert';
 	/** Set when the visitor asks to write a second message after a success. */
 	let writeAnother = $state(false);
 
@@ -91,13 +93,13 @@
 	<div class="mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
 		<div class="grid gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-24">
 			<div class="max-w-[46rem]">
-				<Eyebrow tone="strong" class="text-forest/50">Contact</Eyebrow>
+				<Eyebrow tone="strong" class="text-forest/70">Contact</Eyebrow>
 				<h1
 					class="display mt-6 text-[clamp(3rem,7vw,7rem)] leading-[0.82] tracking-[-0.055em] text-forest"
 				>
 					Reach out<br />to us.
 				</h1>
-				<p class="mt-8 max-w-[52ch] text-[15px] leading-[1.85] text-forest/70">
+				<p class="mt-8 max-w-[52ch] text-[16px] leading-[1.85] text-forest/70">
 					There is no ticket queue and no autoresponder. A message sent here is read by the person
 					who packed your parcel, usually within two working days.
 				</p>
@@ -115,7 +117,7 @@
 						>
 							That has reached us.
 						</h2>
-						<p class="mt-5 max-w-[46ch] text-[15px] leading-[1.8] text-forest/75">
+						<p class="mt-5 max-w-[46ch] text-[16px] leading-[1.8] text-forest/75">
 							{#if form && 'name' in form && form.name}
 								Thank you, {form.name}.
 							{/if}
@@ -148,13 +150,13 @@
 					>
 						{#if errorList.length > 0 || failure}
 							<div class="border-l-2 px-6 py-5 {ERROR_RULE}" role="alert" tabindex="-1">
-								<p class="text-[10px] tracking-[0.2em] uppercase {ERROR_ACCENT}">
+								<p class="text-[11px] tracking-[0.2em] uppercase {ERROR_ACCENT} font-medium">
 									{failure ? 'Not sent' : 'Check these first'}
 								</p>
 								{#if failure}
-									<p class="mt-3 text-[14px] leading-[1.75] text-forest/80">{failure}</p>
+									<p class="mt-3 text-[15px] leading-[1.75] text-forest/80">{failure}</p>
 								{:else}
-									<ul class="mt-3 flex flex-col gap-1.5 text-[14px] leading-[1.6] text-forest/80">
+									<ul class="mt-3 flex flex-col gap-1.5 text-[15px] leading-[1.6] text-forest/80">
 										{#each errorList as [key, text] (key)}
 											<li>{text}</li>
 										{/each}
@@ -232,7 +234,7 @@
 							<Button type="submit" variant="solid" surface="light" disabled={submitting}>
 								{submitting ? 'Sending…' : 'Send it'}
 							</Button>
-							<p class="text-[11px] leading-relaxed text-forest/50">
+							<p class="text-[12px] leading-relaxed text-forest/70">
 								We use what you write here only to answer you. Nothing else.
 							</p>
 						</div>
@@ -246,14 +248,14 @@
 			-->
 			<aside class="lg:sticky lg:top-28 lg:self-start">
 				<div class="border-t border-forest/15 pt-8">
-					<p class="text-[10px] tracking-[0.2em] text-forest/55 uppercase">Direct</p>
-					<ul class="mt-5 flex flex-col gap-4 text-[14px]">
+					<p class="text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">Direct</p>
+					<ul class="mt-5 flex flex-col gap-4 text-[15px]">
 						<li>
 							<a
 								class="text-forest underline decoration-gold decoration-1 underline-offset-[5px] transition hover:decoration-forest"
 								href="mailto:{SUPPORT_EMAIL}">{SUPPORT_EMAIL}</a
 							>
-							<span class="mt-1 block text-[12px] leading-relaxed text-forest/55">
+							<span class="mt-1 block text-[13px] leading-relaxed text-forest/70">
 								Best for anything with an order number or a photograph attached.
 							</span>
 						</li>
@@ -263,7 +265,7 @@
 								href={INSTAGRAM_URL}
 								rel="noreferrer noopener">{INSTAGRAM_HANDLE} — DM</a
 							>
-							<span class="mt-1 block text-[12px] leading-relaxed text-forest/55">
+							<span class="mt-1 block text-[13px] leading-relaxed text-forest/70">
 								Fastest for a quick question about a drop or a size.
 							</span>
 						</li>
@@ -271,8 +273,8 @@
 				</div>
 
 				<div class="mt-10 border-t border-forest/15 pt-8">
-					<p class="text-[10px] tracking-[0.2em] text-forest/55 uppercase">Before you write</p>
-					<ul class="mt-5 flex flex-col gap-3 text-[13px] leading-relaxed">
+					<p class="text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">Before you write</p>
+					<ul class="mt-5 flex flex-col gap-3 text-[14px] leading-relaxed">
 						<li>
 							<a class="text-forest/70 transition hover:text-forest" href="/policies/track-order">
 								Tracking an order →
@@ -297,15 +299,15 @@
 				</div>
 
 				<div class="mt-10 border-t border-forest/15 pt-8">
-					<p class="text-[10px] tracking-[0.2em] text-forest/55 uppercase">{BUSINESS_NAME}</p>
+					<p class="text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">{BUSINESS_NAME}</p>
 					<address
-						class="mt-4 text-[13px] leading-relaxed not-italic {isPlaceholder(BUSINESS_ADDRESS)
+						class="mt-4 text-[14px] leading-relaxed not-italic {isPlaceholder(BUSINESS_ADDRESS)
 							? OUTSTANDING_ACCENT
 							: 'text-forest/70'}"
 					>
 						{displayValue(BUSINESS_ADDRESS)}
 					</address>
-					<p class="mt-4 text-[12px] leading-relaxed text-forest/55">
+					<p class="mt-4 text-[13px] leading-relaxed text-forest/70">
 						Post reaches us, but slowly. Email or DM is quicker for anything about an order.
 					</p>
 				</div>

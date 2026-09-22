@@ -57,7 +57,7 @@
 				{#each hero.title as line, i (i)}<span class="block">{line}</span>{/each}
 			</h1>
 
-			<p class="mt-10 max-w-xl text-sm leading-[1.95] text-forest/70">{hero.lede}</p>
+			<p class="mt-10 max-w-xl text-[15px] leading-[1.95] text-forest/70">{hero.lede}</p>
 
 			<nav
 				class="mt-16 flex flex-wrap gap-x-12 gap-y-5 border-t border-forest/15 pt-7"
@@ -65,11 +65,11 @@
 			>
 				{#each content.movements as movement (movement.id)}
 					<a
-						class="group flex items-baseline gap-3 text-[10px] tracking-[0.28em] text-forest/75 uppercase transition hover:text-forest"
+						class="group flex items-baseline gap-3 text-[11px] tracking-[0.28em] text-forest/75 uppercase transition hover:text-forest font-medium"
 						href="#{movement.id}"
 					>
 						<span class="tabular-nums">{movement.index}</span>
-						<span class="border-b border-transparent pb-1 transition group-hover:border-forest/40">
+						<span class="border-b border-transparent pb-1 transition group-hover:border-forest/65">
 							{movement.eyebrow}
 						</span>
 					</a>
@@ -112,17 +112,17 @@
 			>
 				<Eyebrow>What it is</Eyebrow>
 				<div class="grid gap-12 md:grid-cols-2 md:gap-16">
-					<div class="flex flex-col gap-6 text-sm leading-[1.95] text-stone-400">
+					<div class="flex flex-col gap-6 text-[15px] leading-[1.95] text-stone-400">
 						{#each content.hemp.body as paragraph, i (i)}<p>{paragraph}</p>{/each}
 					</div>
 
 					<dl class="self-start">
 						{#each content.hemp.properties as property (property.term)}
 							<div class="border-t border-white/10 py-5 first:border-t-0 first:pt-0">
-								<dt class="text-[11px] tracking-[0.22em] text-stone-100 uppercase">
+								<dt class="text-[12px] tracking-[0.22em] text-stone-100 uppercase font-medium">
 									{property.term}
 								</dt>
-								<dd class="mt-2 text-sm leading-[1.8] text-stone-400">{property.definition}</dd>
+								<dd class="mt-2 text-[15px] leading-[1.8] text-stone-400">{property.definition}</dd>
 							</div>
 						{/each}
 					</dl>
@@ -148,7 +148,7 @@
 											>{fact.unit}</span
 										>{/if}
 								</span>
-								<span class="text-[10px] leading-relaxed tracking-[0.2em] text-stone-400 uppercase">
+								<span class="text-[11px] leading-relaxed tracking-[0.2em] text-stone-400 uppercase font-medium">
 									{fact.label}
 								</span>
 							</li>
@@ -164,12 +164,12 @@
 				<ol class="grid gap-12 md:grid-cols-2 md:gap-16">
 					{#each content.hemp.lineage as entry (entry.era)}
 						<li class="flex flex-col gap-4">
-							<p class="text-[10px] tracking-[0.24em] text-gold uppercase">
+							<p class="text-[11px] tracking-[0.24em] text-gold uppercase font-medium">
 								{entry.era} · {entry.place}
 							</p>
-							<p class="max-w-md text-sm leading-[1.95] text-stone-400">{entry.body}</p>
+							<p class="max-w-md text-[15px] leading-[1.95] text-stone-400">{entry.body}</p>
 							<a
-								class="self-start text-[10px] tracking-[0.2em] text-stone-300 uppercase underline underline-offset-[6px] transition hover:text-white"
+								class="self-start text-[11px] tracking-[0.2em] text-stone-300 uppercase underline underline-offset-[6px] transition hover:text-white font-medium"
 								href={entry.source.href}
 								target="_blank"
 								rel="noreferrer noopener"
@@ -213,9 +213,9 @@
 					<li
 						class="grid gap-4 border-t border-forest/15 py-10 md:grid-cols-[4rem_minmax(0,16rem)_minmax(0,1fr)] md:items-baseline md:gap-10"
 					>
-						<span class="display text-3xl text-forest/55 tabular-nums">{principle.index}</span>
-						<h3 class="text-[11px] tracking-[0.22em] uppercase">{principle.title}</h3>
-						<p class="max-w-2xl text-sm leading-[1.95] text-forest/70">{principle.body}</p>
+						<span class="display text-3xl text-forest/70 tabular-nums">{principle.index}</span>
+						<h3 class="text-[12px] tracking-[0.22em] uppercase font-medium">{principle.title}</h3>
+						<p class="max-w-2xl text-[15px] leading-[1.95] text-forest/70">{principle.body}</p>
 					</li>
 				{/each}
 			</ol>
@@ -226,7 +226,7 @@
 				>
 					{content.whyRootwear.pullquote.line}
 				</blockquote>
-				<figcaption class="mt-7 text-[10px] tracking-[0.28em] text-forest/70 uppercase">
+				<figcaption class="mt-7 text-[11px] tracking-[0.28em] text-forest/70 uppercase font-medium">
 					{content.whyRootwear.pullquote.attribution}
 				</figcaption>
 			</figure>
@@ -263,9 +263,9 @@
 			<ol class="mt-20 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-5">
 				{#each content.making.steps as step (step.index)}
 					<li class="flex flex-col gap-5 border-t border-white/15 pt-6">
-						<span class="text-[10px] tracking-[0.28em] text-gold tabular-nums">{step.index}</span>
+						<span class="text-[11px] tracking-[0.28em] text-gold tabular-nums">{step.index}</span>
 						<h3 class="display text-2xl leading-[1.05] text-stone-100">{step.title}</h3>
-						<p class="text-[13px] leading-[1.85] text-stone-400">{step.body}</p>
+						<p class="text-[14px] leading-[1.85] text-stone-400">{step.body}</p>
 					</li>
 				{/each}
 			</ol>
@@ -289,7 +289,7 @@
 				{#each close.line as line, i (i)}<span class="block">{line}</span>{/each}
 			</p>
 
-			<p class="mt-9 max-w-xl text-sm leading-[1.95] text-cream/75">{close.body}</p>
+			<p class="mt-9 max-w-xl text-[15px] leading-[1.95] text-cream/75">{close.body}</p>
 
 			<div class="mt-12 flex flex-wrap items-center gap-5">
 				{#each close.actions as action (action.href)}

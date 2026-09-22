@@ -37,7 +37,7 @@
 	<meta name="robots" content="noindex, nofollow" />
 </svelte:head>
 
-<p class="text-[10px] tracking-[0.24em] text-stone-500 uppercase">
+<p class="text-[11px] tracking-[0.24em] text-stone-400 uppercase font-medium">
 	<a class="underline underline-offset-4 hover:text-stone-200" href="/admin/drops">Drops</a>
 	<span aria-hidden="true"> / </span>{drop.slug}
 </p>
@@ -57,12 +57,12 @@
 		label={drop.published ? 'Live on site' : 'Hidden from site'}
 		tone={drop.published ? 'outline' : 'quiet'}
 	/>
-	<p class="text-xs text-stone-500 tabular-nums">
+	<p class="text-[13px] text-stone-400 tabular-nums">
 		Launch {shortDateTime(drop.launchInstant)} IST · edition of {drop.editionSize} · {totalStock} in
 		stock · {totalReserved} reserved
 	</p>
 	<a
-		class="text-xs tracking-[0.16em] text-stone-400 uppercase underline underline-offset-4 hover:text-cream"
+		class="text-[13px] tracking-[0.16em] text-stone-400 uppercase underline underline-offset-4 hover:text-cream font-medium"
 		href="/drops/{drop.slug}"
 	>
 		View on site →
@@ -95,14 +95,14 @@
 			<input type="hidden" name="from" value={drop.state} />
 
 			<div class="flex min-w-[16rem] flex-col gap-2">
-				<label for="to-state" class="text-[10px] tracking-[0.2em] text-stone-400 uppercase">
+				<label for="to-state" class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
 					Move to
 				</label>
 				<select
 					id="to-state"
 					name="to"
 					required
-					class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-sm text-stone-100 outline-none focus:border-white"
+					class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-[15px] text-stone-100 outline-none focus:border-white"
 				>
 					{#each drop.legalTransitions as next (next)}
 						<option value={next}>{humanise(next)} — {DROP_STATE_DESCRIPTION[next]}</option>
@@ -112,7 +112,7 @@
 
 			<button
 				type="submit"
-				class="border border-white/35 px-7 py-3 text-[10px] tracking-[0.2em] text-stone-100 uppercase transition hover:bg-white hover:text-black"
+				class="border border-white/35 px-7 py-3 text-[11px] tracking-[0.2em] text-stone-100 uppercase transition hover:bg-white hover:text-black font-medium"
 			>
 				Move state
 			</button>
@@ -141,7 +141,7 @@
 		<input type="hidden" name="dropId" value={drop.id} />
 
 		<div class="flex min-w-[16rem] flex-col gap-2">
-			<label for="launch-instant" class="text-[10px] tracking-[0.2em] text-stone-400 uppercase">
+			<label for="launch-instant" class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
 				Launch date and time (IST)
 			</label>
 			<input
@@ -151,16 +151,16 @@
 				required
 				value={istInputValue(drop.launchInstant)}
 				aria-describedby="launch-hint"
-				class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-sm text-stone-100 tabular-nums outline-none focus:border-white"
+				class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-[15px] text-stone-100 tabular-nums outline-none focus:border-white"
 			/>
-			<p id="launch-hint" class="text-xs text-stone-500">
+			<p id="launch-hint" class="text-[13px] text-stone-400">
 				Read as India Standard Time, whatever zone this browser is in.
 			</p>
 		</div>
 
 		<button
 			type="submit"
-			class="border border-white/35 px-7 py-3 text-[10px] tracking-[0.2em] text-stone-100 uppercase transition hover:bg-white hover:text-black"
+			class="border border-white/35 px-7 py-3 text-[11px] tracking-[0.2em] text-stone-100 uppercase transition hover:bg-white hover:text-black font-medium"
 		>
 			Save launch instant
 		</button>
@@ -182,24 +182,24 @@
 	{/if}
 
 	<div class="flex flex-col gap-4">
-		<p class="text-[10px] tracking-[0.28em] text-stone-400 uppercase">
+		<p class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
 			Tease schedule, derived
 		</p>
 		<ol class="flex flex-wrap gap-px bg-white/10">
 			{#each stages as stage (stage.index)}
 				<li class="flex min-w-[7rem] flex-1 flex-col gap-1.5 bg-forest/40 px-4 py-3">
-					<span class="text-[10px] tracking-[0.2em] text-stone-500 uppercase">
+					<span class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
 						Stage {stage.index}
 					</span>
-					<span class="text-xs text-stone-200 tabular-nums">{shortDate(stage.at)}</span>
+					<span class="text-[13px] text-stone-200 tabular-nums">{shortDate(stage.at)}</span>
 				</li>
 			{/each}
 			<li class="flex min-w-[7rem] flex-1 flex-col gap-1.5 bg-forest/40 px-4 py-3">
-				<span class="text-[10px] tracking-[0.2em] text-gold uppercase">Launch</span>
-				<span class="text-xs text-cream tabular-nums">{shortDateTime(drop.launchInstant)}</span>
+				<span class="text-[11px] tracking-[0.2em] text-gold uppercase font-medium">Launch</span>
+				<span class="text-[13px] text-cream tabular-nums">{shortDateTime(drop.launchInstant)}</span>
 			</li>
 		</ol>
-		<p class="text-xs leading-relaxed text-stone-500">
+		<p class="text-[13px] leading-relaxed text-stone-400">
 			{data.schedule.stageCount} stages, one a day, opening {shortDate(data.schedule.teaseStart)}. The
 			run length follows the number of stage assets supplied — adding one lengthens the tease and
 			moves its start, with no date to edit here.
@@ -220,13 +220,13 @@
 		<input type="hidden" name="published" value={drop.published ? 'false' : 'true'} />
 		<button
 			type="submit"
-			class="border px-7 py-3 text-[10px] tracking-[0.2em] uppercase transition {drop.published
+			class="border px-7 py-3 text-[11px] tracking-[0.2em] uppercase transition {drop.published
 				? 'border-white/35 text-stone-100 hover:bg-white hover:text-black'
-				: 'border-gold text-gold hover:bg-gold hover:text-forest-black'}"
+				: 'border-gold text-gold hover:bg-gold hover:text-forest-black'} font-medium"
 		>
 			{drop.published ? 'Hide from the site' : 'Publish to the site'}
 		</button>
-		<span class="text-xs text-stone-500">
+		<span class="text-[13px] text-stone-400">
 			{drop.published
 				? 'Anyone can reach /drops/' + drop.slug + ' right now.'
 				: 'Nobody outside this screen can reach this drop.'}
@@ -244,7 +244,7 @@
 
 	<TableShell caption="Stock and reservation caps" note={FIT_DISCLAIMER}>
 		<thead>
-			<tr class="text-[10px] tracking-[0.2em] text-stone-500 uppercase">
+			<tr class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Size</th>
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">SKU</th>
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-right">Reserved</th>
@@ -261,7 +261,7 @@
 					<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal text-cream">
 						{variant.size}
 					</th>
-					<td class="border-b border-white/5 px-4 py-3 text-xs text-stone-500">{variant.sku}</td>
+					<td class="border-b border-white/5 px-4 py-3 text-[13px] text-stone-400">{variant.sku}</td>
 					<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">
 						{variant.reservedCount}
 					</td>
@@ -284,7 +284,7 @@
 							min="0"
 							step="1"
 							value={variant.stockCount}
-							class="w-20 border-b border-white/25 bg-transparent px-0 py-2 text-sm text-stone-100 tabular-nums outline-none focus:border-white"
+							class="w-20 border-b border-white/25 bg-transparent px-0 py-2 text-[15px] text-stone-100 tabular-nums outline-none focus:border-white"
 						/>
 					</td>
 					<td class="border-b border-white/5 px-4 py-3">
@@ -299,7 +299,7 @@
 							min="0"
 							step="1"
 							value={variant.reserveCap}
-							class="w-20 border-b border-white/25 bg-transparent px-0 py-2 text-sm text-stone-100 tabular-nums outline-none focus:border-white"
+							class="w-20 border-b border-white/25 bg-transparent px-0 py-2 text-[15px] text-stone-100 tabular-nums outline-none focus:border-white"
 						/>
 					</td>
 					<td class="border-b border-white/5 px-4 py-3 text-right">
@@ -307,7 +307,7 @@
 							<input type="hidden" name="variantId" value={variant.id} />
 							<button
 								type="submit"
-								class="border border-white/25 px-4 py-2 text-[10px] tracking-[0.18em] text-stone-200 uppercase transition hover:bg-white hover:text-black"
+								class="border border-white/25 px-4 py-2 text-[11px] tracking-[0.18em] text-stone-200 uppercase transition hover:bg-white hover:text-black font-medium"
 							>
 								Save
 							</button>
@@ -318,7 +318,7 @@
 		</tbody>
 	</TableShell>
 
-	<p class="text-xs leading-relaxed text-stone-500">
+	<p class="text-[13px] leading-relaxed text-stone-400">
 		Sold-out sizes stay visible and greyed on the storefront rather than disappearing — the scarcity
 		is the point, and a size that vanishes reads as a bug.
 	</p>

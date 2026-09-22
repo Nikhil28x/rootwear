@@ -46,7 +46,7 @@
 		<h1 class="display text-[clamp(3rem,7vw,7rem)] leading-[0.82] tracking-[-0.055em]">
 			Every growth<br />so far.
 		</h1>
-		<p class="max-w-md text-sm leading-relaxed text-stone-400">
+		<p class="max-w-md text-[15px] leading-relaxed text-stone-400">
 			Nothing is ever taken down. A drop keeps its story, its imagery and its price long after the
 			last piece has gone — and if you missed one, you can tell us the size you wanted.
 		</p>
@@ -55,7 +55,7 @@
 	{#if data.growing}
 		<section class="mb-28 border-t border-white/12 pt-12" aria-labelledby="growing-title">
 			<div class="mb-10 flex flex-wrap items-baseline justify-between gap-4">
-				<h2 id="growing-title" class="text-[10px] tracking-[0.28em] text-stone-400 uppercase">
+				<h2 id="growing-title" class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
 					Growing now
 				</h2>
 				<DropStateMark state={data.growing.state} />
@@ -75,15 +75,15 @@
 				</a>
 
 				<div class="flex flex-col justify-center gap-6">
-					<p class="text-[10px] tracking-[0.28em] text-stone-500 uppercase">
+					<p class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
 						Drop {String(data.growing.number).padStart(2, '0')} ·
 						{data.growing.editionSize} numbered pieces
 					</p>
 					<p class="display text-[clamp(2.5rem,5vw,4.5rem)] leading-[0.88] tracking-[-0.045em]">
 						{data.growing.name}
 					</p>
-					<p class="max-w-prose text-sm leading-relaxed text-stone-400">{data.growing.story}</p>
-					<p class="max-w-prose text-xs leading-relaxed text-stone-500">
+					<p class="max-w-prose text-[15px] leading-relaxed text-stone-400">{data.growing.story}</p>
+					<p class="max-w-prose text-[13px] leading-relaxed text-stone-400">
 						{DROP_STATE_DESCRIPTION[data.growing.state]}
 					</p>
 					<div>
@@ -103,10 +103,10 @@
 		</div>
 
 		<div class="relative mb-12 flex flex-col gap-4">
-			<h2 id="past-title" class="text-[10px] tracking-[0.28em] text-stone-400 uppercase">
+			<h2 id="past-title" class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
 				Past growth
 			</h2>
-			<p class="max-w-lg text-sm leading-relaxed text-stone-400">
+			<p class="max-w-lg text-[15px] leading-relaxed text-stone-400">
 				Finished drops stay exactly as they were. Ask for one back and tell us your size — that is
 				the number we cut against.
 			</p>
@@ -115,7 +115,7 @@
 		{#if data.history.length === 0}
 			<div class="relative border border-white/12 p-8 sm:p-12">
 				<p class="display text-2xl leading-tight">The history starts with Drop 01.</p>
-				<p class="mt-4 max-w-prose text-sm leading-relaxed text-stone-400">
+				<p class="mt-4 max-w-prose text-[15px] leading-relaxed text-stone-400">
 					Nothing has finished yet. When a drop closes it moves here, with its lookbook and story
 					intact, and a request form on every size.
 				</p>
@@ -128,7 +128,7 @@
 
 						<div class="flex flex-col gap-6">
 							{#if entry.demand}
-								<p class="text-[10px] tracking-[0.28em] text-stone-500 uppercase">
+								<p class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
 									<span class="text-gold tabular-nums">{entry.demand.total}</span>
 									{entry.demand.total === 1 ? 'person has' : 'people have'} asked for this drop{#if entry.demand.topSize},
 										most often in {entry.demand.topSize}{/if}.
@@ -152,7 +152,7 @@
 	</section>
 
 	<section class="mt-28 border-t border-white/12 pt-12" aria-labelledby="index-title">
-		<h2 id="index-title" class="mb-8 text-[10px] tracking-[0.28em] text-stone-400 uppercase">
+		<h2 id="index-title" class="mb-8 text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
 			The index
 		</h2>
 
@@ -161,7 +161,7 @@
 				<caption class="sr-only">Every Rootwear drop, newest first</caption>
 				<thead>
 					<tr
-						class="border-b border-white/12 text-[10px] tracking-[0.28em] text-stone-500 uppercase"
+						class="border-b border-white/12 text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium"
 					>
 						<th scope="col" class="py-3 pr-4 font-normal">No.</th>
 						<th scope="col" class="py-3 pr-4 font-normal">Drop</th>
@@ -172,15 +172,15 @@
 				<tbody>
 					{#each data.cards as card (card.slug)}
 						<tr class="border-b border-white/8">
-							<td class="py-4 pr-4 text-xs text-stone-500 tabular-nums">
+							<td class="py-4 pr-4 text-[13px] text-stone-400 tabular-nums">
 								{String(card.number).padStart(2, '0')}
 							</td>
 							<th scope="row" class="py-4 pr-4 font-normal">
-								<a class="story-link text-sm text-stone-100" href="/drops/{card.slug}"
+								<a class="story-link text-[15px] text-stone-100" href="/drops/{card.slug}"
 									>{card.name}</a
 								>
 							</th>
-							<td class="py-4 pr-4 text-xs text-stone-500">
+							<td class="py-4 pr-4 text-[13px] text-stone-400">
 								<time datetime={new Date(card.releasedAt).toISOString()}>
 									{released.format(card.releasedAt)}
 								</time>

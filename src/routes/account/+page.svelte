@@ -28,7 +28,7 @@
 	<meta name="robots" content="noindex, nofollow" />
 </svelte:head>
 
-<Eyebrow tone="strong" class="text-forest/50">Account</Eyebrow>
+<Eyebrow tone="strong" class="text-forest/70">Account</Eyebrow>
 <h1
 	class="display mt-6 text-[clamp(2.8rem,6.4vw,5.4rem)] leading-[0.86] tracking-[-0.055em] text-forest"
 >
@@ -63,7 +63,7 @@
 	<div class="mt-16 grid gap-16 xl:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] xl:gap-20">
 		<div class="min-w-0">
 			<section aria-labelledby="latest-order-title">
-				<h2 id="latest-order-title" class="text-[10px] tracking-[0.28em] text-forest/45 uppercase">
+				<h2 id="latest-order-title" class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">
 					Most recent order
 				</h2>
 
@@ -75,7 +75,7 @@
 								<p class="display text-[clamp(1.6rem,2.8vw,2.2rem)] leading-[1.05] text-forest">
 									{latest.orderNumber}
 								</p>
-								<p class="mt-2 text-xs text-forest/55">
+								<p class="mt-2 text-[13px] text-forest/70">
 									Placed {shortDate(latest.placedAt)} ·
 									{latest.itemCount === 1 ? '1 piece' : `${latest.itemCount} pieces`}
 								</p>
@@ -83,7 +83,7 @@
 							<RecordState label={copy.label} tone={copy.tone} />
 						</div>
 
-						<p class="mt-5 max-w-[52ch] text-sm leading-[1.8] text-forest/75">{copy.sentence}</p>
+						<p class="mt-5 max-w-[52ch] text-[15px] leading-[1.8] text-forest/75">{copy.sentence}</p>
 
 						<div
 							class="mt-7 flex flex-wrap items-end justify-between gap-6 border-t border-forest/15 pt-6"
@@ -93,7 +93,7 @@
 							</p>
 							<div class="flex flex-wrap items-center gap-6">
 								{#if latest.trackingRef}
-									<p class="text-xs text-forest/60">
+									<p class="text-[13px] text-forest/75">
 										{latest.courierName ?? 'Courier'} · {latest.trackingRef}
 									</p>
 								{/if}
@@ -117,10 +117,10 @@
 
 			{#if data.preOrders.length > 0}
 				<section class="mt-16" aria-labelledby="needs-you-title">
-					<h2 id="needs-you-title" class="text-[10px] tracking-[0.28em] text-forest/45 uppercase">
+					<h2 id="needs-you-title" class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">
 						Waiting on you
 					</h2>
-					<p class="mt-4 max-w-[52ch] text-xs leading-relaxed text-forest/55">
+					<p class="mt-4 max-w-[52ch] text-[13px] leading-relaxed text-forest/70">
 						{FIT_DISCLAIMER}
 					</p>
 					<div class="mt-6 flex flex-col gap-8">
@@ -131,7 +131,7 @@
 					{#if data.outstandingCount > data.preOrders.length}
 						<p class="mt-8">
 							<a
-								class="text-[10px] tracking-[0.2em] text-forest uppercase underline underline-offset-4"
+								class="text-[11px] tracking-[0.2em] text-forest uppercase underline underline-offset-4 font-medium"
 								href="/account/pre-orders"
 							>
 								See all pre-orders
@@ -143,7 +143,7 @@
 		</div>
 
 		<aside aria-labelledby="quick-links-title">
-			<h2 id="quick-links-title" class="text-[10px] tracking-[0.28em] text-forest/45 uppercase">
+			<h2 id="quick-links-title" class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">
 				Everything else
 			</h2>
 			<ul class="mt-6 flex list-none flex-col gap-px border-t border-forest/15 p-0">
@@ -151,9 +151,9 @@
 					<li class="border-b border-forest/15">
 						<a
 							href={link.href}
-							class="flex items-baseline justify-between gap-4 py-4 text-sm text-forest/80 transition-colors hover:text-forest"
+							class="flex items-baseline justify-between gap-4 py-4 text-[15px] text-forest/80 transition-colors hover:text-forest"
 						>
-							<span class="text-[10px] tracking-[0.2em] uppercase">{link.label}</span>
+							<span class="text-[11px] tracking-[0.2em] uppercase font-medium">{link.label}</span>
 							<span class="display text-[1.1rem] leading-none text-forest">
 								{#if link.href === '/account/orders'}{data.orderCount}{/if}
 								{#if link.href === '/account/pre-orders'}{data.outstandingCount}{/if}
@@ -165,7 +165,7 @@
 					</li>
 				{/each}
 			</ul>
-			<p class="mt-6 max-w-[36ch] text-xs leading-[1.9] text-forest/50">
+			<p class="mt-6 max-w-[36ch] text-[13px] leading-[1.9] text-forest/70">
 				The figure beside pre-orders counts balances still to clear, not pieces reserved.
 			</p>
 		</aside>

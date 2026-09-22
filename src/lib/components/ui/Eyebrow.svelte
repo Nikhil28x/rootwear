@@ -17,6 +17,6 @@
 	};
 </script>
 
-<p class="text-[10px] tracking-[0.28em] uppercase {tones[tone]} {klass}">
+<p class="text-[11px] tracking-[0.28em] uppercase {tones[tone]} {klass} font-medium">
 	{@render children()}
 </p>

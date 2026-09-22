@@ -27,8 +27,8 @@
 </script>
 
 <nav aria-label="Account" class="lg:sticky lg:top-28 lg:self-start">
-	<p class="text-[10px] tracking-[0.28em] text-forest/45 uppercase">Signed in</p>
-	<p class="mt-2 text-sm break-words text-forest/80">{email}</p>
+	<p class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">Signed in</p>
+	<p class="mt-2 text-[15px] break-words text-forest/80">{email}</p>
 
 	<ul class="mt-8 flex list-none flex-col gap-px border-t border-forest/15 p-0">
 		{#each links as link (link.href)}
@@ -37,9 +37,9 @@
 				<a
 					href={link.href}
 					aria-current={current ? 'page' : undefined}
-					class="flex items-center justify-between gap-3 py-4 text-[10px] tracking-[0.2em] uppercase transition-colors {current
+					class="flex items-center justify-between gap-3 py-4 text-[11px] tracking-[0.2em] uppercase transition-colors {current
 						? 'text-forest'
-						: 'text-forest/55 hover:text-forest'}"
+						: 'text-forest/70 hover:text-forest'} font-medium"
 				>
 					<span class="flex items-center gap-3">
 						<span
@@ -49,7 +49,7 @@
 						{link.label}
 					</span>
 					{#if link.href === '/account/pre-orders' && outstanding > 0}
-						<span class="border border-gold px-1.5 py-0.5 text-[9px] leading-none text-forest">
+						<span class="border border-gold px-1.5 py-0.5 text-[11px] leading-none text-forest">
 							{outstanding}
 							<span class="sr-only">balance payments outstanding</span>
 						</span>
@@ -63,7 +63,7 @@
 	<form method="POST" action="/account/logout" class="mt-8">
 		<button
 			type="submit"
-			class="text-[10px] tracking-[0.2em] text-forest/55 uppercase underline-offset-4 transition-colors hover:text-forest hover:underline"
+			class="text-[11px] tracking-[0.2em] text-forest/70 uppercase underline-offset-4 transition-colors hover:text-forest hover:underline font-medium"
 		>
 			Sign out
 		</button>

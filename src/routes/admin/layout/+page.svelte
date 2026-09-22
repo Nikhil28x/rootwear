@@ -92,7 +92,7 @@
 
 	<TableShell caption="Campaign slots" captionVisible={false}>
 		<thead>
-			<tr class="text-[10px] tracking-[0.2em] text-stone-500 uppercase">
+			<tr class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Drop</th>
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">State</th>
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Visible publicly</th>
@@ -115,12 +115,12 @@
 							tone={slot.published ? 'outline' : 'quiet'}
 						/>
 					</td>
-					<td class="border-b border-white/5 px-4 py-3 text-xs whitespace-nowrap tabular-nums">
+					<td class="border-b border-white/5 px-4 py-3 text-[13px] whitespace-nowrap tabular-nums">
 						{shortDateTime(slot.launchInstant)}
 					</td>
 					<td class="border-b border-white/5 px-4 py-3 text-right">
 						<a
-							class="text-xs tracking-[0.16em] text-stone-300 uppercase underline underline-offset-4 hover:text-cream"
+							class="text-[13px] tracking-[0.16em] text-stone-300 uppercase underline underline-offset-4 hover:text-cream font-medium"
 							href="/drops/{slot.slug}"
 						>
 							Open
@@ -129,7 +129,7 @@
 				</tr>
 			{:else}
 				<tr>
-					<td colspan="5" class="px-4 py-10 text-sm text-stone-500">No drops to place yet.</td>
+					<td colspan="5" class="px-4 py-10 text-[15px] text-stone-400">No drops to place yet.</td>
 				</tr>
 			{/each}
 		</tbody>
@@ -144,12 +144,12 @@
 		{#each layoutSurfaces as surface (surface.title)}
 			<li class="flex flex-col gap-3 bg-forest/40 px-5 py-6">
 				<a
-					class="text-sm text-cream underline decoration-white/25 underline-offset-4 hover:decoration-cream"
+					class="text-[15px] text-cream underline decoration-white/25 underline-offset-4 hover:decoration-cream"
 					href={surface.href}
 				>
 					{surface.title}
 				</a>
-				<p class="text-xs leading-relaxed text-stone-400">{surface.blurb}</p>
+				<p class="text-[13px] leading-relaxed text-stone-400">{surface.blurb}</p>
 			</li>
 		{/each}
 	</ul>
@@ -159,13 +159,13 @@
 	<ul class="grid gap-px bg-white/10 sm:grid-cols-2">
 		{#each ownerSurfaces as surface (surface.title)}
 			<li class="flex flex-col gap-3 bg-forest/20 px-5 py-6">
-				<p class="text-sm text-stone-300">{surface.title}</p>
-				<p class="text-xs leading-relaxed text-stone-500">{surface.blurb}</p>
+				<p class="text-[15px] text-stone-300">{surface.title}</p>
+				<p class="text-[13px] leading-relaxed text-stone-400">{surface.blurb}</p>
 			</li>
 		{/each}
 	</ul>
 
-	<p class="max-w-[52rem] text-xs leading-relaxed text-stone-500">
+	<p class="max-w-[52rem] text-[13px] leading-relaxed text-stone-400">
 		The split is enforced in three places, not one: the row-level policies in the database, the
 		guard on this area, and again on every screen inside it. Hiding a link has never been access
 		control.

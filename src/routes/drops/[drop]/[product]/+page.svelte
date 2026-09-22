@@ -68,12 +68,12 @@
 
 <main class="mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
 	<nav
-		class="mb-12 flex flex-wrap items-center gap-3 text-[10px] tracking-[0.2em] uppercase"
+		class="mb-12 flex flex-wrap items-center gap-3 text-[11px] tracking-[0.2em] uppercase font-medium"
 		aria-label="Breadcrumb"
 	>
-		<a class="text-stone-500 transition hover:text-stone-100" href="/drops">Drops</a>
-		<span class="text-stone-600" aria-hidden="true">/</span>
-		<a class="text-stone-500 transition hover:text-stone-100" href="/drops/{data.drop.slug}">
+		<a class="text-stone-400 transition hover:text-stone-100" href="/drops">Drops</a>
+		<span class="text-stone-400" aria-hidden="true">/</span>
+		<a class="text-stone-400 transition hover:text-stone-100" href="/drops/{data.drop.slug}">
 			Drop {dropNumber} — {data.drop.name}
 		</a>
 	</nav>
@@ -93,7 +93,7 @@
 							decoding="async"
 						/>
 					</div>
-					<figcaption class="text-[10px] tracking-[0.2em] text-stone-500 uppercase">
+					<figcaption class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
 						The model is {data.product.modelHeightCm} cm and wears a {data.product.modelWornSize}.
 					</figcaption>
 				</figure>
@@ -126,16 +126,16 @@
 				{data.product.name}
 			</h1>
 
-			<p class="max-w-prose text-sm leading-relaxed text-stone-400">{data.product.summary}</p>
+			<p class="max-w-prose text-[15px] leading-relaxed text-stone-400">{data.product.summary}</p>
 
 			<div class="flex items-baseline justify-between gap-4 border-y border-white/15 py-4">
-				<span class="text-[10px] tracking-[0.2em] text-stone-500 uppercase">
+				<span class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
 					{data.showPrelaunchPrice ? 'Pre-launch price' : 'Price'}
 				</span>
 				<strong class="text-lg font-normal tracking-[0.04em] text-stone-100">{price}</strong>
 			</div>
 			<!-- §10: displayed prices are inclusive of GST. -->
-			<p class="-mt-4 text-[10px] tracking-[0.2em] text-stone-500 uppercase">
+			<p class="-mt-4 text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
 				Inclusive of all taxes · India only
 			</p>
 
@@ -144,8 +144,8 @@
 				     before. The dispatch note states the drop instant and nothing it
 				     cannot stand behind. -->
 				<div class="border-l-2 border-strain pl-4">
-					<p class="text-[10px] tracking-[0.28em] text-strain uppercase">Pre-order</p>
-					<p class="mt-2 text-sm leading-relaxed text-stone-400">
+					<p class="text-[11px] tracking-[0.28em] text-strain uppercase font-medium">Pre-order</p>
+					<p class="mt-2 text-[15px] leading-relaxed text-stone-400">
 						This piece is made for the drop. Dispatch follows the drop opening on
 						{launchDate.format(data.launchInstant)}, and your hand number is allocated when your
 						payment confirms.
@@ -155,7 +155,7 @@
 
 			{#if everythingGone}
 				<p
-					class="border-l-2 border-white/25 pl-4 text-[10px] tracking-[0.28em] text-stone-400 uppercase"
+					class="border-l-2 border-white/25 pl-4 text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium"
 				>
 					Every size gone — notify-me is open below
 				</p>
@@ -193,10 +193,10 @@
 					<dl class="m-0">
 						{#each specifications as specification (specification[0])}
 							<div
-								class="flex justify-between gap-4 border-b border-white/10 py-3 text-[10px] tracking-[0.18em] uppercase"
+								class="flex justify-between gap-4 border-b border-white/10 py-3 text-[11px] tracking-[0.18em] uppercase font-medium"
 							>
 								<dt class="text-stone-300">{specification[0]}</dt>
-								<dd class="m-0 text-stone-500">{specification[1]}</dd>
+								<dd class="m-0 text-stone-400">{specification[1]}</dd>
 							</div>
 						{/each}
 					</dl>
@@ -226,10 +226,10 @@
 			</div>
 
 			<div class="relative flex flex-col gap-3">
-				<h2 id="notify-title" class="text-[10px] tracking-[0.28em] text-stone-400 uppercase">
+				<h2 id="notify-title" class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
 					Notify me
 				</h2>
-				<p class="max-w-lg text-sm leading-relaxed text-stone-400">
+				<p class="max-w-lg text-[15px] leading-relaxed text-stone-400">
 					Every size keeps its own list. One message, for the size you pick, when it is available —
 					and nothing else.
 				</p>
@@ -251,7 +251,7 @@
 
 	{#if data.canRequest}
 		<section class="mt-28 border-t border-white/12 pt-12" aria-labelledby="request-title">
-			<h2 id="request-title" class="mb-8 text-[10px] tracking-[0.28em] text-stone-400 uppercase">
+			<h2 id="request-title" class="mb-8 text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
 				Bring it back
 			</h2>
 			<div class="max-w-3xl">
@@ -269,7 +269,7 @@
 
 	{#if data.alsoInDrop.length > 0}
 		<section class="mt-28 border-t border-white/12 pt-12" aria-labelledby="also-title">
-			<h2 id="also-title" class="mb-8 text-[10px] tracking-[0.28em] text-stone-400 uppercase">
+			<h2 id="also-title" class="mb-8 text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
 				Also in Drop {dropNumber}
 			</h2>
 
@@ -289,8 +289,8 @@
 								{/if}
 							</div>
 							<div class="flex items-baseline justify-between gap-4">
-								<span class="text-sm text-stone-100">{item.name}</span>
-								<span class="text-[10px] tracking-[0.2em] text-stone-500 uppercase">
+								<span class="text-[15px] text-stone-100">{item.name}</span>
+								<span class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
 									{formatInr(item.price)}
 								</span>
 							</div>

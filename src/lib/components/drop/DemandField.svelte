@@ -50,17 +50,17 @@
 
 	let shell = $derived(
 		surface === 'light'
-			? 'border-forest/25 text-forest placeholder:text-forest/35 focus:border-forest'
-			: 'border-white/25 text-stone-100 placeholder:text-stone-500 focus:border-white'
+			? 'border-forest/25 text-forest placeholder:text-forest/60 focus:border-forest'
+			: 'border-white/25 text-stone-100 placeholder:text-stone-400 focus:border-white'
 	);
 
 	let control = $derived(
-		`w-full border-b ${shell} bg-transparent px-0 py-3 text-sm outline-none transition-colors ` +
+		`w-full border-b ${shell} bg-transparent px-0 py-3 text-[15px] outline-none transition-colors ` +
 			(error ? 'border-b-2 border-gold' : '')
 	);
 
-	let labelTone = $derived(surface === 'light' ? 'text-forest/60' : 'text-stone-400');
-	let hintTone = $derived(surface === 'light' ? 'text-forest/50' : 'text-stone-500');
+	let labelTone = $derived(surface === 'light' ? 'text-forest/75' : 'text-stone-400');
+	let hintTone = $derived(surface === 'light' ? 'text-forest/70' : 'text-stone-400');
 	/** No error colour exists in the palette; a rule plus the words carries it. */
 	let alertTone = $derived(
 		surface === 'light'
@@ -70,7 +70,7 @@
 </script>
 
 <div class="flex flex-col gap-2">
-	<label for={id} class="text-[10px] tracking-[0.2em] uppercase {labelTone}">
+	<label for={id} class="text-[11px] tracking-[0.2em] uppercase {labelTone} font-medium">
 		{label}{#if required}<span aria-hidden="true" class="text-gold"> *</span>{/if}
 	</label>
 
@@ -116,9 +116,9 @@
 	{/if}
 
 	{#if hint && !error}
-		<p id="{id}-hint" class="text-xs {hintTone}">{hint}</p>
+		<p id="{id}-hint" class="text-[13px] {hintTone}">{hint}</p>
 	{/if}
 	{#if error}
-		<p id="{id}-error" class="text-xs {alertTone}">{error}</p>
+		<p id="{id}-error" class="text-[13px] {alertTone}">{error}</p>
 	{/if}
 </div>

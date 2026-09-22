@@ -114,7 +114,7 @@
 		</a>
 
 		<nav
-			class="hidden items-center gap-8 text-[11px] tracking-[0.2em] uppercase md:flex"
+			class="hidden items-center gap-8 text-[12px] tracking-[0.2em] uppercase md:flex font-medium"
 			aria-label="Primary"
 		>
 			{#each items as item (item.href)}
@@ -125,13 +125,13 @@
 		<div class="flex items-center gap-3">
 			{#if cta}
 				<a
-					class="site-header__cta hidden border border-white/25 px-4 py-2 text-[10px] tracking-[0.2em] uppercase transition hover:border-white hover:bg-white hover:text-black sm:block"
+					class="site-header__cta hidden border border-white/25 px-4 py-2 text-[11px] tracking-[0.2em] uppercase transition hover:border-white hover:bg-white hover:text-black sm:block font-medium"
 					href={cta.href}>{cta.label}</a
 				>
 			{/if}
 
 			<a
-				class="site-header__cta border border-white/25 px-4 py-2 text-[10px] tracking-[0.2em] uppercase transition hover:border-white hover:bg-white hover:text-black"
+				class="site-header__cta border border-white/25 px-4 py-2 text-[11px] tracking-[0.2em] uppercase transition hover:border-white hover:bg-white hover:text-black font-medium"
 				href="/cart"
 			>
 				Cart{#if cart.count > 0}<span class="ml-2 tabular-nums">({cart.count})</span>{/if}
@@ -158,7 +158,7 @@
 		>
 			{#each items as item (item.href)}
 				<a
-					class="block border-b border-white/10 py-4 text-sm tracking-[0.18em] uppercase last:border-0"
+					class="block border-b border-white/10 py-4 text-[15px] tracking-[0.18em] uppercase last:border-0 font-medium"
 					href={item.href}
 					onclick={() => (menuOpen = false)}
 				>
@@ -167,7 +167,7 @@
 			{/each}
 			{#if cta}
 				<a
-					class="block border-b border-white/10 py-4 text-sm tracking-[0.18em] uppercase last:border-0"
+					class="block border-b border-white/10 py-4 text-[15px] tracking-[0.18em] uppercase last:border-0 font-medium"
 					href={cta.href}
 					onclick={() => (menuOpen = false)}>{cta.label}</a
 				>

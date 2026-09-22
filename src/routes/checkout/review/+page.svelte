@@ -40,7 +40,7 @@
 
 <main class="relative isolate overflow-hidden bg-cream text-forest">
 	<div class="mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
-		<Eyebrow tone="strong" class="text-forest/50">Checkout · Step two of two</Eyebrow>
+		<Eyebrow tone="strong" class="text-forest/70">Checkout · Step two of two</Eyebrow>
 		<h1
 			class="display mt-6 text-[clamp(3rem,7vw,7rem)] leading-[0.82] tracking-[-0.055em] text-forest"
 		>
@@ -50,7 +50,7 @@
 		{#if problem}
 			<p
 				role="alert"
-				class="mt-10 max-w-[60ch] border-l-2 border-alert bg-alert/[0.06] px-6 py-5 text-sm leading-relaxed text-alert"
+				class="mt-10 max-w-[60ch] border-l-2 border-alert bg-alert/[0.06] px-6 py-5 text-[15px] leading-relaxed text-alert"
 			>
 				{problem}
 			</p>
@@ -60,17 +60,17 @@
 			<div class="max-w-[46rem]">
 				<section aria-labelledby="ship-heading">
 					<div class="flex items-baseline justify-between gap-6 border-b border-forest/15 pb-4">
-						<h2 id="ship-heading" class="text-[10px] tracking-[0.28em] text-forest/60 uppercase">
+						<h2 id="ship-heading" class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 							Delivering to
 						</h2>
 						<a
 							href="/checkout/information"
-							class="text-[10px] tracking-[0.2em] text-forest/60 uppercase underline-offset-4 hover:text-forest hover:underline"
+							class="text-[11px] tracking-[0.2em] text-forest/75 uppercase underline-offset-4 hover:text-forest hover:underline font-medium"
 						>
 							Change
 						</a>
 					</div>
-					<address class="mt-5 text-sm leading-[1.9] text-forest/80 not-italic">
+					<address class="mt-5 text-[15px] leading-[1.9] text-forest/80 not-italic">
 						{data.ship.name}<br />
 						{data.ship.line1}<br />
 						{#if data.ship.line2}{data.ship.line2}<br />{/if}
@@ -82,50 +82,50 @@
 
 					{#if data.ship.notes}
 						<div class="mt-6 border-l-2 border-forest/20 pl-4">
-							<p class="text-[10px] tracking-[0.28em] text-forest/60 uppercase">Your notes</p>
-							<p class="mt-2 text-sm leading-relaxed text-forest/75">{data.ship.notes}</p>
+							<p class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">Your notes</p>
+							<p class="mt-2 text-[15px] leading-relaxed text-forest/75">{data.ship.notes}</p>
 						</div>
 					{/if}
 				</section>
 
 				<section class="mt-14" aria-labelledby="pieces-heading">
-					<h2 id="pieces-heading" class="text-[10px] tracking-[0.28em] text-forest/60 uppercase">
+					<h2 id="pieces-heading" class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 						Pieces
 					</h2>
 					<ul class="mt-5 flex list-none flex-col p-0">
 						{#each data.cart.lines as line (line.variantId)}
 							<li class="flex justify-between gap-6 border-b border-forest/10 py-5">
 								<div>
-									<p class="text-sm text-forest">{line.productName}</p>
-									<p class="mt-1 text-[10px] tracking-[0.2em] text-forest/50 uppercase">
+									<p class="text-[15px] text-forest">{line.productName}</p>
+									<p class="mt-1 text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">
 										{line.dropName} · Size {line.size} · {line.sku} · {line.quantity} ×
 									</p>
 									{#if line.isPreOrder}
-										<p class="mt-2 text-xs leading-relaxed text-forest/70">
+										<p class="mt-2 text-[13px] leading-relaxed text-forest/70">
 											Pre-order — dispatch follows the drop opening on
 											{dispatchDate.format(data.launchInstant)}.
 										</p>
 									{/if}
 									{#if line.overSubscribed}
-										<p class="mt-2 text-xs leading-relaxed text-alert">
+										<p class="mt-2 text-[13px] leading-relaxed text-alert">
 											Only {line.availableNow} of this size remain. Go back and reduce the quantity.
 										</p>
 									{/if}
 								</div>
-								<p class="shrink-0 text-sm text-forest tabular-nums">{formatInr(line.lineTotal)}</p>
+								<p class="shrink-0 text-[15px] text-forest tabular-nums">{formatInr(line.lineTotal)}</p>
 							</li>
 						{/each}
 					</ul>
-					<p class="mt-4 text-xs leading-relaxed text-forest/60">{FIT_DISCLAIMER}</p>
+					<p class="mt-4 text-[13px] leading-relaxed text-forest/75">{FIT_DISCLAIMER}</p>
 				</section>
 
 				<section class="mt-14 border-t border-forest/15 pt-8" aria-labelledby="pay-heading">
-					<h2 id="pay-heading" class="text-[10px] tracking-[0.28em] text-forest/60 uppercase">
+					<h2 id="pay-heading" class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 						Payment
 					</h2>
 
 					{#if data.payment.configured}
-						<p class="mt-4 max-w-[54ch] text-sm leading-relaxed text-forest/75">
+						<p class="mt-4 max-w-[54ch] text-[15px] leading-relaxed text-forest/75">
 							{#if data.payment.name === 'razorpay'}
 								You will be handed to Razorpay to pay. Your order is confirmed by the gateway's own
 								notification, not by the page you land back on — so a dropped connection cannot lose
@@ -136,7 +136,7 @@
 							{/if}
 						</p>
 					{:else}
-						<p class="mt-4 max-w-[54ch] text-sm leading-relaxed text-forest/75">
+						<p class="mt-4 max-w-[54ch] text-[15px] leading-relaxed text-forest/75">
 							{PAYMENT_NOT_CONFIGURED_MESSAGE}
 						</p>
 					{/if}
@@ -158,7 +158,7 @@
 						</Button>
 					</form>
 
-					<p class="mt-4 text-xs leading-relaxed text-forest/60">
+					<p class="mt-4 text-[13px] leading-relaxed text-forest/75">
 						Pressing this twice is safe. A repeated submission returns the order you already placed
 						rather than making a second one.
 					</p>
@@ -180,7 +180,7 @@
 				</CartSummary>
 
 				{#if data.cart.couponCode && !data.cart.couponProblem}
-					<p class="text-[10px] tracking-[0.2em] text-forest/60 uppercase">
+					<p class="text-[11px] tracking-[0.2em] text-forest/75 uppercase font-medium">
 						Code {data.cart.couponCode} applied
 					</p>
 				{/if}
@@ -188,10 +188,10 @@
 				<!-- §11: the SAME returns wording, at checkout, as on the product
 				     page, in the confirmation email and on the policy page. -->
 				<section class="border-t border-forest/15 pt-6" aria-labelledby="returns-heading">
-					<h2 id="returns-heading" class="text-[10px] tracking-[0.28em] text-forest/60 uppercase">
+					<h2 id="returns-heading" class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 						Returns
 					</h2>
-					<p class="mt-4 text-xs leading-relaxed text-forest/70">{RETURNS_WORDING}</p>
+					<p class="mt-4 text-[13px] leading-relaxed text-forest/70">{RETURNS_WORDING}</p>
 				</section>
 			</div>
 		</div>

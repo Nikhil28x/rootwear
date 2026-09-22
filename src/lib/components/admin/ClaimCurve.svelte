@@ -82,7 +82,7 @@
 </script>
 
 {#if points.length === 0}
-	<p class="px-5 py-10 text-sm text-stone-500">
+	<p class="px-5 py-10 text-[15px] text-stone-400">
 		Nothing claimed yet. The curve starts at the first confirmed deposit and the launch instant is
 		marked once there is a line to mark it on.
 	</p>
@@ -148,7 +148,7 @@
 				{dayFormat.format(new Date(domain.hi))}
 			</text>
 		</svg>
-		<figcaption class="mt-3 text-xs text-stone-500">
+		<figcaption class="mt-3 text-[13px] text-stone-400">
 			Cumulative pieces claimed against time. The dashed rule is the edition ceiling of {editionSize}.
 		</figcaption>
 	</figure>

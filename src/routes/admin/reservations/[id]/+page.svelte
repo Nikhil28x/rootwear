@@ -28,7 +28,7 @@
 	<meta name="robots" content="noindex, nofollow" />
 </svelte:head>
 
-<p class="text-[10px] tracking-[0.24em] text-stone-500 uppercase">
+<p class="text-[11px] tracking-[0.24em] text-stone-400 uppercase font-medium">
 	<a class="underline underline-offset-4 hover:text-stone-200" href="/admin/reservations">
 		Reservations
 	</a>
@@ -49,10 +49,10 @@
 	{#if overdue}
 		<StatePill label="Balance overdue" tone="solid" />
 	{/if}
-	<p class="text-xs text-stone-500">{r.sku} · size {r.size}</p>
+	<p class="text-[13px] text-stone-400">{r.sku} · size {r.size}</p>
 	{#if r.orderId}
 		<a
-			class="text-xs tracking-[0.16em] text-stone-300 uppercase underline underline-offset-4 hover:text-cream"
+			class="text-[13px] tracking-[0.16em] text-stone-300 uppercase underline underline-offset-4 hover:text-cream font-medium"
 			href="/admin/orders/{r.orderId}"
 		>
 			Order {r.orderNumber} →
@@ -76,20 +76,20 @@
 
 			<dl class="grid gap-px bg-white/10 sm:grid-cols-3">
 				<div class="flex flex-col gap-2 bg-forest/40 px-5 py-6">
-					<dt class="text-[10px] tracking-[0.24em] text-stone-400 uppercase">Locked price</dt>
+					<dt class="text-[11px] tracking-[0.24em] text-stone-400 uppercase font-medium">Locked price</dt>
 					<dd class="text-xl text-cream tabular-nums">{formatInr(r.lockedPrice)}</dd>
 				</div>
 				<div class="flex flex-col gap-2 bg-forest/40 px-5 py-6">
-					<dt class="text-[10px] tracking-[0.24em] text-stone-400 uppercase">Deposit</dt>
+					<dt class="text-[11px] tracking-[0.24em] text-stone-400 uppercase font-medium">Deposit</dt>
 					<dd class="text-xl text-cream tabular-nums">{formatInr(r.deposit)}</dd>
 				</div>
 				<div class="flex flex-col gap-2 bg-forest/40 px-5 py-6">
-					<dt class="text-[10px] tracking-[0.24em] text-stone-400 uppercase">Balance</dt>
+					<dt class="text-[11px] tracking-[0.24em] text-stone-400 uppercase font-medium">Balance</dt>
 					<dd class="text-xl text-cream tabular-nums">{formatInr(r.balance)}</dd>
 				</div>
 			</dl>
 
-			<p class="text-xs leading-relaxed text-stone-500">
+			<p class="text-[13px] leading-relaxed text-stone-400">
 				Deposit and balance are derived from the locked price together, never computed
 				independently, so they always sum back to it exactly.
 				{#if !DEPOSIT_PERCENT_CONFIRMED}
@@ -114,10 +114,10 @@
 							class="absolute -left-[1.6875rem] top-1.5 block h-2 w-2 bg-gold"
 							aria-hidden="true"
 						></span>
-						<p class="text-sm text-cream">{step.label}</p>
-						<p class="mt-1 text-xs text-stone-500 tabular-nums">{shortDateTime(step.at)} IST</p>
+						<p class="text-[15px] text-cream">{step.label}</p>
+						<p class="mt-1 text-[13px] text-stone-400 tabular-nums">{shortDateTime(step.at)} IST</p>
 						{#if step.detail}
-							<p class="mt-2 max-w-[42rem] text-sm leading-relaxed text-stone-400">{step.detail}</p>
+							<p class="mt-2 max-w-[42rem] text-[15px] leading-relaxed text-stone-400">{step.detail}</p>
 						{/if}
 					</li>
 				{/each}
@@ -135,7 +135,7 @@
 			{#if canRequestBalance}
 				<form method="POST" action="?/balanceLink" class="flex flex-wrap items-end gap-6">
 					<div class="flex w-32 flex-col gap-2">
-						<label for="days" class="text-[10px] tracking-[0.2em] text-stone-400 uppercase">
+						<label for="days" class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
 							Days to pay
 						</label>
 						<input
@@ -146,12 +146,12 @@
 							max="60"
 							step="1"
 							value="7"
-							class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-sm text-stone-100 tabular-nums outline-none focus:border-white"
+							class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-[15px] text-stone-100 tabular-nums outline-none focus:border-white"
 						/>
 					</div>
 					<button
 						type="submit"
-						class="border border-white/35 px-7 py-3 text-[10px] tracking-[0.2em] text-stone-100 uppercase transition hover:bg-white hover:text-black"
+						class="border border-white/35 px-7 py-3 text-[11px] tracking-[0.2em] text-stone-100 uppercase transition hover:bg-white hover:text-black font-medium"
 					>
 						Record balance link
 					</button>
@@ -165,13 +165,13 @@
 			{/if}
 
 			{#if r.balanceDueBy !== null && canRequestBalance}
-				<p class="text-sm {overdue ? 'text-cream' : 'text-stone-400'} tabular-nums">
+				<p class="text-[15px] {overdue ? 'text-cream' : 'text-stone-400'} tabular-nums">
 					Balance due {shortDateTime(r.balanceDueBy)} IST — {relativeDays(r.balanceDueBy, data.now)}{overdue
 						? ', overdue'
 						: ''}.
 				</p>
 			{:else if r.balanceDueBy !== null}
-				<p class="text-sm text-stone-500 tabular-nums">
+				<p class="text-[15px] text-stone-400 tabular-nums">
 					The balance was due {shortDateTime(r.balanceDueBy)} IST and is no longer outstanding.
 				</p>
 			{/if}
@@ -180,19 +180,19 @@
 
 	<aside class="flex flex-col gap-12">
 		<section class="flex flex-col gap-4">
-			<h2 class="text-[10px] tracking-[0.28em] text-stone-400 uppercase">Payments</h2>
+			<h2 class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">Payments</h2>
 			{#if r.payments.length === 0}
-				<p class="text-sm text-stone-500">Nothing captured yet.</p>
+				<p class="text-[15px] text-stone-400">Nothing captured yet.</p>
 			{:else}
 				<ul class="flex flex-col">
 					{#each r.payments as payment (payment.id)}
 						<li class="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 py-4">
 							<span class="flex items-center gap-3">
 								<StatePill label={humanise(payment.state)} tone={paymentTone(payment.state)} />
-								<span class="text-sm text-stone-300">{humanise(payment.kind)}</span>
+								<span class="text-[15px] text-stone-300">{humanise(payment.kind)}</span>
 							</span>
-							<span class="text-sm text-cream tabular-nums">{formatInr(payment.amount)}</span>
-							<span class="w-full text-xs text-stone-500 tabular-nums">
+							<span class="text-[15px] text-cream tabular-nums">{formatInr(payment.amount)}</span>
+							<span class="w-full text-[13px] text-stone-400 tabular-nums">
 								{shortDateTime(payment.createdAt)} · {payment.gateway}
 							</span>
 						</li>
@@ -203,22 +203,22 @@
 
 		{#if r.refunds.length > 0}
 			<section class="flex flex-col gap-4">
-				<h2 class="text-[10px] tracking-[0.28em] text-stone-400 uppercase">Refunds</h2>
+				<h2 class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">Refunds</h2>
 				<ul class="flex flex-col">
 					{#each r.refunds as refund (refund.id)}
 						<li class="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 py-4">
 							<span class="flex items-center gap-3">
 								<StatePill label={humanise(refund.state)} tone="outline" />
-								<span class="text-sm text-stone-300">{humanise(refund.reason)}</span>
+								<span class="text-[15px] text-stone-300">{humanise(refund.reason)}</span>
 							</span>
-							<span class="text-sm text-cream tabular-nums">{formatInr(refund.amount)}</span>
-							<span class="w-full text-xs text-stone-500 tabular-nums">
+							<span class="text-[15px] text-cream tabular-nums">{formatInr(refund.amount)}</span>
+							<span class="w-full text-[13px] text-stone-400 tabular-nums">
 								{shortDateTime(refund.createdAt)}
 							</span>
 						</li>
 					{/each}
 				</ul>
-				<p class="text-xs leading-relaxed text-stone-500">
+				<p class="text-[13px] leading-relaxed text-stone-400">
 					A reservation that loses the cap race is refunded automatically and the customer is told
 					immediately — no piece number is ever issued to it.
 				</p>
@@ -226,11 +226,11 @@
 		{/if}
 
 		<section class="flex flex-col gap-4 border-t border-white/10 pt-8">
-			<h2 class="text-[10px] tracking-[0.28em] text-stone-400 uppercase">
+			<h2 class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
 				Cancellation rule as shown
 			</h2>
-			<p class="text-sm leading-relaxed text-stone-400">{r.cancellationRule}</p>
-			<p class="text-xs text-stone-600">
+			<p class="text-[15px] leading-relaxed text-stone-400">{r.cancellationRule}</p>
+			<p class="text-[13px] text-stone-400">
 				Stored on the record at the moment of reservation. What this customer agreed to is what is
 				printed here, whatever the wording says today.
 			</p>

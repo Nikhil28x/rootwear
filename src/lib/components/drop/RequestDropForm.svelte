@@ -47,7 +47,7 @@
 	let done = $derived(mine && mine.ok ? mine : null);
 
 	let muted = $derived(surface === 'light' ? 'text-forest/70' : 'text-stone-400');
-	let faint = $derived(surface === 'light' ? 'text-forest/50' : 'text-stone-500');
+	let faint = $derived(surface === 'light' ? 'text-forest/70' : 'text-stone-400');
 	let rule = $derived(surface === 'light' ? 'border-forest/20' : 'border-white/15');
 </script>
 
@@ -55,19 +55,19 @@
 	<div class="flex flex-col gap-3">
 		<Eyebrow tone="gold">Request this drop</Eyebrow>
 		<p class="display text-2xl leading-tight">{heading}</p>
-		<p class="max-w-prose text-sm leading-relaxed {muted}">
+		<p class="max-w-prose text-[15px] leading-relaxed {muted}">
 			{dropName} is finished. Tell us the size you wanted and we will know exactly what to cut if it comes
 			back. Nothing is charged and no piece is held — this is a note, not an order.
 		</p>
 	</div>
 
 	{#if done}
-		<p class="border-l-2 border-gold pl-4 text-sm leading-relaxed {muted}" role="status">
+		<p class="border-l-2 border-gold pl-4 text-[15px] leading-relaxed {muted}" role="status">
 			{done.status === 'already'
 				? `You are already on the list for this size. We have your note against ${done.email} and it is counted once.`
 				: `Counted. Your size is on the board for ${dropName}, and we will write to ${done.email} if it is cut again.`}
 		</p>
-		<p class="text-xs {faint}">Want a second size as well? Add it below.</p>
+		<p class="text-[13px] {faint}">Want a second size as well? Add it below.</p>
 	{/if}
 
 	<form
@@ -125,12 +125,12 @@
 		/>
 
 		{#if problem?.field === 'form'}
-			<p class="border-l-2 border-gold pl-3 text-xs {muted}" role="alert">{problem.message}</p>
+			<p class="border-l-2 border-gold pl-3 text-[13px] {muted}" role="alert">{problem.message}</p>
 		{/if}
 
 		<div class="flex flex-wrap items-center gap-5">
 			<Button type="submit" variant="solid" {surface}>Add my size</Button>
-			<p class="text-[10px] tracking-[0.2em] uppercase {faint}">No payment. No hold.</p>
+			<p class="text-[11px] tracking-[0.2em] uppercase {faint} font-medium">No payment. No hold.</p>
 		</div>
 	</form>
 </div>

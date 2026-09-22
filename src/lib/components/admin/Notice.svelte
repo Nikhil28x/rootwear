@@ -26,7 +26,7 @@
 </script>
 
 <p
-	class="border-l-2 px-4 py-3 text-sm leading-relaxed {styles[kind]}"
+	class="border-l-2 px-4 py-3 text-[15px] leading-relaxed {styles[kind]}"
 	role={live ? 'alert' : undefined}
 >
 	{@render children()}

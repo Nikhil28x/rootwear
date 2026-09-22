@@ -28,11 +28,11 @@
 	</div>
 
 	<div class="w-full max-w-md">
-		<p class="wordmark text-sm tracking-[0.24em] text-cream uppercase">Rootwear</p>
+		<p class="wordmark text-[15px] tracking-[0.24em] text-cream uppercase font-medium">Rootwear</p>
 		<h1 class="display mt-5 text-[clamp(2.4rem,6vw,3.4rem)] leading-[0.9] tracking-[-0.045em] text-cream">
 			Operations
 		</h1>
-		<p class="mt-5 text-sm leading-relaxed text-stone-400">
+		<p class="mt-5 text-[15px] leading-relaxed text-stone-400">
 			Two accounts have access. Everything you do here is recorded against your address.
 		</p>
 
@@ -77,7 +77,7 @@
 			<Button type="submit" variant="solid" surface="dark" full>Sign in</Button>
 		</form>
 
-		<p class="mt-10 border-t border-white/10 pt-6 text-xs leading-relaxed text-stone-500">
+		<p class="mt-10 border-t border-white/10 pt-6 text-[13px] leading-relaxed text-stone-400">
 			Accounts are created by the developer, not from this screen. If you cannot get in, write to
 			<a class="text-stone-300 underline underline-offset-4" href="mailto:{SUPPORT_EMAIL}">
 				{SUPPORT_EMAIL}

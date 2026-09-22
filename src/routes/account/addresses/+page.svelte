@@ -26,13 +26,13 @@
 	<meta name="robots" content="noindex, nofollow" />
 </svelte:head>
 
-<Eyebrow tone="strong" class="text-forest/50">Account</Eyebrow>
+<Eyebrow tone="strong" class="text-forest/70">Account</Eyebrow>
 <h1
 	class="display mt-6 text-[clamp(2.8rem,6.4vw,5.4rem)] leading-[0.86] tracking-[-0.055em] text-forest"
 >
 	Addresses.
 </h1>
-<p class="mt-8 max-w-[56ch] text-[15px] leading-[1.85] text-forest/70">
+<p class="mt-8 max-w-[56ch] text-[16px] leading-[1.85] text-forest/70">
 	Where we send things. We ship within India only, so every address here carries an Indian pincode
 	and a mobile number the courier can actually call.
 </p>
@@ -86,14 +86,14 @@
 		>
 			Delete this address?
 		</h2>
-		<address class="mt-6 text-sm leading-[1.9] text-forest/80 not-italic">
+		<address class="mt-6 text-[15px] leading-[1.9] text-forest/80 not-italic">
 			{data.editing.name}<br />
 			{data.editing.line1}<br />
 			{#if data.editing.line2}{data.editing.line2}<br />{/if}
 			{data.editing.city}, {data.editing.state}
 			{data.editing.pincode}
 		</address>
-		<p class="mt-6 max-w-[48ch] text-sm leading-[1.8] text-forest/70">
+		<p class="mt-6 max-w-[48ch] text-[15px] leading-[1.8] text-forest/70">
 			Orders already placed keep the address they were shipped to. This only removes it from the
 			list you choose from at checkout.
 		</p>
@@ -107,7 +107,7 @@
 			<Button type="submit" variant="solid" surface="light">Delete it</Button>
 			<a
 				href="/account/addresses"
-				class="text-[10px] tracking-[0.2em] text-forest/60 uppercase underline-offset-4 hover:text-forest hover:underline"
+				class="text-[11px] tracking-[0.2em] text-forest/75 uppercase underline-offset-4 hover:text-forest hover:underline font-medium"
 			>
 				Keep it
 			</a>
@@ -137,17 +137,17 @@
 		{#each data.addresses as address (address.id)}
 			<li class="border border-forest/20 px-6 py-7">
 				<div class="flex flex-wrap items-start justify-between gap-3">
-					<p class="text-[10px] tracking-[0.28em] text-forest/45 uppercase">{address.label}</p>
+					<p class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">{address.label}</p>
 					{#if address.isDefault}
 						<p
-							class="border border-gold px-2.5 py-1 text-[9px] leading-none tracking-[0.18em] text-forest uppercase"
+							class="border border-gold px-2.5 py-1 text-[11px] leading-none tracking-[0.18em] text-forest uppercase font-medium"
 						>
 							Default
 						</p>
 					{/if}
 				</div>
 
-				<address class="mt-5 text-sm leading-[1.9] text-forest/80 not-italic">
+				<address class="mt-5 text-[15px] leading-[1.9] text-forest/80 not-italic">
 					{address.name}<br />
 					{address.line1}<br />
 					{#if address.line2}{address.line2}<br />{/if}
@@ -159,7 +159,7 @@
 				<div class="mt-7 flex flex-wrap items-center gap-5 border-t border-forest/15 pt-5">
 					<a
 						href="/account/addresses?edit={address.id}"
-						class="text-[10px] tracking-[0.2em] text-forest uppercase underline-offset-4 hover:underline"
+						class="text-[11px] tracking-[0.2em] text-forest uppercase underline-offset-4 hover:underline font-medium"
 					>
 						Edit
 					</a>
@@ -169,7 +169,7 @@
 							<input type="hidden" name="id" value={address.id} />
 							<button
 								type="submit"
-								class="text-[10px] tracking-[0.2em] text-forest/60 uppercase underline-offset-4 hover:text-forest hover:underline"
+								class="text-[11px] tracking-[0.2em] text-forest/75 uppercase underline-offset-4 hover:text-forest hover:underline font-medium"
 							>
 								Make default
 								<span class="sr-only">for {address.label}, {address.line1}</span>
@@ -179,7 +179,7 @@
 
 					<a
 						href="/account/addresses?delete={address.id}"
-						class="text-[10px] tracking-[0.2em] text-forest/60 uppercase underline-offset-4 hover:text-forest hover:underline"
+						class="text-[11px] tracking-[0.2em] text-forest/75 uppercase underline-offset-4 hover:text-forest hover:underline font-medium"
 					>
 						Delete
 						<span class="sr-only">{address.label}, {address.line1}</span>
@@ -189,7 +189,7 @@
 		{/each}
 	</ul>
 
-	<p class="mt-10 max-w-[62ch] text-xs leading-[1.9] text-forest/50">
+	<p class="mt-10 max-w-[62ch] text-[13px] leading-[1.9] text-forest/70">
 		Exactly one address is the default. Making another the default moves it across rather than
 		leaving you with two, and deleting the default promotes the one you touched most recently.
 	</p>

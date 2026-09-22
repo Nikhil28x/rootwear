@@ -37,13 +37,13 @@
 	<meta name="robots" content="noindex, nofollow" />
 </svelte:head>
 
-<Eyebrow tone="strong" class="text-forest/50">Account</Eyebrow>
+<Eyebrow tone="strong" class="text-forest/70">Account</Eyebrow>
 <h1
 	class="display mt-6 text-[clamp(2.8rem,6.4vw,5.4rem)] leading-[0.86] tracking-[-0.055em] text-forest"
 >
 	Notifications.
 </h1>
-<p class="mt-8 max-w-[58ch] text-[15px] leading-[1.85] text-forest/70">
+<p class="mt-8 max-w-[58ch] text-[16px] leading-[1.85] text-forest/70">
 	What you have asked us to tell you about, and where you stand in any queue. We write to
 	<span class="text-forest">{data.email}</span> and nowhere else, and only about the pieces listed here.
 </p>
@@ -67,15 +67,15 @@
 	</div>
 {:else}
 	<!-- §09: the fit disclaimer accompanies every screen that shows a size. -->
-	<p class="mt-12 max-w-[54ch] text-xs leading-relaxed text-forest/55">{FIT_DISCLAIMER}</p>
+	<p class="mt-12 max-w-[54ch] text-[13px] leading-relaxed text-forest/70">{FIT_DISCLAIMER}</p>
 
 	<section class="mt-10" aria-labelledby="notify-title">
-		<h2 id="notify-title" class="text-[10px] tracking-[0.28em] text-forest/45 uppercase">
+		<h2 id="notify-title" class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">
 			Tell me when it is back
 		</h2>
 
 		{#if data.notifications.length === 0}
-			<p class="mt-6 max-w-[54ch] text-sm leading-[1.8] text-forest/60">
+			<p class="mt-6 max-w-[54ch] text-[15px] leading-[1.8] text-forest/75">
 				You have not asked to be told about any size.
 			</p>
 		{:else}
@@ -85,15 +85,15 @@
 						class="flex flex-wrap items-start justify-between gap-5 border-b border-forest/15 py-6"
 					>
 						<div class="min-w-0">
-							<p class="text-sm text-forest">
+							<p class="text-[15px] text-forest">
 								{row.productName ?? 'A piece'}
-								{#if row.size}<span class="text-forest/60"> · size {row.size}</span>{/if}
+								{#if row.size}<span class="text-forest/75"> · size {row.size}</span>{/if}
 							</p>
-							<p class="mt-1.5 text-xs text-forest/50">
+							<p class="mt-1.5 text-[13px] text-forest/70">
 								{#if row.dropName}{row.dropName} ·
 								{/if}{row.sku ?? ''}
 							</p>
-							<p class="mt-2 text-xs text-forest/55">
+							<p class="mt-2 text-[13px] text-forest/70">
 								You agreed to this on {shortDate(row.consentedAt)}.
 								{#if row.notifiedAt !== null}
 									We wrote to you on {shortDate(row.notifiedAt)}.
@@ -104,7 +104,7 @@
 						<div class="flex shrink-0 items-center gap-5">
 							{#if row.dropSlug}
 								<a
-									class="text-[10px] tracking-[0.2em] text-forest/60 uppercase underline-offset-4 hover:text-forest hover:underline"
+									class="text-[11px] tracking-[0.2em] text-forest/75 uppercase underline-offset-4 hover:text-forest hover:underline font-medium"
 									href="/drops/{row.dropSlug}"
 								>
 									Open drop
@@ -114,7 +114,7 @@
 								<input type="hidden" name="id" value={row.id} />
 								<button
 									type="submit"
-									class="text-[10px] tracking-[0.2em] text-forest uppercase underline-offset-4 hover:underline"
+									class="text-[11px] tracking-[0.2em] text-forest uppercase underline-offset-4 hover:underline font-medium"
 								>
 									Unsubscribe
 									<span class="sr-only">
@@ -126,7 +126,7 @@
 					</li>
 				{/each}
 			</ul>
-			<p class="mt-6 max-w-[62ch] text-xs leading-[1.9] text-forest/50">
+			<p class="mt-6 max-w-[62ch] text-[13px] leading-[1.9] text-forest/70">
 				Unsubscribing deletes the record of your consent rather than flagging it, so the address is
 				genuinely off that list.
 			</p>
@@ -134,16 +134,16 @@
 	</section>
 
 	<section class="mt-16" aria-labelledby="waitlist-title">
-		<h2 id="waitlist-title" class="text-[10px] tracking-[0.28em] text-forest/45 uppercase">
+		<h2 id="waitlist-title" class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">
 			Waitlist
 		</h2>
-		<p class="mt-4 max-w-[56ch] text-sm leading-[1.8] text-forest/65">
+		<p class="mt-4 max-w-[56ch] text-[15px] leading-[1.8] text-forest/75">
 			The queue is ordered, and no money is taken to join it. If a reserved piece is not paid for in
 			time it is offered to the next person in line.
 		</p>
 
 		{#if data.waitlist.length === 0}
-			<p class="mt-6 max-w-[54ch] text-sm leading-[1.8] text-forest/60">
+			<p class="mt-6 max-w-[54ch] text-[15px] leading-[1.8] text-forest/75">
 				You are not in any queue.
 			</p>
 		{:else}
@@ -158,16 +158,16 @@
 								<span class="sr-only">place in the queue</span>
 							</p>
 							<div class="min-w-0">
-								<p class="text-sm text-forest">
+								<p class="text-[15px] text-forest">
 									{entry.productName ?? 'A piece'}
-									{#if entry.size}<span class="text-forest/60"> · size {entry.size}</span>{/if}
+									{#if entry.size}<span class="text-forest/75"> · size {entry.size}</span>{/if}
 								</p>
-								<p class="mt-1.5 text-xs text-forest/50">
+								<p class="mt-1.5 text-[13px] text-forest/70">
 									{#if entry.dropName}{entry.dropName} ·
 									{/if}Joined {shortDate(entry.joinedAt)}
 								</p>
 								{#if entry.offeredAt !== null}
-									<p class="mt-2 text-xs text-forest/60">
+									<p class="mt-2 text-[13px] text-forest/75">
 										Offered to you on {shortDate(entry.offeredAt)}.
 									</p>
 								{/if}
@@ -181,7 +181,7 @@
 									<input type="hidden" name="id" value={entry.id} />
 									<button
 										type="submit"
-										class="text-[10px] tracking-[0.2em] text-forest uppercase underline-offset-4 hover:underline"
+										class="text-[11px] tracking-[0.2em] text-forest uppercase underline-offset-4 hover:underline font-medium"
 									>
 										Give up my place
 										<span class="sr-only">
