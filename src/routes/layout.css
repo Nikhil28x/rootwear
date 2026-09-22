@@ -13,6 +13,12 @@
 	   used interchangeably. Overridden per drop via --color-strain. */
 	--color-strain: #e0b23c;
 
+	/* Semantic status colours. Deliberately separate from the brand palette:
+	   an error is not a brand accent, and the two must never be swapped. Tuned
+	   to clear 4.5:1 on both the cream and forest-black grounds. */
+	--color-alert: #9d4526;
+	--color-alert-light: #d97a52;
+
 	/* Type stacks — previously written out in four places. */
 	--font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 	--font-display: Didot, 'Bodoni 72', 'Bodoni MT', 'Times New Roman', serif;

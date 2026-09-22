@@ -1,49 +1,89 @@
 <script lang="ts">
+	/**
+	 * §03 templates 03 AND 04 — the drop page, and the same page once the drop
+	 * is finished. §05: "The same URL survives the drop's whole life — live,
+	 * sold out, archived. Never redirect it."
+	 *
+	 * So there is one page here and the STATE decides what it offers:
+	 *   TEASE / REVEALED  countdown, story, deposit language, notify-me
+	 *   LIVE / PARTIAL    pieces on sale, sold-out sizes greyed and still there
+	 *   SOLD_OUT/ARCHIVED lookbook and story intact, notify-me on every size,
+	 *                     and the §12 "ask for this drop again" form
+	 *
+	 * The imagery is read from the product record rather than listed here. The
+	 * page previously hardcoded four /images/pineapple-haze-*.jpg paths, which
+	 * is exactly what stops one template serving a second drop.
+	 */
 	import DropCountdown from '$lib/DropCountdown.svelte';
+	import DropStateMark from '$lib/components/drop/DropStateMark.svelte';
+	import SizeSelector from '$lib/components/drop/SizeSelector.svelte';
+	import SizeChart from '$lib/components/drop/SizeChart.svelte';
+	import NotifyMeForm from '$lib/components/drop/NotifyMeForm.svelte';
+	import RequestDropForm from '$lib/components/drop/RequestDropForm.svelte';
+	import Eyebrow from '$lib/components/ui/Eyebrow.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import Accordion from '$lib/components/ui/Accordion.svelte';
+	import RootSystem from '$lib/components/art/RootSystem.svelte';
+	import HempMotif from '$lib/components/art/HempMotif.svelte';
 	import { formatInr } from '$lib/money';
-	import { SIZE_RANGE_LABEL, FIT_DISCLAIMER } from '$lib/drop/sizes';
-	import type { PageData } from './$types';
+	import { SIZE_RANGE_LABEL } from '$lib/drop/sizes';
+	import { RETURNS_WORDING } from '$lib/content/returns';
+	import { DROP_STATE_DESCRIPTION } from '$lib/domain/drop-state';
+	import type { PageData, ActionData } from './$types';
 
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	/** RW-032 — every price is read from the product record and formatted here,
-	    at the render edge. No page holds its own price string. */
+	/** RW-032 — every price is read from the record and formatted at the render
+	    edge. No page holds its own price string. */
 	let price = $derived(formatInr(data.displayPrice));
-	const campaignViews = [
-		{
-			index: '01',
-			label: 'Front study',
-			detail: 'Embroidered chest · oversized form',
-			image: '/images/pineapple-haze-front.jpg',
-			alt: 'Pineapple Haze hemp T-shirt worn from the front',
-			alternateLabel: 'Back',
-			alternateImage: '/images/pineapple-haze-back.jpg',
-			alternateAlt: 'Pineapple Haze hemp T-shirt showing the back artwork'
-		},
-		{
-			index: '02',
-			label: 'Back study',
-			detail: 'Tree artwork · numbered edition',
-			image: '/images/pineapple-haze-back.jpg',
-			alt: 'Pineapple Haze hemp T-shirt showing the back artwork',
-			alternateLabel: 'Front',
-			alternateImage: '/images/pineapple-haze-front.jpg',
-			alternateAlt: 'Pineapple Haze hemp T-shirt worn from the front'
-		},
-		{
-			index: '03',
-			label: 'Worn study',
-			detail: 'Unisex shape · made to soften',
-			image: '/images/pineapple-haze-editorial.jpg',
-			alt: 'Pineapple Haze hemp T-shirt styled in the campaign',
-			alternateLabel: 'Back',
-			alternateImage: '/images/pineapple-haze-editorial-back.jpg',
-			alternateAlt: 'Pineapple Haze hemp T-shirt worn by the woman from the back'
-		}
-	];
 
-	/** §09 — fabric, GSM, care and fit are FIELDS on the record, so the spec
-	    table, the size guide and invoices cannot drift apart. */
+	let dropNumber = $derived(String(data.drop.number).padStart(2, '0'));
+
+	const released = new Intl.DateTimeFormat('en-IN', {
+		day: 'numeric',
+		month: 'long',
+		year: 'numeric',
+		timeZone: 'Asia/Kolkata'
+	});
+	let releasedAt = $derived(data.drop.archivedAt ?? data.drop.launchInstant);
+
+	const ROLE_LABEL: Record<string, string> = {
+		lead: 'Lead',
+		detail: 'Detail',
+		fabric: 'Fabric',
+		worn: 'Worn'
+	};
+
+	/** Every image across every piece, so the lookbook survives the drop (§03/04). */
+	let lookbook = $derived(
+		data.pieces.flatMap((piece) =>
+			piece.images.map((image) => ({
+				...image,
+				piece: piece.name,
+				key: `${piece.slug}-${image.url}`
+			}))
+		)
+	);
+
+	let everyOffer = $derived(
+		data.pieces.flatMap((piece) =>
+			piece.offers.map((offer) => ({ ...offer, pieceName: piece.name }))
+		)
+	);
+
+	/**
+	 * §06 — "Notify-me sits on every sold-out piece and size."
+	 *
+	 * Two readings of that, and both are true. While the drop is on sale, only
+	 * the sizes that have GONE take a notify-me; the rest take a cart. While it
+	 * is not on sale — revealed, sold out, archived — the drop's own state opens
+	 * notify-me on every size, because none of them can be bought today.
+	 */
+	let notifyOffers = $derived(
+		data.notifyOpen && !data.onSale ? everyOffer : everyOffer.filter((offer) => offer.soldOut)
+	);
+
+	/** §09 — fields on the record, so spec table, size guide and invoice agree. */
 	let specifications = $derived([
 		['Fibre', data.product.fabric],
 		['Weight', `${data.product.gsm} GSM`],
@@ -51,541 +91,309 @@
 		['Edition', `${data.editionSize} numbered pieces`],
 		['Sizes', SIZE_RANGE_LABEL]
 	]);
+
+	/** §12 — what the board already says, shown only where it is non-zero. */
+	let requestedTotal = $derived(data.demandRows.reduce((sum, row) => sum + row.requests, 0));
 </script>
 
 <svelte:head>
-	<title>Drop 01 — Pineapple Haze | Rootwear</title>
-	<meta
-		name="description"
-		content="Discover Pineapple Haze, Rootwear's first limited drop: 25 numbered hemp-cotton pieces."
-	/>
-	<meta name="theme-color" content="#faf9f5" />
+	<title>Drop {dropNumber} — {data.drop.name} | Rootwear</title>
+	<meta name="description" content={data.drop.story} />
 </svelte:head>
 
-<div class="collection-page">
-	<header class="collection-header">
-		<a class="collection-wordmark" href="/" aria-label="Rootwear home">ROOTWEAR</a>
-		<a class="collection-header__back" href="/"
-			>Back to the forest <span aria-hidden="true">↖</span></a
-		>
-	</header>
-
-	<main>
+<main>
+	{#if data.showCountdown}
+		<!-- The countdown carries this page's h1. Everything below is an h2. -->
 		<DropCountdown stage={data.stage} />
-		<section class="collection-intro" aria-labelledby="collection-title">
-			<div class="collection-kicker">
-				<span>New collection</span>
-				<span>25 pieces · 2026</span>
+	{/if}
+
+	<div class="mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
+		<header class="relative mb-20 overflow-hidden">
+			<div
+				class="pointer-events-none absolute inset-x-0 -top-10 h-56 text-cream"
+				aria-hidden="true"
+			>
+				<RootSystem opacity={0.09} depth={6} />
 			</div>
 
-			<div class="collection-intro__grid">
-				<h2 id="collection-title"><span>Pineapple</span><span>Haze.</span></h2>
-				<div class="collection-intro__copy">
-					<p>
-						Our first growth: a tactile everyday uniform made with hemp-led fabric, quiet colour and
-						a shape designed to gather character over time.
+			<div class="relative flex flex-wrap items-center gap-4">
+				<Eyebrow>Drop {dropNumber}</Eyebrow>
+				<DropStateMark state={data.drop.state} />
+				<span class="text-[10px] tracking-[0.2em] text-stone-500 uppercase">
+					<time datetime={new Date(releasedAt).toISOString()}>{released.format(releasedAt)}</time>
+				</span>
+			</div>
+
+			<div class="relative mt-8 grid gap-10 lg:grid-cols-[1.4fr_0.6fr] lg:gap-20">
+				{#if data.showCountdown}
+					<h2
+						id="collection-title"
+						class="display text-[clamp(3rem,8vw,8rem)] leading-[0.82] tracking-[-0.055em]"
+					>
+						{data.drop.name}
+					</h2>
+				{:else}
+					<h1
+						id="collection-title"
+						class="display text-[clamp(3rem,8vw,8rem)] leading-[0.82] tracking-[-0.055em]"
+					>
+						{data.drop.name}
+					</h1>
+				{/if}
+
+				<div class="flex flex-col justify-end gap-6">
+					<p class="max-w-prose text-sm leading-relaxed text-stone-300">{data.drop.story}</p>
+					<p class="text-xs leading-relaxed text-stone-500">
+						{DROP_STATE_DESCRIPTION[data.drop.state]}
 					</p>
-					<div class="collection-price">
-						<span>Pineapple Haze Tee</span>
-						<strong>{price}</strong>
+
+					<div
+						class="flex items-baseline justify-between gap-4 border-t border-white/15 pt-4 text-[10px] tracking-[0.2em] uppercase"
+					>
+						<span class="text-stone-400">{data.product.name}</span>
+						<strong class="font-normal text-stone-100">{price}</strong>
 					</div>
+
+					{#if data.showPrelaunchPrice}
+						<p class="text-[10px] tracking-[0.2em] text-stone-500 uppercase">
+							Pre-launch price, locked for anyone who reserves now.
+						</p>
+					{/if}
+
+					{#if data.acceptsDeposits}
+						<!-- §08: a deposit. The percentage is an unanswered open item and
+						     is deliberately not printed here. -->
+						<p class="border-l-2 border-strain pl-4 text-xs leading-relaxed text-stone-400">
+							Reserve now with a deposit. The balance is settled before your piece is dispatched,
+							and your hand number is allocated when payment confirms — never before.
+						</p>
+						<p class="text-[10px] tracking-[0.2em] text-stone-500 uppercase">
+							<span class="text-strain tabular-nums">{data.claimed}</span>
+							of {data.editionSize} claimed
+						</p>
+					{/if}
 				</div>
 			</div>
-		</section>
+		</header>
 
-		<section class="collection-campaign" aria-label="Pineapple Haze campaign views">
-			{#each campaignViews as view}
-				<figure class="collection-card">
-					<div class="collection-card__image">
-						<div class="collection-card__transition">
+		<!-- §03 template 04: the lookbook stays intact once the drop is finished. -->
+		<section class="mb-24" aria-labelledby="lookbook-title">
+			<h2 id="lookbook-title" class="mb-8 text-[10px] tracking-[0.28em] text-stone-400 uppercase">
+				The lookbook
+			</h2>
+
+			<ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+				{#each lookbook as shot (shot.key)}
+					<li class="group flex flex-col gap-3">
+						<div class="aspect-[4/5] w-full overflow-hidden bg-white/5">
 							<img
-								class="collection-face collection-face--primary"
-								src={view.image}
-								alt={view.alt}
-							/>
-							<img
-								class="collection-face collection-face--alternate"
-								src={view.alternateImage}
-								alt={view.alternateAlt}
+								class="size-full object-cover object-center transition duration-700 ease-out group-hover:scale-[1.035] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+								src={shot.url}
+								alt={shot.alt}
+								loading="lazy"
+								decoding="async"
 							/>
 						</div>
-						<span>{view.index}</span>
-						<small>{view.label} ↔ {view.alternateLabel}</small>
-					</div>
-					<figcaption>
-						<div>
-							<strong>{view.label}</strong>
-							<p>{view.detail}</p>
-						</div>
-						<span>{price}</span>
-					</figcaption>
-				</figure>
-			{/each}
+						<p class="text-[10px] tracking-[0.2em] text-stone-500 uppercase">
+							{ROLE_LABEL[shot.role] ?? shot.role} · {shot.piece}
+						</p>
+					</li>
+				{/each}
+			</ul>
 		</section>
 
-		<section class="collection-piece" aria-labelledby="piece-title">
-			<div class="collection-piece__story">
-				<p>01 / The piece</p>
-				<h2 id="piece-title">Grown, not manufactured.</h2>
-			</div>
+		<!-- The pieces. §06: sold-out sizes are greyed and still visible here too. -->
+		<section class="mb-24 border-t border-white/12 pt-12" aria-labelledby="pieces-title">
+			<h2 id="pieces-title" class="mb-10 text-[10px] tracking-[0.28em] text-stone-400 uppercase">
+				{data.pieces.length === 1 ? 'The piece' : 'The pieces'}
+			</h2>
 
-			<div class="collection-piece__details">
-				<div class="collection-piece__heading">
-					<div>
-						<span>Drop 001</span>
-						<h3>Pineapple Haze Tee</h3>
-					</div>
-					<strong>{price}</strong>
+			<ul class="flex flex-col gap-16">
+				{#each data.pieces as piece (piece.slug)}
+					<li class="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+						<a
+							class="group block overflow-hidden bg-white/5"
+							href="/drops/{data.drop.slug}/{piece.slug}"
+						>
+							{#if piece.lead}
+								<img
+									class="aspect-[4/5] w-full object-cover object-center transition duration-700 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+									src={piece.lead.url}
+									alt={piece.lead.alt}
+									loading="lazy"
+									decoding="async"
+								/>
+							{/if}
+						</a>
+
+						<div class="flex flex-col gap-6">
+							<div class="flex flex-wrap items-baseline justify-between gap-4">
+								<h3 class="display text-3xl leading-none tracking-[-0.03em]">{piece.name}</h3>
+								<strong class="text-[10px] font-normal tracking-[0.2em] text-stone-100 uppercase">
+									{formatInr(piece.price)}
+								</strong>
+							</div>
+
+							<p class="max-w-prose text-sm leading-relaxed text-stone-400">{piece.summary}</p>
+
+							{#if piece.allSoldOut}
+								<p
+									class="border-l-2 border-white/25 pl-4 text-[10px] tracking-[0.28em] text-stone-400 uppercase"
+								>
+									Every size gone
+								</p>
+							{/if}
+
+							<!-- Availability, not a control: the choice is made on the piece
+							     page where the fit note and the size guide sit beside it. -->
+							<SizeSelector
+								offers={piece.offers}
+								selectable={false}
+								idPrefix="drop-{piece.slug}"
+								name="preview-{piece.slug}"
+							/>
+
+							<div class="flex flex-wrap gap-4">
+								<Button href="/drops/{data.drop.slug}/{piece.slug}" variant="solid">
+									{data.onSale ? 'Choose a size' : 'View the piece'}
+								</Button>
+							</div>
+						</div>
+					</li>
+				{/each}
+			</ul>
+		</section>
+
+		{#if notifyOffers.length > 0}
+			<section class="relative mb-24 border-t border-white/12 pt-12" aria-labelledby="notify-title">
+				<div
+					class="pointer-events-none absolute inset-x-0 top-0 h-80 text-cream"
+					aria-hidden="true"
+				>
+					<HempMotif opacity={0.04} seed={7} />
 				</div>
-				<p class="collection-piece__description">
-					Cut loose through the body with a dropped shoulder and substantial hand-feel. Designed for
-					repeat wear, small runs and a slower wardrobe.
-				</p>
 
-				<dl>
-					{#each specifications as specification}
-						<div>
-							<dt>{specification[0]}</dt>
-							<dd>{specification[1]}</dd>
+				<div class="relative flex flex-col gap-3">
+					<h2 id="notify-title" class="text-[10px] tracking-[0.28em] text-stone-400 uppercase">
+						Notify me
+					</h2>
+					<p class="max-w-lg text-sm leading-relaxed text-stone-400">
+						Every size keeps its own list. One message, for the size you pick, when it is available
+						— and nothing else.
+					</p>
+				</div>
+
+				<div class="relative mt-8 max-w-2xl">
+					{#each notifyOffers as offer (offer.variantId)}
+						<NotifyMeForm
+							dropSlug={data.drop.slug}
+							variantId={offer.variantId}
+							size={offer.size}
+							productName={data.pieces.length > 1 ? offer.pieceName : ''}
+							{form}
+							source="drop_page"
+						/>
+					{/each}
+				</div>
+			</section>
+		{/if}
+
+		{#if data.canRequest}
+			<section class="mb-24 border-t border-white/12 pt-12" aria-labelledby="request-title">
+				<h2 id="request-title" class="mb-8 text-[10px] tracking-[0.28em] text-stone-400 uppercase">
+					Bring it back
+				</h2>
+
+				{#if requestedTotal > 0}
+					<p class="mb-6 text-[10px] tracking-[0.28em] text-stone-500 uppercase">
+						<span class="text-gold tabular-nums">{requestedTotal}</span>
+						{requestedTotal === 1 ? 'request' : 'requests'} on the board for this drop
+					</p>
+				{/if}
+
+				<div class="max-w-3xl">
+					<RequestDropForm
+						dropSlug={data.drop.slug}
+						dropName={data.drop.name}
+						sizeOptions={data.sizeOptions}
+						{form}
+						source="drop_page"
+						heading="Tell us the size you missed"
+					/>
+				</div>
+
+				{#if data.demandRows.length > 0 && requestedTotal > 0}
+					<div class="mt-10 max-w-xl overflow-x-auto">
+						<table class="w-full min-w-[22rem] border-collapse text-left">
+							<caption class="sr-only">Requests on the board, by size</caption>
+							<thead>
+								<tr
+									class="border-b border-white/12 text-[10px] tracking-[0.28em] text-stone-500 uppercase"
+								>
+									<th scope="col" class="py-3 pr-4 font-normal">Size</th>
+									<th scope="col" class="py-3 pr-4 font-normal">Requests</th>
+									<th scope="col" class="py-3 font-normal">Notify-me</th>
+								</tr>
+							</thead>
+							<tbody>
+								{#each data.demandRows as row (row.variantId)}
+									<tr class="border-b border-white/8">
+										<th
+											scope="row"
+											class="py-3 pr-4 text-xs font-normal tracking-[0.18em] uppercase"
+										>
+											{row.size}
+										</th>
+										<td class="py-3 pr-4 text-sm text-stone-400 tabular-nums">{row.requests}</td>
+										<td class="py-3 text-sm text-stone-400 tabular-nums">{row.notifyMe}</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					</div>
+				{/if}
+			</section>
+		{/if}
+
+		<section class="border-t border-white/12 pt-12" aria-labelledby="spec-title">
+			<h2 id="spec-title" class="mb-8 text-[10px] tracking-[0.28em] text-stone-400 uppercase">
+				The specification
+			</h2>
+
+			<div class="grid gap-12 lg:grid-cols-2 lg:gap-20">
+				<dl class="m-0">
+					{#each specifications as specification (specification[0])}
+						<div
+							class="flex justify-between gap-4 border-t border-white/12 py-4 text-[10px] tracking-[0.18em] uppercase"
+						>
+							<dt class="text-stone-300">{specification[0]}</dt>
+							<dd class="m-0 text-stone-500">{specification[1]}</dd>
 						</div>
 					{/each}
 				</dl>
 
-				<div class="collection-piece__note">
-					<span>Release status</span>
-					<strong>Drop 001 · limited to 25</strong>
+				<div class="flex flex-col">
+					<Accordion title="Size guide" surface="dark" open>
+						<SizeChart
+							modelHeightCm={data.product.modelHeightCm}
+							modelWornSize={data.product.modelWornSize}
+							surface="dark"
+						/>
+					</Accordion>
+					<Accordion title="Care" surface="dark">
+						<ul class="flex flex-col gap-2">
+							{#each data.product.care as instruction (instruction)}
+								<li>{instruction}</li>
+							{/each}
+						</ul>
+					</Accordion>
+					<Accordion title="Returns" surface="dark">
+						<!-- §11: identical wording on the product page, at checkout, in the
+						     confirmation email and on the policy page. Imported, never retyped. -->
+						<p>{RETURNS_WORDING}</p>
+					</Accordion>
 				</div>
 			</div>
 		</section>
-	</main>
-
-	<footer class="collection-footer">
-		<a class="collection-wordmark" href="/">ROOTWEAR</a>
-		<p>Future-grown clothing. Grown, not made.</p>
-		<a href="/">Return to the canopy ↑</a>
-	</footer>
-</div>
-
-<style>
-	.collection-page {
-		min-height: 100vh;
-		color: #173426;
-		background: #faf9f5;
-		color-scheme: light;
-	}
-
-	.collection-header {
-		display: grid;
-		grid-template-columns: 1fr auto;
-		align-items: center;
-		gap: 2rem;
-		padding: 1.4rem clamp(1.25rem, 3vw, 3.5rem);
-		font-size: 9px;
-		letter-spacing: 0.18em;
-		text-transform: uppercase;
-		border-bottom: 1px solid rgba(23, 52, 38, 0.2);
-	}
-
-	.collection-wordmark {
-		font-family: Didot, 'Bodoni 72', 'Times New Roman', serif;
-		font-size: 1.25rem;
-		letter-spacing: 0.22em;
-	}
-
-	.collection-header__back {
-		justify-self: end;
-		padding-bottom: 0.25rem;
-		border-bottom: 1px solid currentColor;
-	}
-
-	.collection-intro {
-		padding: clamp(4rem, 9vw, 9rem) clamp(1.25rem, 3vw, 3.5rem) clamp(3rem, 6vw, 6rem);
-	}
-
-	.collection-kicker {
-		display: flex;
-		justify-content: space-between;
-		padding-bottom: 1rem;
-		font-size: 9px;
-		letter-spacing: 0.2em;
-		text-transform: uppercase;
-		border-bottom: 1px solid rgba(23, 52, 38, 0.2);
-	}
-
-	.collection-intro__grid {
-		display: grid;
-		grid-template-columns: minmax(0, 1.45fr) minmax(18rem, 0.55fr);
-		gap: clamp(3rem, 8vw, 9rem);
-		align-items: end;
-		padding-top: 2rem;
-	}
-
-	.collection-intro h2,
-	.collection-piece h2 {
-		margin: 0;
-		font-family: Didot, 'Bodoni 72', 'Times New Roman', serif;
-		font-weight: 400;
-		letter-spacing: -0.07em;
-	}
-
-	.collection-intro h2 {
-		font-size: clamp(5rem, 13vw, 14rem);
-		line-height: 0.7;
-	}
-
-	.collection-intro h2 span {
-		display: block;
-	}
-
-	.collection-intro h2 span + span {
-		margin-top: 0.09em;
-	}
-
-	.collection-intro__copy > p {
-		margin: 0;
-		font-size: clamp(1rem, 1.4vw, 1.3rem);
-		line-height: 1.55;
-	}
-
-	.collection-price {
-		display: flex;
-		justify-content: space-between;
-		gap: 1rem;
-		margin-top: 3rem;
-		padding-top: 1rem;
-		font-size: 10px;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-		border-top: 1px solid rgba(23, 52, 38, 0.25);
-	}
-
-	.collection-price strong {
-		font-weight: 500;
-	}
-
-	.collection-campaign {
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 1rem;
-		padding: 0 clamp(1.25rem, 3vw, 3.5rem) clamp(5rem, 10vw, 10rem);
-	}
-
-	.collection-card {
-		margin: 0;
-	}
-
-	.collection-card__image {
-		position: relative;
-		aspect-ratio: 4 / 5;
-		overflow: hidden;
-		background: #efede7;
-	}
-
-	.collection-card__transition {
-		position: absolute;
-		inset: 0;
-	}
-
-	.collection-face {
-		position: absolute;
-		inset: 0;
-		display: block;
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		transition:
-			opacity 600ms cubic-bezier(0.22, 1, 0.36, 1),
-			transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
-		will-change: opacity, transform;
-	}
-
-	.collection-face--alternate {
-		opacity: 0;
-		transform: scale(1.025);
-	}
-
-	.collection-card:hover .collection-face--primary {
-		opacity: 0;
-		transform: scale(1.015);
-	}
-
-	.collection-card:hover .collection-face--alternate {
-		opacity: 1;
-		transform: scale(1);
-	}
-
-	.collection-card__image > span {
-		position: absolute;
-		top: 1rem;
-		left: 1rem;
-		display: grid;
-		width: 2rem;
-		height: 2rem;
-		place-items: center;
-		font-size: 8px;
-		letter-spacing: 0.12em;
-		color: #faf9f5;
-		background: rgba(23, 52, 38, 0.78);
-		border-radius: 50%;
-	}
-
-	.collection-card__image > small {
-		position: absolute;
-		right: 1rem;
-		bottom: 1rem;
-		z-index: 2;
-		padding: 0.55rem 0.65rem;
-		font-size: 7px;
-		line-height: 1;
-		letter-spacing: 0.12em;
-		color: rgba(250, 249, 245, 0.88);
-		text-transform: uppercase;
-		background: rgba(23, 52, 38, 0.76);
-		border: 1px solid rgba(250, 249, 245, 0.22);
-		opacity: 0;
-		transform: translateY(5px);
-		transition:
-			opacity 240ms ease,
-			transform 240ms ease;
-		-webkit-backdrop-filter: blur(6px);
-		backdrop-filter: blur(6px);
-	}
-
-	.collection-card:hover .collection-card__image > small {
-		opacity: 1;
-		transform: translateY(0);
-	}
-
-	.collection-card figcaption {
-		display: flex;
-		justify-content: space-between;
-		gap: 1rem;
-		padding: 1rem 0;
-		border-bottom: 1px solid rgba(23, 52, 38, 0.2);
-	}
-
-	.collection-card figcaption strong,
-	.collection-card figcaption > span {
-		font-size: 10px;
-		font-weight: 500;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-	}
-
-	.collection-card figcaption p {
-		margin: 0.45rem 0 0;
-		font-size: 9px;
-		letter-spacing: 0.08em;
-		color: rgba(23, 52, 38, 0.56);
-	}
-
-	.collection-piece {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(22rem, 0.72fr);
-		gap: clamp(4rem, 10vw, 12rem);
-		padding: clamp(5rem, 10vw, 10rem) clamp(1.25rem, 3vw, 3.5rem);
-		color: #f8f4e8;
-		background-color: #173426;
-		background-image:
-			linear-gradient(90deg, rgba(13, 45, 31, 0.7), rgba(13, 45, 31, 0.84)),
-			url('/images/rootwear-roots-backdrop.jpg');
-		background-repeat: no-repeat;
-		background-position:
-			center,
-			left center;
-		background-size:
-			cover,
-			auto 82%;
-	}
-
-	.collection-piece__story > p,
-	.collection-piece__heading span {
-		margin: 0 0 2rem;
-		font-size: 9px;
-		letter-spacing: 0.2em;
-		text-transform: uppercase;
-		color: rgba(248, 244, 232, 0.58);
-	}
-
-	.collection-piece h2 {
-		max-width: 8ch;
-		font-size: clamp(4rem, 8vw, 9rem);
-		line-height: 0.78;
-	}
-
-	.collection-piece__details {
-		align-self: end;
-	}
-
-	.collection-piece__heading {
-		display: flex;
-		align-items: end;
-		justify-content: space-between;
-		gap: 2rem;
-		padding-bottom: 1.5rem;
-		border-bottom: 1px solid rgba(248, 244, 232, 0.28);
-	}
-
-	.collection-piece__heading span {
-		display: block;
-		margin-bottom: 0.6rem;
-	}
-
-	.collection-piece__heading h3 {
-		margin: 0;
-		font-family: Didot, 'Bodoni 72', 'Times New Roman', serif;
-		font-size: 2rem;
-		font-weight: 400;
-	}
-
-	.collection-piece__heading strong {
-		font-size: 0.8rem;
-		font-weight: 400;
-		letter-spacing: 0.12em;
-	}
-
-	.collection-piece__description {
-		max-width: 38rem;
-		margin: 2rem 0 3rem;
-		font-size: 1rem;
-		line-height: 1.7;
-		color: rgba(248, 244, 232, 0.72);
-	}
-
-	.collection-piece dl {
-		margin: 0;
-	}
-
-	.collection-piece dl > div {
-		display: flex;
-		justify-content: space-between;
-		gap: 1rem;
-		padding: 0.9rem 0;
-		font-size: 10px;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-		border-top: 1px solid rgba(248, 244, 232, 0.16);
-	}
-
-	.collection-piece dd {
-		margin: 0;
-		color: rgba(248, 244, 232, 0.62);
-	}
-
-	.collection-piece__note {
-		display: flex;
-		justify-content: space-between;
-		gap: 1rem;
-		margin-top: 2rem;
-		padding: 1.2rem;
-		font-size: 9px;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-		border: 1px solid rgba(201, 165, 84, 0.6);
-	}
-
-	.collection-piece__note strong {
-		font-weight: 500;
-		color: #d6b76d;
-	}
-
-	.collection-footer {
-		display: grid;
-		grid-template-columns: 1fr auto 1fr;
-		align-items: center;
-		gap: 2rem;
-		padding: 2rem clamp(1.25rem, 3vw, 3.5rem);
-		font-size: 9px;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-		border-top: 1px solid rgba(23, 52, 38, 0.2);
-	}
-
-	.collection-footer p {
-		margin: 0;
-		color: rgba(23, 52, 38, 0.6);
-	}
-
-	.collection-footer > a:last-child {
-		justify-self: end;
-	}
-
-	@media (max-width: 900px) {
-		.collection-intro__grid,
-		.collection-piece {
-			grid-template-columns: minmax(0, 1fr);
-		}
-
-		.collection-intro__grid {
-			gap: 3rem;
-		}
-
-		.collection-piece {
-			gap: 5rem;
-			background-position:
-				center,
-				20% center;
-			background-size:
-				cover,
-				auto 66%;
-		}
-	}
-
-	@media (max-width: 680px) {
-		.collection-header__back {
-			font-size: 0;
-		}
-
-		.collection-header__back span {
-			font-size: 1rem;
-		}
-
-		.collection-kicker {
-			align-items: flex-end;
-			gap: 1rem;
-		}
-
-		.collection-intro h2 {
-			font-size: 22vw;
-		}
-
-		.collection-piece h2 {
-			max-width: 100%;
-			font-size: clamp(2.75rem, 13vw, 4rem);
-			line-height: 0.92;
-		}
-
-		.collection-campaign {
-			grid-template-columns: 1fr;
-		}
-
-		.collection-card figcaption {
-			padding-bottom: 1.5rem;
-		}
-
-		.collection-piece__heading,
-		.collection-piece__note {
-			align-items: flex-start;
-		}
-
-		.collection-piece__note {
-			flex-direction: column;
-		}
-
-		.collection-footer {
-			grid-template-columns: 1fr;
-			gap: 1rem;
-		}
-
-		.collection-footer > a:last-child {
-			justify-self: start;
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.collection-card__transition,
-		.collection-card__image > small {
-			transition: none;
-		}
-	}
-</style>
+	</div>
+</main>
