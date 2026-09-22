@@ -2,16 +2,38 @@
 	import { getCart } from '$lib/cart/cart.svelte';
 
 	/**
-	 * The shared header. Both original pages carried their own copy of this
-	 * markup, which is why the cart badge had nowhere to live.
+	 * THE header. One component for every route, including the homepage, which
+	 * used to carry its own copy of this markup — which is how the two drifted
+	 * into looking like different sites.
 	 *
-	 * `surface` says what the header sits ON. The homepage flips it while
-	 * scrolling between dark and cream sections; every other page states it once.
+	 * The glass treatment (inset shell, hairline border, backdrop blur) and its
+	 * light/dark variants live in src/routes/layout.css under .site-header*,
+	 * so both the styling and its transitions are shared rather than restated.
 	 */
+	type NavItem = { label: string; href: string };
+
 	let {
+		/** Nav entries. The homepage passes its in-page anchors instead. */
+		items = [
+			{ label: 'Drops', href: '/drops' },
+			{ label: 'Know your roots', href: '/know-your-roots' },
+			{ label: 'Contact', href: '/contact' }
+		],
+		/** Optional right-hand call to action, beside the cart. */
+		cta = undefined,
+		/** Where the wordmark points. The homepage sends it to its own top. */
+		home = '/',
+		/** Default ground. Overridden per section by the probe below. */
 		surface = 'dark',
-		floating = false
-	}: { surface?: 'dark' | 'light'; floating?: boolean } = $props();
+		/** `fixed` floats over a hero; `sticky` reserves its own band. */
+		position = 'sticky'
+	}: {
+		items?: NavItem[];
+		cta?: NavItem;
+		home?: string;
+		surface?: 'dark' | 'light';
+		position?: 'fixed' | 'sticky';
+	} = $props();
 
 	const cart = getCart();
 	let menuOpen = $state(false);
@@ -20,12 +42,8 @@
 	 * Scroll-aware theming.
 	 *
 	 * `surface` is only the DEFAULT. A page that alternates cream and
-	 * forest-black sections — /know-your-roots does exactly that — would
-	 * otherwise pin one ink colour and go invisible over half its own content.
-	 *
-	 * Any section may declare `data-header-theme="light|dark"`; the header
-	 * probes whatever sits behind it and retints. Same convention the homepage
-	 * hero already uses, now available to every route.
+	 * forest-black sections would otherwise pin one ink and go invisible over
+	 * half its own content. Any section may declare data-header-theme.
 	 */
 	let probed = $state<'dark' | 'light' | null>(null);
 	let resolved = $derived(probed ?? surface);
@@ -39,16 +57,11 @@
 	/**
 	 * Resolve what is behind the header by GEOMETRY, not hit-testing.
 	 *
-	 * An earlier version used document.elementsFromPoint(). That is a hit test,
-	 * so it answers differently depending on pointer-events, stacking context
-	 * and — the case that actually bit — a zero-sized viewport, where it
-	 * returns nothing at all. Reading rectangles is deterministic and asks the
-	 * question we actually mean: which themed section spans the header's line?
-	 *
-	 * Read synchronously rather than inside requestAnimationFrame. rAF does not
-	 * run in a background tab, which would leave the header showing the wrong
-	 * ink for the section behind it on return. At five sections the layout read
-	 * costs less than the bookkeeping to defer it.
+	 * elementsFromPoint answers differently depending on pointer-events,
+	 * stacking context and viewport size; rectangles are deterministic.
+	 * Read synchronously rather than in requestAnimationFrame, which does not
+	 * run in a background tab — a tab scrolled while hidden would come back
+	 * showing the wrong ink for the section behind it.
 	 */
 	function probeSurface() {
 		const y = window.scrollY;
@@ -76,103 +89,89 @@
 
 	$effect(() => {
 		reprobe();
-		// Late-loading images shift what sits under the header.
 		window.addEventListener('load', reprobe);
 		return () => window.removeEventListener('load', reprobe);
 	});
-
-	const nav = [
-		{ label: 'Drops', href: '/drops' },
-		{ label: 'Know your roots', href: '/know-your-roots' },
-		{ label: 'Contact', href: '/contact' }
-	];
-
-	/**
-	 * Each tone carries its own GROUND as well as its ink.
-	 *
-	 * The header previously set only a text colour and let whatever sat behind
-	 * it show through. On a light route that ground is `body`, which is
-	 * forest-black — so dark green ink landed on near-black and the nav was
-	 * effectively invisible. A header must never be transparent over a ground
-	 * it does not control.
-	 */
-	let tone = $derived(
-		resolved === 'light'
-			? {
-					text: 'text-forest',
-					bg: 'bg-cream',
-					rule: 'border-forest/20',
-					hover: 'hover:text-forest'
-				}
-			: {
-					text: 'text-stone-100',
-					bg: 'bg-forest-black',
-					rule: 'border-white/20',
-					hover: 'hover:text-white'
-				}
-	);
 </script>
-
-<header
-	data-site-header
-	class="{floating ? 'fixed' : 'sticky'} inset-x-0 top-0 z-50 transition-colors duration-300 {tone.text} {floating ? '' : tone.bg}"
-	data-header-theme={resolved}
->
-	<div class="mx-auto flex max-w-[1600px] items-center justify-between gap-6 px-5 py-5 sm:px-10 lg:px-14">
-		<a href="/" class="wordmark text-lg tracking-[0.2em] uppercase" aria-label="Rootwear home">
-			Rootwear
-		</a>
-
-		<nav class="hidden items-center gap-9 md:flex" aria-label="Primary">
-			{#each nav as item (item.href)}
-				<a
-					class="text-[10px] tracking-[0.2em] uppercase opacity-80 transition hover:opacity-100 {tone.hover}"
-					href={item.href}>{item.label}</a
-				>
-			{/each}
-		</nav>
-
-		<div class="flex items-center gap-4">
-			<a
-				class="border {tone.rule} px-5 py-3 text-[10px] tracking-[0.18em] uppercase transition hover:opacity-70"
-				href="/cart"
-			>
-				Cart{#if cart.count > 0}<span class="ml-2 tabular-nums">({cart.count})</span>{/if}
-			</a>
-			<button
-				class="border {tone.rule} px-4 py-3 text-[10px] tracking-[0.18em] uppercase md:hidden"
-				aria-expanded={menuOpen}
-				aria-controls="mobile-nav"
-				onclick={() => (menuOpen = !menuOpen)}
-			>
-				{menuOpen ? 'Close' : 'Menu'}
-			</button>
-		</div>
-	</div>
-
-	{#if menuOpen}
-		<nav
-			id="mobile-nav"
-			class="border-t {tone.rule} {tone.bg} px-5 py-6 backdrop-blur-xl md:hidden"
-			aria-label="Mobile"
-		>
-			<ul class="flex flex-col gap-5">
-				{#each nav as item (item.href)}
-					<li>
-						<a
-							class="text-sm tracking-[0.18em] text-stone-100 uppercase"
-							href={item.href}
-							onclick={() => (menuOpen = false)}>{item.label}</a
-						>
-					</li>
-				{/each}
-			</ul>
-		</nav>
-	{/if}
-</header>
 
 <svelte:window
 	onscroll={probeSurface}
 	onresize={reprobe}
 	onkeydown={(e) => e.key === 'Escape' && (menuOpen = false)}
 />
+
+<header
+	data-site-header
+	data-header-theme={resolved}
+	class="site-header {position} inset-x-0 top-0 z-50 px-4 pt-4 text-stone-100 sm:px-7 sm:pt-6"
+	class:site-header--light={resolved === 'light'}
+>
+	<div
+		class="site-header__shell mx-auto flex max-w-[1600px] items-center justify-between border border-white/15 bg-black/10 px-4 py-3 backdrop-blur-md sm:px-6"
+	>
+		<a class="wordmark text-lg tracking-[0.22em]" href={home} aria-label="Rootwear home">
+			ROOTWEAR
+		</a>
+
+		<nav
+			class="hidden items-center gap-8 text-[11px] tracking-[0.2em] uppercase md:flex"
+			aria-label="Primary"
+		>
+			{#each items as item (item.href)}
+				<a class="nav-link" href={item.href}>{item.label}</a>
+			{/each}
+		</nav>
+
+		<div class="flex items-center gap-3">
+			{#if cta}
+				<a
+					class="site-header__cta hidden border border-white/25 px-4 py-2 text-[10px] tracking-[0.2em] uppercase transition hover:border-white hover:bg-white hover:text-black sm:block"
+					href={cta.href}>{cta.label}</a
+				>
+			{/if}
+
+			<a
+				class="site-header__cta border border-white/25 px-4 py-2 text-[10px] tracking-[0.2em] uppercase transition hover:border-white hover:bg-white hover:text-black"
+				href="/cart"
+			>
+				Cart{#if cart.count > 0}<span class="ml-2 tabular-nums">({cart.count})</span>{/if}
+			</a>
+
+			<button
+				type="button"
+				class="site-header__menu grid size-9 place-items-center border border-white/25 md:hidden"
+				aria-label="Toggle navigation"
+				aria-expanded={menuOpen}
+				aria-controls="site-nav-mobile"
+				onclick={() => (menuOpen = !menuOpen)}
+			>
+				<span class="menu-icon" class:open={menuOpen}></span>
+			</button>
+		</div>
+	</div>
+
+	{#if menuOpen}
+		<nav
+			id="site-nav-mobile"
+			class="site-header__mobile mt-2 border border-white/15 bg-forest-black/95 p-5 backdrop-blur-xl md:hidden"
+			aria-label="Mobile"
+		>
+			{#each items as item (item.href)}
+				<a
+					class="block border-b border-white/10 py-4 text-sm tracking-[0.18em] uppercase last:border-0"
+					href={item.href}
+					onclick={() => (menuOpen = false)}
+				>
+					{item.label}
+				</a>
+			{/each}
+			{#if cta}
+				<a
+					class="block border-b border-white/10 py-4 text-sm tracking-[0.18em] uppercase last:border-0"
+					href={cta.href}
+					onclick={() => (menuOpen = false)}>{cta.label}</a
+				>
+			{/if}
+		</nav>
+	{/if}
+</header>

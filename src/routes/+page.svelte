@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import SiteHeader from '$lib/components/SiteHeader.svelte';
 
 	type Drop = {
 		name: string;
@@ -11,7 +12,7 @@
 		hoverImage: string;
 	};
 
-	const navItems = [
+	const items = [
 		{ label: 'Story', href: '#about' },
 		{ label: 'The Drop', href: '#drop' },
 		{ label: 'Impact', href: '#impact' },
@@ -68,8 +69,6 @@
 	const heroVideoSrc = '/video/rootwear-forest-loop-seamless.mp4';
 
 	let heroElement: HTMLElement;
-	let menuOpen = $state(false);
-	let lightHeader = $state(false);
 	let heroVideoReady = $state(false);
 	let heroProgress = $state(0);
 	let wordmarkOpacity = $derived(Math.max(0, Math.min(1, (heroProgress - 0.12) / 0.52)));
@@ -99,10 +98,6 @@
 			const scrollRange = Math.max(heroElement.offsetHeight - window.innerHeight, 1);
 			heroProgress = Math.max(0, Math.min(1, window.scrollY / scrollRange));
 
-			const activeSection = document
-				.elementsFromPoint(window.innerWidth / 2, Math.min(110, window.innerHeight - 1))
-				.find((element) => element.tagName === 'SECTION') as HTMLElement | undefined;
-			lightHeader = activeSection?.dataset.headerTheme === 'light';
 		};
 
 		updateViewport();
@@ -124,64 +119,19 @@
 	/>
 </svelte:head>
 
-<svelte:window
-	onkeydown={(event) => {
-		if (event.key === 'Escape') menuOpen = false;
-	}}
+<!--
+	The homepage used to carry its own copy of this header, which is how it and
+	the rest of the site drifted apart. Same component now; the only difference
+	is configuration — in-page anchors, a drop CTA, and fixed so the hero runs
+	full bleed beneath it.
+-->
+<SiteHeader
+	{items}
+	cta={{ label: 'Explore drop 01', href: '/drops/01-pineapple-haze' }}
+	home="#top"
+	position="fixed"
+	surface="dark"
 />
-
-<header
-	class="site-header fixed inset-x-0 top-0 z-50 px-4 pt-4 text-stone-100 sm:px-7 sm:pt-6"
-	class:site-header--light={lightHeader}
->
-	<div
-		class="site-header__shell mx-auto flex max-w-[1600px] items-center justify-between border border-white/15 bg-black/10 px-4 py-3 backdrop-blur-md sm:px-6"
-	>
-		<a class="wordmark text-lg tracking-[0.22em]" href="#top" aria-label="Rootwear home">
-			ROOTWEAR
-		</a>
-
-		<nav class="hidden items-center gap-8 text-[11px] tracking-[0.2em] uppercase md:flex">
-			{#each navItems as item}
-				<a class="nav-link" href={item.href}>{item.label}</a>
-			{/each}
-		</nav>
-
-		<div class="flex items-center gap-3">
-			<a
-				class="site-header__cta hidden border border-white/25 px-4 py-2 text-[10px] tracking-[0.2em] uppercase transition hover:border-white hover:bg-white hover:text-black sm:block"
-				href="/new-collection"
-			>
-				Explore drop 01
-			</a>
-			<button
-				type="button"
-				class="site-header__menu grid size-9 place-items-center border border-white/25 md:hidden"
-				aria-label="Toggle navigation"
-				aria-expanded={menuOpen}
-				onclick={() => (menuOpen = !menuOpen)}
-			>
-				<span class="menu-icon" class:open={menuOpen}></span>
-			</button>
-		</div>
-	</div>
-
-	{#if menuOpen}
-		<nav
-			class="site-header__mobile mt-2 border border-white/15 bg-[#11160f]/95 p-5 backdrop-blur-xl md:hidden"
-		>
-			{#each navItems as item}
-				<a
-					class="block border-b border-white/10 py-4 text-sm tracking-[0.18em] uppercase last:border-0"
-					href={item.href}
-					onclick={() => (menuOpen = false)}
-				>
-					{item.label}
-				</a>
-			{/each}
-		</nav>
-	{/if}
-</header>
 
 <main id="top" class="overflow-clip bg-forest-black text-stone-100">
 	<section bind:this={heroElement} class="relative h-[175svh]" aria-label="Rootwear introduction">
