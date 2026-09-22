@@ -36,7 +36,14 @@ export const DROP_STATE_MARK: Record<DropState, DropMark> = {
  * takes a deposit (§08). Enforced in the action too — this is the UI half.
  */
 export function acceptsDropRequest(state: DropState): boolean {
-	return state === 'SOLD_OUT' || state === 'ARCHIVED';
+	/*
+	 * A request is "bring this back, in this size" — meaningful for anything a
+	 * visitor cannot buy right now, which includes a drop that has not opened
+	 * yet as well as one that has finished. It is NOT meaningful for a drop on
+	 * open sale: asking for something already in front of you is noise in the
+	 * §12 demand board, which is the whole point of collecting it.
+	 */
+	return state !== 'LIVE' && state !== 'PARTIAL' && state !== 'RE_DROP';
 }
 
 /**

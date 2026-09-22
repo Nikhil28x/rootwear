@@ -1,30 +1,23 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import SiteHeader from '$lib/components/SiteHeader.svelte';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 
 	type Drop = {
 		name: string;
 		note: string;
-		price: string;
 		view: string;
 		image: string;
 		hoverView: string;
 		hoverImage: string;
 	};
 
-	const items = [
-		{ label: 'Story', href: '#about' },
-		{ label: 'The Drop', href: '#drop' },
-		{ label: 'Impact', href: '#impact' },
-		// The only cross-page entry: the others are anchors within this page.
-		{ label: 'Know your roots', href: '/know-your-roots' }
-	];
-
 	const drops: Drop[] = [
 		{
 			name: 'Pineapple Haze Tee',
 			note: 'Hemp cotton · 180 GSM · oversized',
-			price: '₹3,490',
 			view: 'Front study',
 			image: '/images/pineapple-haze-front.jpg',
 			hoverView: 'Back study',
@@ -33,7 +26,6 @@
 		{
 			name: 'Pineapple Haze Tee',
 			note: 'Numbered edition · 01 of 25',
-			price: '₹3,490',
 			view: 'Back study',
 			image: '/images/pineapple-haze-back.jpg',
 			hoverView: 'Front study',
@@ -42,7 +34,6 @@
 		{
 			name: 'Pineapple Haze Tee',
 			note: 'Unisex by design · limited run',
-			price: '₹3,490',
 			view: 'Worn study',
 			image: '/images/pineapple-haze-editorial.jpg',
 			hoverView: 'Back study',
@@ -126,7 +117,6 @@
 	full bleed beneath it.
 -->
 <SiteHeader
-	{items}
 	cta={{ label: 'Explore drop 01', href: '/drops/01-pineapple-haze' }}
 	home="#top"
 	position="fixed"
@@ -326,7 +316,9 @@
 								<h3 class="text-base tracking-[-0.01em]">{product.name}</h3>
 								<p class="mt-2 text-[10px] tracking-[0.08em] text-stone-500">{product.note}</p>
 							</div>
-							<p class="shrink-0 text-[9px] tracking-[0.15em] text-stone-500">{product.price}</p>
+							<p class="shrink-0 text-[9px] tracking-[0.15em] text-stone-500">
+								{data.dropStatus?.label ?? 'Coming soon'}
+							</p>
 						</div>
 						<a
 							class="absolute inset-0 z-20 cursor-pointer"
@@ -356,7 +348,7 @@
 	<section
 		id="impact"
 		data-header-theme="light"
-		class="impact-section relative bg-cream px-5 py-24 text-forest sm:px-10 sm:py-36 lg:px-14"
+		class="impact-section relative bg-cream px-5 pt-24 pb-14 text-forest sm:px-10 sm:pt-36 sm:pb-16 lg:px-14"
 	>
 		<div class="impact-rings absolute inset-0 overflow-hidden" aria-hidden="true">
 			<span></span><span></span><span></span>
@@ -460,7 +452,7 @@
 
 	<section
 		data-header-theme="light"
-		class="relative grid min-h-[75svh] place-items-center overflow-hidden bg-cream px-5 py-24 text-forest"
+		class="relative grid min-h-[52svh] place-items-center overflow-hidden bg-cream px-5 pt-16 pb-24 text-forest"
 	>
 		<div class="grain absolute inset-0 opacity-30" aria-hidden="true"></div>
 		<div use:reveal class="reveal-grid relative max-w-5xl text-center">

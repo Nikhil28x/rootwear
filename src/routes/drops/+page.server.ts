@@ -73,29 +73,20 @@ async function demandSummary(dropId: string) {
 	return { total, topSize: top.requests > 0 ? top.size : null };
 }
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({ locals }) => {
 	const all = await drops.listDrops();
 
 	// listDrops() already returns newest first; sorting again here would be a
 	// second opinion about chronology and the repository owns that.
-	const cards = all.map(toCard);
-
-	// The drop that is alive: the newest one that has not finished. A finished
-	// drop belongs under the history, not at the top of the page.
-	const growing = all.find((drop) => !isFinished(drop.state)) ?? null;
-	const past = all.filter((drop) => isFinished(drop.state));
-
-	const history = await Promise.all(
-		past.map(async (drop) => ({
-			card: toCard(drop),
-			demand: await demandSummary(drop.id)
-		}))
-	);
-
+	//
+	// One card per drop, and nothing else. The page used to also compute a
+	// "growing now" highlight and a separate history with demand summaries,
+	// which listed every drop up to three times on one screen.
 	return {
-		cards,
-		growing: growing ? toCard(growing) : null,
-		history
+		cards: all.map(toCard),
+		// Card copy says "Opens" or "Was live" depending on the drop's instant,
+		// so it needs the request clock rather than the visitor's (§04).
+		now: locals.now
 	};
 };
 

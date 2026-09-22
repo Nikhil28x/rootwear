@@ -91,12 +91,12 @@
 			Where it<br />goes.
 		</h1>
 
-		<div class="mt-16 grid gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-24">
+		<div class="mt-10 grid gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-24">
 			<div class="max-w-[46rem]">
 				{#if problem}
 					<p
 						role="alert"
-						class="mb-10 border-l-2 border-alert bg-alert/[0.06] px-6 py-5 text-[15px] leading-relaxed text-alert"
+						class="mb-7 border-l-2 border-alert bg-alert/[0.06] px-6 py-5 text-[15px] leading-relaxed text-alert"
 					>
 						{problem}
 					</p>
@@ -107,7 +107,7 @@
 					     field: a screen reader gets the whole picture in one place. -->
 					<section
 						role="alert"
-						class="mb-10 border-l-2 border-alert bg-alert/[0.06] px-6 py-5"
+						class="mb-7 border-l-2 border-alert bg-alert/[0.06] px-6 py-5"
 						aria-labelledby="errors-title"
 					>
 						<h2 id="errors-title" class="text-[11px] tracking-[0.28em] text-alert uppercase font-medium">
@@ -123,7 +123,7 @@
 				{/if}
 
 				{#if data.saved.length > 0}
-					<section class="mb-12 border-b border-forest/15 pb-8" aria-labelledby="saved-title">
+					<section class="mb-8 border-b border-forest/15 pb-8" aria-labelledby="saved-title">
 						<h2 id="saved-title" class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 							Saved addresses
 						</h2>
@@ -146,7 +146,7 @@
 
 				<form
 					method="POST"
-					class="flex flex-col gap-8"
+					class="flex flex-col gap-5"
 					use:enhance={() => {
 						submitting = true;
 						return async ({ update }) => {
@@ -160,7 +160,7 @@
 					     invite a value the server has to refuse. -->
 					<input type="hidden" name="country" value={SHIP_COUNTRY} />
 
-					<fieldset class="flex flex-col gap-8 border-0 p-0">
+					<fieldset class="flex flex-col gap-5 border-0 p-0">
 						<legend class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">Contact</legend>
 
 						<Field
@@ -190,7 +190,7 @@
 						/>
 					</fieldset>
 
-					<fieldset class="flex flex-col gap-8 border-0 p-0">
+					<fieldset class="flex flex-col gap-5 border-0 p-0">
 						<legend class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 							Delivery address
 						</legend>
@@ -221,7 +221,7 @@
 							error={errors?.line2 ?? ''}
 						/>
 
-						<div class="grid gap-8 sm:grid-cols-2">
+						<div class="grid gap-5 sm:grid-cols-2">
 							<Field
 								label="Town or city"
 								name="city"
@@ -265,7 +265,7 @@
 						</div>
 					</fieldset>
 
-					<fieldset class="flex flex-col gap-8 border-0 p-0">
+					<fieldset class="flex flex-col gap-5 border-0 p-0">
 						<legend class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 							Order notes
 						</legend>
@@ -288,7 +288,7 @@
 				</form>
 			</div>
 
-			<div class="flex flex-col gap-8 lg:sticky lg:top-28 lg:self-start">
+			<div class="flex flex-col gap-5 lg:sticky lg:top-28 lg:self-start">
 				{#if data.cart.soonestHoldMs !== null}
 					<HoldTimer
 						expiresAtMs={data.cart.soonestHoldMs}

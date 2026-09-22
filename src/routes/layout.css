@@ -930,10 +930,31 @@ a:focus-visible {
 }
 
 .roots-timeline {
+	position: relative;
 	margin: 0;
 	padding: 0 0 0 1.75rem;
 	border-left: 1px solid rgba(146, 112, 44, 0.4);
 	list-style: none;
+}
+
+/*
+ * The rail used to run 2.75rem past the last entry — "Grown, not
+ * manufactured." — and simply stop in mid-air. It now ends level with that
+ * last dot and turns into a short horizontal rule, so the line resolves into
+ * the section instead of trailing off it.
+ */
+.roots-timeline li:last-child {
+	padding-bottom: 0;
+}
+
+.roots-timeline::after {
+	position: absolute;
+	bottom: 0;
+	left: -1px;
+	width: clamp(3.5rem, 22%, 9rem);
+	height: 1px;
+	background: rgba(146, 112, 44, 0.4);
+	content: '';
 }
 
 .roots-timeline li {

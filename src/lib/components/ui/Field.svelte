@@ -51,7 +51,7 @@
 	);
 
 	let control = $derived(
-		`w-full border-b ${shell} px-0 py-3 text-[15px] outline-none transition-colors ` +
+		`w-full border-b ${shell} px-0 py-2.5 text-[15px] outline-none transition-colors ` +
 			(error ? 'border-b-2 border-alert' : '')
 	);
 </script>
