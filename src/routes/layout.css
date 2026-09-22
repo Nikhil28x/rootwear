@@ -396,20 +396,80 @@ a:focus-visible {
 .brand-footer {
 	position: relative;
 	overflow: hidden;
-	color: var(--color-cream);
-	background: var(--color-forest);
+	/* Turned down on purpose. The full brand forest made the footer the
+	   brightest thing on a dark page; this is a desaturated grey-green that
+	   sits behind the content instead of pulling the eye to the bottom of
+	   every screen. */
+	color: rgba(246, 239, 221, 0.82);
+	background: #161c18;
 }
 
 .brand-footer__artwork {
+	position: relative;
 	margin: 0;
-	background: #152b20;
+	background: #131a16;
 }
 
+.brand-footer__grid {
+	position: relative;
+	display: grid;
+	gap: 2rem clamp(1.5rem, 4vw, 4rem);
+	grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+	padding: clamp(2rem, 4vw, 3.25rem) clamp(1rem, 3vw, 3.5rem);
+	border-top: 1px solid rgba(246, 239, 221, 0.1);
+}
+
+.brand-footer__head {
+	margin: 0 0 0.9rem;
+	font-size: 11px;
+	font-weight: 500;
+	letter-spacing: 0.22em;
+	color: rgba(246, 239, 221, 0.55);
+	text-transform: uppercase;
+}
+
+.brand-footer__col ul {
+	display: flex;
+	flex-direction: column;
+	gap: 0.55rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.brand-footer__col a {
+	font-size: 13px;
+	color: rgba(246, 239, 221, 0.78);
+	text-decoration: none;
+	transition: color 180ms ease;
+}
+
+.brand-footer__col a:hover {
+	color: var(--color-cream);
+}
+
+.brand-footer__col address {
+	font-size: 13px;
+	font-style: normal;
+	line-height: 1.7;
+	color: rgba(246, 239, 221, 0.78);
+}
+
+.brand-footer__col address.is-placeholder {
+	color: var(--color-alert-light);
+}
+
+/*
+ * The artwork is atmosphere, not a hero. Dimmed and largely desaturated so it
+ * reads as a texture behind the links rather than as an image to look at —
+ * the footer should settle behind the page, not be the brightest thing on it.
+ */
 .brand-footer__artwork img {
 	display: block;
 	width: 100%;
 	height: auto;
-	filter: saturate(0.88) contrast(1.04);
+	opacity: 0.4;
+	filter: grayscale(0.6) contrast(0.9);
 }
 
 .brand-footer__mobile-lockup {
@@ -423,11 +483,16 @@ a:focus-visible {
 	justify-content: space-between;
 	gap: 1rem 2rem;
 	padding: 1rem clamp(1rem, 3vw, 3.5rem);
-	font-size: 8px;
+	/* 11px, not 8. This was homepage-only chrome when it was exempted from the
+	   type floor; the footer is now shared by every route, so it follows the
+	   same floor as the rest of the site. */
+	font-size: 11px;
+	font-weight: 500;
 	letter-spacing: 0.16em;
-	color: rgba(246, 239, 221, 0.72);
+	color: rgba(246, 239, 221, 0.62);
 	text-transform: uppercase;
-	background: rgba(11, 15, 11, 0.28);
+	background: rgba(11, 15, 11, 0.35);
+	border-top: 1px solid rgba(246, 239, 221, 0.08);
 }
 
 .brand-footer__legal nav {
@@ -819,7 +884,7 @@ a:focus-visible {
 
 	.brand-footer__mobile-lockup small {
 		margin-top: 1.25rem;
-		font-size: 8px;
+		font-size: 11px;
 		letter-spacing: 0.18em;
 		text-transform: uppercase;
 		opacity: 0.68;
@@ -1001,7 +1066,7 @@ a:focus-visible {
 	left: 72%;
 	width: 21%;
 	padding: 0.25em 0;
-	background: #1c3023;
+	background: rgba(19, 26, 22, 0.88);
 	font-family: Didot, 'Bodoni 72', 'Times New Roman', serif;
 	font-size: clamp(0.75rem, 1.65vw, 2.3rem);
 	font-style: italic;

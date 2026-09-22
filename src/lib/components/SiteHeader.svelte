@@ -17,6 +17,7 @@
 		items = [
 			{ label: 'Know your roots', href: '/know-your-roots' },
 			{ label: 'The Drop', href: '/drops' },
+			{ label: 'Impact', href: '/impact' },
 			{ label: 'Contact', href: '/contact' }
 		],
 		/** Optional right-hand call to action, beside the cart. */

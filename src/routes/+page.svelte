@@ -184,6 +184,17 @@
 						<h1 class="display hero-headline">
 							Grown, not<br />manufactured.
 						</h1>
+						<!-- The hero had no way out of it but the nav. -->
+						<div class="mt-9 flex flex-wrap items-center gap-4">
+							<a
+								class="inline-flex border border-cream bg-cream px-7 py-4 text-[11px] font-medium tracking-[0.2em] text-forest uppercase transition hover:bg-white"
+								href="/drops/01-pineapple-haze">Shop Drop 01</a
+							>
+							<a
+								class="inline-flex border border-white/40 px-7 py-4 text-[11px] font-medium tracking-[0.2em] text-stone-100 uppercase transition hover:border-white hover:bg-white hover:text-black"
+								href="/know-your-roots">Know your roots</a
+							>
+						</div>
 					</div>
 					<div
 						class="hidden max-w-[18rem] border-l border-white/35 pl-5 text-xs leading-relaxed text-stone-300 lg:block"
@@ -322,7 +333,7 @@
 						</div>
 						<a
 							class="absolute inset-0 z-20 cursor-pointer"
-							href="/new-collection"
+							href="/drops/01-pineapple-haze"
 							aria-label={`View ${product.name}`}
 						></a>
 					</article>
@@ -337,7 +348,7 @@
 			</div>
 
 			<div class="drop-collection-action">
-				<a class="drop-collection-link" href="/new-collection">
+				<a class="drop-collection-link" href="/drops/01-pineapple-haze">
 					<span>View the collection</span>
 					<span aria-hidden="true">↗</span>
 				</a>
@@ -348,13 +359,13 @@
 	<section
 		id="impact"
 		data-header-theme="light"
-		class="impact-section relative bg-cream px-5 pt-24 pb-14 text-forest sm:px-10 sm:pt-36 sm:pb-16 lg:px-14"
+		class="impact-section relative bg-cream px-5 pt-20 pb-16 text-forest sm:px-10 sm:pt-24 sm:pb-20 lg:px-14"
 	>
 		<div class="impact-rings absolute inset-0 overflow-hidden" aria-hidden="true">
 			<span></span><span></span><span></span>
 		</div>
 		<div class="relative mx-auto max-w-[1600px]">
-			<div use:reveal class="reveal-grid grid gap-12 lg:grid-cols-[0.72fr_1.28fr] lg:gap-24">
+			<div use:reveal class="reveal-grid grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:gap-16">
 				<div>
 					<p class="mb-7 text-[10px] tracking-[0.25em] uppercase">03 / The material record</p>
 					<a class="roots-jump" href="/know-your-roots"
@@ -367,13 +378,17 @@
 						Composition, weight and edition size, stated plainly. We publish what we can
 						verify about the cloth, and nothing we cannot.
 					</p>
+					<a
+						class="mt-8 inline-flex border border-forest px-7 py-4 text-[11px] font-medium tracking-[0.2em] uppercase transition hover:bg-forest hover:text-cream"
+						href="/impact">Read the material record</a
+					>
 				</div>
 
 				<div class="grid border-t border-l border-[#13190e]/30 sm:grid-cols-2">
 					{#each impactStats as stat, index}
 						<div
 							use:reveal
-							class="stat-cell border-r border-b border-[#13190e]/30 p-6 sm:p-8"
+							class="stat-cell border-r border-b border-[#13190e]/30 p-5 sm:p-6"
 							style={`--delay:${index * 80}ms`}
 						>
 							<div class="flex items-start justify-between">
@@ -382,10 +397,10 @@
 									><i></i></span
 								>
 							</div>
-							<p class="display mt-12 text-[clamp(4rem,7vw,8rem)] leading-none tracking-[-0.07em]">
+							<p class="display mt-7 text-[clamp(2.6rem,4.6vw,4.6rem)] leading-none tracking-[-0.06em]">
 								{stat.value}<span class="ml-2 text-[0.16em] tracking-[0.05em]">{stat.unit}</span>
 							</p>
-							<p class="mt-5 max-w-[12rem] text-[10px] leading-relaxed tracking-[0.14em] uppercase">
+							<p class="mt-3 max-w-[12rem] text-[10px] leading-relaxed tracking-[0.14em] uppercase">
 								{stat.label}
 							</p>
 						</div>
@@ -393,60 +408,6 @@
 				</div>
 			</div>
 
-			<div
-				class="mt-12 border-t border-[#13190e]/30 pt-5 text-[9px] leading-relaxed tracking-[0.12em] uppercase opacity-65"
-			>
-				Sample impact profile. Replace with Rootwear's independently verified lifecycle figures
-				before launch.
-			</div>
-			<section
-				id="know-your-roots"
-				class="roots-section"
-				data-header-theme="light"
-				aria-labelledby="roots-title"
-			>
-				<div class="roots-intro">
-					<p class="roots-eyebrow">Impact / Know Your Roots</p>
-					<h3 id="roots-title" class="display">An ancient fibre.<br />A new chapter.</h3>
-					<p>
-						Before it became a garment, it was a plant. Follow hemp through its early uses, India's
-						material history, and the clothes we choose today.
-					</p>
-				</div>
-				<ol class="roots-timeline">
-					<li>
-						<p class="roots-era">c. 6000 BCE / East Asia</p>
-						<h4 class="display">The first threads</h4>
-						<p>
-							Archaeological evidence places the use of cannabis seeds and fibres in East Asia
-							around 8,000 years ago. Hemp's material story began long before modern fashion.
-						</p>
-						<a href="https://www.nature.com/articles/s41586-025-09065-0"
-							>Read the research in Nature ↗</a
-						>
-					</li>
-					<li>
-						<p class="roots-era">1885 / Punjab, India</p>
-						<h4 class="display">India, in the fibre</h4>
-						<p>
-							A hemp fibre sample from Punjab, given by the Royal Botanic Gardens, Kew, in 1885, is
-							preserved in the Smithsonian's collection—a tangible record of India's place in this
-							material's history.
-						</p>
-						<a href="https://americanhistory.si.edu/collections/object/nmah_648677"
-							>Explore the Smithsonian archive ↗</a
-						>
-					</li>
-					<li>
-						<p class="roots-era">Today / Rootwear</p>
-						<h4 class="display">Grown, not manufactured.</h4>
-						<p>
-							Our chapter starts with hemp-led fabrics and everyday pieces. Knowing the roots of a
-							material is part of choosing what comes next.
-						</p>
-					</li>
-				</ol>
-			</section>
 		</div>
 	</section>
 
@@ -460,39 +421,23 @@
 			<h2 class="display text-[clamp(4rem,10vw,11rem)] leading-[0.78] tracking-[-0.07em]">
 				Wear the change slowly.
 			</h2>
-			<a
-				class="mt-12 inline-flex border border-forest px-7 py-4 text-[10px] tracking-[0.2em] uppercase transition hover:bg-forest hover:text-cream"
-				href="/new-collection"
-			>
-				Enter drop 01
-			</a>
+			<p class="mt-8 max-w-[46ch] text-[15px] leading-relaxed text-forest/75">
+				Twenty-five hand-numbered pieces, cut once. When they are gone the drop closes and stays
+				on the site with its story intact.
+			</p>
+			<!-- Points at the canonical drop URL (§05), not the old /new-collection
+			     path, which only survives as a redirect. -->
+			<div class="mt-10 flex flex-wrap items-center justify-center gap-4">
+				<a
+					class="inline-flex border border-forest bg-forest px-8 py-4 text-[11px] font-medium tracking-[0.2em] text-cream uppercase transition hover:bg-forest-black"
+					href="/drops/01-pineapple-haze">Shop Drop 01</a
+				>
+				<a
+					class="inline-flex border border-forest px-8 py-4 text-[11px] font-medium tracking-[0.2em] uppercase transition hover:bg-forest hover:text-cream"
+					href="/impact">Read the material record</a
+				>
+			</div>
 		</div>
 	</section>
 </main>
 
-<footer id="footer" class="brand-footer">
-	<figure class="brand-footer__artwork">
-		<img
-			src="/images/rootwear-brand-story.jpg"
-			alt="Rootwear's illustrated tree manifesto: before we build, we listen; built from the ground up"
-			loading="lazy"
-		/>
-		<figcaption class="brand-footer__desktop-tagline">Established in Process</figcaption>
-	</figure>
-
-	<div class="brand-footer__mobile-lockup" aria-hidden="true">
-		<p>ROOTWEAR</p>
-		<span>Established in Process</span>
-		<small>Built from the ground up.</small>
-	</div>
-
-	<div class="brand-footer__legal">
-		<span>© 2026 Rootwear · Established in Process</span>
-		<nav aria-label="Footer navigation">
-			<a href="#about">Story</a>
-			<a href="/new-collection">Drop 01</a>
-			<a href="#impact">Impact</a>
-		</nav>
-		<a href="#top">Return to the canopy ↑</a>
-	</div>
-</footer>

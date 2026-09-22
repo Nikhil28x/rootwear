@@ -38,6 +38,7 @@
 </svelte:head>
 
 {#if isHome}
+	<!-- The homepage renders its own SiteHeader (anchored hero, drop CTA, fixed). -->
 	{@render children()}
 {:else}
 	<!--
@@ -54,5 +55,10 @@
 		{@render children()}
 	</div>
 
+	<SiteFooter policies={data.footerPolicies ?? []} />
+{/if}
+
+<!-- One footer for every route, the landing lockup included. -->
+{#if isHome}
 	<SiteFooter policies={data.footerPolicies ?? []} />
 {/if}
