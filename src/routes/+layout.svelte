@@ -12,11 +12,11 @@
 	// Per-request cart state, shared by context. Never a module singleton —
 	// on the server that would be shared across concurrent requests.
 	//
-	// Created empty and filled by the effect below rather than seeded from
-	// `data` at init: reading a prop during setup captures only its first
-	// value, so a client-side navigation would leave the badge stale.
-	const cart = setCart();
-	$effect(() => cart.sync(data.cartLines ?? []));
+	// Passed as a FUNCTION so the badge is correct in server-rendered HTML and
+	// still tracks `data` across navigations. Seeding a copy would go stale;
+	// syncing in an $effect would leave the badge empty until hydration, and
+	// empty forever without JavaScript.
+	setCart(() => data.cartLines ?? []);
 
 	/**
 	 * The homepage renders SiteHeader itself, because it needs a different

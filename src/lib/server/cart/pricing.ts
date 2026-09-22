@@ -15,6 +15,7 @@
  *
  * The two implementations must not drift: if one changes, the other is wrong.
  */
+import { isOnSale, acceptsDeposits } from '$lib/domain/drop-state';
 import type { Drop, Product, Variant } from '$lib/domain/drop';
 import { sellableStock } from '$lib/domain/drop';
 import { drops } from '$lib/server/drops';
@@ -68,11 +69,31 @@ export type ResolvedPrice = {
 
 /** The one price rule. Mirrors app.commit_order() line for line. */
 export function resolvePrice(drop: Drop, product: Product, nowMs: number): ResolvedPrice {
-	const launched = nowMs >= drop.launchInstant;
+	/**
+	 * Price follows the drop's STATE, not the clock alone.
+	 *
+	 * These two normally agree, because RW-041 opens a drop the moment its
+	 * launch instant passes. They disagree on a MANUAL PUSH — §06 state 2's
+	 * override, where an operator opens a drop early. Keying on the clock there
+	 * sold openly at the pre-launch price: §08 locks ₹3,400 for someone who
+	 * RESERVES DURING THE TEASE, not for a walk-up buyer, so every early sale
+	 * gave away the difference and was recorded as a pre-order besides.
+	 *
+	 * isPreOrder is likewise a property of the tease, not of the calendar: a
+	 * deposit reserves a piece only while the drop is actually in TEASE (§08).
+	 */
+	const onSale = isOnSale(drop.state);
+	const preOrder = acceptsDeposits(drop.state);
+
+	// Belt and braces: a drop still in a pre-launch state after its instant has
+	// passed should never be cheaper than the launch price.
+	const pastInstant = nowMs >= drop.launchInstant;
+	const atLaunchPrice = onSale || pastInstant;
+
 	return {
-		unitPrice: launched ? product.launchPrice : product.prelaunchPrice,
-		priceSource: launched ? 'launch' : 'prelaunch_locked',
-		isPreOrder: !launched
+		unitPrice: atLaunchPrice ? product.launchPrice : product.prelaunchPrice,
+		priceSource: atLaunchPrice ? 'launch' : 'prelaunch_locked',
+		isPreOrder: preOrder
 	};
 }
 

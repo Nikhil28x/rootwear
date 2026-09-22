@@ -27,7 +27,18 @@ export const DROP_01: Drop = {
 	story:
 		'Our first growth: a tactile everyday uniform made with hemp-led fabric, quiet colour ' +
 		'and a shape designed to gather character over time.',
-	state: 'TEASE',
+	/**
+	 * §06 state 2. TEASE is the drop's pre-launch state; LIVE is what §06 calls
+	 * the "manual push", the override an operator uses to open a drop without
+	 * waiting for the scheduled instant.
+	 *
+	 * Set to LIVE so the store is shoppable now. To put the drop back behind
+	 * its tease, change this one value to 'TEASE' — the countdown, the deposit
+	 * path and the greyed sizes all key off it. Once the launch instant passes,
+	 * RW-041 (src/lib/domain/publish.ts) opens the drop on its own, whatever is
+	 * stored here.
+	 */
+	state: 'LIVE',
 	launchInstant: LAUNCH_INSTANT,
 	archivedAt: null,
 	editionSize: EDITION_SIZE,

@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { drops } from '$lib/server/drops';
 import { handleNotifyMe, handleRequestDrop } from '$lib/server/demand/actions';
+import { resolvePrice } from '$lib/server/cart/pricing';
 import { resolveStage } from '$lib/drop/stage-resolver';
 import { DROP_01_SCHEDULE, LAUNCH_INSTANT } from '$lib/drop/schedule';
 import { acceptsNotifyMe, isOnSale } from '$lib/domain/drop-state';
@@ -31,11 +32,19 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const stage = resolveStage(DROP_01_SCHEDULE, locals.now);
 
-	// §10 — resolved SERVER-SIDE, exactly as on the drop page. The client is
-	// never handed both prices and never picks between them (§04).
-	const isPreLaunchState = drop.state === 'TEASE' || drop.state === 'REVEALED';
-	const showPrelaunchPrice = isPreLaunchState && !stage.launched && !isOnSale(drop.state);
-	const displayPrice: Paise = showPrelaunchPrice ? product.prelaunchPrice : product.launchPrice;
+	/**
+	 * §10 — resolved SERVER-SIDE through the SAME function the cart uses, so the
+	 * page and the basket can never quote different prices for the same piece.
+	 *
+	 * This used to derive the price and the pre-order flag from the clock here,
+	 * separately from $lib/server/cart/pricing. The two then disagreed on a
+	 * manual push (§06 state 2): the page offered "Reserve this piece" at the
+	 * tease price while the cart charged the launch price for an open sale.
+	 * One authority now.
+	 */
+	const { unitPrice, isPreOrder } = resolvePrice(drop, product, locals.now);
+	const displayPrice: Paise = unitPrice;
+	const showPrelaunchPrice = displayPrice === product.prelaunchPrice;
 
 	const finished = isFinished(drop.state);
 	const onSale = isOnSale(drop.state);
@@ -48,14 +57,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		soldOut: isSizeSoldOut(variant),
 		remaining: sellableStock(variant)
 	}));
-
-	/**
-	 * §08/§09 — the pre-order state, stated rather than implied. A piece bought
-	 * before the drop opens is made for the drop; saying "ships in 3 days" here
-	 * would be a promise nobody has agreed to, so the note carries only what is
-	 * actually known: the drop's own instant, and §08's allocation rule.
-	 */
-	const isPreOrder = !finished && !stage.launched;
 
 	return {
 		drop: {

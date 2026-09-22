@@ -130,10 +130,17 @@ begin
     where cl.cart_id = v_cart_id
     order by cl.variant_id
   loop
-    select (now() >= d.launch_instant),
-           case when now() >= d.launch_instant
+    -- Price follows the drop's STATE, not the clock alone. They normally agree,
+    -- because a drop opens when its launch instant passes; they disagree on a
+    -- MANUAL PUSH (§06 state 2), where an operator opens a drop early. Keying
+    -- on the clock alone sold openly at the pre-launch price — and §08 locks
+    -- that price for someone who RESERVES DURING THE TEASE, not a walk-up
+    -- buyer. Mirrors resolvePrice() in src/lib/server/cart/pricing.ts.
+    select (d.state in ('LIVE','PARTIAL','RE_DROP') or now() >= d.launch_instant),
+           case when d.state in ('LIVE','PARTIAL','RE_DROP') or now() >= d.launch_instant
                 then p.launch_price_paise else p.prelaunch_price_paise end,
-           case when now() >= d.launch_instant then 'launch' else 'prelaunch_locked' end
+           case when d.state in ('LIVE','PARTIAL','RE_DROP') or now() >= d.launch_instant
+                then 'launch' else 'prelaunch_locked' end
       into v_launched, v_price, v_source
     from public.variants v
     join public.products p on p.id = v.product_id

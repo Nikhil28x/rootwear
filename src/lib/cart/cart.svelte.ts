@@ -26,10 +26,22 @@ export type CartLineView = {
 };
 
 export class CartState {
-	lines = $state<CartLineView[]>([]);
+	/**
+	 * The server's view of the cart, read as a function rather than copied in.
+	 *
+	 * A snapshot taken in the constructor would be correct once and then stale:
+	 * the badge has to update after an add, a removal, and any client-side
+	 * navigation. Holding the SOURCE and deriving from it means server-rendered
+	 * HTML already carries the right count — which a $effect-based sync could
+	 * not do, because effects do not run during SSR, so the badge was missing
+	 * on first paint and never appeared at all without JavaScript.
+	 */
+	#source: () => CartLineView[] = () => [];
+
 	/** Set while a mutation is in flight, so the UI can stay honest. */
 	pending = $state(false);
 
+	lines = $derived(this.#source());
 	count = $derived(this.lines.reduce((n, l) => n + l.quantity, 0));
 	subtotal = $derived(this.lines.reduce((n, l) => n + l.unitPrice * l.quantity, 0));
 
@@ -41,20 +53,21 @@ export class CartState {
 		}, null)
 	);
 
-	constructor(initial: CartLineView[] = []) {
-		this.lines = initial;
-	}
-
-	/** Replace from a server response. The server is always right. */
-	sync(lines: CartLineView[]) {
-		this.lines = lines;
+	constructor(source: () => CartLineView[]) {
+		this.#source = source;
 	}
 }
 
 const KEY = Symbol('rootwear-cart');
 
-export function setCart(initial: CartLineView[] = []): CartState {
-	const cart = new CartState(initial);
+/**
+ * Create the per-request cart and put it in context.
+ *
+ * `source` is a function so the state tracks the layout's `data` rather than a
+ * copy of it — call it as `setCart(() => data.cartLines ?? [])`.
+ */
+export function setCart(source: () => CartLineView[]): CartState {
+	const cart = new CartState(source);
 	setContext(KEY, cart);
 	return cart;
 }
