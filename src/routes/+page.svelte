@@ -14,7 +14,9 @@
 	const navItems = [
 		{ label: 'Story', href: '#about' },
 		{ label: 'The Drop', href: '#drop' },
-		{ label: 'Impact', href: '#impact' }
+		{ label: 'Impact', href: '#impact' },
+		// The only cross-page entry: the others are anchors within this page.
+		{ label: 'Know your roots', href: '/know-your-roots' }
 	];
 
 	const drops: Drop[] = [
@@ -413,8 +415,8 @@
 			<div use:reveal class="reveal-grid grid gap-12 lg:grid-cols-[0.72fr_1.28fr] lg:gap-24">
 				<div>
 					<p class="mb-7 text-[10px] tracking-[0.25em] uppercase">03 / The material record</p>
-					<a class="roots-jump" href="#know-your-roots"
-						>Know Your Roots <span aria-hidden="true">↘</span></a
+					<a class="roots-jump" href="/know-your-roots"
+						>Know your roots <span aria-hidden="true">↘</span></a
 					>
 					<h2 class="display text-[clamp(3.8rem,7vw,8rem)] leading-[0.82] tracking-[-0.06em]">
 						What the cloth<br />is made of.
