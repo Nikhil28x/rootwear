@@ -70,9 +70,9 @@
 				>
 					<span class={offer.soldOut ? 'line-through' : ''}>{offer.size}</span>
 					{#if offer.soldOut}
-						<span class="text-[8px] tracking-[0.2em]">Sold out</span>
+						<span class="text-[11px] tracking-[0.2em]">Sold out</span>
 					{:else if offer.remaining <= 3}
-						<span class="text-[8px] tracking-[0.2em] tabular-nums">{offer.remaining} left</span>
+						<span class="text-[11px] tracking-[0.2em] tabular-nums">{offer.remaining} left</span>
 					{/if}
 				</label>
 			</div>

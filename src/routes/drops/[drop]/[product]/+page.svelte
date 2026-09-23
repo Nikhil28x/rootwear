@@ -71,9 +71,9 @@
 		class="mb-12 flex flex-wrap items-center gap-3 text-[11px] tracking-[0.2em] uppercase font-medium"
 		aria-label="Breadcrumb"
 	>
-		<a class="text-stone-400 transition hover:text-stone-100" href="/drops">Drops</a>
-		<span class="text-stone-400" aria-hidden="true">/</span>
-		<a class="text-stone-400 transition hover:text-stone-100" href="/drops/{data.drop.slug}">
+		<a class="text-forest/75 transition hover:text-forest" href="/drops">Drops</a>
+		<span class="text-forest/75" aria-hidden="true">/</span>
+		<a class="text-forest/75 transition hover:text-forest" href="/drops/{data.drop.slug}">
 			Drop {dropNumber} — {data.drop.name}
 		</a>
 	</nav>
@@ -84,7 +84,7 @@
 		<div class="flex flex-col gap-4">
 			{#if lead}
 				<figure class="m-0 flex flex-col gap-3">
-					<div class="aspect-[4/5] w-full overflow-hidden bg-white/5">
+					<div class="aspect-[4/5] w-full overflow-hidden bg-forest/[0.04]">
 						<img
 							class="size-full object-cover object-center"
 							src={lead.url}
@@ -93,7 +93,7 @@
 							decoding="async"
 						/>
 					</div>
-					<figcaption class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
+					<figcaption class="text-[11px] tracking-[0.2em] text-forest/75 uppercase font-medium">
 						The model is {data.product.modelHeightCm} cm and wears a {data.product.modelWornSize}.
 					</figcaption>
 				</figure>
@@ -102,7 +102,7 @@
 			{#if rest.length > 0}
 				<ul class="grid grid-cols-3 gap-4">
 					{#each rest as image (image.url)}
-						<li class="aspect-[4/5] overflow-hidden bg-white/5">
+						<li class="aspect-[4/5] overflow-hidden bg-forest/[0.04]">
 							<img
 								class="size-full object-cover object-center"
 								src={image.url}
@@ -119,23 +119,23 @@
 		<div class="flex flex-col gap-8">
 			<div class="flex flex-wrap items-center gap-4">
 				<Eyebrow>Drop {dropNumber}</Eyebrow>
-				<DropStateMark state={data.drop.state} />
+				<DropStateMark state={data.drop.state} surface="light"/>
 			</div>
 
 			<h1 class="display text-[clamp(2.5rem,5vw,4.5rem)] leading-[0.88] tracking-[-0.045em]">
 				{data.product.name}
 			</h1>
 
-			<p class="max-w-prose text-[15px] leading-relaxed text-stone-400">{data.product.summary}</p>
+			<p class="max-w-prose text-[15px] leading-relaxed text-forest/75">{data.product.summary}</p>
 
-			<div class="flex items-baseline justify-between gap-4 border-y border-white/15 py-4">
-				<span class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
+			<div class="flex items-baseline justify-between gap-4 border-y border-forest/18 py-4">
+				<span class="text-[11px] tracking-[0.2em] text-forest/75 uppercase font-medium">
 					{data.showPrelaunchPrice ? 'Pre-launch price' : 'Price'}
 				</span>
-				<strong class="text-lg font-normal tracking-[0.04em] text-stone-100">{price}</strong>
+				<strong class="text-lg font-normal tracking-[0.04em] text-forest">{price}</strong>
 			</div>
 			<!-- §10: displayed prices are inclusive of GST. -->
-			<p class="-mt-4 text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
+			<p class="-mt-4 text-[11px] tracking-[0.2em] text-forest/75 uppercase font-medium">
 				Inclusive of all taxes · India only
 			</p>
 
@@ -143,9 +143,9 @@
 				<!-- §08: the hand number is allocated ON PAYMENT CONFIRMATION, never
 				     before. The dispatch note states the drop instant and nothing it
 				     cannot stand behind. -->
-				<div class="border-l-2 border-strain pl-4">
-					<p class="text-[11px] tracking-[0.28em] text-strain uppercase font-medium">Pre-order</p>
-					<p class="mt-2 text-[15px] leading-relaxed text-stone-400">
+				<div class="border-l-2 border-strain-ink pl-4">
+					<p class="text-[11px] tracking-[0.28em] text-strain-ink uppercase font-medium">Pre-order</p>
+					<p class="mt-2 text-[15px] leading-relaxed text-forest/75">
 						This piece is made for the drop. Dispatch follows the drop opening on
 						{launchDate.format(data.launchInstant)}, and your hand number is allocated when your
 						payment confirms.
@@ -155,7 +155,7 @@
 
 			{#if everythingGone}
 				<p
-					class="border-l-2 border-white/25 pl-4 text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium"
+					class="border-l-2 border-forest/25 pl-4 text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium"
 				>
 					Every size gone — notify-me is open below
 				</p>
@@ -168,41 +168,41 @@
 					<input type="hidden" name="productSlug" value={data.product.slug} />
 					<input type="hidden" name="quantity" value="1" />
 
-					<SizeSelector offers={data.offers} idPrefix="pdp" />
+					<SizeSelector offers={data.offers} idPrefix="pdp" surface="light"/>
 
-					<Button type="submit" variant="solid" full disabled={everythingGone}>
+					<Button type="submit" variant="solid" full disabled={everythingGone} surface="light">
 						{data.isPreOrder ? 'Reserve this piece' : 'Add to cart'}
 					</Button>
 				</form>
 			{:else}
 				<!-- Not on sale: the sizes still show, greyed, because §06 says the
 				     scarcity is the point and nothing is ever hidden. -->
-				<SizeSelector offers={data.offers} selectable={false} idPrefix="pdp" />
+				<SizeSelector offers={data.offers} selectable={false} idPrefix="pdp" surface="light"/>
 			{/if}
 
 			<div class="flex flex-col">
-				<Accordion title="Size guide" surface="dark">
+				<Accordion title="Size guide" surface="light">
 					<SizeChart
 						modelHeightCm={data.product.modelHeightCm}
 						modelWornSize={data.product.modelWornSize}
-						surface="dark"
+						surface="light"
 					/>
 				</Accordion>
 
-				<Accordion title="Fabric and specification" surface="dark">
+				<Accordion title="Fabric and specification" surface="light">
 					<dl class="m-0">
 						{#each specifications as specification (specification[0])}
 							<div
-								class="flex justify-between gap-4 border-b border-white/10 py-3 text-[11px] tracking-[0.18em] uppercase font-medium"
+								class="flex justify-between gap-4 border-b border-forest/12 py-3 text-[11px] tracking-[0.18em] uppercase font-medium"
 							>
-								<dt class="text-stone-300">{specification[0]}</dt>
-								<dd class="m-0 text-stone-400">{specification[1]}</dd>
+								<dt class="text-forest/80">{specification[0]}</dt>
+								<dd class="m-0 text-forest/75">{specification[1]}</dd>
 							</div>
 						{/each}
 					</dl>
 				</Accordion>
 
-				<Accordion title="Care" surface="dark">
+				<Accordion title="Care" surface="light">
 					<ul class="flex flex-col gap-2">
 						{#each data.product.care as instruction (instruction)}
 							<li>{instruction}</li>
@@ -210,7 +210,7 @@
 					</ul>
 				</Accordion>
 
-				<Accordion title="Returns" surface="dark">
+				<Accordion title="Returns" surface="light">
 					<!-- §11: the same wording as checkout, the confirmation email and the
 					     policy page. Imported from one module, never retyped. -->
 					<p>{RETURNS_WORDING}</p>
@@ -220,16 +220,16 @@
 	</div>
 
 	{#if notifyOffers.length > 0}
-		<section class="relative mt-28 border-t border-white/12 pt-12" aria-labelledby="notify-title">
-			<div class="pointer-events-none absolute inset-x-0 top-0 h-80 text-paper" aria-hidden="true">
+		<section class="relative mt-28 border-t border-forest/15 pt-12" aria-labelledby="notify-title">
+			<div class="pointer-events-none absolute inset-x-0 top-0 h-80 text-forest" aria-hidden="true">
 				<HempMotif opacity={0.04} seed={5} />
 			</div>
 
 			<div class="relative flex flex-col gap-3">
-				<h2 id="notify-title" class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
+				<h2 id="notify-title" class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 					Notify me
 				</h2>
-				<p class="max-w-lg text-[15px] leading-relaxed text-stone-400">
+				<p class="max-w-lg text-[15px] leading-relaxed text-forest/75">
 					Every size keeps its own list. One message, for the size you pick, when it is available —
 					and nothing else.
 				</p>
@@ -243,15 +243,15 @@
 						size={offer.size}
 						{form}
 						source="product_page"
-					/>
+					surface="light"/>
 				{/each}
 			</div>
 		</section>
 	{/if}
 
 	{#if data.canRequest}
-		<section class="mt-28 border-t border-white/12 pt-12" aria-labelledby="request-title">
-			<h2 id="request-title" class="mb-8 text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
+		<section class="mt-28 border-t border-forest/15 pt-12" aria-labelledby="request-title">
+			<h2 id="request-title" class="mb-8 text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 				Bring it back
 			</h2>
 			<div class="max-w-3xl">
@@ -262,14 +262,14 @@
 					{form}
 					source="product_page"
 					heading="Tell us the size you missed"
-				/>
+				surface="light"/>
 			</div>
 		</section>
 	{/if}
 
 	{#if data.alsoInDrop.length > 0}
-		<section class="mt-28 border-t border-white/12 pt-12" aria-labelledby="also-title">
-			<h2 id="also-title" class="mb-8 text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
+		<section class="mt-28 border-t border-forest/15 pt-12" aria-labelledby="also-title">
+			<h2 id="also-title" class="mb-8 text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 				Also in Drop {dropNumber}
 			</h2>
 
@@ -277,7 +277,7 @@
 				{#each data.alsoInDrop as item (item.slug)}
 					<li class="group flex flex-col gap-4">
 						<a class="flex flex-col gap-4" href="/drops/{data.drop.slug}/{item.slug}">
-							<div class="aspect-[4/5] w-full overflow-hidden bg-white/5">
+							<div class="aspect-[4/5] w-full overflow-hidden bg-forest/[0.04]">
 								{#if item.image}
 									<img
 										class="size-full object-cover object-center transition duration-700 ease-out group-hover:scale-[1.035] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
@@ -289,8 +289,8 @@
 								{/if}
 							</div>
 							<div class="flex items-baseline justify-between gap-4">
-								<span class="text-[15px] text-stone-100">{item.name}</span>
-								<span class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
+								<span class="text-[15px] text-forest">{item.name}</span>
+								<span class="text-[11px] tracking-[0.2em] text-forest/75 uppercase font-medium">
 									{formatInr(item.price)}
 								</span>
 							</div>

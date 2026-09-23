@@ -131,7 +131,7 @@
 				aspect-locked to the motif's own viewBox so it stays a pineapple.
 			-->
 			<div
-				class="pointer-events-none absolute -top-10 left-[42%] hidden aspect-[200/320] h-[21rem] text-gold lg:block xl:left-[46%]"
+				class="pointer-events-none absolute -top-10 left-[42%] hidden aspect-[200/320] h-[21rem] text-gold-ink lg:block xl:left-[46%]"
 				aria-hidden="true"
 			>
 				<PineappleMotif opacity={0.13} />
@@ -139,8 +139,8 @@
 
 			<div class="relative flex flex-wrap items-center gap-4">
 				<Eyebrow>Drop {dropNumber}</Eyebrow>
-				<DropStateMark state={data.drop.state} />
-				<span class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
+				<DropStateMark state={data.drop.state} surface="light"/>
+				<span class="text-[11px] tracking-[0.2em] text-forest/75 uppercase font-medium">
 					<time datetime={new Date(releasedAt).toISOString()}>{released.format(releasedAt)}</time>
 				</span>
 			</div>
@@ -163,25 +163,25 @@
 				{/if}
 
 				<div class="flex flex-col justify-end gap-6">
-					<p class="max-w-prose text-[15px] leading-relaxed text-stone-300">{data.drop.story}</p>
-					<p class="text-[13px] leading-relaxed text-stone-400">
+					<p class="max-w-prose text-[15px] leading-relaxed text-forest/80">{data.drop.story}</p>
+					<p class="text-[13px] leading-relaxed text-forest/75">
 						{DROP_STATE_DESCRIPTION[data.drop.state]}
 					</p>
 
 					<!-- Preview toggle: priced, or open for pre-order. -->
-					<div class="flex flex-col gap-3 border-t border-white/15 pt-4">
+					<div class="flex flex-col gap-3 border-t border-forest/18 pt-4">
 						<div
 							class="flex items-center gap-2 text-[11px] font-medium tracking-[0.2em] uppercase"
 							role="group"
 							aria-label="Preview this drop as"
 						>
-							<span class="mr-1 text-stone-500">Preview</span>
+							<span class="mr-1 text-forest/60">Preview</span>
 							{#each [{ id: 'price', label: 'Price' }, { id: 'preorder', label: 'Pre-order' }] as option (option.id)}
 								<button
 									type="button"
 									class="border px-3 py-2 transition {view === option.id
-										? 'border-stone-100 bg-stone-100 text-forest'
-										: 'border-white/25 text-stone-400 hover:border-white/60 hover:text-stone-100'}"
+										? 'border-forest bg-forest text-paper'
+										: 'border-forest/25 text-forest/75 hover:border-forest/60 hover:text-forest'}"
 									aria-pressed={view === option.id}
 									onclick={() => (view = option.id as DropView)}
 								>
@@ -193,17 +193,17 @@
 						<div
 							class="flex items-baseline justify-between gap-4 pt-1 text-[11px] font-medium tracking-[0.2em] uppercase"
 						>
-							<span class="text-stone-400">{data.product.name}</span>
+							<span class="text-forest/75">{data.product.name}</span>
 							{#if view === 'price'}
-								<strong class="font-normal text-stone-100">{price}</strong>
+								<strong class="font-normal text-forest">{price}</strong>
 							{:else}
-								<strong class="font-normal text-strain">Open for pre-order</strong>
+								<strong class="font-normal text-strain-ink">Open for pre-order</strong>
 							{/if}
 						</div>
 					</div>
 
 					{#if view === 'price' && data.showPrelaunchPrice}
-						<p class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
+						<p class="text-[11px] tracking-[0.2em] text-forest/75 uppercase font-medium">
 							Pre-launch price, locked for anyone who reserves now.
 						</p>
 					{/if}
@@ -211,12 +211,12 @@
 					{#if view === 'price' && data.acceptsDeposits}
 						<!-- §08: a deposit. The percentage is an unanswered open item and
 						     is deliberately not printed here. -->
-						<p class="border-l-2 border-strain pl-4 text-[13px] leading-relaxed text-stone-400">
+						<p class="border-l-2 border-strain-ink pl-4 text-[13px] leading-relaxed text-forest/75">
 							Reserve now with a deposit. The balance is settled before your piece is dispatched,
 							and your hand number is allocated when payment confirms — never before.
 						</p>
-						<p class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
-							<span class="text-strain tabular-nums">{data.claimed}</span>
+						<p class="text-[11px] tracking-[0.2em] text-forest/75 uppercase font-medium">
+							<span class="text-strain-ink tabular-nums">{data.claimed}</span>
 							of {data.editionSize} claimed
 						</p>
 					{/if}
@@ -224,7 +224,7 @@
 						<PreOrderForm
 							dropSlug={data.drop.slug}
 							sizeOptions={data.sizeOptions}
-							surface="dark"
+							surface="light"
 							{form}
 						/>
 					{/if}
@@ -234,14 +234,14 @@
 
 		<!-- §03 template 04: the lookbook stays intact once the drop is finished. -->
 		<section class="mb-24" aria-labelledby="lookbook-title">
-			<h2 id="lookbook-title" class="mb-8 text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
+			<h2 id="lookbook-title" class="mb-8 text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 				The lookbook
 			</h2>
 
 			<ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 				{#each lookbook as shot (shot.key)}
 					<li class="group flex flex-col gap-3">
-						<div class="aspect-[4/5] w-full overflow-hidden bg-white/5">
+						<div class="aspect-[4/5] w-full overflow-hidden bg-forest/[0.04]">
 							<img
 								class="size-full object-cover object-center transition duration-700 ease-out group-hover:scale-[1.035] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
 								src={shot.url}
@@ -250,7 +250,7 @@
 								decoding="async"
 							/>
 						</div>
-						<p class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
+						<p class="text-[11px] tracking-[0.2em] text-forest/75 uppercase font-medium">
 							{ROLE_LABEL[shot.role] ?? shot.role} · {shot.piece}
 						</p>
 					</li>
@@ -259,8 +259,8 @@
 		</section>
 
 		<!-- The pieces. §06: sold-out sizes are greyed and still visible here too. -->
-		<section class="mb-24 border-t border-white/12 pt-12" aria-labelledby="pieces-title">
-			<h2 id="pieces-title" class="mb-10 text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
+		<section class="mb-24 border-t border-forest/15 pt-12" aria-labelledby="pieces-title">
+			<h2 id="pieces-title" class="mb-10 text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 				{data.pieces.length === 1 ? 'The piece' : 'The pieces'}
 			</h2>
 
@@ -268,7 +268,7 @@
 				{#each data.pieces as piece (piece.slug)}
 					<li class="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
 						<a
-							class="group block overflow-hidden bg-white/5"
+							class="group block overflow-hidden bg-forest/[0.04]"
 							href="/drops/{data.drop.slug}/{piece.slug}"
 						>
 							{#if piece.lead}
@@ -289,18 +289,18 @@
 								     for pre-order and quote its price in the same breath. -->
 								<strong
 									class="text-[11px] font-normal tracking-[0.2em] uppercase {view === 'price'
-										? 'text-stone-100'
-										: 'text-strain'}"
+										? 'text-forest'
+										: 'text-strain-ink'}"
 								>
 									{view === 'price' ? formatInr(piece.price) : 'Open for pre-order'}
 								</strong>
 							</div>
 
-							<p class="max-w-prose text-[15px] leading-relaxed text-stone-400">{piece.summary}</p>
+							<p class="max-w-prose text-[15px] leading-relaxed text-forest/75">{piece.summary}</p>
 
 							{#if piece.allSoldOut}
 								<p
-									class="border-l-2 border-white/25 pl-4 text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium"
+									class="border-l-2 border-forest/25 pl-4 text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium"
 								>
 									Every size gone
 								</p>
@@ -313,10 +313,10 @@
 								selectable={false}
 								idPrefix="drop-{piece.slug}"
 								name="preview-{piece.slug}"
-							/>
+							surface="light"/>
 
 							<div class="flex flex-wrap gap-4">
-								<Button href="/drops/{data.drop.slug}/{piece.slug}" variant="solid">
+								<Button href="/drops/{data.drop.slug}/{piece.slug}" variant="solid" surface="light">
 									{data.onSale ? 'Choose a size' : 'View the piece'}
 								</Button>
 							</div>
@@ -327,19 +327,19 @@
 		</section>
 
 		{#if notifyOffers.length > 0}
-			<section class="relative mb-24 border-t border-white/12 pt-12" aria-labelledby="notify-title">
+			<section class="relative mb-24 border-t border-forest/15 pt-12" aria-labelledby="notify-title">
 				<div
-					class="pointer-events-none absolute inset-x-0 top-0 h-80 text-paper"
+					class="pointer-events-none absolute inset-x-0 top-0 h-80 text-forest"
 					aria-hidden="true"
 				>
 					<HempMotif opacity={0.04} seed={7} />
 				</div>
 
 				<div class="relative flex flex-col gap-3">
-					<h2 id="notify-title" class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
+					<h2 id="notify-title" class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 						Notify me
 					</h2>
-					<p class="max-w-lg text-[15px] leading-relaxed text-stone-400">
+					<p class="max-w-lg text-[15px] leading-relaxed text-forest/75">
 						Every size keeps its own list. One message, for the size you pick, when it is available
 						— and nothing else.
 					</p>
@@ -354,6 +354,7 @@
 							productName={data.pieces.length > 1 ? offer.pieceName : ''}
 							{form}
 							source="drop_page"
+							surface="light"
 						/>
 					{/each}
 				</div>
@@ -361,14 +362,14 @@
 		{/if}
 
 		{#if data.canRequest}
-			<section class="mb-24 border-t border-white/12 pt-12" aria-labelledby="request-title">
-				<h2 id="request-title" class="mb-8 text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
+			<section class="mb-24 border-t border-forest/15 pt-12" aria-labelledby="request-title">
+				<h2 id="request-title" class="mb-8 text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 					Bring it back
 				</h2>
 
 				{#if requestedTotal > 0}
-					<p class="mb-6 text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
-						<span class="text-gold tabular-nums">{requestedTotal}</span>
+					<p class="mb-6 text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
+						<span class="text-gold-ink tabular-nums">{requestedTotal}</span>
 						{requestedTotal === 1 ? 'request' : 'requests'} on the board for this drop
 					</p>
 				{/if}
@@ -381,7 +382,7 @@
 						{form}
 						source="drop_page"
 						heading="Tell us the size you missed"
-					/>
+					surface="light"/>
 				</div>
 
 				{#if data.demandRows.length > 0 && requestedTotal > 0}
@@ -390,7 +391,7 @@
 							<caption class="sr-only">Requests on the board, by size</caption>
 							<thead>
 								<tr
-									class="border-b border-white/12 text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium"
+									class="border-b border-forest/15 text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium"
 								>
 									<th scope="col" class="py-3 pr-4 font-normal">Size</th>
 									<th scope="col" class="py-3 pr-4 font-normal">Requests</th>
@@ -399,15 +400,15 @@
 							</thead>
 							<tbody>
 								{#each data.demandRows as row (row.variantId)}
-									<tr class="border-b border-white/8">
+									<tr class="border-b border-forest/10">
 										<th
 											scope="row"
 											class="py-3 pr-4 text-[13px] font-normal tracking-[0.18em] uppercase"
 										>
 											{row.size}
 										</th>
-										<td class="py-3 pr-4 text-[15px] text-stone-400 tabular-nums">{row.requests}</td>
-										<td class="py-3 text-[15px] text-stone-400 tabular-nums">{row.notifyMe}</td>
+										<td class="py-3 pr-4 text-[15px] text-forest/75 tabular-nums">{row.requests}</td>
+										<td class="py-3 text-[15px] text-forest/75 tabular-nums">{row.notifyMe}</td>
 									</tr>
 								{/each}
 							</tbody>
@@ -417,8 +418,8 @@
 			</section>
 		{/if}
 
-		<section class="border-t border-white/12 pt-12" aria-labelledby="spec-title">
-			<h2 id="spec-title" class="mb-8 text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
+		<section class="border-t border-forest/15 pt-12" aria-labelledby="spec-title">
+			<h2 id="spec-title" class="mb-8 text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 				The specification
 			</h2>
 
@@ -426,30 +427,30 @@
 				<dl class="m-0">
 					{#each specifications as specification (specification[0])}
 						<div
-							class="flex justify-between gap-4 border-t border-white/12 py-4 text-[11px] tracking-[0.18em] uppercase font-medium"
+							class="flex justify-between gap-4 border-t border-forest/15 py-4 text-[11px] tracking-[0.18em] uppercase font-medium"
 						>
-							<dt class="text-stone-300">{specification[0]}</dt>
-							<dd class="m-0 text-stone-400">{specification[1]}</dd>
+							<dt class="text-forest/80">{specification[0]}</dt>
+							<dd class="m-0 text-forest/75">{specification[1]}</dd>
 						</div>
 					{/each}
 				</dl>
 
 				<div class="flex flex-col">
-					<Accordion title="Size guide" surface="dark" open>
+					<Accordion title="Size guide" surface="light" open>
 						<SizeChart
 							modelHeightCm={data.product.modelHeightCm}
 							modelWornSize={data.product.modelWornSize}
-							surface="dark"
+							surface="light"
 						/>
 					</Accordion>
-					<Accordion title="Care" surface="dark">
+					<Accordion title="Care" surface="light">
 						<ul class="flex flex-col gap-2">
 							{#each data.product.care as instruction (instruction)}
 								<li>{instruction}</li>
 							{/each}
 						</ul>
 					</Accordion>
-					<Accordion title="Returns" surface="dark">
+					<Accordion title="Returns" surface="light">
 						<!-- §11: identical wording on the product page, at checkout, in the
 						     confirmation email and on the policy page. Imported, never retyped. -->
 						<p>{RETURNS_WORDING}</p>

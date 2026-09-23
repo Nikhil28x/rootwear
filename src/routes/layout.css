@@ -15,6 +15,17 @@
 	   used interchangeably. Overridden per drop via --color-strain. */
 	--color-strain: #e0b23c;
 
+	/*
+	 * Light-surface variants of the two warm accents.
+	 *
+	 * The suffix names the GROUND, as with --color-alert. Gold and strain are
+	 * tuned for dark grounds and collapse on white — #c9a554 measures 2.34:1
+	 * there and #e0b23c measures 1.98:1, both far under AA. These are the same
+	 * hues carried down until they read as ink rather than as highlight.
+	 */
+	--color-gold-ink: #8a6a1c;   /* on white — 5.05:1 */
+	--color-strain-ink: #87650e; /* on white — 5.39:1 */
+
 	/* Semantic status colours. Deliberately separate from the brand palette:
 	   an error is not a brand accent, and the two must never be swapped.
 	

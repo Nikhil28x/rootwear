@@ -26,7 +26,16 @@
 	let isHome = $derived(page.route.id === '/');
 
 	/** Routes that sit on cream rather than forest-black. */
-	const LIGHT_ROUTES = ['/policies', '/contact', '/know-your-roots', '/account', '/cart', '/checkout'];
+	const LIGHT_ROUTES = [
+		'/policies',
+		'/contact',
+		'/know-your-roots',
+		'/account',
+		'/cart',
+		'/checkout',
+		'/drops',
+		'/impact'
+	];
 	let surface = $derived(
 		LIGHT_ROUTES.some((r) => page.route.id?.startsWith(r)) ? 'light' : 'dark'
 	) as 'light' | 'dark';
@@ -42,6 +51,14 @@
 	{@render children()}
 {:else}
 	<!--
+		The ground AND the ink.
+
+		:root carries color-scheme: dark, so the UA default text colour is white.
+		The dark pages relied on that and never set a colour of their own — which
+		meant painting this wrapper white left white ink on a white ground and
+		the drop title disappeared. A wrapper that sets a background must set the
+		ink that goes with it.
+
 		The ground the header's glass sits on.
 
 		The shell is translucent by design, so it shows whatever is behind it —
@@ -50,7 +67,11 @@
 		forest-black, and a light route's header came out muddy olive. Painting
 		the wrapper to match the route keeps the glass reading as glass.
 	-->
-	<div class="min-h-svh {surface === 'light' ? 'bg-paper' : 'bg-forest-black'}">
+	<div
+		class="min-h-svh {surface === 'light'
+			? 'bg-paper text-forest'
+			: 'bg-forest-black text-stone-100'}"
+	>
 		<SiteHeader {surface} />
 		{@render children()}
 	</div>

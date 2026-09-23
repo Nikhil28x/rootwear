@@ -65,7 +65,9 @@ export const MARK_CLASS: Record<MarkTone, string> = {
 
 /** The same marks on a cream surface. */
 export const MARK_CLASS_LIGHT: Record<MarkTone, string> = {
-	live: 'border-gold text-gold',
+	// gold-ink, not gold: --color-gold is tuned for dark grounds and measures
+	// 2.34:1 on white. The border can stay the brighter hue; the text cannot.
+	live: 'border-gold text-gold-ink',
 	closing: 'border-forest/40 text-forest/80',
 	gone: 'border-forest/20 text-forest/50',
 	quiet: 'border-forest/15 text-forest/45'

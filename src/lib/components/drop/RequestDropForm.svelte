@@ -53,7 +53,7 @@
 
 <div class="flex flex-col gap-6 border {rule} p-6 sm:p-8">
 	<div class="flex flex-col gap-3">
-		<Eyebrow tone="gold">Request this drop</Eyebrow>
+		<Eyebrow tone="gold" {surface}>Request this drop</Eyebrow>
 		<p class="display text-2xl leading-tight">{heading}</p>
 		<p class="max-w-prose text-[15px] leading-relaxed {muted}">
 			{dropName} is finished. Tell us the size you wanted and we will know exactly what to cut if it comes

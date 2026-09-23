@@ -56,7 +56,7 @@
 		<h1 class="display text-[clamp(2.6rem,6vw,5.5rem)] leading-[0.86] tracking-[-0.05em]">
 			Every growth<br />so far.
 		</h1>
-		<p class="max-w-[46ch] text-[15px] leading-relaxed text-stone-400">
+		<p class="max-w-[46ch] text-[15px] leading-relaxed text-forest/75">
 			Nothing is ever taken down. Ask for a drop to come back and we will know how many of you
 			want it, and in which size.
 		</p>
@@ -80,7 +80,7 @@
 							<span class="text-[11px] font-medium tracking-[0.2em] uppercase">
 								Drop {String(card.number).padStart(2, '0')}
 							</span>
-							<span class="text-[11px] tracking-[0.16em] text-stone-400 uppercase">
+							<span class="text-[11px] tracking-[0.16em] text-forest/75 uppercase">
 								{card.editionSize} pieces
 							</span>
 						</div>
@@ -89,14 +89,14 @@
 				</a>
 
 				<div class="flex flex-wrap items-center gap-3">
-					<DropStateMark state={card.state} surface="dark" />
-					<span class="text-[12px] tracking-[0.1em] text-stone-400">
+					<DropStateMark state={card.state} surface="light" />
+					<span class="text-[12px] tracking-[0.1em] text-forest/75">
 						{dateLine(card, data.now)}
 					</span>
 				</div>
 
 				{#if isOnSale(card.state)}
-					<Button href="/drops/{card.slug}" surface="dark" variant="outline">Shop the drop</Button>
+					<Button href="/drops/{card.slug}" surface="light" variant="outline">Shop the drop</Button>
 				{:else if card.canRequest}
 					<!--
 						§12 demand board. No money is taken; one row per person per
@@ -106,7 +106,7 @@
 						dropSlug={card.slug}
 						dropName={card.name}
 						sizeOptions={card.sizeOptions}
-						surface="dark"
+						surface="light"
 						{form}
 					/>
 				{/if}

@@ -95,7 +95,7 @@
 
 		<div class="relative mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
 			<div class="grid gap-8 lg:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] lg:gap-16">
-				<Eyebrow tone="gold">{fibre.index} — {fibre.eyebrow}</Eyebrow>
+				<Eyebrow tone="gold" surface="dark">{fibre.index} — {fibre.eyebrow}</Eyebrow>
 				<div>
 					<h2
 						id="movement-{fibre.id}"
@@ -248,7 +248,7 @@
 
 		<div class="relative mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
 			<div class="grid gap-8 lg:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] lg:gap-16">
-				<Eyebrow tone="gold">{making.index} — {making.eyebrow}</Eyebrow>
+				<Eyebrow tone="gold" surface="dark">{making.index} — {making.eyebrow}</Eyebrow>
 				<div>
 					<h2
 						id="movement-{making.id}"
