@@ -25,7 +25,7 @@
 	import Eyebrow from '$lib/components/ui/Eyebrow.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Accordion from '$lib/components/ui/Accordion.svelte';
-	import PineappleMotif from '$lib/components/art/PineappleMotif.svelte';
+	import PineappleField from '$lib/components/art/PineappleField.svelte';
 	import HempMotif from '$lib/components/art/HempMotif.svelte';
 	import { formatInr } from '$lib/money';
 	import { SIZE_RANGE_LABEL } from '$lib/drop/sizes';
@@ -118,7 +118,8 @@
 	<meta name="description" content={data.drop.story} />
 </svelte:head>
 
-<main>
+<main class="relative isolate overflow-x-clip">
+	<PineappleField />
 	{#if data.showCountdown}
 		<!-- The countdown carries this page's h1. Everything below is an h2. -->
 		<DropCountdown stage={data.stage} />
@@ -131,12 +132,6 @@
 				branching line that read as a stray glyph behind the title. This is
 				aspect-locked to the motif's own viewBox so it stays a pineapple.
 			-->
-			<div
-				class="pointer-events-none absolute top-0 right-0 hidden aspect-[200/320] h-[11rem] text-gold-ink sm:block lg:-top-10 lg:right-auto lg:left-[42%] lg:h-[21rem] xl:left-[46%]"
-				aria-hidden="true"
-			>
-				<PineappleMotif opacity={0.13} />
-			</div>
 
 			<div class="relative flex flex-wrap items-center gap-4">
 				<Eyebrow>Drop {dropNumber}</Eyebrow>
@@ -273,12 +268,6 @@
 
 		<!-- §03 template 04: the lookbook stays intact once the drop is finished. -->
 		<section class="relative mb-24 overflow-hidden" aria-labelledby="lookbook-title">
-			<div
-				class="pointer-events-none absolute top-4 right-2 hidden aspect-[200/320] h-[9rem] text-gold-ink sm:block lg:h-[14rem]"
-				aria-hidden="true"
-			>
-				<PineappleMotif opacity={0.12} rotate={18} />
-			</div>
 
 			<h2 id="lookbook-title" class="mb-8 text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 				The lookbook
@@ -309,12 +298,6 @@
 			class="relative mb-24 overflow-hidden border-t border-forest/15 pt-12"
 			aria-labelledby="pieces-title"
 		>
-			<div
-				class="pointer-events-none absolute bottom-6 left-1 hidden aspect-[200/320] h-[12rem] text-gold-ink sm:block lg:h-[20rem]"
-				aria-hidden="true"
-			>
-				<PineappleMotif opacity={0.1} rotate={-22} />
-			</div>
 
 			<h2 id="pieces-title" class="mb-10 text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 				{data.pieces.length === 1 ? 'The piece' : 'The pieces'}
@@ -422,12 +405,6 @@
 				class="relative mb-24 overflow-hidden border-t border-forest/15 pt-12"
 				aria-labelledby="request-title"
 			>
-			<div
-				class="pointer-events-none absolute top-6 right-0 hidden aspect-[200/320] h-[9rem] text-gold-ink sm:block lg:h-[13rem]"
-				aria-hidden="true"
-			>
-				<PineappleMotif opacity={0.12} rotate={8} />
-			</div>
 
 				<h2 id="request-title" class="mb-8 text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 					Bring it back
@@ -488,12 +465,6 @@
 			class="relative overflow-hidden border-t border-forest/15 pt-12"
 			aria-labelledby="spec-title"
 		>
-			<div
-				class="pointer-events-none absolute bottom-2 left-[40%] hidden aspect-[200/320] h-[11rem] text-gold-ink sm:block lg:h-[17rem]"
-				aria-hidden="true"
-			>
-				<PineappleMotif opacity={0.1} rotate={28} />
-			</div>
 
 			<h2 id="spec-title" class="mb-8 text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 				The specification
