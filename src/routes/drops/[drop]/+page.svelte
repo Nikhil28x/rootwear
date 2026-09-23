@@ -486,10 +486,21 @@
 			</h2>
 
 			<div class="grid gap-12 lg:grid-cols-2 lg:gap-20">
-				<dl class="m-0">
+				<!--
+					Both columns are the same row primitive, on purpose. They used to
+					differ — 11px/py-4/border-t on the left against 12px/py-5/border-b
+					on the right — so the first rows were 49.5px and 64px tall, their
+					labels sat on different baselines, the accordion column opened with
+					no rule and the spec column closed with none.
+
+					One rhythm now: a rule on the container, a rule under every row, and
+					py-5 + leading-6 on both. That pins the pitch at 65px a side (64 of
+					row plus the rule) whatever the glyphs inside happen to measure.
+				-->
+				<dl class="m-0 border-t border-forest/15">
 					{#each specifications as specification (specification[0])}
 						<div
-							class="flex justify-between gap-4 border-t border-forest/15 py-4 text-[11px] tracking-[0.18em] uppercase font-medium"
+							class="flex items-center justify-between gap-4 border-b border-forest/15 py-5 text-[12px] leading-6 tracking-[0.18em] uppercase font-medium"
 						>
 							<dt class="text-forest/80">{specification[0]}</dt>
 							<dd class="m-0 text-forest/75">{specification[1]}</dd>
@@ -497,7 +508,7 @@
 					{/each}
 				</dl>
 
-				<div class="flex flex-col">
+				<div class="flex flex-col border-t border-forest/15">
 					<Accordion title="Size guide" surface="light" open>
 						<SizeChart
 							modelHeightCm={data.product.modelHeightCm}

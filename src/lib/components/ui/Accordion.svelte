@@ -15,7 +15,7 @@
 
 <details class="group border-b {rule}" {open}>
 	<summary
-		class="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-[12px] tracking-[0.18em] uppercase {tone} marker:hidden [&::-webkit-details-marker]:hidden font-medium"
+		class="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-[12px] leading-6 tracking-[0.18em] uppercase {tone} marker:hidden [&::-webkit-details-marker]:hidden font-medium"
 	>
 		{title}
 		<span
