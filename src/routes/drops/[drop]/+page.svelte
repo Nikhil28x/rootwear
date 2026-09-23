@@ -16,6 +16,7 @@
 	 */
 	import DropCountdown from '$lib/DropCountdown.svelte';
 	import PreOrderForm from '$lib/components/drop/PreOrderForm.svelte';
+	import PosterShowcase from '$lib/components/drop/PosterShowcase.svelte';
 	import DropStateMark from '$lib/components/drop/DropStateMark.svelte';
 	import SizeSelector from '$lib/components/drop/SizeSelector.svelte';
 	import SizeChart from '$lib/components/drop/SizeChart.svelte';
@@ -231,6 +232,44 @@
 				</div>
 			</div>
 		</header>
+
+		<!--
+			The drop poster with the piece turning in front of it. Marked as a dark
+			section so the header re-inks over it — the rest of this page is white.
+		-->
+		<section
+			class="mb-24 grid items-center gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16"
+			data-header-theme="light"
+			aria-labelledby="showcase-title"
+		>
+			<div class="order-2 flex flex-col gap-6 lg:order-1">
+				<Eyebrow surface="light">The piece</Eyebrow>
+				<h2
+					id="showcase-title"
+					class="display text-[clamp(2.2rem,4.5vw,3.6rem)] leading-[0.92] tracking-[-0.04em]"
+				>
+					Grown, not<br />manufactured.
+				</h2>
+				<p class="max-w-[46ch] text-[15px] leading-relaxed text-forest/75">
+					{data.product.fabric} at {data.product.gsm} GSM, cut {data.product.fit.toLowerCase()}.
+					Turn it over and the tree sits across the back.
+				</p>
+				<dl class="grid max-w-md grid-cols-2 gap-x-8 gap-y-4 border-t border-forest/15 pt-6">
+					{#each [['Fibre', data.product.fabric], ['Weight', `${data.product.gsm} GSM`], ['Fit', data.product.fit], ['Edition', `${data.editionSize} numbered`]] as [term, value] (term)}
+						<div class="flex flex-col gap-1">
+							<dt class="text-[11px] font-medium tracking-[0.2em] text-forest/60 uppercase">
+								{term}
+							</dt>
+							<dd class="text-[15px] text-forest/85">{value}</dd>
+						</div>
+					{/each}
+				</dl>
+			</div>
+
+			<div class="order-1 mx-auto w-full max-w-[30rem] lg:order-2">
+				<PosterShowcase />
+			</div>
+		</section>
 
 		<!-- §03 template 04: the lookbook stays intact once the drop is finished. -->
 		<section class="mb-24" aria-labelledby="lookbook-title">
