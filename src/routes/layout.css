@@ -16,6 +16,15 @@
 	--color-strain: #e0b23c;
 
 	/*
+	 * The drop poster's own background, sampled from
+	 * static/images/pineapple-haze-poster.jpg at four flat points (they agreed
+	 * on rgb(35,69,55)). Deliberately NOT --color-forest: the brand forest is
+	 * #1f382a, darker and less blue, and butting the two together reads as a
+	 * mismatch rather than a bleed.
+	 */
+	--color-poster: #234537;
+
+	/*
 	 * Light-surface variants of the two warm accents.
 	 *
 	 * The suffix names the GROUND, as with --color-alert. Gold and strain are

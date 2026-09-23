@@ -45,8 +45,9 @@
 		position: relative;
 		overflow: hidden;
 		aspect-ratio: 810 / 1013;
-		/* Matches the poster's own ground, so any rounding gap is invisible. */
-		background: #1d4034;
+		/* The poster's own ground, so the frame and the band it sits on are the
+		   same green and the seam between them disappears. */
+		background: var(--color-poster);
 	}
 
 	.poster-showcase__poster {
