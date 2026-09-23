@@ -229,6 +229,86 @@
 		</header>
 
 		<!--
+			FIRST, deliberately. This is the only section anyone can buy from, and
+			it used to sit below the poster and the lookbook — so the size selector
+			and the add-to-cart were two screens down on a page whose job is to sell
+			twenty-five pieces. The story now follows the purchase rather than
+			guarding it.
+		-->
+
+		<!-- The pieces. §06: sold-out sizes are greyed and still visible here too. -->
+		<section
+			class="relative mb-24 overflow-hidden"
+			aria-labelledby="pieces-title"
+		>
+
+			<h2 id="pieces-title" class="mb-10 text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
+				{data.pieces.length === 1 ? 'The piece' : 'The pieces'}
+			</h2>
+
+			<ul class="flex flex-col gap-16">
+				{#each data.pieces as piece (piece.slug)}
+					<li class="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+						<a
+							class="group block overflow-hidden bg-forest/[0.04]"
+							href="/drops/{data.drop.slug}/{piece.slug}"
+						>
+							{#if piece.lead}
+								<img
+									class="aspect-[4/5] w-full object-cover object-center transition duration-700 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+									src={piece.lead.url}
+									alt={piece.lead.alt}
+									loading="lazy"
+									decoding="async"
+								/>
+							{/if}
+						</a>
+
+						<div class="flex flex-col gap-6">
+							<div class="flex flex-wrap items-baseline justify-between gap-4">
+								<h3 class="display text-3xl leading-none tracking-[-0.03em]">{piece.name}</h3>
+								<!-- Follows the preview toggle, or the page would offer a piece
+								     for pre-order and quote its price in the same breath. -->
+								<strong
+									class="text-[11px] font-normal tracking-[0.2em] uppercase {view === 'price'
+										? 'text-forest'
+										: 'text-strain-ink'}"
+								>
+									{view === 'price' ? formatInr(piece.price) : 'Open for pre-order'}
+								</strong>
+							</div>
+
+							<p class="max-w-prose text-[15px] leading-relaxed text-forest/75">{piece.summary}</p>
+
+							{#if piece.allSoldOut}
+								<p
+									class="border-l-2 border-forest/25 pl-4 text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium"
+								>
+									Every size gone
+								</p>
+							{/if}
+
+							<!-- Availability, not a control: the choice is made on the piece
+							     page where the fit note and the size guide sit beside it. -->
+							<SizeSelector
+								offers={piece.offers}
+								selectable={false}
+								idPrefix="drop-{piece.slug}"
+								name="preview-{piece.slug}"
+							surface="light"/>
+
+							<div class="flex flex-wrap gap-4">
+								<Button href="/drops/{data.drop.slug}/{piece.slug}" variant="solid" surface="light">
+									{data.onSale ? 'Choose a size' : 'View the piece'}
+								</Button>
+							</div>
+						</div>
+					</li>
+				{/each}
+			</ul>
+		</section>
+
+		<!--
 			The drop poster with the piece turning in front of it. Marked as a dark
 			section so the header re-inks over it — the rest of this page is white.
 		-->
@@ -295,78 +375,6 @@
 						<p class="text-[11px] tracking-[0.2em] text-forest/75 uppercase font-medium">
 							{ROLE_LABEL[shot.role] ?? shot.role} · {shot.piece}
 						</p>
-					</li>
-				{/each}
-			</ul>
-		</section>
-
-		<!-- The pieces. §06: sold-out sizes are greyed and still visible here too. -->
-		<section
-			class="relative mb-24 overflow-hidden border-t border-forest/15 pt-12"
-			aria-labelledby="pieces-title"
-		>
-
-			<h2 id="pieces-title" class="mb-10 text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
-				{data.pieces.length === 1 ? 'The piece' : 'The pieces'}
-			</h2>
-
-			<ul class="flex flex-col gap-16">
-				{#each data.pieces as piece (piece.slug)}
-					<li class="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
-						<a
-							class="group block overflow-hidden bg-forest/[0.04]"
-							href="/drops/{data.drop.slug}/{piece.slug}"
-						>
-							{#if piece.lead}
-								<img
-									class="aspect-[4/5] w-full object-cover object-center transition duration-700 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-									src={piece.lead.url}
-									alt={piece.lead.alt}
-									loading="lazy"
-									decoding="async"
-								/>
-							{/if}
-						</a>
-
-						<div class="flex flex-col gap-6">
-							<div class="flex flex-wrap items-baseline justify-between gap-4">
-								<h3 class="display text-3xl leading-none tracking-[-0.03em]">{piece.name}</h3>
-								<!-- Follows the preview toggle, or the page would offer a piece
-								     for pre-order and quote its price in the same breath. -->
-								<strong
-									class="text-[11px] font-normal tracking-[0.2em] uppercase {view === 'price'
-										? 'text-forest'
-										: 'text-strain-ink'}"
-								>
-									{view === 'price' ? formatInr(piece.price) : 'Open for pre-order'}
-								</strong>
-							</div>
-
-							<p class="max-w-prose text-[15px] leading-relaxed text-forest/75">{piece.summary}</p>
-
-							{#if piece.allSoldOut}
-								<p
-									class="border-l-2 border-forest/25 pl-4 text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium"
-								>
-									Every size gone
-								</p>
-							{/if}
-
-							<!-- Availability, not a control: the choice is made on the piece
-							     page where the fit note and the size guide sit beside it. -->
-							<SizeSelector
-								offers={piece.offers}
-								selectable={false}
-								idPrefix="drop-{piece.slug}"
-								name="preview-{piece.slug}"
-							surface="light"/>
-
-							<div class="flex flex-wrap gap-4">
-								<Button href="/drops/{data.drop.slug}/{piece.slug}" variant="solid" surface="light">
-									{data.onSale ? 'Choose a size' : 'View the piece'}
-								</Button>
-							</div>
-						</div>
 					</li>
 				{/each}
 			</ul>
