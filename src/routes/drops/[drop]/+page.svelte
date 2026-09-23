@@ -24,7 +24,7 @@
 	import Eyebrow from '$lib/components/ui/Eyebrow.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Accordion from '$lib/components/ui/Accordion.svelte';
-	import RootSystem from '$lib/components/art/RootSystem.svelte';
+	import PineappleMotif from '$lib/components/art/PineappleMotif.svelte';
 	import HempMotif from '$lib/components/art/HempMotif.svelte';
 	import { formatInr } from '$lib/money';
 	import { SIZE_RANGE_LABEL } from '$lib/drop/sizes';
@@ -125,11 +125,16 @@
 
 	<div class="mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
 		<header class="relative mb-20 overflow-hidden">
+			<!--
+				A root system squashed into a short, wide box collapsed into a thin
+				branching line that read as a stray glyph behind the title. This is
+				aspect-locked to the motif's own viewBox so it stays a pineapple.
+			-->
 			<div
-				class="pointer-events-none absolute inset-x-0 -top-10 h-56 text-paper"
+				class="pointer-events-none absolute -top-10 left-[42%] hidden aspect-[200/320] h-[21rem] text-gold lg:block xl:left-[46%]"
 				aria-hidden="true"
 			>
-				<RootSystem opacity={0.09} depth={6} />
+				<PineappleMotif opacity={0.13} />
 			</div>
 
 			<div class="relative flex flex-wrap items-center gap-4">

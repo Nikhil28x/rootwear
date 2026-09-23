@@ -15,26 +15,15 @@
 	 * previously existed only there while every other route got a plain link
 	 * list.
 	 *
-	 * Off the landing page it is turned DOWN via `muted`: the artwork is dimmed
-	 * and desaturated and the ground is a grey-green rather than the full brand
-	 * forest, so the footer settles behind the page instead of competing with
-	 * it. See .brand-footer--muted in layout.css.
+	 * One treatment everywhere: the full lockup on the brand forest ground.
 	 *
 	 * §14 requires the registered business name and address here; §11 requires
 	 * email and Instagram DM. Both read from one module (RW-022).
 	 */
-	let {
-		policies = [],
-		/**
-		 * Turn the lockup down. True everywhere except the landing page, which
-		 * earns the artwork at full strength — it is part of the story there and
-		 * arrives after a long scroll, rather than closing an ordinary page.
-		 */
-		muted = true
-	}: { policies?: Array<{ slug: string; title: string }>; muted?: boolean } = $props();
+	let { policies = [] }: { policies?: Array<{ slug: string; title: string }> } = $props();
 </script>
 
-<footer id="footer" class="brand-footer" class:brand-footer--muted={muted}>
+<footer id="footer" class="brand-footer">
 	<figure class="brand-footer__artwork">
 		<img
 			src="/images/rootwear-brand-story.jpg"

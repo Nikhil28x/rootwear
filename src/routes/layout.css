@@ -23,10 +23,10 @@
 	   FOREST-BLACK. Using the wrong one is readable-looking in isolation and
 	   fails badly in place: alert-light on white measures 2.67:1. */
 	--color-alert: #9d4526;        /* on white   — 6.6:1 */
-	/* Must clear AA on all three dark grounds this ink lands on: the brand
-	   forest #1f382a (full-strength footer), the muted footer #161c18, and
-	   near-black #0b0f0b. #d97a52 measured only 4.14:1 on the forest one. */
-	--color-alert-light: #e08b63;  /* forest 4.85 · muted 6.63 · near-black 7.40 */
+	/* Must clear AA on both dark grounds this ink lands on: the brand forest
+	   #1f382a (the footer) and near-black #0b0f0b. The previous #d97a52
+	   measured only 4.14:1 on the forest one. */
+	--color-alert-light: #e08b63;  /* forest 4.85 · near-black 7.40 */
 
 	/* Type stacks — previously written out in four places. */
 	--font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -405,18 +405,6 @@ a:focus-visible {
 	background: var(--color-forest);
 }
 
-/*
- * The muted variant, used on every route EXCEPT the landing page.
- *
- * The landing page earns the full lockup — the artwork is part of the story
- * there and arrives after a long scroll. Everywhere else the same footer at
- * full strength became the brightest thing on the page, so it is turned down
- * to sit behind the content instead of pulling the eye to the bottom.
- */
-.brand-footer--muted {
-	color: rgba(255, 255, 255, 0.82);
-	background: #161c18;
-}
 
 .brand-footer__artwork {
 	position: relative;
@@ -424,9 +412,6 @@ a:focus-visible {
 	background: #152b20;
 }
 
-.brand-footer--muted .brand-footer__artwork {
-	background: #131a16;
-}
 
 .brand-footer__grid {
 	position: relative;
@@ -484,14 +469,6 @@ a:focus-visible {
 	filter: saturate(0.88) contrast(1.04);
 }
 
-/*
- * Only on the muted variant: the artwork becomes atmosphere rather than
- * something to look at, so it reads as texture behind the links.
- */
-.brand-footer--muted .brand-footer__artwork img {
-	opacity: 0.4;
-	filter: grayscale(0.6) contrast(0.9);
-}
 
 .brand-footer__mobile-lockup {
 	display: none;
