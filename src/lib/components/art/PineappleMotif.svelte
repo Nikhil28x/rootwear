@@ -16,10 +16,27 @@
 		opacity = 0.16,
 		latticeStep = 17,
 		blades = 9,
+		/** Degrees. Lets the same drawing sit at a different angle per placement. */
+		rotate = 0,
 		class: klass = ''
-	}: { opacity?: number; latticeStep?: number; blades?: number; class?: string } = $props();
+	}: {
+		opacity?: number;
+		latticeStep?: number;
+		blades?: number;
+		rotate?: number;
+		class?: string;
+	} = $props();
 
 	// Body geometry. Everything else is derived from these four numbers.
+	/**
+	 * A unique id per instance. Every copy previously emitted
+	 * clipPath id="pineapple-body", so the page carried duplicate ids and each
+	 * SVG clipped to whichever element the document resolved first. Identical
+	 * silhouettes hid it — until one instance changed latticeStep or blades.
+	 */
+	const uid = $props.id();
+	const clipId = `pineapple-body-${uid}`;
+
 	const CX = 100;
 	const BODY_TOP = 108;
 	const BODY_BOTTOM = 286;
@@ -96,18 +113,19 @@
 	stroke-linecap="round"
 	stroke-linejoin="round"
 	{opacity}
+	style={rotate ? `transform: rotate(${rotate}deg)` : undefined}
 	aria-hidden="true"
 	focusable="false"
 	preserveAspectRatio="xMidYMid meet"
 >
 	<defs>
-		<clipPath id="pineapple-body">
+		<clipPath id={clipId}>
 			<path d={body} />
 		</clipPath>
 	</defs>
 
 	<!-- The lattice, trimmed to the silhouette. -->
-	<g clip-path="url(#pineapple-body)" opacity="0.72">
+	<g clip-path="url(#{clipId})" opacity="0.72">
 		{#each rising as [x1, y1, x2, y2], i (`r${i}`)}
 			<line {x1} {y1} {x2} {y2} />
 		{/each}

@@ -272,7 +272,14 @@
 		</section>
 
 		<!-- §03 template 04: the lookbook stays intact once the drop is finished. -->
-		<section class="mb-24" aria-labelledby="lookbook-title">
+		<section class="relative mb-24 overflow-hidden" aria-labelledby="lookbook-title">
+			<div
+				class="pointer-events-none absolute -top-8 -right-10 hidden aspect-[200/320] h-[14rem] text-gold-ink lg:block"
+				aria-hidden="true"
+			>
+				<PineappleMotif opacity={0.05} rotate={18} />
+			</div>
+
 			<h2 id="lookbook-title" class="mb-8 text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 				The lookbook
 			</h2>
@@ -298,7 +305,17 @@
 		</section>
 
 		<!-- The pieces. §06: sold-out sizes are greyed and still visible here too. -->
-		<section class="mb-24 border-t border-forest/15 pt-12" aria-labelledby="pieces-title">
+		<section
+			class="relative mb-24 overflow-hidden border-t border-forest/15 pt-12"
+			aria-labelledby="pieces-title"
+		>
+			<div
+				class="pointer-events-none absolute bottom-0 -left-14 hidden aspect-[200/320] h-[20rem] text-gold-ink lg:block"
+				aria-hidden="true"
+			>
+				<PineappleMotif opacity={0.045} rotate={-22} />
+			</div>
+
 			<h2 id="pieces-title" class="mb-10 text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 				{data.pieces.length === 1 ? 'The piece' : 'The pieces'}
 			</h2>
@@ -401,7 +418,17 @@
 		{/if}
 
 		{#if data.canRequest}
-			<section class="mb-24 border-t border-forest/15 pt-12" aria-labelledby="request-title">
+			<section
+				class="relative mb-24 overflow-hidden border-t border-forest/15 pt-12"
+				aria-labelledby="request-title"
+			>
+			<div
+				class="pointer-events-none absolute top-6 right-0 hidden aspect-[200/320] h-[13rem] text-gold-ink lg:block"
+				aria-hidden="true"
+			>
+				<PineappleMotif opacity={0.05} rotate={8} />
+			</div>
+
 				<h2 id="request-title" class="mb-8 text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 					Bring it back
 				</h2>
@@ -457,7 +484,17 @@
 			</section>
 		{/if}
 
-		<section class="border-t border-forest/15 pt-12" aria-labelledby="spec-title">
+		<section
+			class="relative overflow-hidden border-t border-forest/15 pt-12"
+			aria-labelledby="spec-title"
+		>
+			<div
+				class="pointer-events-none absolute -bottom-10 left-[38%] hidden aspect-[200/320] h-[17rem] text-gold-ink lg:block"
+				aria-hidden="true"
+			>
+				<PineappleMotif opacity={0.04} rotate={28} />
+			</div>
+
 			<h2 id="spec-title" class="mb-8 text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
 				The specification
 			</h2>
