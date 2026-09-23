@@ -58,7 +58,10 @@
 	<SiteFooter policies={data.footerPolicies ?? []} />
 {/if}
 
-<!-- One footer for every route, the landing lockup included. -->
+<!--
+	One footer for every route. The landing page shows it at full strength; every
+	other route gets the muted variant so it sits behind the page.
+-->
 {#if isHome}
-	<SiteFooter policies={data.footerPolicies ?? []} />
+	<SiteFooter policies={data.footerPolicies ?? []} muted={false} />
 {/if}
