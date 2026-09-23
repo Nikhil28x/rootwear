@@ -39,11 +39,21 @@
 <style>
 	.poster-showcase {
 		margin: 0;
+		height: 100%;
 	}
 
 	.poster-showcase__frame {
 		position: relative;
 		overflow: hidden;
+		/*
+		 * Holds the poster's own 810:1013 and lets it set the band's height,
+		 * rather than stretching to a height the band dictates.
+		 *
+		 * The alternative — height:100% with object-cover — made the frame
+		 * landscape against a portrait poster and cropped about 345px of it,
+		 * which took the bottom off "Grown, Not Manufactured". The poster is
+		 * the artwork here; the band gives way to it, not the other way round.
+		 */
 		aspect-ratio: 810 / 1013;
 		/* The poster's own ground, so the frame and the band it sits on are the
 		   same green and the seam between them disappears. */
@@ -54,6 +64,7 @@
 		display: block;
 		width: 100%;
 		height: 100%;
+		/* Nothing is cropped: the frame already holds the poster's ratio. */
 		object-fit: cover;
 	}
 

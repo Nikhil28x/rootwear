@@ -318,12 +318,12 @@
 			isolated card on white. Dark ground, so the header re-inks over it.
 		-->
 		<section
-			class="-mx-5 mb-24 bg-poster px-5 py-16 text-paper sm:-mx-10 sm:px-10 sm:py-20 lg:-mx-14 lg:px-14"
+			class="-mx-5 mb-24 bg-poster px-5 text-paper sm:-mx-10 sm:px-10 lg:-mx-14 lg:px-14"
 			data-header-theme="dark"
 			aria-labelledby="showcase-title"
 		>
-			<div class="grid items-center gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
-			<div class="order-2 flex flex-col gap-6 lg:order-1">
+			<div class="grid items-stretch gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+			<div class="order-2 flex flex-col justify-center gap-6 py-16 sm:py-20 lg:order-1">
 				<Eyebrow surface="dark">The piece</Eyebrow>
 				<h2
 					id="showcase-title"
@@ -347,7 +347,7 @@
 				</dl>
 			</div>
 
-				<div class="order-1 mx-auto w-full max-w-[30rem] lg:order-2">
+				<div class="order-1 mx-auto w-full max-w-[34rem] lg:order-2 lg:mx-0 lg:max-w-none">
 					<PosterShowcase />
 				</div>
 			</div>
