@@ -4,6 +4,7 @@
 	import HempMotif from '$lib/components/art/HempMotif.svelte';
 	import RootSystem from '$lib/components/art/RootSystem.svelte';
 	import type { PageData } from './$types';
+	import PineappleField from '$lib/components/art/PineappleField.svelte';
 
 	let { data }: { data: PageData } = $props();
 </script>
@@ -16,7 +17,8 @@
 	/>
 </svelte:head>
 
-<main class="bg-paper text-forest">
+<main class="relative isolate overflow-x-clip bg-paper text-forest">
+	<PineappleField />
 	<!-- ─────────────────────────────────────────────────────────── the opening -->
 	<section
 		data-header-theme="light"

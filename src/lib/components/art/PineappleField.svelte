@@ -28,25 +28,34 @@
 
 	let {
 		placements = [
-			// Header: the large one beside the title, as before.
-			{ top: 4, left: 60, h: ['h-[9rem]', 'lg:h-[19rem]'], rotate: 0, opacity: 0.13 },
-			{ top: 8, left: 92, h: ['h-[6rem]', 'lg:h-[10rem]'], rotate: 16, opacity: 0.09 },
+			{ top: 3, left: 60, h: ['h-[9rem]', 'lg:h-[19rem]'], rotate: 0, opacity: 0.13 },
+			{ top: 6, left: 92, h: ['h-[6rem]', 'lg:h-[10rem]'], rotate: 16, opacity: 0.09 },
+			{ top: 9, left: 30, h: ['h-[5rem]', 'lg:h-[8rem]'], rotate: -24, opacity: 0.07 },
 			{ top: 12, left: 5, h: ['h-[9rem]', 'lg:h-[15rem]'], rotate: -19, opacity: 0.11 },
-			// 22-40% on the right is the poster panel, which is opaque — a
-			// pineapple behind it is simply not seen, so that lane stays empty.
+			{ top: 16, left: 76, h: ['h-[6rem]', 'lg:h-[11rem]'], rotate: 33, opacity: 0.085 },
 			{ top: 20, left: 22, h: ['h-[6rem]', 'lg:h-[10rem]'], rotate: 29, opacity: 0.08 },
+			{ top: 24, left: 50, h: ['h-[5rem]', 'lg:h-[8rem]'], rotate: -12, opacity: 0.07 },
 			{ top: 28, left: 6, h: ['h-[8rem]', 'lg:h-[14rem]'], rotate: -11, opacity: 0.1 },
+			{ top: 32, left: 88, h: ['h-[7rem]', 'lg:h-[12rem]'], rotate: 21, opacity: 0.095 },
 			{ top: 35, left: 30, h: ['h-[6rem]', 'lg:h-[9rem]'], rotate: 22, opacity: 0.08 },
+			{ top: 39, left: 66, h: ['h-[5rem]', 'lg:h-[9rem]'], rotate: -30, opacity: 0.075 },
 			{ top: 43, left: 90, h: ['h-[9rem]', 'lg:h-[16rem]'], rotate: -26, opacity: 0.11 },
+			{ top: 46, left: 18, h: ['h-[6rem]', 'lg:h-[10rem]'], rotate: 14, opacity: 0.085 },
 			{ top: 49, left: 3, h: ['h-[7rem]', 'lg:h-[12rem]'], rotate: 13, opacity: 0.09 },
+			{ top: 53, left: 72, h: ['h-[7rem]', 'lg:h-[12rem]'], rotate: -18, opacity: 0.09 },
 			{ top: 56, left: 52, h: ['h-[6rem]', 'lg:h-[10rem]'], rotate: -34, opacity: 0.075 },
+			{ top: 60, left: 12, h: ['h-[8rem]', 'lg:h-[14rem]'], rotate: 25, opacity: 0.1 },
 			{ top: 62, left: 94, h: ['h-[8rem]', 'lg:h-[15rem]'], rotate: 8, opacity: 0.1 },
+			{ top: 66, left: 38, h: ['h-[5rem]', 'lg:h-[9rem]'], rotate: -15, opacity: 0.07 },
 			{ top: 69, left: 14, h: ['h-[9rem]', 'lg:h-[17rem]'], rotate: -17, opacity: 0.11 },
+			{ top: 72, left: 84, h: ['h-[6rem]', 'lg:h-[11rem]'], rotate: 30, opacity: 0.085 },
 			{ top: 75, left: 70, h: ['h-[6rem]', 'lg:h-[10rem]'], rotate: 27, opacity: 0.08 },
-			{ top: 82, left: 4, h: ['h-[7rem]', 'lg:h-[13rem]'], rotate: -7, opacity: 0.1 },
-			{ top: 88, left: 86, h: ['h-[9rem]', 'lg:h-[16rem]'], rotate: 19, opacity: 0.11 },
-			{ top: 94, left: 36, h: ['h-[6rem]', 'lg:h-[11rem]'], rotate: -30, opacity: 0.085 },
-			{ top: 98, left: 66, h: ['h-[7rem]', 'lg:h-[12rem]'], rotate: 11, opacity: 0.09 }
+			{ top: 79, left: 4, h: ['h-[7rem]', 'lg:h-[13rem]'], rotate: -7, opacity: 0.1 },
+			{ top: 83, left: 44, h: ['h-[6rem]', 'lg:h-[10rem]'], rotate: 19, opacity: 0.08 },
+			{ top: 87, left: 86, h: ['h-[9rem]', 'lg:h-[16rem]'], rotate: 19, opacity: 0.11 },
+			{ top: 91, left: 24, h: ['h-[6rem]', 'lg:h-[11rem]'], rotate: -30, opacity: 0.085 },
+			{ top: 95, left: 64, h: ['h-[7rem]', 'lg:h-[12rem]'], rotate: 11, opacity: 0.09 },
+			{ top: 98, left: 8, h: ['h-[5rem]', 'lg:h-[9rem]'], rotate: -22, opacity: 0.07 }
 		]
 	}: { placements?: Placement[] } = $props();
 </script>

@@ -14,6 +14,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { isOnSale } from '$lib/domain/drop-state';
 	import type { PageData, ActionData } from './$types';
+	import PineappleField from '$lib/components/art/PineappleField.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -50,7 +51,8 @@
 	/>
 </svelte:head>
 
-<main class="mx-auto max-w-[1600px] px-5 pt-20 pb-24 sm:px-10 lg:px-14">
+<main class="relative isolate mx-auto max-w-[1600px] overflow-x-clip px-5 pt-20 pb-24 sm:px-10 lg:px-14">
+	<PineappleField />
 	<header class="mb-14 flex flex-col gap-4">
 		<Eyebrow>The Drop</Eyebrow>
 		<h1 class="display text-[clamp(2.6rem,6vw,5.5rem)] leading-[0.86] tracking-[-0.05em]">

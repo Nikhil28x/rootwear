@@ -22,6 +22,7 @@
 	import { formatInr } from '$lib/money';
 	import { RETURNS_WORDING } from '$lib/content/returns';
 	import type { PageData, ActionData } from './$types';
+	import PineappleField from '$lib/components/art/PineappleField.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -66,7 +67,8 @@
 	<meta name="description" content={data.product.summary} />
 </svelte:head>
 
-<main class="mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
+<main class="relative isolate mx-auto max-w-[1600px] overflow-x-clip px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
+	<PineappleField />
 	<nav
 		class="mb-12 flex flex-wrap items-center gap-3 text-[11px] tracking-[0.2em] uppercase font-medium"
 		aria-label="Breadcrumb"
