@@ -333,26 +333,25 @@
 			<div class="grid items-stretch gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
 			<div class="order-2 flex flex-col justify-center gap-6 py-16 sm:py-20 lg:order-1">
 				<Eyebrow surface="dark">The piece</Eyebrow>
-				<h2
-					id="showcase-title"
-					class="display text-[clamp(2.2rem,4.5vw,3.6rem)] leading-[0.92] tracking-[-0.04em]"
-				>
-					Grown, not<br />manufactured.
-				</h2>
+				<!--
+					The heading is screen-reader-only on purpose. The poster beside it
+					prints "Grown, Not Manufactured" in gold as part of the artwork, so
+					a matching h2 set this phrase twice within one band. The words now
+					appear once as type, in the closing plaque at the foot of the page.
+					This h2 survives only to give the section its accessible name, and
+					names what the band actually is rather than repeating the plaque's
+					headline into the accessibility tree.
+
+					The spec list that used to sit here has moved to that plaque too. It
+					was an inline literal rather than the page's `specifications` array,
+					and the two had already drifted — "25 numbered" here against
+					"25 numbered pieces" there.
+				-->
+				<h2 id="showcase-title" class="sr-only">The drop poster</h2>
 				<p class="max-w-[46ch] text-[15px] leading-relaxed text-paper/75">
 					{data.product.fabric} at {data.product.gsm} GSM, cut {data.product.fit.toLowerCase()}.
 					Turn it over and the tree sits across the back.
 				</p>
-				<dl class="grid max-w-md grid-cols-2 gap-x-8 gap-y-4 border-t border-white/20 pt-6">
-					{#each [['Fibre', data.product.fabric], ['Weight', `${data.product.gsm} GSM`], ['Fit', data.product.fit], ['Edition', `${data.editionSize} numbered`]] as [term, value] (term)}
-						<div class="flex flex-col gap-1">
-							<dt class="text-[11px] font-medium tracking-[0.2em] text-paper/60 uppercase">
-								{term}
-							</dt>
-							<dd class="text-[15px] text-paper/85">{value}</dd>
-						</div>
-					{/each}
-				</dl>
 			</div>
 
 				<div class="order-1 mx-auto w-full max-w-[34rem] lg:order-2 lg:mx-0 lg:max-w-none">
@@ -490,32 +489,16 @@
 		>
 
 			<h2 id="spec-title" class="mb-8 text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
-				The specification
+				Size, care and returns
 			</h2>
 
-			<div class="grid gap-12 lg:grid-cols-2 lg:gap-20">
-				<!--
-					Both columns are the same row primitive, on purpose. They used to
-					differ — 11px/py-4/border-t on the left against 12px/py-5/border-b
-					on the right — so the first rows were 49.5px and 64px tall, their
-					labels sat on different baselines, the accordion column opened with
-					no rule and the spec column closed with none.
-
-					One rhythm now: a rule on the container, a rule under every row, and
-					py-5 + leading-6 on both. That pins the pitch at 65px a side (64 of
-					row plus the rule) whatever the glyphs inside happen to measure.
-				-->
-				<dl class="m-0 border-t border-forest/15">
-					{#each specifications as specification (specification[0])}
-						<div
-							class="flex items-center justify-between gap-4 border-b border-forest/15 py-5 text-[12px] leading-6 tracking-[0.18em] uppercase font-medium"
-						>
-							<dt class="text-forest/80">{specification[0]}</dt>
-							<dd class="m-0 text-forest/75">{specification[1]}</dd>
-						</div>
-					{/each}
-				</dl>
-
+			<!--
+				The specification table that used to sit beside these lives in the
+				closing plaque now, so this section is the three disclosures alone.
+				Capped at a reading measure rather than run out to 1600px, which is
+				where a lone column of accordions would otherwise end up.
+			-->
+			<div class="max-w-[52rem]">
 				<div class="flex flex-col border-t border-forest/15">
 					<Accordion title="Size guide" surface="light" open>
 						<SizeChart
@@ -540,4 +523,132 @@
 			</div>
 		</section>
 	</div>
+
+	<!--
+		The closing plaque, ported from the old /new-collection page (that route
+		now 308s here, so this is where its last section belongs).
+
+		Outside the padded container on purpose: it runs edge to edge and butts
+		the footer, which is the same forest ground, so the page ends on one
+		unbroken dark block rather than a panel with a white strip beneath it.
+		That is also why the ground is --color-forest and not --color-poster —
+		layout.css warns that butting those two near-greens "reads as a mismatch
+		rather than a bleed", and the footer is forest.
+
+		Every value is read off the record. The original hardcoded ₹3,490, "Drop
+		001", "XS — XXL" and a description with no field behind it — all four are
+		wrong on this branch.
+	-->
+	<section
+		class="piece-plaque text-paper"
+		data-header-theme="dark"
+		aria-labelledby="plaque-title"
+	>
+		<div
+			class="mx-auto grid max-w-[1600px] gap-12 px-5 py-20 sm:px-10 sm:py-28 lg:grid-cols-[1fr_0.72fr] lg:items-end lg:gap-24 lg:px-14"
+		>
+			<div class="flex flex-col gap-6">
+				<Eyebrow surface="dark">01 / The piece</Eyebrow>
+				<h2
+					id="plaque-title"
+					class="display max-w-[9ch] text-[clamp(2.75rem,7vw,6rem)] leading-[0.84] tracking-[-0.055em]"
+				>
+					Grown, not manufactured.
+				</h2>
+			</div>
+
+			<div class="flex flex-col gap-8">
+				<div class="flex items-end justify-between gap-6 border-b border-white/20 pb-6">
+					<div class="flex flex-col gap-2">
+						<span class="text-[11px] font-medium tracking-[0.2em] text-paper/70 uppercase">
+							Drop {dropNumber}
+						</span>
+						<h3 class="display text-2xl leading-none tracking-[-0.02em]">{data.product.name}</h3>
+					</div>
+					<!--
+						Follows the preview toggle for the same reason the header price
+						and the piece cards do: the page must not offer the piece for
+						pre-order and quote its price in the same breath. text-gold, not
+						text-strain-ink — that token is tuned for white.
+					-->
+					<strong
+						class="shrink-0 text-[18px] font-normal {view === 'price'
+							? 'text-paper'
+							: 'text-gold'}"
+					>
+						{view === 'price' ? price : 'Open for pre-order'}
+					</strong>
+				</div>
+
+				<p class="max-w-[46ch] text-[15px] leading-relaxed text-paper/75">
+					{data.product.summary}
+				</p>
+
+				<!-- Same row rhythm as the disclosures above: a rule on the container,
+				     a rule under every row, py-5 + leading-6 to pin the pitch. -->
+				<dl class="m-0 border-t border-white/20">
+					{#each specifications as specification (specification[0])}
+						<div
+							class="flex items-center justify-between gap-4 border-b border-white/20 py-5 text-[12px] leading-6 font-medium tracking-[0.18em] uppercase"
+						>
+							<dt class="text-paper/70">{specification[0]}</dt>
+							<dd class="m-0 text-paper/90">{specification[1]}</dd>
+						</div>
+					{/each}
+				</dl>
+
+				<div
+					class="flex flex-col gap-2 border border-gold/60 p-5 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+				>
+					<span class="text-[11px] font-medium tracking-[0.2em] text-gold uppercase">
+						Release status
+					</span>
+					<strong class="text-[13px] font-normal text-paper">
+						Drop {dropNumber} · limited to {data.editionSize}
+					</strong>
+				</div>
+			</div>
+		</div>
+	</section>
 </main>
+
+<style>
+	/*
+		The roots artwork, veiled by the section's own ground so the type on top
+		of it stays legible. The veil deepens left-to-right because the details
+		column — price, spec rows, release status — sits on the right.
+
+		The veil is expressed in --color-forest rather than the original's raw
+		rgba, so it tracks the token it sits on instead of being a fourth green.
+	*/
+	.piece-plaque {
+		background-color: var(--color-forest);
+		background-image:
+			linear-gradient(
+				90deg,
+				color-mix(in srgb, var(--color-forest) 72%, transparent),
+				color-mix(in srgb, var(--color-forest) 88%, transparent)
+			),
+			url('/images/rootwear-roots-backdrop.jpg');
+		background-repeat: no-repeat;
+		background-position:
+			center,
+			left center;
+		background-size:
+			cover,
+			auto 82%;
+	}
+
+	/* Below the two-column collapse the artwork pulls in off the left edge and
+	   shrinks, so it reads as a motif behind single-column text. */
+	@media (max-width: 1023px) {
+		.piece-plaque {
+			background-position:
+				center,
+				20% center;
+			background-size:
+				cover,
+				auto 66%;
+		}
+	}
+</style>
