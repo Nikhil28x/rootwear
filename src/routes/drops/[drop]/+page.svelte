@@ -122,7 +122,15 @@
 	<PineappleField />
 	{#if data.showCountdown}
 		<!-- The countdown carries this page's h1. Everything below is an h2. -->
-		<DropCountdown stage={data.stage} />
+		<DropCountdown
+			stage={data.stage}
+			name={data.drop.name}
+			number={data.drop.number}
+			editionSize={data.editionSize}
+			launchInstant={data.drop.launchInstant}
+			headingLevel={1}
+			priority
+		/>
 	{/if}
 
 	<div class="mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">

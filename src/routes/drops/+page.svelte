@@ -15,6 +15,7 @@
 	import { isOnSale } from '$lib/domain/drop-state';
 	import type { PageData, ActionData } from './$types';
 	import PineappleField from '$lib/components/art/PineappleField.svelte';
+	import DropCountdown from '$lib/DropCountdown.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -51,9 +52,9 @@
 	/>
 </svelte:head>
 
-<main class="relative isolate mx-auto max-w-[1600px] overflow-x-clip px-5 pt-20 pb-24 sm:px-10 lg:px-14">
-	<PineappleField />
-	<header class="mb-14 flex flex-col gap-4">
+<main class="relative overflow-x-clip">
+	<div class="mx-auto max-w-[1600px] px-5 pt-20 pb-16 sm:px-10 lg:px-14">
+	<header class="flex flex-col gap-4">
 		<Eyebrow>The Drop</Eyebrow>
 		<h1 class="display text-[clamp(2.6rem,6vw,5.5rem)] leading-[0.86] tracking-[-0.05em]">
 			Every growth<br />so far.
@@ -63,7 +64,33 @@
 			want it, and in which size.
 		</p>
 	</header>
+	</div>
 
+	<!--
+		The drop the archive leads with, at full bleed.
+
+		Placed after the page's own h1 rather than above it, so the outline still
+		opens on "Every growth so far." — the countdown renders an h2 here
+		because this page, unlike the single-drop page, already owns its h1.
+
+		It carries both readings on its own: digits while the drop is still
+		growing, and the "it is here" hero once the launch instant has passed.
+	-->
+	{#if data.feature}
+		<DropCountdown
+			stage={data.feature.stage}
+			name={data.feature.name}
+			number={data.feature.number}
+			editionSize={data.feature.editionSize}
+			launchInstant={data.feature.launchInstant}
+			href="/drops/{data.feature.slug}"
+			linkLabel="Shop the drop"
+			headingLevel={2}
+		/>
+	{/if}
+
+	<div class="relative isolate mx-auto max-w-[1600px] px-5 pt-20 pb-24 sm:px-10 lg:px-14">
+	<PineappleField />
 	<ul class="grid gap-x-10 gap-y-16 sm:grid-cols-2 lg:grid-cols-3">
 		{#each data.cards as card, index (card.slug)}
 			<li class="flex flex-col gap-5">
@@ -115,4 +142,5 @@
 			</li>
 		{/each}
 	</ul>
+	</div>
 </main>

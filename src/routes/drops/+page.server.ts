@@ -5,6 +5,8 @@ import { handleRequestDrop } from '$lib/server/demand/actions';
 import { acceptsDropRequest, isFinished } from '$lib/components/drop/marks';
 import type { ArchiveCard } from '$lib/components/drop/types';
 import type { Drop } from '$lib/domain/drop';
+import { resolveStage } from '$lib/drop/stage-resolver';
+import { STAGE_COUNT, STAGE_DURATION_MS } from '$lib/drop/schedule';
 
 /**
  * RW-026 — §03 template 03: the drop archive. "The index of every drop
@@ -73,6 +75,29 @@ async function demandSummary(dropId: string) {
 	return { total, topSize: top.requests > 0 ? top.size : null };
 }
 
+/**
+ * The growth clock for ONE drop, built from that drop's own launch instant.
+ *
+ * Deliberately not DROP_01_SCHEDULE: that constant hardcodes Drop 01's
+ * instant, so reusing it here would count every drop down to Drop 01's launch.
+ * Mirrors the admin route, which already builds a schedule per record.
+ *
+ * `drop.launchInstant`, never the card's `releasedAt` — releasedAt is
+ * `archivedAt ?? launchInstant`, so on an archived drop it is the date the
+ * drop came DOWN, and a countdown against it would be quietly wrong.
+ */
+function stageFor(drop: Drop, now: number) {
+	return resolveStage(
+		{
+			teaseStart: drop.launchInstant - STAGE_COUNT * STAGE_DURATION_MS,
+			launchInstant: drop.launchInstant,
+			stageCount: STAGE_COUNT,
+			stageDurationMs: STAGE_DURATION_MS
+		},
+		now
+	);
+}
+
 export const load: PageServerLoad = async ({ locals }) => {
 	const all = await drops.listDrops();
 
@@ -82,8 +107,35 @@ export const load: PageServerLoad = async ({ locals }) => {
 	// One card per drop, and nothing else. The page used to also compute a
 	// "growing now" highlight and a separate history with demand summaries,
 	// which listed every drop up to three times on one screen.
+	/**
+	 * The drop the archive leads with. listDrops() is newest-first, so that is
+	 * simply the head of the list.
+	 *
+	 * Shown whatever its state, not only while it is counting down. The
+	 * component already carries both readings: before the launch instant it is
+	 * a countdown with digits, and after it the digits fall away and it becomes
+	 * the "it is here" hero. Gating it on a pre-launch state the way the drop
+	 * page does would render nothing at all today, because Drop 01 is LIVE.
+	 *
+	 * Its identity travels with it. The component used to name the drop and its
+	 * launch date from module constants, which happened to be right only
+	 * because Drop 01's instant IS that constant.
+	 */
+	const lead = all[0];
+
 	return {
 		cards: all.map(toCard),
+		feature: lead
+			? {
+					slug: lead.slug,
+					name: lead.name,
+					number: lead.number,
+					editionSize: lead.editionSize,
+					launchInstant: lead.launchInstant,
+					// §04 — resolved on the server clock. Never the visitor's.
+					stage: stageFor(lead, locals.now)
+				}
+			: null,
 		// Card copy says "Opens" or "Was live" depending on the drop's instant,
 		// so it needs the request clock rather than the visitor's (§04).
 		now: locals.now
