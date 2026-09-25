@@ -1,31 +1,106 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { DROP_LAUNCH, GROWTH_STAGES, getDropState } from './drop-timeline';
+	import { invalidateAll } from '$app/navigation';
+	import { countdownParts, type StageState } from './drop/stage-resolver';
+	import { stageAt } from './drop/stage-manifest';
 
-	let { serverNow }: { serverNow: number } = $props();
-	let clockNow = $state<number | null>(null);
+	/**
+	 * RW-039 — `stage` is resolved on the SERVER and passed in. §04: "Countdowns
+	 * and state changes run on server time, never the visitor's clock." §18
+	 * gate: "A device with its clock set forward cannot open the drop early."
+	 *
+	 * This component previously derived `now` from `Date.now()` plus an offset,
+	 * so a visitor who moved their system clock forward flipped `launched` and
+	 * opened the drop early. It no longer reads the wall clock at all.
+	 */
+	let {
+		stage,
+		name,
+		number,
+		editionSize,
+		launchInstant,
+		href = '#collection-title',
+		linkLabel = 'Explore the drop',
+		headingLevel = 1,
+		priority = false
+	}: {
+		stage: StageState;
+		/** The drop's own name. Was hardcoded 'Pineapple Haze'. */
+		name: string;
+		/** The drop's own number. Was hardcoded '001'. */
+		number: number;
+		/** The drop's own edition size. Was hardcoded '25'. */
+		editionSize: number;
+		/**
+		 * The drop's own launch instant, in ms. This USED to be read from the
+		 * DROP_LAUNCH module constant, which is Drop 01's instant — so a second
+		 * drop would have shown the right digits above the wrong date. The bug
+		 * was invisible because the only fixture's instant IS that constant.
+		 */
+		launchInstant: number;
+		href?: string;
+		linkLabel?: string;
+		/** 1 on a page the countdown titles; 2 where the page owns its own h1. */
+		headingLevel?: 1 | 2;
+		/** Only the LCP surface should claim high fetch priority. */
+		priority?: boolean;
+	} = $props();
+
+	/** Ids must be unique — this component now renders on more than one page. */
+	const uid = $props.id();
+	const titleId = `growth-title-${uid}`;
+	const explanationId = `growth-explanation-${uid}`;
+
 	let motionEnabled = $state(false);
-	let now = $derived(clockNow ?? serverNow);
-	let growth = $derived(getDropState(now));
-	const launchDate = new Intl.DateTimeFormat('en-IN', {
+
+	/**
+	 * Monotonic elapsed time since mount, from performance.now(), which is
+	 * unaffected by system clock changes. Used ONLY to tick the display down
+	 * from the server's figure — never to decide whether the drop is open.
+	 */
+	let elapsedMs = $state(0);
+
+	let remainingMs = $derived(Math.max(0, stage.msUntilLaunch - elapsedMs));
+	let parts = $derived(countdownParts(remainingMs));
+
+	/** Authoritative, server-resolved. Never computed on the client. */
+	let launched = $derived(stage.launched);
+
+	let asset = $derived(stageAt(stage.stageIndex));
+
+	// $derived, not const: these follow the drop that was passed in. As consts
+	// reading DROP_LAUNCH they never reacted to `stage` at all.
+	const dayFormat = new Intl.DateTimeFormat('en-IN', {
 		day: 'numeric',
 		month: 'long',
 		year: 'numeric',
 		timeZone: 'Asia/Kolkata'
-	}).format(DROP_LAUNCH);
-	const launchTime = new Intl.DateTimeFormat('en-IN', {
+	});
+	const timeFormat = new Intl.DateTimeFormat('en-IN', {
 		hour: 'numeric',
 		minute: '2-digit',
 		hour12: true,
 		timeZone: 'Asia/Kolkata'
-	}).format(DROP_LAUNCH);
+	});
+	let launchDate = $derived(dayFormat.format(launchInstant));
+	let launchTime = $derived(timeFormat.format(launchInstant));
+	let dropLabel = $derived(String(number).padStart(2, '0'));
 	const pad = (number: number) => String(number).padStart(2, '0');
 
 	onMount(() => {
-		const serverOffset = serverNow - Date.now();
+		const origin = performance.now();
+		let asked = false;
+
 		const tick = () => {
-			clockNow = Date.now() + serverOffset;
+			elapsedMs = performance.now() - origin;
+			// The display has reached zero but only the server may open the drop.
+			// Ask it once, rather than flipping state locally.
+			if (!asked && !launched && stage.msUntilLaunch - elapsedMs <= 0) {
+				asked = true;
+				void invalidateAll();
+			}
 		};
+
 		const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
 		const updateMotion = () => {
 			motionEnabled = !motion.matches;
@@ -75,32 +150,41 @@
 	}
 </script>
 
-<section class="drop-countdown" aria-labelledby="growth-title">
+<!--
+	Dark ground on pages that are otherwise white, so the header has to re-ink
+	over it the same way the poster band does.
+-->
+<section class="drop-countdown" aria-labelledby={titleId} data-header-theme="dark">
 	<div class="growth-intro">
-		<p class="eyebrow">Pineapple Haze</p>
-		<h1 id="growth-title">Drop<br />001.</h1>
-		<p class="growth-explanation" id="growth-explanation">
-			{growth.launched
-				? 'Pineapple Haze is here. A limited release of 25 numbered hemp-cotton pieces.'
-				: 'A limited release of 25 numbered hemp-cotton pieces, arriving at full growth.'}
+		<p class="eyebrow">{name}</p>
+		{#if headingLevel === 1}
+			<h1 id={titleId}>Drop<br />{dropLabel}.</h1>
+		{:else}
+			<h2 id={titleId}>Drop<br />{dropLabel}.</h2>
+		{/if}
+		<p class="growth-explanation" id={explanationId}>
+			{launched
+				? `${name} is here. A limited release of ${editionSize} numbered hemp-cotton pieces.`
+				: `A limited release of ${editionSize} numbered hemp-cotton pieces, arriving at full growth.`}
 		</p>
 	</div>
 
-	<figure class="growth-scene" aria-describedby="growth-explanation">
+	<figure class="growth-scene" aria-describedby={explanationId}>
 		<img
-			src={`/images/drop-growth/hd/stage-${growth.stageIndex}-1920.webp`}
-			srcset={`/images/drop-growth/hd/stage-${growth.stageIndex}-960.webp 960w, /images/drop-growth/hd/stage-${growth.stageIndex}-1920.webp 1920w, /images/drop-growth/hd/stage-${growth.stageIndex}-3840.webp 3840w`}
+			src={asset.image}
+			srcset={asset.srcset}
 			sizes="(max-width: 760px) 180vw, max(60vw, 1680px)"
 			width="3840"
 			height="1600"
-			fetchpriority="high"
-			alt={`${growth.stage.label}: the plant in our misty forest, at stage ${growth.stageIndex + 1} of ${GROWTH_STAGES.length} on its journey to the Pineapple Haze launch`}
+			fetchpriority={priority ? 'high' : 'auto'}
+			loading={priority ? 'eager' : 'lazy'}
+			alt={asset.alt}
 		/>
-		{#if motionEnabled && growth.stageIndex > 0}
-			{#key growth.stageIndex}
+		{#if motionEnabled && stage.stageIndex > 0 && asset.video}
+			{#key stage.stageIndex}
 				<video
 					use:playChapter
-					src={`/video/drop-growth/hd/stage-${growth.stageIndex}.mp4`}
+					src={asset.video}
 					muted
 					playsinline
 					preload="auto"
@@ -112,25 +196,25 @@
 	</figure>
 
 	<div class="launch-panel">
-		{#if !growth.launched}
+		{#if !launched}
 			<div
 				class="countdown-digits"
 				role="timer"
-				aria-label="Time until Drop 001 launches"
+				aria-label="Time until Drop {dropLabel} launches"
 				aria-live="off"
 			>
-				{#each [[growth.days, 'Days'], [growth.hours, 'Hours'], [growth.minutes, 'Minutes']] as [value, label]}
+				{#each [[parts.days, 'Days'], [parts.hours, 'Hours'], [parts.minutes, 'Minutes']] as [value, label]}
 					<div><strong>{pad(Number(value))}</strong><span>{label}</span></div>
 				{/each}
 			</div>
 		{/if}
 		<p class="launch-date">
-			<time datetime={new Date(DROP_LAUNCH).toISOString()}
+			<time datetime={new Date(launchInstant).toISOString()}
 				>{launchDate} · {launchTime.toUpperCase()} IST</time
 			>
 		</p>
-		<a class="drop-link" href="#collection-title">
-			Explore the drop<span aria-hidden="true">↗</span>
+		<a class="drop-link" href={href}>
+			{linkLabel}<span aria-hidden="true">↗</span>
 		</a>
 	</div>
 </section>
@@ -142,7 +226,7 @@
 		grid-template-rows: 1fr 1fr;
 		grid-template-areas: 'intro scene' 'launch scene';
 		min-height: clamp(580px, 72svh, 740px);
-		color: #f6efdd;
+		color: var(--color-paper);
 		background: #12251b;
 	}
 	.growth-intro {
@@ -157,7 +241,8 @@
 		text-transform: uppercase;
 		color: #b6c0b3;
 	}
-	.growth-intro h1 {
+	.growth-intro h1,
+	.growth-intro h2 {
 		margin: 1.5rem 0 1.25rem;
 		font-family: Didot, 'Bodoni 72', 'Times New Roman', serif;
 		font-size: clamp(3rem, 4.5vw, 5.25rem);
@@ -212,7 +297,7 @@
 		gap: 1.5rem;
 		margin-top: 2rem;
 		padding: 0.4rem 0;
-		border-bottom: 1px solid #f6efdd50;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.38);
 		font-size: 11px;
 		line-height: 1.5;
 		transition:
@@ -267,7 +352,8 @@
 		.growth-intro {
 			padding: 2.5rem 1.5rem 2rem;
 		}
-		.growth-intro h1 {
+		.growth-intro h1,
+		.growth-intro h2 {
 			margin: 1rem 0;
 			font-size: clamp(2.8rem, 9vw, 4rem);
 		}

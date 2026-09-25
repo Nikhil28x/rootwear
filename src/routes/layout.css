@@ -1,29 +1,75 @@
-@import 'tailwindcss' source('.');
-@source inline(
-	'-translate-x-1/2 -translate-y-1/2 absolute aspect-[4/5] backdrop-blur-md backdrop-blur-xl bg-[#0b0f0b] bg-[#0b100d] bg-[#11160f]/95 bg-[#1a2019] bg-[#1f382a] bg-[#c9a554] bg-[#f6efdd] bg-black/10 block border border-[#13190e]/30 border-[#152016]/25 border-[#1f382a] border-[#c9a554]/30 border-b border-l border-r border-t border-white/10 border-white/15 border-white/25 border-white/35 bottom-0 bottom-8 cursor-pointer duration-700 ease-out fixed flex flex-col gap-12 gap-16 gap-3 gap-4 gap-6 gap-8 grid group group-hover:scale-[1.035] h-[175svh] h-svh hidden hover:bg-[#1f382a] hover:bg-white hover:border-white hover:text-[#f6efdd] hover:text-black hover:text-white inline-flex inset-0 inset-x-0 items-center items-end items-start justify-between justify-center last:border-0 leading-[0.75] leading-[0.76] leading-[0.78] leading-[0.82] leading-[0.9] leading-none leading-relaxed left-0 left-1/2 lg:block lg:gap-24 lg:grid-cols-3 lg:grid-cols-[0.72fr_1.28fr] lg:grid-cols-[0.9fr_1.1fr] lg:min-h-[48rem] lg:p-14 lg:px-14 lg:py-12 lg:right-14 max-w-2xl max-w-4xl max-w-5xl max-w-[12rem] max-w-[15rem] max-w-[1600px] max-w-[18rem] max-w-md max-w-sm mb-14 mb-4 mb-6 mb-7 md:flex md:flex-row md:hidden md:items-end min-h-[32rem] min-h-[75svh] ml-2 mt-12 mt-2 mt-3 mt-5 mt-8 mt-9 mx-auto object-center object-cover opacity-30 opacity-65 overflow-clip overflow-hidden p-5 p-6 pb-7 pb-8 pl-5 place-items-center pt-4 pt-5 pt-7 px-4 px-5 px-7 py-12 py-2 py-24 py-3 py-4 py-9 relative right-5 shrink-0 size-9 size-full sm:block sm:flex sm:flex-row sm:grid-cols-2 sm:items-end sm:justify-between sm:p-10 sm:p-8 sm:pb-10 sm:pt-6 sm:px-10 sm:px-6 sm:px-7 sm:py-36 sm:text-xl space-y-5 sticky text-2xl text-[#1f382a] text-[#313a21] text-[#354035] text-[#aeb6a0] text-[0.16em] text-[10px] text-[11px] text-[9px] text-[clamp(3.5rem,10vw,9.5rem)] text-[clamp(3.8rem,7vw,8rem)] text-[clamp(3rem,6vw,7.2rem)] text-[clamp(4rem,10vw,11rem)] text-[clamp(4rem,7vw,8rem)] text-[clamp(4rem,9vw,10rem)] text-base text-center text-lg text-sm text-stone-100 text-stone-300 text-stone-400 text-stone-500 text-stone-600 text-xs top-0 top-[47%] tracking-[-0.01em] tracking-[-0.055em] tracking-[-0.065em] tracking-[-0.06em] tracking-[-0.07em] tracking-[0.05em] tracking-[0.08em] tracking-[0.12em] tracking-[0.14em] tracking-[0.15em] tracking-[0.16em] tracking-[0.18em] tracking-[0.22em] tracking-[0.25em] tracking-[0.28em] tracking-[0.2em] transition uppercase w-full z-10 z-20 z-30 z-50'
-);
+@import 'tailwindcss' source('../');
 
 @theme {
+	/* Brand palette — the single source of truth for Rootwear colour.
+	   Utilities: bg-forest-black, bg-forest, bg-cream, text-gold, border-forest, ... */
+	--color-forest-black: #0b0f0b;
+	--color-forest: #1f382a;
+	/* The light ground. Named for what it IS — paper — rather than for the
+	   beige it used to be, so the name does not have to be re-read as a lie. */
+	--color-paper: #ffffff;
+	--color-gold: #c9a554;
+
+	/* §07: the tease uses the per-drop STRAIN accent at 5-10% of the surface,
+	   never the house gold. Kept deliberately separate so the two cannot be
+	   used interchangeably. Overridden per drop via --color-strain. */
+	--color-strain: #e0b23c;
+
+	/*
+	 * The drop poster's own background, sampled from
+	 * static/images/pineapple-haze-poster.jpg at four flat points (they agreed
+	 * on rgb(35,69,55)). Deliberately NOT --color-forest: the brand forest is
+	 * #1f382a, darker and less blue, and butting the two together reads as a
+	 * mismatch rather than a bleed.
+	 */
+	--color-poster: #234537;
+
+	/*
+	 * Light-surface variants of the two warm accents.
+	 *
+	 * The suffix names the GROUND, as with --color-alert. Gold and strain are
+	 * tuned for dark grounds and collapse on white — #c9a554 measures 2.34:1
+	 * there and #e0b23c measures 1.98:1, both far under AA. These are the same
+	 * hues carried down until they read as ink rather than as highlight.
+	 */
+	--color-gold-ink: #8a6a1c;   /* on white — 5.05:1 */
+	--color-strain-ink: #87650e; /* on white — 5.39:1 */
+
+	/* Semantic status colours. Deliberately separate from the brand palette:
+	   an error is not a brand accent, and the two must never be swapped.
+	
+	   The suffix names the GROUND, not the colour. --color-alert is dark ink
+	   for use ON WHITE; --color-alert-light is light ink for use ON
+	   FOREST-BLACK. Using the wrong one is readable-looking in isolation and
+	   fails badly in place: alert-light on white measures 2.67:1. */
+	--color-alert: #9d4526;        /* on white   — 6.6:1 */
+	/* Must clear AA on both dark grounds this ink lands on: the brand forest
+	   #1f382a (the footer) and near-black #0b0f0b. The previous #d97a52
+	   measured only 4.14:1 on the forest one. */
+	--color-alert-light: #e08b63;  /* forest 4.85 · near-black 7.40 */
+
+	/* Type stacks — previously written out in four places. */
 	--font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	--font-display: Didot, 'Bodoni 72', 'Bodoni MT', 'Times New Roman', serif;
 }
 
 :root {
 	font-family: var(--font-sans);
 	font-synthesis: none;
 	color-scheme: dark;
-	background: #0b0f0b;
+	background: var(--color-forest-black);
 	text-rendering: optimizeLegibility;
 }
 
 html {
 	scroll-behavior: smooth;
-	background: #0b0f0b;
+	background: var(--color-forest-black);
 }
 
 body {
 	margin: 0;
 	min-width: 320px;
-	background: #0b0f0b;
+	background: var(--color-forest-black);
 }
 
 button,
@@ -38,8 +84,8 @@ a:focus-visible {
 }
 
 ::selection {
-	background: #c9a554;
-	color: #1f382a;
+	background: var(--color-gold);
+	color: var(--color-forest);
 }
 
 .display {
@@ -64,20 +110,20 @@ a:focus-visible {
 }
 
 .site-header--light {
-	color: #1f382a;
+	color: var(--color-forest);
 }
 
 .site-header--light .site-header__shell {
 	border-color: rgba(31, 56, 42, 0.2);
-	background: rgba(246, 239, 221, 0.68);
+	background: rgba(255, 255, 255, 0.68);
 }
 
 .site-header--light .nav-link {
-	color: rgba(31, 56, 42, 0.72);
+	color: rgba(31, 56, 42, 0.88);
 }
 
 .site-header--light .nav-link:hover {
-	color: #1f382a;
+	color: var(--color-forest);
 }
 
 .site-header--light .site-header__cta,
@@ -86,20 +132,23 @@ a:focus-visible {
 }
 
 .site-header--light .site-header__cta:hover {
-	color: #f6efdd;
-	background: #1f382a;
-	border-color: #1f382a;
+	color: var(--color-paper);
+	background: var(--color-forest);
+	border-color: var(--color-forest);
 }
 
 .site-header--light .site-header__mobile {
-	color: #1f382a;
-	background: rgba(246, 239, 221, 0.96);
+	color: var(--color-forest);
+	background: rgba(255, 255, 255, 0.96);
 	border-color: rgba(31, 56, 42, 0.2);
 }
 
 .nav-link {
 	position: relative;
-	color: rgba(255, 255, 255, 0.72);
+	/* Was 0.72 at weight 400. Uppercase at 11px with 0.2em tracking needs both
+	   more ink and more weight, or it reads as a grey smudge on the glass. */
+	color: rgba(255, 255, 255, 0.88);
+	font-weight: 500;
 	transition: color 180ms ease;
 }
 
@@ -202,10 +251,10 @@ a:focus-visible {
 	font-weight: 400;
 	line-height: 0.78;
 	letter-spacing: -0.055em;
-	color: rgba(246, 239, 221, 0.14);
+	color: rgba(255, 255, 255, 0.14);
 	white-space: nowrap;
-	text-shadow: 0 0 44px rgba(246, 239, 221, 0.09);
-	-webkit-text-stroke: 1px rgba(246, 239, 221, 0.24);
+	text-shadow: 0 0 44px rgba(255, 255, 255, 0.09);
+	-webkit-text-stroke: 1px rgba(255, 255, 255, 0.24);
 }
 
 .tree-shadow {
@@ -372,13 +421,65 @@ a:focus-visible {
 .brand-footer {
 	position: relative;
 	overflow: hidden;
-	color: #f6efdd;
-	background: #1f382a;
+	color: var(--color-paper);
+	background: var(--color-forest);
 }
 
+
 .brand-footer__artwork {
+	position: relative;
 	margin: 0;
 	background: #152b20;
+}
+
+
+.brand-footer__grid {
+	position: relative;
+	display: grid;
+	gap: 2rem clamp(1.5rem, 4vw, 4rem);
+	grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+	padding: clamp(2rem, 4vw, 3.25rem) clamp(1rem, 3vw, 3.5rem);
+	border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.brand-footer__head {
+	margin: 0 0 0.9rem;
+	font-size: 11px;
+	font-weight: 500;
+	letter-spacing: 0.22em;
+	color: rgba(255, 255, 255, 0.55);
+	text-transform: uppercase;
+}
+
+.brand-footer__col ul {
+	display: flex;
+	flex-direction: column;
+	gap: 0.55rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.brand-footer__col a {
+	font-size: 13px;
+	color: rgba(255, 255, 255, 0.78);
+	text-decoration: none;
+	transition: color 180ms ease;
+}
+
+.brand-footer__col a:hover {
+	color: var(--color-paper);
+}
+
+.brand-footer__col address {
+	font-size: 13px;
+	font-style: normal;
+	line-height: 1.7;
+	color: rgba(255, 255, 255, 0.78);
+}
+
+.brand-footer__col address.is-placeholder {
+	color: var(--color-alert-light);
 }
 
 .brand-footer__artwork img {
@@ -387,6 +488,7 @@ a:focus-visible {
 	height: auto;
 	filter: saturate(0.88) contrast(1.04);
 }
+
 
 .brand-footer__mobile-lockup {
 	display: none;
@@ -399,11 +501,16 @@ a:focus-visible {
 	justify-content: space-between;
 	gap: 1rem 2rem;
 	padding: 1rem clamp(1rem, 3vw, 3.5rem);
-	font-size: 8px;
+	/* 11px, not 8. This was homepage-only chrome when it was exempted from the
+	   type floor; the footer is now shared by every route, so it follows the
+	   same floor as the rest of the site. */
+	font-size: 11px;
+	font-weight: 500;
 	letter-spacing: 0.16em;
-	color: rgba(246, 239, 221, 0.72);
+	color: rgba(255, 255, 255, 0.62);
 	text-transform: uppercase;
-	background: rgba(11, 15, 11, 0.28);
+	background: rgba(11, 15, 11, 0.35);
+	border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .brand-footer__legal nav {
@@ -416,7 +523,7 @@ a:focus-visible {
 }
 
 .brand-footer__legal a:hover {
-	color: #c9a554;
+	color: var(--color-gold);
 }
 
 .product-card {
@@ -441,9 +548,9 @@ a:focus-visible {
 	padding: 1.05rem 1.2rem;
 	font-size: 9px;
 	letter-spacing: 0.2em;
-	color: #f6efdd;
+	color: var(--color-paper);
 	text-transform: uppercase;
-	border: 1px solid rgba(246, 239, 221, 0.36);
+	border: 1px solid rgba(255, 255, 255, 0.36);
 	transition:
 		color 220ms ease,
 		background-color 220ms ease,
@@ -451,14 +558,14 @@ a:focus-visible {
 }
 
 .drop-collection-link:hover {
-	color: #1f382a;
-	background: #f6efdd;
-	border-color: #f6efdd;
+	color: var(--color-forest);
+	background: var(--color-paper);
+	border-color: var(--color-paper);
 }
 
 .product-stage {
 	position: relative;
-	background: #ddd8d2;
+	background: #f1f1f0;
 }
 
 .product-transition {
@@ -504,10 +611,10 @@ a:focus-visible {
 	font-size: 7px;
 	line-height: 1;
 	letter-spacing: 0.13em;
-	color: rgba(246, 239, 221, 0.82);
+	color: rgba(255, 255, 255, 0.82);
 	text-transform: uppercase;
 	background: rgba(12, 20, 14, 0.7);
-	border: 1px solid rgba(246, 239, 221, 0.2);
+	border: 1px solid rgba(255, 255, 255, 0.2);
 	opacity: 0;
 	transform: translateY(5px);
 	transition:
@@ -790,12 +897,12 @@ a:focus-visible {
 		font-family: Didot, 'Bodoni 72', 'Times New Roman', serif;
 		font-size: 1.2rem;
 		font-style: italic;
-		color: rgba(246, 239, 221, 0.86);
+		color: rgba(255, 255, 255, 0.86);
 	}
 
 	.brand-footer__mobile-lockup small {
 		margin-top: 1.25rem;
-		font-size: 8px;
+		font-size: 11px;
 		letter-spacing: 0.18em;
 		text-transform: uppercase;
 		opacity: 0.68;
@@ -815,8 +922,8 @@ a:focus-visible {
 		grid-template-columns: repeat(3, 1fr);
 		width: 100%;
 		padding: 1rem 0;
-		border-top: 1px solid rgba(246, 239, 221, 0.12);
-		border-bottom: 1px solid rgba(246, 239, 221, 0.12);
+		border-top: 1px solid rgba(255, 255, 255, 0.12);
+		border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 	}
 
 	.brand-footer__legal nav a:nth-child(2) {
@@ -906,10 +1013,31 @@ a:focus-visible {
 }
 
 .roots-timeline {
+	position: relative;
 	margin: 0;
 	padding: 0 0 0 1.75rem;
 	border-left: 1px solid rgba(146, 112, 44, 0.4);
 	list-style: none;
+}
+
+/*
+ * The rail used to run 2.75rem past the last entry — "Grown, not
+ * manufactured." — and simply stop in mid-air. It now ends level with that
+ * last dot and turns into a short horizontal rule, so the line resolves into
+ * the section instead of trailing off it.
+ */
+.roots-timeline li:last-child {
+	padding-bottom: 0;
+}
+
+.roots-timeline::after {
+	position: absolute;
+	bottom: 0;
+	left: -1px;
+	width: clamp(3.5rem, 22%, 9rem);
+	height: 1px;
+	background: rgba(146, 112, 44, 0.4);
+	content: '';
 }
 
 .roots-timeline li {
