@@ -24,6 +24,7 @@
 	 * full bleed beneath it. Same component, different props.
 	 */
 	let isHome = $derived(page.route.id === '/');
+	let isAdmin = $derived(page.route.id?.startsWith('/admin') ?? false);
 
 	/** Routes that sit on cream rather than forest-black. */
 	const LIGHT_ROUTES = [
@@ -43,12 +44,17 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
-	<meta name="theme-color" content={BRAND_THEME_COLOR} />
+	<meta name="theme-color" content={isAdmin ? '#ffffff' : BRAND_THEME_COLOR} />
 </svelte:head>
 
 {#if isHome}
 	<!-- The homepage renders its own SiteHeader (anchored hero, drop CTA, fixed). -->
 	{@render children()}
+{:else if isAdmin}
+	<!-- Operations is a separate, light workspace without the storefront chrome. -->
+	<div class="admin-theme">
+		{@render children()}
+	</div>
 {:else}
 	<!--
 		The ground AND the ink.
@@ -83,3 +89,32 @@
 {#if isHome}
 	<SiteFooter policies={data.footerPolicies ?? []} />
 {/if}
+
+<style>
+	/**
+	 * Admin components use the shared brand tokens. Remapping those tokens at
+	 * the route boundary gives the complete workspace a high-contrast light
+	 * surface while leaving every storefront route unchanged.
+	 */
+	.admin-theme {
+		--color-forest-black: #ffffff;
+		--color-forest: #ffffff;
+		--color-paper: #173925;
+		--color-cream: #173925;
+		--color-stone-100: #14251a;
+		--color-stone-200: #21382a;
+		--color-stone-300: #385242;
+		--color-stone-400: #607066;
+		--color-stone-500: #87948c;
+		--color-stone-700: #cbd2cd;
+		--color-white: #173925;
+		--color-black: #ffffff;
+		--color-gold: #7d5d13;
+		--color-alert-light: #9f342d;
+
+		min-height: 100svh;
+		background: #ffffff;
+		color: #21382a;
+		color-scheme: light;
+	}
+</style>
