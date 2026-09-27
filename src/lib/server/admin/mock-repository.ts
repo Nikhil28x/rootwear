@@ -26,10 +26,16 @@ import { sellableStock, type Drop, type Product, type Variant } from '$lib/domai
 import { addPaise, ZERO, type Paise } from '$lib/money';
 import type { Size } from '$lib/drop/sizes';
 import type { AdminRepository } from './repository';
-import { fixtureStore, type FixtureStore, type StoredOrder, type StoredReservation } from './fixtures';
+import {
+	fixtureStore,
+	type FixtureStore,
+	type StoredOrder,
+	type StoredReservation
+} from './fixtures';
 import type {
 	AdminContactSubmission,
 	AdminDropRow,
+	AdminFormSubmission,
 	AdminOrderDetail,
 	AdminOrderSummary,
 	AdminPayment,
@@ -50,6 +56,8 @@ import type {
 	SellOutPoint,
 	SizePerformance
 } from './types';
+import { mockContactSnapshot, setMockContactStatus } from '$lib/server/content/contact';
+import { mockDemandSnapshot } from '$lib/server/demand/mock-repository';
 
 const MINUTE = 60_000;
 
@@ -167,7 +175,13 @@ function toReservationSummary(
 	};
 }
 
-function audit(store: FixtureStore, actor: string, action: string, entity: string, entityId: string) {
+function audit(
+	store: FixtureStore,
+	actor: string,
+	action: string,
+	entity: string,
+	entityId: string
+) {
 	store.audit.unshift({ at: Date.now(), actor, action, entity, entityId });
 }
 
@@ -343,10 +357,11 @@ export const mockAdminRepository: AdminRepository = {
 
 		const meta = (variantId: string) => index.get(variantId);
 
-		for (const r of store.requests) {
+		for (const [requestIndex, r] of store.requests.entries()) {
 			const ref = meta(r.variantId);
 			entries.push({
 				id: r.id,
+				trackingId: `RW-REQ-FX${String(requestIndex + 1).padStart(4, '0')}`,
 				kind: 'request',
 				dropId: r.dropId,
 				dropSlug: ref?.drop.slug ?? r.dropId,
@@ -354,6 +369,8 @@ export const mockAdminRepository: AdminRepository = {
 				variantId: r.variantId,
 				size: ref?.variant.size ?? null,
 				email: r.email,
+				name: null,
+				phone: null,
 				note: r.note,
 				createdAt: r.createdAt,
 				position: null,
@@ -361,11 +378,12 @@ export const mockAdminRepository: AdminRepository = {
 			});
 		}
 
-		for (const n of store.notifies) {
+		for (const [notifyIndex, n] of store.notifies.entries()) {
 			const ref = meta(n.variantId);
 			if (!ref) continue;
 			entries.push({
 				id: n.id,
+				trackingId: `RW-NTF-FX${String(notifyIndex + 1).padStart(4, '0')}`,
 				kind: 'notify_me',
 				dropId: ref.drop.id,
 				dropSlug: ref.drop.slug,
@@ -373,6 +391,8 @@ export const mockAdminRepository: AdminRepository = {
 				variantId: n.variantId,
 				size: ref.variant.size,
 				email: n.email,
+				name: null,
+				phone: null,
 				note: null,
 				createdAt: n.createdAt,
 				position: null,
@@ -384,6 +404,7 @@ export const mockAdminRepository: AdminRepository = {
 			const ref = meta(w.variantId);
 			entries.push({
 				id: w.id,
+				trackingId: null,
 				kind: 'waitlist',
 				dropId: w.dropId,
 				dropSlug: ref?.drop.slug ?? w.dropId,
@@ -391,6 +412,8 @@ export const mockAdminRepository: AdminRepository = {
 				variantId: w.variantId,
 				size: ref?.variant.size ?? null,
 				email: w.email,
+				name: null,
+				phone: null,
 				note: null,
 				createdAt: w.createdAt,
 				position: w.position,
@@ -398,10 +421,129 @@ export const mockAdminRepository: AdminRepository = {
 			});
 		}
 
+		const submitted = mockDemandSnapshot();
+		for (const r of submitted.requests) {
+			const ref = meta(r.variantId);
+			entries.push({
+				id: r.id,
+				trackingId: r.trackingId,
+				kind: 'request',
+				dropId: r.dropId,
+				dropSlug: ref?.drop.slug ?? r.dropId,
+				dropName: ref?.drop.name ?? r.dropId,
+				variantId: r.variantId,
+				size: ref?.variant.size ?? null,
+				email: r.email,
+				name: null,
+				phone: null,
+				note: r.note,
+				createdAt: r.consentedAt,
+				position: null,
+				state: 'open'
+			});
+		}
+
+		for (const n of submitted.notifies) {
+			const ref = meta(n.variantId);
+			if (!ref) continue;
+			entries.push({
+				id: n.id,
+				trackingId: n.trackingId,
+				kind: 'notify_me',
+				dropId: ref.drop.id,
+				dropSlug: ref.drop.slug,
+				dropName: ref.drop.name,
+				variantId: n.variantId,
+				size: ref.variant.size,
+				email: n.email,
+				name: null,
+				phone: null,
+				note: null,
+				createdAt: n.consentedAt,
+				position: null,
+				state: 'open'
+			});
+		}
+
+		for (const p of submitted.preorders) {
+			const ref = meta(p.variantId);
+			entries.push({
+				id: p.id,
+				trackingId: p.trackingId,
+				kind: 'preorder',
+				dropId: p.dropId,
+				dropSlug: ref?.drop.slug ?? p.dropId,
+				dropName: ref?.drop.name ?? p.dropId,
+				variantId: p.variantId,
+				size: ref?.variant.size ?? null,
+				email: p.email,
+				name: p.name,
+				phone: p.phone,
+				note: null,
+				createdAt: p.consentedAt,
+				position: null,
+				state: 'open'
+			});
+		}
+
 		return entries
 			.filter((e) => (filter?.dropId ? e.dropId === filter.dropId : true))
 			.filter((e) => (filter?.kind ? e.kind === filter.kind : true))
 			.sort((a, b) => b.createdAt - a.createdAt);
+	},
+
+	async listFormSubmissions(): Promise<AdminFormSubmission[]> {
+		const [demand, contacts] = await Promise.all([
+			mockAdminRepository.listDemandEntries(),
+			mockAdminRepository.listContact()
+		]);
+
+		const demandRows: AdminFormSubmission[] = demand
+			.filter((row) => row.kind !== 'waitlist' && row.trackingId !== null)
+			.map((row) => ({
+				trackingId: row.trackingId!,
+				sourceId: row.id,
+				kind:
+					row.kind === 'request'
+						? 'drop_request'
+						: row.kind === 'notify_me'
+							? 'notify_me'
+							: 'preorder',
+				name: row.name,
+				email: row.email,
+				phone: row.phone,
+				dropId: row.dropId,
+				variantId: row.variantId,
+				subject:
+					row.kind === 'request'
+						? 'Request this drop'
+						: row.kind === 'notify_me'
+							? 'Notify me'
+							: 'Pre-order signup',
+				detail: row.note,
+				status: row.state,
+				isSpam: false,
+				createdAt: row.createdAt
+			}));
+
+		return [
+			...contacts.map((row) => ({
+				trackingId: row.trackingId,
+				sourceId: row.id,
+				kind: 'contact' as const,
+				name: row.name,
+				email: row.email,
+				phone: null,
+				dropId: null,
+				variantId: null,
+				subject: row.subject,
+				detail: row.message,
+				status: row.status,
+				isSpam: row.isSpam,
+				createdAt: row.createdAt
+			})),
+			...demandRows
+		].sort((a, b) => b.createdAt - a.createdAt);
 	},
 
 	async listDropRows(): Promise<AdminDropRow[]> {
@@ -617,7 +759,18 @@ export const mockAdminRepository: AdminRepository = {
 
 	async listContact(filter): Promise<AdminContactSubmission[]> {
 		const store = await fixtureStore(Date.now());
-		return store.contact
+		const submitted = mockContactSnapshot().map((row) => ({
+			id: row.id,
+			trackingId: row.trackingId,
+			name: row.name,
+			email: row.email,
+			subject: row.subject,
+			message: row.message,
+			status: row.status,
+			isSpam: row.isSpam ?? false,
+			createdAt: row.createdAt
+		}));
+		return [...store.contact, ...submitted]
 			.filter((c) => (filter?.status ? c.status === filter.status : true))
 			.map((c) => ({ ...c }))
 			.sort((a, b) => b.createdAt - a.createdAt);
@@ -626,8 +779,8 @@ export const mockAdminRepository: AdminRepository = {
 	async setContactStatus({ id, status, actor }) {
 		const store = await fixtureStore(Date.now());
 		const row = store.contact.find((c) => c.id === id);
-		if (!row) throw new Error(`Unknown submission ${id}`);
-		row.status = status;
+		if (row) row.status = status;
+		else if (!setMockContactStatus(id, status)) throw new Error(`Unknown submission ${id}`);
 		audit(store, actor, `status ${status}`, 'contact_submission', id);
 	}
 };

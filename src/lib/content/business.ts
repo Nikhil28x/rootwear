@@ -14,22 +14,22 @@
 const TBC = 'TBC::';
 
 export type GstPosition =
-	| { readonly registered: true; readonly gstin: string }
-	| { readonly registered: false };
+	{ readonly registered: true; readonly gstin: string } | { readonly registered: false };
 
 /** §14: sole proprietorship. */
 export const ENTITY_TYPE = 'Sole proprietorship' as const;
 
 export const BUSINESS_NAME = 'Rootwear Clothing';
 
-/** §15 open item — "Business address", owner Aaron, was due 15 Sep. */
-export const BUSINESS_ADDRESS = `${TBC}registered business address`;
+/** §14: registered business address shown on legal and contact surfaces. */
+export const BUSINESS_ADDRESS =
+	'Flat no. 2B, 2nd Floor, 2nd Cross, Janakirama Layout, Hennuru, Bengaluru - 560043, Karnataka, India.';
 
 /** §13: sending address on the registered domain. */
 export const SUPPORT_EMAIL = 'hi@rootwear.in';
 
-export const INSTAGRAM_HANDLE = '@rootwear';
-export const INSTAGRAM_URL = 'https://instagram.com/rootwear';
+export const INSTAGRAM_HANDLE = '@rootwearclothing';
+export const INSTAGRAM_URL = 'https://www.instagram.com/rootwearclothing/';
 
 /**
  * §15 open item — "GST registration position", owner Aaron, was due 15 Sep.

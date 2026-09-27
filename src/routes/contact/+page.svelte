@@ -126,6 +126,11 @@
 							— usually within two working days, and always from {SUPPORT_EMAIL}. If it is urgent,
 							the Instagram DM is faster.
 						</p>
+						{#if form && 'trackingId' in form && form.trackingId}
+							<p class="mt-4 text-[11px] font-medium tracking-[0.18em] text-forest/65 uppercase">
+								Reference {form.trackingId}
+							</p>
+						{/if}
 						<div class="mt-8 flex flex-wrap gap-4">
 							<Button surface="light" variant="outline" href="/contact" onclick={startAgain}>
 								Write another
@@ -248,7 +253,7 @@
 			-->
 			<aside class="lg:sticky lg:top-28 lg:self-start">
 				<div class="border-t border-forest/15 pt-8">
-					<p class="text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">Direct</p>
+					<p class="text-[11px] font-medium tracking-[0.2em] text-forest/70 uppercase">Direct</p>
 					<ul class="mt-5 flex flex-col gap-4 text-[15px]">
 						<li>
 							<a
@@ -273,7 +278,9 @@
 				</div>
 
 				<div class="mt-10 border-t border-forest/15 pt-8">
-					<p class="text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">Before you write</p>
+					<p class="text-[11px] font-medium tracking-[0.2em] text-forest/70 uppercase">
+						Before you write
+					</p>
 					<ul class="mt-5 flex flex-col gap-3 text-[14px] leading-relaxed">
 						<li>
 							<a class="text-forest/70 transition hover:text-forest" href="/policies/track-order">
@@ -299,7 +306,9 @@
 				</div>
 
 				<div class="mt-10 border-t border-forest/15 pt-8">
-					<p class="text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">{BUSINESS_NAME}</p>
+					<p class="text-[11px] font-medium tracking-[0.2em] text-forest/70 uppercase">
+						{BUSINESS_NAME}
+					</p>
 					<address
 						class="mt-4 text-[14px] leading-relaxed not-italic {isPlaceholder(BUSINESS_ADDRESS)
 							? OUTSTANDING_ACCENT

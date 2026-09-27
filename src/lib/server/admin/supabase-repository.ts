@@ -33,6 +33,7 @@ import type { AdminRepository } from './repository';
 import type {
 	AdminContactSubmission,
 	AdminDropRow,
+	AdminFormSubmission,
 	AdminOrderDetail,
 	AdminOrderSummary,
 	AdminPayment,
@@ -179,15 +180,21 @@ async function loadCatalogue(): Promise<{
 	const [dropsRes, productsRes, variantsRes] = await Promise.all([
 		client
 			.from('drops')
-			.select('id, slug, number, name, state, launch_instant, archived_at, edition_size, published_at')
+			.select(
+				'id, slug, number, name, state, launch_instant, archived_at, edition_size, published_at'
+			)
 			.order('launch_instant', { ascending: false }),
 		client.from('products').select('id, drop_id, name'),
-		client.from('variants').select('id, product_id, sku, size, stock_count, reserve_cap, reserved_count')
+		client
+			.from('variants')
+			.select('id, product_id, sku, size, stock_count, reserve_cap, reserved_count')
 	]);
 
 	if (dropsRes.error) throw new Error(`admin drops read failed: ${dropsRes.error.message}`);
-	if (productsRes.error) throw new Error(`admin products read failed: ${productsRes.error.message}`);
-	if (variantsRes.error) throw new Error(`admin variants read failed: ${variantsRes.error.message}`);
+	if (productsRes.error)
+		throw new Error(`admin products read failed: ${productsRes.error.message}`);
+	if (variantsRes.error)
+		throw new Error(`admin variants read failed: ${variantsRes.error.message}`);
 
 	const drops = (dropsRes.data ?? []) as unknown as DropRow[];
 	const products = (productsRes.data ?? []) as unknown as ProductRow[];
@@ -268,9 +275,13 @@ export const supabaseAdminRepository: AdminRepository = {
 		}
 
 		const orders = new Map(
-			((ordersRes.data ?? []) as unknown as Array<{ id: string; state: OrderState; created_at: string }>).map(
-				(o) => [o.id, o]
-			)
+			(
+				(ordersRes.data ?? []) as unknown as Array<{
+					id: string;
+					state: OrderState;
+					created_at: string;
+				}>
+			).map((o) => [o.id, o])
 		);
 		const lines = (linesRes.data ?? []) as unknown as Array<{
 			order_id: string;
@@ -383,7 +394,8 @@ export const supabaseAdminRepository: AdminRepository = {
 			(r) => r.state === 'reserved' || r.state === 'balance_due'
 		);
 		const overdue = outstanding.filter(
-			(r) => r.state === 'balance_due' && r.balance_due_by !== null && Date.parse(r.balance_due_by) < now
+			(r) =>
+				r.state === 'balance_due' && r.balance_due_by !== null && Date.parse(r.balance_due_by) < now
 		);
 		const processed = refunds.filter((r) => r.state === 'processed');
 
@@ -415,10 +427,9 @@ export const supabaseAdminRepository: AdminRepository = {
 		if (linesRes.error) throw new Error(`order_lines read failed: ${linesRes.error.message}`);
 
 		const reservationDrop = new Map(
-			((reservationsRes.data ?? []) as unknown as Array<{ id: string; drop_id: string }>).map((r) => [
-				r.id,
-				r.drop_id
-			])
+			((reservationsRes.data ?? []) as unknown as Array<{ id: string; drop_id: string }>).map(
+				(r) => [r.id, r.drop_id]
+			)
 		);
 		// An order belongs to whichever drop its lines' variants belong to.
 		const orderDrop = new Map<string, string>();
@@ -472,7 +483,9 @@ export const supabaseAdminRepository: AdminRepository = {
 		// The view already does the aggregation — §12's demand board, in SQL.
 		const { data, error } = await getServiceClient()
 			.from('demand_board')
-			.select('drop_id, drop_slug, drop_name, drop_state, variant_id, size, requests, notify_me, waitlist');
+			.select(
+				'drop_id, drop_slug, drop_name, drop_state, variant_id, size, requests, notify_me, waitlist'
+			);
 		if (error) throw new Error(`demand_board read failed: ${error.message}`);
 
 		return (
@@ -504,13 +517,27 @@ export const supabaseAdminRepository: AdminRepository = {
 		const catalogue = await loadCatalogue();
 		const service = getServiceClient();
 
-		const [requestsRes, notifyRes, waitlistRes] = await Promise.all([
-			service.from('drop_requests').select('id, drop_id, variant_id, email, note, created_at, fulfilled_at'),
-			service.from('notify_requests').select('id, variant_id, email, created_at, notified_at'),
-			service.from('waitlist_entries').select('id, drop_id, variant_id, email:customer_id, position, state, created_at')
+		const [requestsRes, notifyRes, preorderRes, waitlistRes] = await Promise.all([
+			service
+				.from('drop_requests')
+				.select('id, tracking_id, drop_id, variant_id, email, note, created_at, fulfilled_at'),
+			service
+				.from('notify_requests')
+				.select('id, tracking_id, variant_id, email, created_at, notified_at'),
+			service
+				.from('preorder_signups')
+				.select(
+					'id, tracking_id, drop_id, variant_id, name, email, phone, created_at, converted_at'
+				),
+			service
+				.from('waitlist_entries')
+				.select('id, drop_id, variant_id, email:customer_id, position, state, created_at')
 		]);
-		if (requestsRes.error) throw new Error(`drop_requests read failed: ${requestsRes.error.message}`);
+		if (requestsRes.error)
+			throw new Error(`drop_requests read failed: ${requestsRes.error.message}`);
 		if (notifyRes.error) throw new Error(`notify_requests read failed: ${notifyRes.error.message}`);
+		if (preorderRes.error)
+			throw new Error(`preorder_signups read failed: ${preorderRes.error.message}`);
 		if (waitlistRes.error) {
 			throw new Error(`waitlist_entries read failed: ${waitlistRes.error.message}`);
 		}
@@ -528,6 +555,7 @@ export const supabaseAdminRepository: AdminRepository = {
 
 		for (const r of (requestsRes.data ?? []) as unknown as Array<{
 			id: string;
+			tracking_id: string;
 			drop_id: string;
 			variant_id: string | null;
 			email: string;
@@ -538,6 +566,7 @@ export const supabaseAdminRepository: AdminRepository = {
 			const m = meta(r.variant_id);
 			entries.push({
 				id: r.id,
+				trackingId: r.tracking_id,
 				kind: 'request',
 				dropId: r.drop_id,
 				dropSlug: m?.drop?.slug ?? r.drop_id,
@@ -545,6 +574,8 @@ export const supabaseAdminRepository: AdminRepository = {
 				variantId: r.variant_id,
 				size: m?.variant.size ?? null,
 				email: r.email,
+				name: null,
+				phone: null,
 				note: r.note,
 				createdAt: Date.parse(r.created_at),
 				position: null,
@@ -554,6 +585,7 @@ export const supabaseAdminRepository: AdminRepository = {
 
 		for (const n of (notifyRes.data ?? []) as unknown as Array<{
 			id: string;
+			tracking_id: string;
 			variant_id: string;
 			email: string;
 			created_at: string;
@@ -563,6 +595,7 @@ export const supabaseAdminRepository: AdminRepository = {
 			if (!m?.drop) continue;
 			entries.push({
 				id: n.id,
+				trackingId: n.tracking_id,
 				kind: 'notify_me',
 				dropId: m.drop.id,
 				dropSlug: m.drop.slug,
@@ -570,10 +603,43 @@ export const supabaseAdminRepository: AdminRepository = {
 				variantId: n.variant_id,
 				size: m.variant.size,
 				email: n.email,
+				name: null,
+				phone: null,
 				note: null,
 				createdAt: Date.parse(n.created_at),
 				position: null,
 				state: n.notified_at ? 'notified' : 'open'
+			});
+		}
+
+		for (const p of (preorderRes.data ?? []) as unknown as Array<{
+			id: string;
+			tracking_id: string;
+			drop_id: string;
+			variant_id: string;
+			name: string;
+			email: string;
+			phone: string;
+			created_at: string;
+			converted_at: string | null;
+		}>) {
+			const m = meta(p.variant_id);
+			entries.push({
+				id: p.id,
+				trackingId: p.tracking_id,
+				kind: 'preorder',
+				dropId: p.drop_id,
+				dropSlug: m?.drop?.slug ?? p.drop_id,
+				dropName: m?.drop?.name ?? p.drop_id,
+				variantId: p.variant_id,
+				size: m?.variant.size ?? null,
+				email: p.email,
+				name: p.name,
+				phone: p.phone,
+				note: null,
+				createdAt: Date.parse(p.created_at),
+				position: null,
+				state: p.converted_at ? 'converted' : 'open'
 			});
 		}
 
@@ -592,6 +658,7 @@ export const supabaseAdminRepository: AdminRepository = {
 			const m = meta(w.variant_id);
 			entries.push({
 				id: w.id,
+				trackingId: null,
 				kind: 'waitlist',
 				dropId: w.drop_id,
 				dropSlug: m?.drop?.slug ?? w.drop_id,
@@ -599,6 +666,8 @@ export const supabaseAdminRepository: AdminRepository = {
 				variantId: w.variant_id,
 				size: m?.variant.size ?? null,
 				email: emails.get(w.email) ?? 'unknown',
+				name: null,
+				phone: null,
 				note: null,
 				createdAt: Date.parse(w.created_at),
 				position: w.position,
@@ -612,9 +681,53 @@ export const supabaseAdminRepository: AdminRepository = {
 			.sort((a, b) => b.createdAt - a.createdAt);
 	},
 
+	async listFormSubmissions(): Promise<AdminFormSubmission[]> {
+		const { data, error } = await getServiceClient()
+			.from('form_submissions')
+			.select(
+				'tracking_id, source_id, kind, name, email, phone, drop_id, variant_id, subject, detail, status, is_spam, created_at'
+			)
+			.order('created_at', { ascending: false });
+		if (error) throw new Error(`form submissions read failed: ${error.message}`);
+
+		return (
+			(data ?? []) as unknown as Array<{
+				tracking_id: string;
+				source_id: string;
+				kind: AdminFormSubmission['kind'];
+				name: string | null;
+				email: string;
+				phone: string | null;
+				drop_id: string | null;
+				variant_id: string | null;
+				subject: string | null;
+				detail: string | null;
+				status: string;
+				is_spam: boolean;
+				created_at: string;
+			}>
+		).map((row) => ({
+			trackingId: row.tracking_id,
+			sourceId: row.source_id,
+			kind: row.kind,
+			name: row.name,
+			email: row.email,
+			phone: row.phone,
+			dropId: row.drop_id,
+			variantId: row.variant_id,
+			subject: row.subject,
+			detail: row.detail,
+			status: row.status,
+			isSpam: row.is_spam,
+			createdAt: Date.parse(row.created_at)
+		}));
+	},
+
 	async listDropRows(): Promise<AdminDropRow[]> {
 		const catalogue = await loadCatalogue();
-		return catalogue.drops.map((drop) => toDropRow(drop, catalogue.variants, catalogue.variantDrop));
+		return catalogue.drops.map((drop) =>
+			toDropRow(drop, catalogue.variants, catalogue.variantDrop)
+		);
 	},
 
 	async findDropRow(slug: string): Promise<AdminDropRow | null> {
@@ -678,10 +791,7 @@ export const supabaseAdminRepository: AdminRepository = {
 		const previous = (before as { launch_instant: string }).launch_instant;
 		const next = new Date(launchInstant).toISOString();
 
-		const { error } = await client
-			.from('drops')
-			.update({ launch_instant: next })
-			.eq('id', dropId);
+		const { error } = await client.from('drops').update({ launch_instant: next }).eq('id', dropId);
 		if (error) throw new Error(`launch instant write failed: ${error.message}`);
 
 		await writeAudit(actor, `launch ${previous} -> ${next}`, 'drop', dropId, {
@@ -726,7 +836,10 @@ export const supabaseAdminRepository: AdminRepository = {
 			service
 				.from('order_lines')
 				.select('order_id, quantity, reservation_id')
-				.in('order_id', orders.map((o) => o.id)),
+				.in(
+					'order_id',
+					orders.map((o) => o.id)
+				),
 			loadCustomerEmails(orders.map((o) => o.customer_id))
 		]);
 		if (linesRes.error) throw new Error(`order_lines read failed: ${linesRes.error.message}`);
@@ -778,7 +891,9 @@ export const supabaseAdminRepository: AdminRepository = {
 				.eq('order_id', id),
 			service
 				.from('payments')
-				.select('id, order_id, reservation_id, kind, gateway, gateway_payment_id, amount_paise, state, created_at')
+				.select(
+					'id, order_id, reservation_id, kind, gateway, gateway_payment_id, amount_paise, state, created_at'
+				)
 				.eq('order_id', id),
 			loadCustomerEmails([order.customer_id])
 		]);
@@ -817,9 +932,7 @@ export const supabaseAdminRepository: AdminRepository = {
 				pieceNumber: line.piece_number,
 				reservationId: line.reservation_id
 			})),
-			payments: payments
-				.map(toAdminPayment)
-				.sort((a, b) => a.createdAt - b.createdAt)
+			payments: payments.map(toAdminPayment).sort((a, b) => a.createdAt - b.createdAt)
 		};
 	},
 
@@ -881,8 +994,13 @@ export const supabaseAdminRepository: AdminRepository = {
 		const catalogue = await loadCatalogue();
 		const { data: lineData, error: lineError } = await service
 			.from('order_lines')
-			.select('order_id, variant_id, reservation_id, quantity, piece_number, sku_snapshot, name_snapshot')
-			.in('order_id', orders.map((o) => o.id));
+			.select(
+				'order_id, variant_id, reservation_id, quantity, piece_number, sku_snapshot, name_snapshot'
+			)
+			.in(
+				'order_id',
+				orders.map((o) => o.id)
+			);
 		if (lineError) throw new Error(`order_lines read failed: ${lineError.message}`);
 		const lines = (lineData ?? []) as unknown as OrderLineRow[];
 
@@ -946,7 +1064,9 @@ export const supabaseAdminRepository: AdminRepository = {
 			loadCustomerEmails([row.customer_id]),
 			service
 				.from('payments')
-				.select('id, order_id, reservation_id, kind, gateway, gateway_payment_id, amount_paise, state, created_at')
+				.select(
+					'id, order_id, reservation_id, kind, gateway, gateway_payment_id, amount_paise, state, created_at'
+				)
 				.eq('reservation_id', id),
 			service.from('order_lines').select('order_id').eq('reservation_id', id).limit(1)
 		]);
@@ -1028,7 +1148,7 @@ export const supabaseAdminRepository: AdminRepository = {
 	async listContact(filter): Promise<AdminContactSubmission[]> {
 		let query = getServiceClient()
 			.from('contact_submissions')
-			.select('id, name, email, subject, message, status, is_spam, created_at')
+			.select('id, tracking_id, name, email, subject, message, status, is_spam, created_at')
 			.order('created_at', { ascending: false });
 		if (filter?.status) query = query.eq('status', filter.status);
 
@@ -1038,6 +1158,7 @@ export const supabaseAdminRepository: AdminRepository = {
 		return (
 			(data ?? []) as unknown as Array<{
 				id: string;
+				tracking_id: string;
 				name: string;
 				email: string;
 				subject: string;
@@ -1048,6 +1169,7 @@ export const supabaseAdminRepository: AdminRepository = {
 			}>
 		).map((row) => ({
 			id: row.id,
+			trackingId: row.tracking_id,
 			name: row.name,
 			email: row.email,
 			subject: row.subject,

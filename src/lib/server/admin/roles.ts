@@ -22,6 +22,7 @@ import type { AdminActor, StaffRole } from './types';
 
 export const ADMIN_SECTIONS = [
 	'dashboard',
+	'submissions',
 	'drops',
 	'demand',
 	'orders',
@@ -72,14 +73,60 @@ export type AdminNavItem = {
 
 /** Ordered as the work is done: read the numbers, then act on them. */
 const NAV: readonly AdminNavItem[] = [
-	{ section: 'dashboard', href: '/admin', label: 'Reports', blurb: 'Performance, ledger, demand, revenue' },
-	{ section: 'demand', href: '/admin/demand', label: 'Demand', blurb: 'Requests, notify-me and waitlist by size' },
-	{ section: 'drops', href: '/admin/drops', label: 'Drops', blurb: 'State, launch instant, stock and caps' },
-	{ section: 'orders', href: '/admin/orders', label: 'Orders', blurb: 'Payment, packing and dispatch' },
-	{ section: 'reservations', href: '/admin/reservations', label: 'Reservations', blurb: 'Deposits, balances, piece numbers' },
-	{ section: 'fulfilment', href: '/admin/orders/packing-list', label: 'Packing list', blurb: 'Printable list and address labels' },
-	{ section: 'contact', href: '/admin/contact', label: 'Contact', blurb: 'Submissions from the contact form' },
-	{ section: 'layout', href: '/admin/layout', label: 'Layout', blurb: 'Pages, banners, campaign slots, navigation' }
+	{
+		section: 'dashboard',
+		href: '/admin',
+		label: 'Reports',
+		blurb: 'Performance, ledger, demand, revenue'
+	},
+	{
+		section: 'submissions',
+		href: '/admin/submissions',
+		label: 'Submissions',
+		blurb: 'All customer forms and tracking IDs'
+	},
+	{
+		section: 'demand',
+		href: '/admin/demand',
+		label: 'Demand',
+		blurb: 'Requests, notify-me and waitlist by size'
+	},
+	{
+		section: 'drops',
+		href: '/admin/drops',
+		label: 'Drops',
+		blurb: 'State, launch instant, stock and caps'
+	},
+	{
+		section: 'orders',
+		href: '/admin/orders',
+		label: 'Orders',
+		blurb: 'Payment, packing and dispatch'
+	},
+	{
+		section: 'reservations',
+		href: '/admin/reservations',
+		label: 'Reservations',
+		blurb: 'Deposits, balances, piece numbers'
+	},
+	{
+		section: 'fulfilment',
+		href: '/admin/orders/packing-list',
+		label: 'Packing list',
+		blurb: 'Printable list and address labels'
+	},
+	{
+		section: 'contact',
+		href: '/admin/contact',
+		label: 'Contact',
+		blurb: 'Submissions from the contact form'
+	},
+	{
+		section: 'layout',
+		href: '/admin/layout',
+		label: 'Layout',
+		blurb: 'Pages, banners, campaign slots, navigation'
+	}
 ];
 
 /**
@@ -117,6 +164,7 @@ export function safeNext(next: string | null, role: StaffRole): string {
 export function sectionForRoute(routeId: string | null): AdminSection {
 	const id = routeId ?? '/admin';
 	if (id.startsWith('/admin/orders/packing-list')) return 'fulfilment';
+	if (id.startsWith('/admin/submissions')) return 'submissions';
 	if (id.startsWith('/admin/orders')) return 'orders';
 	if (id.startsWith('/admin/reservations')) return 'reservations';
 	if (id.startsWith('/admin/demand')) return 'demand';

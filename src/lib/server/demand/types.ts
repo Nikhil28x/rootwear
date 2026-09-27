@@ -60,6 +60,12 @@ export type NotifyRequestInput = {
  */
 export type DemandWriteStatus = 'recorded' | 'already';
 
+export type DemandWriteResult = {
+	readonly status: DemandWriteStatus;
+	/** Immutable reference shown to the customer and searchable in admin. */
+	readonly trackingId: string;
+};
+
 /** One row of app.demand_board, per drop and size. */
 export type DemandRow = {
 	readonly dropId: string;

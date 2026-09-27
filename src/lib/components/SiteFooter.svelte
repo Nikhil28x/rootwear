@@ -30,11 +30,12 @@
 			alt="Rootwear's illustrated tree manifesto: before we build, we listen; built from the ground up"
 			loading="lazy"
 		/>
+		<span class="brand-footer__desktop-tm" aria-hidden="true">TM</span>
 		<figcaption class="brand-footer__desktop-tagline">Established in Process</figcaption>
 	</figure>
 
 	<div class="brand-footer__mobile-lockup" aria-hidden="true">
-		<p>ROOTWEAR</p>
+		<p>ROOTWEAR<sup>TM</sup></p>
 		<span>Established in Process</span>
 		<small>Built from the ground up.</small>
 	</div>

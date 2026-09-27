@@ -24,6 +24,7 @@ import type { RequestEvent } from '@sveltejs/kit';
 import { getServiceClient } from '$lib/server/db/clients';
 import { isSupabaseConfigured } from '$lib/server/env';
 import type { AdminActor, StaffRole } from './types';
+import { readLocalAdminSession } from './local-session';
 
 export type AdminAuth =
 	| { readonly status: 'anonymous' }
@@ -67,6 +68,19 @@ export function resolveAdminAuth(event: RequestEvent): Promise<AdminAuth> {
 }
 
 async function resolve(event: RequestEvent): Promise<AdminAuth> {
+	const localId = await readLocalAdminSession(event.cookies);
+	if (localId) {
+		return {
+			status: 'staff',
+			actor: {
+				userId: 'local-owner',
+				email: localId,
+				role: 'owner',
+				preview: true
+			}
+		};
+	}
+
 	const preview = previewRole();
 	if (preview) {
 		return {

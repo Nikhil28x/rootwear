@@ -25,6 +25,7 @@ export type DemandSuccess = {
 	 */
 	readonly status: 'recorded' | 'already';
 	readonly email: string;
+	readonly trackingId: string;
 };
 
 export type DemandProblem = {

@@ -99,8 +99,9 @@ export const actions: Actions = {
 
 		const { user } = await locals.safeGetSession();
 
+		let trackingId = '';
 		try {
-			await contactInbox.submit({
+			const receipt = await contactInbox.submit({
 				name: values.name,
 				email: values.email,
 				// Stored as the readable label, so the inbox reads as English.
@@ -109,6 +110,7 @@ export const actions: Actions = {
 				userId: user?.id ?? null,
 				isSpam: trap.length > 0
 			});
+			trackingId = receipt.trackingId;
 		} catch (cause) {
 			console.error('[contact] submit failed', cause);
 			return fail(500, {
@@ -122,6 +124,6 @@ export const actions: Actions = {
 			});
 		}
 
-		return { sent: true, name: values.name, email: values.email };
+		return { sent: true, name: values.name, email: values.email, trackingId };
 	}
 };

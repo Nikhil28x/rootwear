@@ -34,6 +34,7 @@ export const adminRepo: AdminRepository = {
 	revenueByDrop: () => select().revenueByDrop(),
 	listDemandRows: () => select().listDemandRows(),
 	listDemandEntries: (filter) => select().listDemandEntries(filter),
+	listFormSubmissions: () => select().listFormSubmissions(),
 	listDropRows: () => select().listDropRows(),
 	findDropRow: (slug) => select().findDropRow(slug),
 	setDropState: (input) => select().setDropState(input),

@@ -14,6 +14,7 @@
 import type { DropState } from '$lib/domain/drop-state';
 import type {
 	AdminContactSubmission,
+	AdminFormSubmission,
 	AdminDropRow,
 	AdminOrderDetail,
 	AdminOrderSummary,
@@ -43,10 +44,9 @@ export interface AdminRepository {
 	/** Reads app.demand_board — counts by drop and size. */
 	listDemandRows(): Promise<DemandRow[]>;
 	/** The individual people behind those counts, with dates. §13 export feeds off this. */
-	listDemandEntries(filter?: {
-		dropId?: string;
-		kind?: DemandEntryKind;
-	}): Promise<DemandEntry[]>;
+	listDemandEntries(filter?: { dropId?: string; kind?: DemandEntryKind }): Promise<DemandEntry[]>;
+	/** One chronological inbox over every customer lead form. */
+	listFormSubmissions(): Promise<AdminFormSubmission[]>;
 
 	/* --- drops ------------------------------------------------------------ */
 

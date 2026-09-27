@@ -58,6 +58,9 @@
 				? `You are already on the list for ${size}. We will write to ${done.email} the moment it comes back.`
 				: `Noted. We will write to ${done.email} when ${size} comes back, and about nothing else.`}
 		</p>
+		<p class="mt-3 text-[11px] font-medium tracking-[0.18em] uppercase {muted}">
+			Reference {done.trackingId}
+		</p>
 	{:else}
 		<form
 			method="POST"
@@ -92,7 +95,9 @@
 			/>
 
 			{#if problem?.field === 'form'}
-				<p class="border-l-2 border-gold pl-3 text-[13px] {muted}" role="alert">{problem.message}</p>
+				<p class="border-l-2 border-gold pl-3 text-[13px] {muted}" role="alert">
+					{problem.message}
+				</p>
 			{/if}
 
 			<Button type="submit" variant="outline" {surface}>Notify me</Button>

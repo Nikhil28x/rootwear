@@ -37,6 +37,11 @@ export const policies: PolicyRepository = {
 };
 
 export { contactInbox } from './contact';
-export type { ContactRepository, ContactSubmission, ContactWriteStatus } from './contact';
+export type {
+	ContactRepository,
+	ContactSubmission,
+	ContactWriteResult,
+	ContactWriteStatus
+} from './contact';
 export { blocksToText, excerptAround, headingsOf, queryTerms, scorePolicy } from './text';
 export type { Policy, PolicyBlock, PolicyLink, PolicyRepository } from './types';

@@ -13,7 +13,13 @@
 	let boards = $derived.by(() => {
 		const byDrop = new Map<
 			string,
-			{ dropId: string; dropName: string; dropSlug: string; dropState: string; rows: typeof data.rows }
+			{
+				dropId: string;
+				dropName: string;
+				dropSlug: string;
+				dropState: string;
+				rows: typeof data.rows;
+			}
 		>();
 		for (const row of data.rows) {
 			const existing = byDrop.get(row.dropId);
@@ -50,6 +56,7 @@
 	const KIND_LABEL: Record<string, string> = {
 		request: 'Requested',
 		notify_me: 'Notify me',
+		preorder: 'Pre-order',
 		waitlist: 'Waitlist'
 	};
 
@@ -95,7 +102,9 @@
 <!-- Filter / sort. A GET form, so it works with no JavaScript. -->
 <form method="GET" class="mt-12 flex flex-wrap items-end gap-6 border-y border-white/10 py-6">
 	<div class="flex min-w-[12rem] flex-col gap-2">
-		<label for="f-drop" class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">Drop</label>
+		<label for="f-drop" class="text-[11px] font-medium tracking-[0.2em] text-stone-400 uppercase"
+			>Drop</label
+		>
 		<select
 			id="f-drop"
 			name="drop"
@@ -110,22 +119,27 @@
 	</div>
 
 	<div class="flex min-w-[10rem] flex-col gap-2">
-		<label for="f-kind" class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">Kind</label>
+		<label for="f-kind" class="text-[11px] font-medium tracking-[0.2em] text-stone-400 uppercase"
+			>Kind</label
+		>
 		<select
 			id="f-kind"
 			name="kind"
 			value={data.filter.kind}
 			class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-[15px] text-stone-100 outline-none focus:border-white"
 		>
-			<option value="">All three</option>
+			<option value="">All four</option>
 			<option value="request">Drop requests</option>
 			<option value="notify_me">Notify-me</option>
+			<option value="preorder">Pre-orders</option>
 			<option value="waitlist">Waitlist</option>
 		</select>
 	</div>
 
 	<div class="flex min-w-[10rem] flex-col gap-2">
-		<label for="f-sort" class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">Sort</label>
+		<label for="f-sort" class="text-[11px] font-medium tracking-[0.2em] text-stone-400 uppercase"
+			>Sort</label
+		>
 		<select
 			id="f-sort"
 			name="sort"
@@ -140,21 +154,21 @@
 
 	<button
 		type="submit"
-		class="border border-white/35 px-7 py-3 text-[11px] tracking-[0.2em] text-stone-100 uppercase transition hover:bg-white hover:text-black font-medium"
+		class="border border-white/35 px-7 py-3 text-[11px] font-medium tracking-[0.2em] text-stone-100 uppercase transition hover:bg-white hover:text-black"
 	>
 		Apply
 	</button>
 
 	<a
 		href={exportHref}
-		class="border border-gold px-7 py-3 text-[11px] tracking-[0.2em] text-gold uppercase transition hover:bg-gold hover:text-forest-black font-medium"
+		class="border border-gold px-7 py-3 text-[11px] font-medium tracking-[0.2em] text-gold uppercase transition hover:bg-gold hover:text-forest-black"
 		data-sveltekit-reload
 	>
 		Export CSV
 	</a>
 	<a
 		href="/admin/demand"
-		class="text-[11px] tracking-[0.2em] text-stone-400 uppercase underline underline-offset-4 hover:text-stone-200 font-medium"
+		class="text-[11px] font-medium tracking-[0.2em] text-stone-400 uppercase underline underline-offset-4 hover:text-stone-200"
 	>
 		Clear
 	</a>
@@ -173,7 +187,7 @@
 
 			<TableShell caption="{board.dropName} demand by size" captionVisible={false}>
 				<thead>
-					<tr class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
+					<tr class="text-[11px] font-medium tracking-[0.2em] text-stone-400 uppercase">
 						<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Size</th>
 						<th scope="col" class="border-b border-white/10 px-4 py-3 text-right">Requests</th>
 						<th scope="col" class="border-b border-white/10 px-4 py-3 text-right">Notify-me</th>
@@ -191,9 +205,15 @@
 							>
 								{row.size}
 							</th>
-							<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">{row.requests}</td>
-							<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">{row.notifyMe}</td>
-							<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">{row.waitlist}</td>
+							<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums"
+								>{row.requests}</td
+							>
+							<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums"
+								>{row.notifyMe}</td
+							>
+							<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums"
+								>{row.waitlist}</td
+							>
 							<td
 								class="border-b border-white/5 px-4 py-3 text-right tabular-nums {total > 0
 									? 'text-paper'
@@ -224,7 +244,8 @@
 		note="{data.entries.length} entr{data.entries.length === 1 ? 'y' : 'ies'}"
 	>
 		<thead>
-			<tr class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
+			<tr class="text-[11px] font-medium tracking-[0.2em] text-stone-400 uppercase">
+				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Reference</th>
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Kind</th>
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Drop</th>
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Size</th>
@@ -237,6 +258,11 @@
 		<tbody>
 			{#each data.entries as entry (entry.id)}
 				<tr class="align-top text-stone-200">
+					<td
+						class="border-b border-white/5 px-4 py-3 text-[12px] whitespace-nowrap text-gold tabular-nums"
+					>
+						{entry.trackingId ?? '—'}
+					</td>
 					<td class="border-b border-white/5 px-4 py-3">
 						<StatePill
 							label={KIND_LABEL[entry.kind] ?? entry.kind}
@@ -244,11 +270,17 @@
 						/>
 					</td>
 					<td class="border-b border-white/5 px-4 py-3 text-[15px]">{entry.dropName}</td>
-					<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal text-paper">
+					<th
+						scope="row"
+						class="border-b border-white/5 px-4 py-3 text-left font-normal text-paper"
+					>
 						{entry.size ?? '—'}
 					</th>
 					<td class="border-b border-white/5 px-4 py-3 text-[15px]">
+						{#if entry.name}<span class="mb-1 block text-paper">{entry.name}</span>{/if}
 						{entry.email}
+						{#if entry.phone}<span class="mt-1 block text-[13px] text-stone-400">{entry.phone}</span
+							>{/if}
 						{#if entry.note}
 							<span class="mt-1 block max-w-[28rem] text-[13px] leading-relaxed text-stone-400">
 								{entry.note}
@@ -258,16 +290,20 @@
 					<td class="border-b border-white/5 px-4 py-3 text-right text-stone-400 tabular-nums">
 						{entry.position ?? '—'}
 					</td>
-					<td class="border-b border-white/5 px-4 py-3 text-[13px] tracking-[0.12em] text-stone-400 uppercase font-medium">
+					<td
+						class="border-b border-white/5 px-4 py-3 text-[13px] font-medium tracking-[0.12em] text-stone-400 uppercase"
+					>
 						{humanise(entry.state)}
 					</td>
-					<td class="border-b border-white/5 px-4 py-3 text-[13px] whitespace-nowrap text-stone-400 tabular-nums">
+					<td
+						class="border-b border-white/5 px-4 py-3 text-[13px] whitespace-nowrap text-stone-400 tabular-nums"
+					>
 						{shortDateTime(entry.createdAt)}
 					</td>
 				</tr>
 			{:else}
 				<tr>
-					<td colspan="7" class="px-4 py-10 text-[15px] text-stone-400">
+					<td colspan="8" class="px-4 py-10 text-[15px] text-stone-400">
 						Nothing recorded for this filter. Clear the filter, or wait for the first request.
 					</td>
 				</tr>

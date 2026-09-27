@@ -3,6 +3,13 @@ import type { Actions, PageServerLoad } from './$types';
 import { findStaffRole, previewAvailable } from '$lib/server/admin/session';
 import { safeNext } from '$lib/server/admin/roles';
 import { isSupabaseConfigured } from '$lib/server/env';
+import {
+	localAdminAvailable,
+	localAdminLoginId,
+	setLocalAdminSession,
+	verifyLocalAdmin
+} from '$lib/server/admin/local-session';
+import { env } from '$env/dynamic/private';
 
 /**
  * RW-151 — Staff sign-in.
@@ -28,7 +35,9 @@ export const load: PageServerLoad = async ({ url }) => {
 	return {
 		next: url.searchParams.get('next'),
 		configured: isSupabaseConfigured(),
-		canPreview: previewAvailable()
+		canPreview: previewAvailable(),
+		canLocal: localAdminAvailable(),
+		loginId: localAdminLoginId()
 	};
 };
 
@@ -37,36 +46,47 @@ const GENERIC_FAILURE = 'Those details did not match a Rootwear staff account.';
 export const actions: Actions = {
 	default: async (event) => {
 		const form = await event.request.formData();
-		const email = String(form.get('email') ?? '').trim();
+		const loginId = String(form.get('email') ?? '').trim();
 		const password = String(form.get('password') ?? '');
 		const next = String(form.get('next') ?? '') || null;
 
-		if (!email || !password) {
-			return fail(400, { email, error: 'Enter both an email address and a password.' });
+		if (!loginId || !password) {
+			return fail(400, { email: loginId, error: 'Enter both a user ID and a password.' });
 		}
 
 		const supabase = event.locals.supabase;
 		if (!supabase) {
+			if (verifyLocalAdmin(loginId, password)) {
+				await setLocalAdminSession(event.cookies);
+				redirect(303, safeNext(next, 'owner'));
+			}
 			return fail(503, {
-				email,
-				error:
-					'Supabase is not configured on this deployment, so there is nothing to sign in to. ' +
-					'Set PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY, then create a staff account ' +
-					'with scripts/create-admin.mjs.'
+				email: loginId,
+				error: localAdminAvailable()
+					? GENERIC_FAILURE
+					: 'Admin access is not configured on this deployment. Set the Supabase keys or the local admin environment values.'
 			});
 		}
 
-		const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+		const authEmail =
+			loginId.toLowerCase() === (env.ADMIN_LOGIN_ID ?? '').toLowerCase()
+				? env.ADMIN_EMAIL || loginId
+				: loginId;
+
+		const { data, error: authError } = await supabase.auth.signInWithPassword({
+			email: authEmail,
+			password
+		});
 
 		if (authError || !data.user) {
-			return fail(401, { email, error: GENERIC_FAILURE });
+			return fail(401, { email: loginId, error: GENERIC_FAILURE });
 		}
 
 		// Signed in is not staff. app.staff is the membership list.
 		const role = await findStaffRole(data.user.id);
 		if (!role) {
 			await supabase.auth.signOut();
-			return fail(403, { email, error: GENERIC_FAILURE });
+			return fail(403, { email: loginId, error: GENERIC_FAILURE });
 		}
 
 		redirect(303, safeNext(next, role));

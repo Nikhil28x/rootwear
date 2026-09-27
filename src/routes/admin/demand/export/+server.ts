@@ -16,7 +16,7 @@ import { csvDate, csvResponse, toCsv } from '$lib/server/admin/csv';
  * checks as every other owner-only screen — a session AND a role — and it
  * carries them itself. An endpoint does not run the layout guard.
  */
-const KINDS: DemandEntryKind[] = ['request', 'notify_me', 'waitlist'];
+const KINDS: DemandEntryKind[] = ['request', 'notify_me', 'preorder', 'waitlist'];
 
 export const GET: RequestHandler = async (event) => {
 	const auth = await resolveAdminAuth(event);
@@ -33,13 +33,29 @@ export const GET: RequestHandler = async (event) => {
 	const entries = await adminRepo.listDemandEntries({ dropId, kind });
 
 	const body = toCsv(
-		['kind', 'drop', 'drop_slug', 'size', 'email', 'position', 'state', 'note', 'recorded_at'],
+		[
+			'tracking_id',
+			'kind',
+			'drop',
+			'drop_slug',
+			'size',
+			'name',
+			'email',
+			'phone',
+			'position',
+			'state',
+			'note',
+			'recorded_at'
+		],
 		entries.map((entry) => [
+			entry.trackingId ?? '',
 			entry.kind,
 			entry.dropName,
 			entry.dropSlug,
 			entry.size ?? '',
+			entry.name ?? '',
 			entry.email,
+			entry.phone ?? '',
 			entry.position ?? '',
 			entry.state,
 			entry.note ?? '',

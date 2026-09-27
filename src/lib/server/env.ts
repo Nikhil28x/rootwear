@@ -40,9 +40,18 @@ export const CRON_SECRET = () => required('CRON_SECRET');
  * fixtures and Postgres, with no other code change.
  */
 export function catalogueSource(): 'mock' | 'supabase' {
-	return optional('CATALOGUE_SOURCE') === 'supabase' ? 'supabase' : 'mock';
+	const requested = optional('CATALOGUE_SOURCE');
+	if (requested === 'mock' || requested === 'supabase') return requested;
+
+	// Once the three backend values exist, live storage is the default. Mock
+	// mode remains available as an explicit local override.
+	return isBackendConfigured() ? 'supabase' : 'mock';
 }
 
 export function isSupabaseConfigured(): boolean {
 	return Boolean(optional('PUBLIC_SUPABASE_URL') && optional('PUBLIC_SUPABASE_ANON_KEY'));
+}
+
+export function isBackendConfigured(): boolean {
+	return Boolean(isSupabaseConfigured() && optional('SUPABASE_SERVICE_ROLE_KEY'));
 }

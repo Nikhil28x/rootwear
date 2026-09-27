@@ -53,14 +53,17 @@
 		<p class="mt-1">
 			We will write to {result.email} when Drop 01 opens. Nothing has been charged.
 		</p>
+		<p class="mt-3 text-[11px] font-medium tracking-[0.18em] uppercase">
+			Reference {result.trackingId}
+		</p>
 	</div>
 {:else}
 	<form method="POST" action="?/preorder" class="flex flex-col gap-5 border-t {rule} pt-6">
 		<input type="hidden" name="dropSlug" value={dropSlug} />
 
 		<p class="text-[13px] leading-relaxed {muted}">
-			Tell us where to reach you and we will hold your size back when the drop opens. No payment
-			is taken now.
+			Tell us where to reach you and we will hold your size back when the drop opens. No payment is
+			taken now.
 		</p>
 
 		<Field

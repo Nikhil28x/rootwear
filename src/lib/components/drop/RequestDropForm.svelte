@@ -67,6 +67,9 @@
 				? `You are already on the list for this size. We have your note against ${done.email} and it is counted once.`
 				: `Counted. Your size is on the board for ${dropName}, and we will write to ${done.email} if it is cut again.`}
 		</p>
+		<p class="text-[11px] font-medium tracking-[0.18em] uppercase {faint}">
+			Reference {done.trackingId}
+		</p>
 		<p class="text-[13px] {faint}">Want a second size as well? Add it below.</p>
 	{/if}
 

@@ -127,7 +127,7 @@ export async function handleRequestDrop(
 	const rawNote = String(data.get('note') ?? '').trim();
 	const note = rawNote.length > 0 ? rawNote.slice(0, MAX_NOTE) : null;
 
-	const status = await demand.requestDrop({
+	const receipt = await demand.requestDrop({
 		dropId: drop.id,
 		variantId: variant.id,
 		email,
@@ -137,7 +137,14 @@ export async function handleRequestDrop(
 		consentedAt: event.locals.now
 	});
 
-	return { ok: true, intent: 'request', target: dropSlug, status, email };
+	return {
+		ok: true,
+		intent: 'request',
+		target: dropSlug,
+		status: receipt.status,
+		email,
+		trackingId: receipt.trackingId
+	};
 }
 
 /**
@@ -195,14 +202,21 @@ export async function handleNotifyMe(
 		);
 	}
 
-	const status = await demand.notifyMe({
+	const receipt = await demand.notifyMe({
 		variantId: variant.id,
 		email,
 		consentSource: readSource(data.get('source'), defaultSource),
 		consentedAt: event.locals.now
 	});
 
-	return { ok: true, intent: 'notify', target: variantId, status, email };
+	return {
+		ok: true,
+		intent: 'notify',
+		target: variantId,
+		status: receipt.status,
+		email,
+		trackingId: receipt.trackingId
+	};
 }
 
 /** §10 India: ten digits starting 6-9. Same rule as the checkout address form. */
@@ -249,7 +263,7 @@ export async function handlePreOrder(
 		return fail_('consent', 'Tick the box so we can contact you about this drop.');
 	}
 
-	const status = await demand.preorderSignup({
+	const receipt = await demand.preorderSignup({
 		dropId: drop.id,
 		variantId: variant.id,
 		name,
@@ -259,5 +273,12 @@ export async function handlePreOrder(
 		consentedAt: event.locals.now
 	});
 
-	return { ok: true, intent: 'preorder', target: dropSlug, status, email };
+	return {
+		ok: true,
+		intent: 'preorder',
+		target: dropSlug,
+		status: receipt.status,
+		email,
+		trackingId: receipt.trackingId
+	};
 }

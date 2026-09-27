@@ -138,11 +138,12 @@ export type DemandRow = {
 	readonly waitlist: number;
 };
 
-export type DemandEntryKind = 'request' | 'notify_me' | 'waitlist';
+export type DemandEntryKind = 'request' | 'notify_me' | 'preorder' | 'waitlist';
 
 /** One named person behind a demand figure. §13: the list belongs to Rootwear. */
 export type DemandEntry = {
 	readonly id: string;
+	readonly trackingId: string | null;
 	readonly kind: DemandEntryKind;
 	readonly dropId: string;
 	readonly dropSlug: string;
@@ -150,6 +151,8 @@ export type DemandEntry = {
 	readonly variantId: string | null;
 	readonly size: Size | null;
 	readonly email: string;
+	readonly name: string | null;
+	readonly phone: string | null;
 	readonly note: string | null;
 	readonly createdAt: number;
 	/** Waitlist position, or null for the other two kinds. */
@@ -330,11 +333,32 @@ export type PackingListEntry = {
 
 export type AdminContactSubmission = {
 	readonly id: string;
+	readonly trackingId: string;
 	readonly name: string;
 	readonly email: string;
 	readonly subject: string;
 	readonly message: string;
 	readonly status: ContactStatus;
+	readonly isSpam: boolean;
+	readonly createdAt: number;
+};
+
+export const FORM_SUBMISSION_KINDS = ['contact', 'drop_request', 'notify_me', 'preorder'] as const;
+export type FormSubmissionKind = (typeof FORM_SUBMISSION_KINDS)[number];
+
+/** One row in the owner-only inbox across every customer lead form. */
+export type AdminFormSubmission = {
+	readonly trackingId: string;
+	readonly sourceId: string;
+	readonly kind: FormSubmissionKind;
+	readonly name: string | null;
+	readonly email: string;
+	readonly phone: string | null;
+	readonly dropId: string | null;
+	readonly variantId: string | null;
+	readonly subject: string | null;
+	readonly detail: string | null;
+	readonly status: string;
 	readonly isSpam: boolean;
 	readonly createdAt: number;
 };

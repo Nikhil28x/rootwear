@@ -8,8 +8,8 @@
 	import GrowthRings from '$lib/components/art/GrowthRings.svelte';
 
 	/**
-	 * §03 template 09 — one long read, three movements: the fibre, the label,
-	 * the making. Not split into a story page plus a sustainability page.
+	 * §03 template 09 — one long read, four movements: the lineage, the
+	 * fibre, the label, and the making.
 	 *
 	 * Every string comes from $lib/content/know-your-roots via the server load.
 	 * §14 is enforced there, at the source, rather than in this markup.
@@ -20,11 +20,12 @@
 	let hero = $derived(content.hero);
 	let close = $derived(content.close);
 
-	// The three movements are ordered in the content module and rendered with
+	// The four movements are ordered in the content module and rendered with
 	// bespoke interiors, so they are addressed positionally rather than looped.
-	let fibre = $derived(content.movements[0]);
-	let label = $derived(content.movements[1]);
-	let making = $derived(content.movements[2]);
+	let lineage = $derived(content.movements[0]);
+	let fibre = $derived(content.movements[1]);
+	let label = $derived(content.movements[2]);
+	let making = $derived(content.movements[3]);
 
 	/**
 	 * This page alternates white and forest-black movements, so the header ink
@@ -65,7 +66,7 @@
 			>
 				{#each content.movements as movement (movement.id)}
 					<a
-						class="group flex items-baseline gap-3 text-[11px] tracking-[0.28em] text-forest/75 uppercase transition hover:text-forest font-medium"
+						class="group flex items-baseline gap-3 text-[11px] font-medium tracking-[0.28em] text-forest/75 uppercase transition hover:text-forest"
 						href="#{movement.id}"
 					>
 						<span class="tabular-nums">{movement.index}</span>
@@ -78,7 +79,111 @@
 		</div>
 	</section>
 
-	<!-- ──────────────────────────────────────────────────────── 01 · the fibre -->
+	<!-- 01 · the lineage -->
+	<section
+		id={lineage.id}
+		aria-labelledby="movement-{lineage.id}"
+		data-header-theme="dark"
+		class="relative isolate scroll-mt-28 overflow-hidden bg-forest text-paper"
+	>
+		<div class="pointer-events-none absolute inset-x-0 top-0 h-[52rem] text-gold">
+			<RootSystem opacity={0.09} depth={8} />
+		</div>
+
+		<div class="relative mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
+			<div class="mx-auto max-w-3xl text-center">
+				<svg
+					class="mx-auto mb-9 h-14 w-10 text-gold"
+					viewBox="0 0 40 56"
+					fill="none"
+					aria-hidden="true"
+				>
+					<path
+						d="M20 2v22M20 24c0-6-4-9-9-10M20 24c0-6 4-9 9-10M20 30c0-4-3-6-7-7M20 30c0-4 3-6 7-7"
+						stroke="currentColor"
+						stroke-width="1.3"
+						stroke-linecap="round"
+					/>
+					<path
+						d="M20 24c-3 5-9 7-14 7M20 24c3 5 9 7 14 7M20 30c-2 6-7 9-13 10M20 30c2 6 7 9 13 10M20 24v24"
+						stroke="currentColor"
+						stroke-width="1.1"
+						stroke-linecap="round"
+						opacity=".8"
+					/>
+				</svg>
+				<Eyebrow tone="gold" surface="dark">{lineage.index} — {lineage.eyebrow}</Eyebrow>
+				<h2
+					id="movement-{lineage.id}"
+					class="display mt-8 text-[clamp(2.6rem,7vw,5.75rem)] leading-[0.88] tracking-[-0.05em]"
+				>
+					{#each lineage.title as line, i (i)}<span class="block">{line}</span>{/each}
+				</h2>
+				<p
+					class="display mx-auto mt-8 max-w-[34ch] text-xl leading-[1.55] text-paper/75 italic sm:text-2xl"
+				>
+					{lineage.lede}
+				</p>
+				<p class="mx-auto mt-6 max-w-xl text-sm leading-[1.8] text-paper/55">
+					{content.lineage.close.defiant}
+				</p>
+			</div>
+
+			<div
+				class="mx-auto my-16 flex items-center justify-center gap-4 text-gold sm:my-20"
+				aria-hidden="true"
+			>
+				<span class="h-px w-16 bg-current opacity-50"></span>
+				<span class="size-1.5 rotate-45 bg-current"></span>
+				<span class="h-px w-16 bg-current opacity-50"></span>
+			</div>
+
+			<ol class="mx-auto max-w-3xl">
+				{#each content.lineage.entries as entry (entry.era)}
+					<li
+						class="relative ml-1 border-l border-gold/30 pb-14 pl-8 last:border-transparent last:pb-0 sm:pl-12"
+					>
+						<span
+							class="absolute top-1.5 -left-[5px] size-[9px] rounded-full bg-gold ring-4 ring-forest"
+							aria-hidden="true"
+						></span>
+						<p class="text-[11px] font-medium tracking-[0.24em] text-gold uppercase">
+							{entry.era}
+						</p>
+						<h3 class="display mt-2 text-[clamp(1.55rem,3.2vw,2rem)] leading-[1.1] text-paper">
+							{entry.title}
+						</h3>
+						<p class="mt-4 max-w-2xl text-[15px] leading-[1.9] text-paper/70">{entry.body}</p>
+						<a
+							class="mt-5 inline-block text-[10px] font-medium tracking-[0.2em] text-paper/65 uppercase underline decoration-gold/60 underline-offset-[6px] transition hover:text-white"
+							href={entry.source.href}
+							target={entry.source.href.startsWith('http') ? '_blank' : undefined}
+							rel={entry.source.href.startsWith('http') ? 'noreferrer noopener' : undefined}
+						>
+							{entry.source.label}{#if entry.source.href.startsWith('http')}<span class="sr-only">
+									(opens in a new tab)</span
+								>{/if}
+						</a>
+					</li>
+				{/each}
+			</ol>
+
+			<div class="mx-auto mt-20 max-w-3xl border-t border-gold/30 pt-12 text-center">
+				<p class="display text-[clamp(1.6rem,4vw,2.35rem)] leading-[1.3] italic">
+					{content.lineage.close.line}
+				</p>
+				<p class="display mt-8 tracking-[0.34em]">{content.lineage.close.sign}</p>
+				<p class="display mt-2 text-base text-gold italic">{content.lineage.close.tag}</p>
+				<div class="mt-8">
+					<Button href={content.lineage.close.action.href} variant="quiet" surface="dark">
+						{content.lineage.close.action.label}
+					</Button>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- 02 · the fibre -->
 	<section
 		id={fibre.id}
 		aria-labelledby="movement-{fibre.id}"
@@ -119,7 +224,7 @@
 					<dl class="self-start">
 						{#each content.hemp.properties as property (property.term)}
 							<div class="border-t border-white/10 py-5 first:border-t-0 first:pt-0">
-								<dt class="text-[12px] tracking-[0.22em] text-stone-100 uppercase font-medium">
+								<dt class="text-[12px] font-medium tracking-[0.22em] text-stone-100 uppercase">
 									{property.term}
 								</dt>
 								<dd class="mt-2 text-[15px] leading-[1.8] text-stone-400">{property.definition}</dd>
@@ -148,7 +253,9 @@
 											>{fact.unit}</span
 										>{/if}
 								</span>
-								<span class="text-[11px] leading-relaxed tracking-[0.2em] text-stone-400 uppercase font-medium">
+								<span
+									class="text-[11px] leading-relaxed font-medium tracking-[0.2em] text-stone-400 uppercase"
+								>
 									{fact.label}
 								</span>
 							</li>
@@ -156,34 +263,10 @@
 					</ul>
 				</div>
 			</div>
-
-			<div
-				class="mt-20 grid gap-8 border-t border-white/10 pt-12 lg:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] lg:gap-16"
-			>
-				<Eyebrow>Older than the label</Eyebrow>
-				<ol class="grid gap-12 md:grid-cols-2 md:gap-16">
-					{#each content.hemp.lineage as entry (entry.era)}
-						<li class="flex flex-col gap-4">
-							<p class="text-[11px] tracking-[0.24em] text-gold uppercase font-medium">
-								{entry.era} · {entry.place}
-							</p>
-							<p class="max-w-md text-[15px] leading-[1.95] text-stone-400">{entry.body}</p>
-							<a
-								class="self-start text-[11px] tracking-[0.2em] text-stone-300 uppercase underline underline-offset-[6px] transition hover:text-white font-medium"
-								href={entry.source.href}
-								target="_blank"
-								rel="noreferrer noopener"
-							>
-								{entry.source.label}<span class="sr-only"> (opens in a new tab)</span>
-							</a>
-						</li>
-					{/each}
-				</ol>
-			</div>
 		</div>
 	</section>
 
-	<!-- ──────────────────────────────────────────────────────── 02 · the label -->
+	<!-- ────────────────────────────────────────────────────── 03 · the label -->
 	<section
 		id={label.id}
 		aria-labelledby="movement-{label.id}"
@@ -214,7 +297,7 @@
 						class="grid gap-4 border-t border-forest/15 py-10 md:grid-cols-[4rem_minmax(0,16rem)_minmax(0,1fr)] md:items-baseline md:gap-10"
 					>
 						<span class="display text-3xl text-forest/70 tabular-nums">{principle.index}</span>
-						<h3 class="text-[12px] tracking-[0.22em] uppercase font-medium">{principle.title}</h3>
+						<h3 class="text-[12px] font-medium tracking-[0.22em] uppercase">{principle.title}</h3>
 						<p class="max-w-2xl text-[15px] leading-[1.95] text-forest/70">{principle.body}</p>
 					</li>
 				{/each}
@@ -226,14 +309,14 @@
 				>
 					{content.whyRootwear.pullquote.line}
 				</blockquote>
-				<figcaption class="mt-7 text-[11px] tracking-[0.28em] text-forest/70 uppercase font-medium">
+				<figcaption class="mt-7 text-[11px] font-medium tracking-[0.28em] text-forest/70 uppercase">
 					{content.whyRootwear.pullquote.attribution}
 				</figcaption>
 			</figure>
 		</div>
 	</section>
 
-	<!-- ─────────────────────────────────────────────────────── 03 · the making -->
+	<!-- 04 · the making -->
 	<section
 		id={making.id}
 		aria-labelledby="movement-{making.id}"

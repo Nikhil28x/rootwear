@@ -12,6 +12,7 @@
  */
 import { getServiceClient } from '$lib/server/db/clients';
 import { catalogueSource, isSupabaseConfigured } from '$lib/server/env';
+import { nextMockTrackingId } from '$lib/server/submissions/tracking';
 
 /** Exactly the columns 0010 accepts from a visitor. */
 export type ContactSubmission = {
@@ -32,31 +33,61 @@ export type ContactSubmission = {
 
 export type ContactWriteStatus = 'received' | 'quarantined';
 
+export type ContactWriteResult = {
+	readonly status: ContactWriteStatus;
+	readonly trackingId: string;
+};
+
 export interface ContactRepository {
-	submit(input: ContactSubmission): Promise<ContactWriteStatus>;
+	submit(input: ContactSubmission): Promise<ContactWriteResult>;
 }
 
 /**
- * Fixture implementation: logs and succeeds.
- *
- * It does NOT pretend to persist. Nothing in the app reads a submission back,
- * so an in-memory list would be a lie told to no one — the log line is the
- * honest version, and it is what a developer running CATALOGUE_SOURCE=mock
- * actually wants to see.
+ * Fixture implementation: held for this dev-server process and exposed to the
+ * fixture admin inbox. Live deployments use Postgres.
  */
+export type MockContactSubmission = ContactSubmission & {
+	readonly id: string;
+	readonly trackingId: string;
+	status: 'new' | 'in_progress' | 'closed';
+	readonly createdAt: number;
+};
+
+const mockContact = new Map<string, MockContactSubmission>();
+
 export const mockContactRepository: ContactRepository = {
-	async submit(input: ContactSubmission): Promise<ContactWriteStatus> {
+	async submit(input: ContactSubmission): Promise<ContactWriteResult> {
+		const trackingId = nextMockTrackingId('CON');
+		mockContact.set(trackingId, {
+			...input,
+			id: `contact-${mockContact.size + 1}`,
+			trackingId,
+			status: 'new',
+			createdAt: Date.now()
+		});
 		if (input.isSpam) {
 			console.info('[contact] honeypot tripped, quarantined:', input.email);
-			return 'quarantined';
+			return { status: 'quarantined', trackingId };
 		}
 		console.info(
 			`[contact] ${input.name} <${input.email}> — ${input.subject}\n` +
 				`          ${input.message.replace(/\s+/g, ' ').slice(0, 160)}`
 		);
-		return 'received';
+		return { status: 'received', trackingId };
 	}
 };
+
+/** Owner-only fixture read used by the admin submissions inbox. */
+export function mockContactSnapshot(): MockContactSubmission[] {
+	return [...mockContact.values()];
+}
+
+export function setMockContactStatus(id: string, status: MockContactSubmission['status']): boolean {
+	const row = [...mockContact.values()].find((submission) => submission.id === id);
+	if (!row) return false;
+	row.status = status;
+	return true;
+}
 
 /**
  * auth.users.id -> app.customers.id. Returns null for a signed-out sender, or
@@ -78,10 +109,10 @@ async function resolveCustomerId(userId: string | null | undefined): Promise<str
 }
 
 export const supabaseContactRepository: ContactRepository = {
-	async submit(input: ContactSubmission): Promise<ContactWriteStatus> {
+	async submit(input: ContactSubmission): Promise<ContactWriteResult> {
 		const customerId = await resolveCustomerId(input.userId);
 
-		const { error } = await getServiceClient()
+		const { data, error } = await getServiceClient()
 			.from('contact_submissions')
 			.insert({
 				name: input.name,
@@ -90,10 +121,15 @@ export const supabaseContactRepository: ContactRepository = {
 				message: input.message,
 				customer_id: customerId,
 				is_spam: input.isSpam ?? false
-			});
+			})
+			.select('tracking_id')
+			.single();
 
 		if (error) throw new Error(`contact submit failed: ${error.message}`);
-		return input.isSpam ? 'quarantined' : 'received';
+		return {
+			status: input.isSpam ? 'quarantined' : 'received',
+			trackingId: String(data.tracking_id)
+		};
 	}
 };
 

@@ -12,18 +12,33 @@
  * so "submitting twice is idempotent" behaves identically in both sources.
  */
 import type { DemandRepository } from './repository';
-import type { DemandRow, DemandWriteStatus, DropRequestInput, NotifyRequestInput,
+import type {
+	DemandRow,
+	DemandWriteResult,
+	DropRequestInput,
+	NotifyRequestInput,
 	PreOrderInput
 } from './types';
 import type { Size } from '$lib/drop/sizes';
 import { drops } from '$lib/server/drops';
+import { nextMockTrackingId } from '$lib/server/submissions/tracking';
 
-type StoredRequest = DropRequestInput & { readonly id: string };
-type StoredNotify = NotifyRequestInput & { readonly id: string };
+export type MockStoredRequest = DropRequestInput & {
+	readonly id: string;
+	readonly trackingId: string;
+};
+export type MockStoredNotify = NotifyRequestInput & {
+	readonly id: string;
+	readonly trackingId: string;
+};
+export type MockStoredPreorder = PreOrderInput & {
+	readonly id: string;
+	readonly trackingId: string;
+};
 
-const requests = new Map<string, StoredRequest>();
-const preorders = new Map<string, PreOrderInput & { id: string }>();
-const notifies = new Map<string, StoredNotify>();
+const requests = new Map<string, MockStoredRequest>();
+const preorders = new Map<string, MockStoredPreorder>();
+const notifies = new Map<string, MockStoredNotify>();
 
 const requestKey = (i: DropRequestInput) => `${i.dropId}|${i.variantId}|${i.email}`;
 const notifyKey = (i: NotifyRequestInput) => `${i.variantId}|${i.email}`;
@@ -42,27 +57,33 @@ async function variantIndex(): Promise<Map<string, { dropId: string; size: Size 
 }
 
 export const mockDemandRepository: DemandRepository = {
-	async requestDrop(input: DropRequestInput): Promise<DemandWriteStatus> {
+	async requestDrop(input: DropRequestInput): Promise<DemandWriteResult> {
 		const key = requestKey(input);
-		if (requests.has(key)) return 'already';
-		requests.set(key, { ...input, id: `req-${requests.size + 1}` });
-		return 'recorded';
+		const existing = requests.get(key);
+		if (existing) return { status: 'already', trackingId: existing.trackingId };
+		const trackingId = nextMockTrackingId('REQ');
+		requests.set(key, { ...input, id: `req-${requests.size + 1}`, trackingId });
+		return { status: 'recorded', trackingId };
 	},
 
-	async notifyMe(input: NotifyRequestInput): Promise<DemandWriteStatus> {
+	async notifyMe(input: NotifyRequestInput): Promise<DemandWriteResult> {
 		const key = notifyKey(input);
-		if (notifies.has(key)) return 'already';
-		notifies.set(key, { ...input, id: `ntf-${notifies.size + 1}` });
-		return 'recorded';
+		const existing = notifies.get(key);
+		if (existing) return { status: 'already', trackingId: existing.trackingId };
+		const trackingId = nextMockTrackingId('NTF');
+		notifies.set(key, { ...input, id: `ntf-${notifies.size + 1}`, trackingId });
+		return { status: 'recorded', trackingId };
 	},
 
-	async preorderSignup(input: PreOrderInput): Promise<DemandWriteStatus> {
+	async preorderSignup(input: PreOrderInput): Promise<DemandWriteResult> {
 		// Idempotent on (variant, email), matching the unique constraint in
 		// 0017 — a repeat submission must not inflate what admin reads.
 		const key = `${input.variantId}|${input.email.toLowerCase()}`;
-		if (preorders.has(key)) return 'already';
-		preorders.set(key, { ...input, id: `pre-${preorders.size + 1}` });
-		return 'recorded';
+		const existing = preorders.get(key);
+		if (existing) return { status: 'already', trackingId: existing.trackingId };
+		const trackingId = nextMockTrackingId('PRE');
+		preorders.set(key, { ...input, id: `pre-${preorders.size + 1}`, trackingId });
+		return { status: 'recorded', trackingId };
 	},
 
 	async demandForDrop(dropId: string): Promise<DemandRow[]> {
@@ -98,3 +119,12 @@ export const mockDemandRepository: DemandRepository = {
 		}));
 	}
 };
+
+/** Owner-only fixture read used by the admin submissions inbox. */
+export function mockDemandSnapshot() {
+	return {
+		requests: [...requests.values()],
+		notifies: [...notifies.values()],
+		preorders: [...preorders.values()]
+	};
+}

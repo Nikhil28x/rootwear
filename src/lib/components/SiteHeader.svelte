@@ -111,11 +111,14 @@
 		class="site-header__shell mx-auto flex max-w-[1600px] items-center justify-between border border-white/15 bg-black/10 px-4 py-3 backdrop-blur-md sm:px-6"
 	>
 		<a class="wordmark text-lg tracking-[0.22em]" href={home} aria-label="Rootwear home">
-			ROOTWEAR
+			ROOTWEAR<sup
+				class="relative -top-[0.7em] ml-1 align-baseline text-[0.4em] leading-none tracking-[0.08em]"
+				aria-hidden="true">TM</sup
+			>
 		</a>
 
 		<nav
-			class="hidden items-center gap-8 text-[12px] tracking-[0.2em] uppercase md:flex font-medium"
+			class="hidden items-center gap-8 text-[12px] font-medium tracking-[0.2em] uppercase md:flex"
 			aria-label="Primary"
 		>
 			{#each items as item (item.href)}
@@ -126,13 +129,13 @@
 		<div class="flex items-center gap-3">
 			{#if cta}
 				<a
-					class="site-header__cta hidden border border-white/25 px-4 py-2 text-[11px] tracking-[0.2em] uppercase transition hover:border-white hover:bg-white hover:text-black sm:block font-medium"
+					class="site-header__cta hidden border border-white/25 px-4 py-2 text-[11px] font-medium tracking-[0.2em] uppercase transition hover:border-white hover:bg-white hover:text-black sm:block"
 					href={cta.href}>{cta.label}</a
 				>
 			{/if}
 
 			<a
-				class="site-header__cta border border-white/25 px-4 py-2 text-[11px] tracking-[0.2em] uppercase transition hover:border-white hover:bg-white hover:text-black font-medium"
+				class="site-header__cta border border-white/25 px-4 py-2 text-[11px] font-medium tracking-[0.2em] uppercase transition hover:border-white hover:bg-white hover:text-black"
 				href="/cart"
 			>
 				Cart{#if cart.count > 0}<span class="ml-2 tabular-nums">({cart.count})</span>{/if}
@@ -159,7 +162,7 @@
 		>
 			{#each items as item (item.href)}
 				<a
-					class="block border-b border-white/10 py-4 text-[15px] tracking-[0.18em] uppercase last:border-0 font-medium"
+					class="block border-b border-white/10 py-4 text-[15px] font-medium tracking-[0.18em] uppercase last:border-0"
 					href={item.href}
 					onclick={() => (menuOpen = false)}
 				>
@@ -168,7 +171,7 @@
 			{/each}
 			{#if cta}
 				<a
-					class="block border-b border-white/10 py-4 text-[15px] tracking-[0.18em] uppercase last:border-0 font-medium"
+					class="block border-b border-white/10 py-4 text-[15px] font-medium tracking-[0.18em] uppercase last:border-0"
 					href={cta.href}
 					onclick={() => (menuOpen = false)}>{cta.label}</a
 				>

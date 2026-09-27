@@ -1,5 +1,6 @@
 /**
- * §03 template 09 — "Know your roots": hemp, why Rootwear, the making.
+ * §03 template 09 — "Know your roots": hemp, its lineage, why Rootwear,
+ * and the making.
  *
  * ONE page, deliberately not split into a story page plus a sustainability
  * page. The copy lives here as structured data rather than inline in the
@@ -33,12 +34,12 @@ export type RootsStep = {
 /** A dated, externally sourced note in the lineage strip. */
 export type RootsLineage = {
 	readonly era: string;
-	readonly place: string;
+	readonly title: string;
 	readonly body: string;
 	readonly source: { readonly label: string; readonly href: string };
 };
 
-/** One of the three movements. `surface` drives the light/dark alternation. */
+/** One of the four movements. `surface` drives the light/dark alternation. */
 export type RootsMovement = {
 	readonly id: string;
 	readonly index: string;
@@ -51,25 +52,34 @@ export type RootsMovement = {
 export const KNOW_YOUR_ROOTS_SEO = {
 	title: 'Know your roots — Rootwear',
 	description:
-		'Hemp as a fibre, why Rootwear exists, and how a drop is made. 30% hemp, 70% cotton, ' +
-		'180 GSM, twenty-five hand-numbered pieces, India only.'
+		'The long history of plant cloth in India, hemp as a fibre, why Rootwear exists, and ' +
+		'how a drop is made. 30% hemp, 70% cotton, 180 GSM, twenty-five hand-numbered pieces.'
 } as const;
 
 export const ROOTS_HERO = {
-	eyebrow: 'The fibre · the label · the making',
+	eyebrow: 'The lineage · the fibre · the label · the making',
 	title: ['Know your', 'roots.'],
 	lede:
-		'Three things worth knowing before you wear one: what the cloth is actually made of, ' +
-		'why this label exists at all, and how a drop gets made. No mythology — the plant, the ' +
-		'decisions, and the hands.',
+		'The long thread that brought plant fibre here, what the cloth is made of, why this ' +
+		'label exists, and how a drop gets made. The history, the plant, the decisions, and the hands.',
 	jumpLabel: 'Skip to'
 } as const;
 
-/** The three movements, in order. The page renders them as one continuous read. */
+/** The four movements, in order. The page renders them as one continuous read. */
 export const ROOTS_MOVEMENTS: readonly RootsMovement[] = [
 	{
-		id: 'hemp',
+		id: 'lineage',
 		index: '01',
+		eyebrow: 'The lineage',
+		title: ['An old thread,', 'carried forward.'],
+		lede:
+			'Plant cloth is not a trend we joined. It is a lineage this land has carried for ' +
+			'eight thousand years.',
+		surface: 'dark'
+	},
+	{
+		id: 'hemp',
+		index: '02',
 		eyebrow: 'The fibre',
 		title: ['It begins', 'as a stalk.'],
 		lede:
@@ -80,7 +90,7 @@ export const ROOTS_MOVEMENTS: readonly RootsMovement[] = [
 	},
 	{
 		id: 'why-rootwear',
-		index: '02',
+		index: '03',
 		eyebrow: 'The label',
 		title: ['Established', 'in Process.'],
 		lede:
@@ -90,7 +100,7 @@ export const ROOTS_MOVEMENTS: readonly RootsMovement[] = [
 	},
 	{
 		id: 'the-making',
-		index: '03',
+		index: '04',
 		eyebrow: 'The making',
 		title: ['How a drop', 'comes to exist.'],
 		lede:
@@ -100,7 +110,7 @@ export const ROOTS_MOVEMENTS: readonly RootsMovement[] = [
 	}
 ] as const;
 
-/* ------------------------------------------------------------------ 01 hemp */
+/* ------------------------------------------------------------------ 02 hemp */
 
 export const HEMP_BODY: readonly string[] = [
 	'Cotton grows as a seed hair: short, fine, spun into a soft and round yarn. Bast fibre runs ' +
@@ -148,30 +158,112 @@ export const HEMP_FACTS = PROVABLE_FACTS;
 
 export const HEMP_LINEAGE: readonly RootsLineage[] = [
 	{
-		era: 'c. 6000 BCE',
-		place: 'East Asia',
+		era: 'c. 6000 BCE · Mehrgarh',
+		title: 'The first thread',
 		body:
-			'Archaeological work places cannabis seeds and fibre in East Asia around eight thousand ' +
-			'years ago. The plant was a material long before it was anything else.',
+			'Cotton fibres mineralised inside a copper bead at Mehrgarh, in present-day Pakistan, ' +
+			'date to the first half of the sixth millennium BCE. They are the earliest known cotton ' +
+			'fibres in the archaeological record: plant cloth was already part of life in this region.',
 		source: {
-			label: 'The research, in Nature',
-			href: 'https://www.nature.com/articles/s41586-025-09065-0'
+			label: 'Read the archaeological record',
+			href: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC9772618/'
 		}
 	},
 	{
-		era: '1885',
-		place: 'Punjab, India',
+		era: 'The Vedic tradition',
+		title: 'Plants worth praising',
 		body:
-			'A hemp fibre sample from Punjab, given by the Royal Botanic Gardens at Kew, is held in ' +
-			'the Smithsonian’s collection. India is not new to this fibre.',
+			'The Atharva Veda contains hymns to plants and their healing power. Later traditions ' +
+			'associate bhang with that sacred plant vocabulary. Translations and identifications ' +
+			'vary, but the underlying idea is clear: useful plants were named, studied, and treated with care.',
 		source: {
-			label: 'The record, in the Smithsonian',
+			label: 'Read the plant history',
+			href: 'https://insa.nic.in/writereaddata/UpLoadedFiles/IJHS/10-43539_2024_128_OnlinePDF225-232.pdf'
+		}
+	},
+	{
+		era: 'Medieval Ayurveda',
+		title: 'Medicine, in measure',
+		body:
+			'Later Ayurvedic and rasaśāstra texts record cannabis as bhangā or vijayā and describe ' +
+			'prepared uses alongside dosage and adverse effects. The record treats it as a potent ' +
+			'material to be handled deliberately, not a cure-all.',
+		source: {
+			label: 'Read the medical history',
+			href: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC5255965/'
+		}
+	},
+	{
+		era: 'The western Himalaya',
+		title: 'The mountain cloth',
+		body:
+			'Across the western Himalaya, hemp stalks have been retted, stripped, spun, and woven ' +
+			'into cordage and cloth. A surviving 1885 fibre sample from Punjab now sits in the ' +
+			'Smithsonian collection; the material history is physical, not imagined.',
+		source: {
+			label: 'See the fibre record',
 			href: 'https://americanhistory.si.edu/collections/object/nmah_648677'
+		}
+	},
+	{
+		era: '1894 · The Empire',
+		title: 'An inconvenient report',
+		body:
+			'The colonial Indian Hemp Drugs Commission gathered evidence across the subcontinent. ' +
+			'Its report distinguished moderate from excessive use and concluded that moderate use ' +
+			'was generally not associated with appreciable harm — a more complicated record than the prohibition story that followed.',
+		source: {
+			label: 'Explore the commission report',
+			href: 'https://wellcomecollection.org/works/ugn4vdz3'
+		}
+	},
+	{
+		era: '1985 · NDPS Act',
+		title: 'The line, and what it left standing',
+		body:
+			'India’s central law defined cannabis around resin and flowering or fruiting tops, ' +
+			'excluding seeds and leaves when they are not accompanied by those tops. It also allows ' +
+			'governments to permit cultivation for fibre, seed, or horticultural purposes.',
+		source: {
+			label: 'Read the Act',
+			href: 'https://www.indiacode.nic.in/bitstream/123456789/6834/1/narcotic-drugs-and-psychotropic-substances-act-1985.pdf'
+		}
+	},
+	{
+		era: '2016 onward · Uttarakhand',
+		title: 'The return to cultivation',
+		body:
+			'Uttarakhand became the first Indian state to regulate hemp cultivation and later ' +
+			'issued the first commercial pilot licence for high-quality fibre. The return is ' +
+			'licensed and measured, but it reconnects the crop with one of its oldest uses.',
+		source: {
+			label: 'Read the legal survey',
+			href: 'https://www.loc.gov/item/2022666115/'
+		}
+	},
+	{
+		era: 'Now · Rootwear',
+		title: 'You are wearing the rootline',
+		body:
+			'Rootwear is a continuation: hemp grown as a crop, spun into cloth, and carried into a ' +
+			'new garment. Every drop is a small act of remembering. You are holding one end of a very old thread.',
+		source: {
+			label: 'See the current drop',
+			href: '/drops'
 		}
 	}
 ] as const;
 
-/* --------------------------------------------------------- 02 why rootwear */
+export const ROOTS_LINEAGE_CLOSE = {
+	defiant:
+		'We did not start this. We are refusing to let it be forgotten — and asking you to wear it knowing what it is.',
+	line: 'Grown slow. Worn loud. Rooted deep.',
+	sign: 'ROOTWEAR',
+	tag: 'Established in Process.',
+	action: { label: 'Join the line', href: '/drops' }
+} as const;
+
+/* ----------------------------------------------------------- 03 why rootwear */
 
 export const WHY_ROOTWEAR_PRINCIPLES: readonly RootsStep[] = [
 	{
@@ -217,7 +309,7 @@ export const WHY_ROOTWEAR_PULLQUOTE = {
 	attribution: 'The house line, and the working method'
 } as const;
 
-/* ----------------------------------------------------------- 03 the making */
+/* ----------------------------------------------------------- 04 the making */
 
 export const MAKING_STEPS: readonly RootsStep[] = [
 	{
@@ -282,9 +374,9 @@ export const KNOW_YOUR_ROOTS = {
 		body: HEMP_BODY,
 		properties: HEMP_PROPERTIES,
 		blendNote: HEMP_BLEND_NOTE,
-		facts: HEMP_FACTS,
-		lineage: HEMP_LINEAGE
+		facts: HEMP_FACTS
 	},
+	lineage: { entries: HEMP_LINEAGE, close: ROOTS_LINEAGE_CLOSE },
 	whyRootwear: {
 		principles: WHY_ROOTWEAR_PRINCIPLES,
 		pullquote: WHY_ROOTWEAR_PULLQUOTE

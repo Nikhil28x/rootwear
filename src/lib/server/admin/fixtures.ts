@@ -179,6 +179,7 @@ export type StoredWaitlist = {
 
 export type StoredContact = {
 	id: string;
+	trackingId: string;
 	name: string;
 	email: string;
 	subject: string;
@@ -293,10 +294,7 @@ function buildForDrop(drop: Drop, now: number, store: FixtureStore, counter: { n
 				counter.n += 1;
 				const n = counter.n;
 				const key = `${variant.id}:res`;
-				const createdAt = Math.min(
-					now - HOUR,
-					teaseStart + Math.floor(jitter(key, i) * 9 * DAY)
-				);
+				const createdAt = Math.min(now - HOUR, teaseStart + Math.floor(jitter(key, i) * 9 * DAY));
 				const state = reservationStateFor(piece - 1, launched);
 				/* Nothing is dated after `now`. A fixture that reports an order
 				   placed tomorrow makes every report downstream of it a lie. */
@@ -304,7 +302,11 @@ function buildForDrop(drop: Drop, now: number, store: FixtureStore, counter: { n
 				const orderAt = Math.min(balanceAt + HOUR, now - HOUR);
 				const dispatchAt = Math.min(createdAt + 7 * DAY, now - 30 * MINUTE);
 				const events: StoredEvent[] = [
-					{ at: createdAt, label: 'Reservation opened', detail: `${variant.sku} · deposit initiated` },
+					{
+						at: createdAt,
+						label: 'Reservation opened',
+						detail: `${variant.sku} · deposit initiated`
+					},
 					{
 						at: createdAt + 4 * MINUTE,
 						label: 'Deposit confirmed',
@@ -455,7 +457,11 @@ function buildForDrop(drop: Drop, now: number, store: FixtureStore, counter: { n
 					createdAt,
 					orderId: null,
 					events: [
-						{ at: createdAt, label: 'Reservation opened', detail: `${variant.sku} · deposit initiated` },
+						{
+							at: createdAt,
+							label: 'Reservation opened',
+							detail: `${variant.sku} · deposit initiated`
+						},
 						{
 							at: createdAt + 2 * MINUTE,
 							label: 'Cap full',
@@ -653,6 +659,7 @@ function buildContact(now: number): StoredContact[] {
 
 	return seeds.map(([subject, message, status, isSpam], i) => ({
 		id: `cnt-${String(i + 1).padStart(2, '0')}`,
+		trackingId: `RW-CON-FX${String(i + 1).padStart(4, '0')}`,
 		name: fixtureName(90 + i),
 		email: fixtureEmail(90 + i),
 		subject,

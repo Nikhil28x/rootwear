@@ -49,7 +49,9 @@
 
 <form method="GET" class="mt-12 flex flex-wrap items-end gap-6 border-y border-white/10 py-6">
 	<div class="flex min-w-[12rem] flex-col gap-2">
-		<label for="f-status" class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">Status</label>
+		<label for="f-status" class="text-[11px] font-medium tracking-[0.2em] text-stone-400 uppercase"
+			>Status</label
+		>
 		<select
 			id="f-status"
 			name="status"
@@ -64,13 +66,13 @@
 	</div>
 	<button
 		type="submit"
-		class="border border-white/35 px-7 py-3 text-[11px] tracking-[0.2em] text-stone-100 uppercase transition hover:bg-white hover:text-black font-medium"
+		class="border border-white/35 px-7 py-3 text-[11px] font-medium tracking-[0.2em] text-stone-100 uppercase transition hover:bg-white hover:text-black"
 	>
 		Apply
 	</button>
 	<a
 		href="/admin/contact"
-		class="text-[11px] tracking-[0.2em] text-stone-400 uppercase underline underline-offset-4 hover:text-stone-200 font-medium"
+		class="text-[11px] font-medium tracking-[0.2em] text-stone-400 uppercase underline underline-offset-4 hover:text-stone-200"
 	>
 		Clear
 	</a>
@@ -81,6 +83,9 @@
 		<article class="flex flex-col gap-5 border border-white/10 p-6">
 			<div class="flex flex-wrap items-start justify-between gap-4">
 				<div class="flex flex-col gap-2">
+					<p class="text-[11px] font-medium tracking-[0.16em] text-gold uppercase">
+						{row.trackingId}
+					</p>
 					<h2 class="text-base text-paper">{row.subject || 'No subject'}</h2>
 					<p class="text-[13px] text-stone-400">
 						{row.name} ·
@@ -103,7 +108,7 @@
 							<input type="hidden" name="status" value={status} />
 							<button
 								type="submit"
-								class="border border-white/25 px-4 py-2 text-[11px] tracking-[0.18em] text-stone-300 uppercase transition hover:bg-white hover:text-black font-medium"
+								class="border border-white/25 px-4 py-2 text-[11px] font-medium tracking-[0.18em] text-stone-300 uppercase transition hover:bg-white hover:text-black"
 							>
 								Mark {humanise(status).toLowerCase()}
 							</button>
@@ -111,8 +116,10 @@
 					{/if}
 				{/each}
 				<a
-					class="ml-auto text-[11px] tracking-[0.18em] text-stone-400 uppercase underline underline-offset-4 hover:text-paper font-medium"
-					href="mailto:{row.email}?subject={encodeURIComponent(`Re: ${row.subject || 'your message'}`)}"
+					class="ml-auto text-[11px] font-medium tracking-[0.18em] text-stone-400 uppercase underline underline-offset-4 hover:text-paper"
+					href="mailto:{row.email}?subject={encodeURIComponent(
+						`Re: ${row.subject || 'your message'}`
+					)}"
 				>
 					Reply by email →
 				</a>
@@ -136,6 +143,9 @@
 
 		{#each data.spam as row (row.id)}
 			<article class="flex flex-col gap-3 border border-white/10 px-6 py-5">
+				<p class="text-[11px] font-medium tracking-[0.16em] text-gold uppercase">
+					{row.trackingId}
+				</p>
 				<p class="text-[15px] text-stone-400">{row.subject || 'No subject'}</p>
 				<p class="text-[13px] text-stone-400">
 					{row.email} · <span class="tabular-nums">{shortDateTime(row.createdAt)}</span>

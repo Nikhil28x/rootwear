@@ -16,7 +16,11 @@
  * trip instead of two.
  */
 import type { DemandRepository } from './repository';
-import type { DemandRow, DemandWriteStatus, DropRequestInput, NotifyRequestInput,
+import type {
+	DemandRow,
+	DemandWriteResult,
+	DropRequestInput,
+	NotifyRequestInput,
 	PreOrderInput
 } from './types';
 import type { Size } from '$lib/drop/sizes';
@@ -38,8 +42,9 @@ type BoardRow = {
 const asCount = (value: number | string | null): number => Number(value ?? 0);
 
 export const supabaseDemandRepository: DemandRepository = {
-	async requestDrop(input: DropRequestInput): Promise<DemandWriteStatus> {
-		const { error } = await getServiceClient()
+	async requestDrop(input: DropRequestInput): Promise<DemandWriteResult> {
+		const service = getServiceClient();
+		const { data, error } = await service
 			.from('drop_requests')
 			.insert({
 				drop_id: input.dropId,
@@ -49,34 +54,65 @@ export const supabaseDemandRepository: DemandRepository = {
 				// §13: the consent instant and its surface are stored WITH the row.
 				consented_at: new Date(input.consentedAt).toISOString(),
 				consent_source: input.consentSource
-			});
+			})
+			.select('tracking_id')
+			.single();
 
 		if (error) {
-			if (error.code === UNIQUE_VIOLATION) return 'already';
+			if (error.code === UNIQUE_VIOLATION) {
+				const { data: existing, error: readError } = await service
+					.from('drop_requests')
+					.select('tracking_id')
+					.eq('drop_id', input.dropId)
+					.eq('variant_id', input.variantId)
+					.eq('email', input.email)
+					.single();
+				if (readError || !existing) {
+					throw new Error(
+						`requestDrop receipt lookup failed: ${readError?.message ?? 'missing row'}`
+					);
+				}
+				return { status: 'already', trackingId: String(existing.tracking_id) };
+			}
 			throw new Error(`requestDrop failed: ${error.message}`);
 		}
-		return 'recorded';
+		return { status: 'recorded', trackingId: String(data.tracking_id) };
 	},
 
-	async notifyMe(input: NotifyRequestInput): Promise<DemandWriteStatus> {
-		const { error } = await getServiceClient()
+	async notifyMe(input: NotifyRequestInput): Promise<DemandWriteResult> {
+		const service = getServiceClient();
+		const { data, error } = await service
 			.from('notify_requests')
 			.insert({
 				variant_id: input.variantId,
 				email: input.email,
 				consented_at: new Date(input.consentedAt).toISOString(),
 				consent_source: input.consentSource
-			});
+			})
+			.select('tracking_id')
+			.single();
 
 		if (error) {
-			if (error.code === UNIQUE_VIOLATION) return 'already';
+			if (error.code === UNIQUE_VIOLATION) {
+				const { data: existing, error: readError } = await service
+					.from('notify_requests')
+					.select('tracking_id')
+					.eq('variant_id', input.variantId)
+					.eq('email', input.email)
+					.single();
+				if (readError || !existing) {
+					throw new Error(`notifyMe receipt lookup failed: ${readError?.message ?? 'missing row'}`);
+				}
+				return { status: 'already', trackingId: String(existing.tracking_id) };
+			}
 			throw new Error(`notifyMe failed: ${error.message}`);
 		}
-		return 'recorded';
+		return { status: 'recorded', trackingId: String(data.tracking_id) };
 	},
 
-	async preorderSignup(input: PreOrderInput): Promise<DemandWriteStatus> {
-		const { error } = await getServiceClient()
+	async preorderSignup(input: PreOrderInput): Promise<DemandWriteResult> {
+		const service = getServiceClient();
+		const { data, error } = await service
 			.from('preorder_signups')
 			.insert({
 				drop_id: input.dropId,
@@ -87,13 +123,26 @@ export const supabaseDemandRepository: DemandRepository = {
 				customer_id: input.customerId ?? null,
 				consented_at: new Date(input.consentedAt).toISOString(),
 				consent_source: input.consentSource
-			});
+			})
+			.select('tracking_id')
+			.single();
 
 		if (error) {
-			if (error.code === UNIQUE_VIOLATION) return 'already';
+			if (error.code === UNIQUE_VIOLATION) {
+				const { data: existing, error: readError } = await service
+					.from('preorder_signups')
+					.select('tracking_id')
+					.eq('variant_id', input.variantId)
+					.eq('email', input.email)
+					.single();
+				if (readError || !existing) {
+					throw new Error(`preorder receipt lookup failed: ${readError?.message ?? 'missing row'}`);
+				}
+				return { status: 'already', trackingId: String(existing.tracking_id) };
+			}
 			throw new Error(`preorderSignup failed: ${error.message}`);
 		}
-		return 'recorded';
+		return { status: 'recorded', trackingId: String(data.tracking_id) };
 	},
 
 	async demandForDrop(dropId: string): Promise<DemandRow[]> {

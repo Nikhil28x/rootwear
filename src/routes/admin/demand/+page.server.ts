@@ -17,7 +17,7 @@ import { resolveAdminAuth } from '$lib/server/admin/session';
  * work with JavaScript switched off and both survive a bookmarked URL.
  */
 
-const KINDS: DemandEntryKind[] = ['request', 'notify_me', 'waitlist'];
+const KINDS: DemandEntryKind[] = ['request', 'notify_me', 'preorder', 'waitlist'];
 
 export type DemandSort = 'newest' | 'oldest' | 'drop' | 'size' | 'kind';
 
@@ -31,14 +31,10 @@ function sortEntries(entries: DemandEntry[], sort: DemandSort): DemandEntry[] {
 		case 'oldest':
 			return copy.sort((a, b) => a.createdAt - b.createdAt);
 		case 'drop':
-			return copy.sort(
-				(a, b) => a.dropName.localeCompare(b.dropName) || b.createdAt - a.createdAt
-			);
+			return copy.sort((a, b) => a.dropName.localeCompare(b.dropName) || b.createdAt - a.createdAt);
 		case 'size':
 			// Garment order, not alphabetical: XS S M L XL.
-			return copy.sort(
-				(a, b) => sizeRank(a.size) - sizeRank(b.size) || b.createdAt - a.createdAt
-			);
+			return copy.sort((a, b) => sizeRank(a.size) - sizeRank(b.size) || b.createdAt - a.createdAt);
 		case 'kind':
 			return copy.sort((a, b) => a.kind.localeCompare(b.kind) || b.createdAt - a.createdAt);
 		default:

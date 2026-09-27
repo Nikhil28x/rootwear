@@ -12,6 +12,7 @@
 	let email = $state('');
 	$effect(() => {
 		if (form?.email) email = form.email;
+		else if (!email && data.loginId) email = data.loginId;
 	});
 </script>
 
@@ -20,7 +21,9 @@
 	<meta name="robots" content="noindex, nofollow" />
 </svelte:head>
 
-<main class="relative isolate grid min-h-svh place-items-center overflow-hidden bg-forest-black px-5 py-24">
+<main
+	class="relative isolate grid min-h-svh place-items-center overflow-hidden bg-forest-black px-5 py-24"
+>
 	<div class="pointer-events-none absolute inset-0 -z-10 text-paper select-none" aria-hidden="true">
 		<div class="absolute -top-40 -right-32 h-[34rem] w-[34rem]">
 			<HempMotif opacity={0.05} seed={4} />
@@ -28,8 +31,10 @@
 	</div>
 
 	<div class="w-full max-w-md">
-		<p class="wordmark text-[15px] tracking-[0.24em] text-paper uppercase font-medium">Rootwear</p>
-		<h1 class="display mt-5 text-[clamp(2.4rem,6vw,3.4rem)] leading-[0.9] tracking-[-0.045em] text-paper">
+		<p class="wordmark text-[15px] font-medium tracking-[0.24em] text-paper uppercase">Rootwear</p>
+		<h1
+			class="display mt-5 text-[clamp(2.4rem,6vw,3.4rem)] leading-[0.9] tracking-[-0.045em] text-paper"
+		>
 			Operations
 		</h1>
 		<p class="mt-5 text-[15px] leading-relaxed text-stone-400">
@@ -40,13 +45,13 @@
 			<div class="mt-8"><Notice kind="error">{form.error}</Notice></div>
 		{/if}
 
-		{#if data.canPreview}
+		{#if data.canPreview && !data.canLocal}
 			<div class="mt-8">
 				<Notice kind="warning">
 					No Supabase project is configured, so there is no account to sign in to. For a local
 					read-through of the screens, set ADMIN_PREVIEW_ROLE=owner (or layout) in
-					<code class="text-paper">.env</code> and reload — that switch works only in dev and only
-					while Supabase is unconfigured.
+					<code class="text-paper">.env</code> and reload — that switch works only in dev and only while
+					Supabase is unconfigured.
 				</Notice>
 			</div>
 		{/if}
@@ -55,13 +60,12 @@
 			<input type="hidden" name="next" value={data.next ?? ''} />
 
 			<Field
-				label="Email"
+				label="User ID"
 				name="email"
-				type="email"
+				type="text"
 				surface="dark"
 				required
 				autocomplete="username"
-				inputmode="email"
 				bind:value={email}
 			/>
 

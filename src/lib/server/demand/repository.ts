@@ -9,7 +9,7 @@
  */
 import type {
 	DemandRow,
-	DemandWriteStatus,
+	DemandWriteResult,
 	DropRequestInput,
 	NotifyRequestInput,
 	PreOrderInput
@@ -20,19 +20,19 @@ export interface DemandRepository {
 	 * §12 — "bring this drop back, in this size". Idempotent on
 	 * (drop, variant, email): a repeat submission returns 'already'.
 	 */
-	requestDrop(input: DropRequestInput): Promise<DemandWriteStatus>;
+	requestDrop(input: DropRequestInput): Promise<DemandWriteResult>;
 
 	/**
 	 * §06 — notify-me on a sold-out piece and size. Idempotent on
 	 * (variant, email).
 	 */
-	notifyMe(input: NotifyRequestInput): Promise<DemandWriteStatus>;
+	notifyMe(input: NotifyRequestInput): Promise<DemandWriteResult>;
 
 	/**
 	 * A pre-order signup. Idempotent on (variant, email): a repeat submission
 	 * returns 'already' rather than inflating the count admin reads.
 	 */
-	preorderSignup(input: PreOrderInput): Promise<DemandWriteStatus>;
+	preorderSignup(input: PreOrderInput): Promise<DemandWriteResult>;
 
 	/**
 	 * Per-size demand for one drop. §07: these numbers are real and live.
