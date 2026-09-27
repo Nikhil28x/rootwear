@@ -1,17 +1,15 @@
 /**
  * RW-147 — The one place the admin data source is chosen.
  *
- * Same switch as src/lib/server/drops/index.ts, on the same environment
- * variable, so the catalogue and the admin area can never end up reading from
- * two different worlds. CATALOGUE_SOURCE=supabase reads Postgres; anything
- * else (the default) reads the fixtures, which is what lets the whole admin
- * area run with no database configured.
+ * CATALOGUE_SOURCE=supabase reads persistent records from Postgres. Without a
+ * configured backend, admin exposes only real visitor forms held by this
+ * server process; it never invents customer or order data.
  *
  * Resolved per call rather than at import, so flipping the variable in dev
  * takes effect without a restart.
  */
 import type { AdminRepository } from './repository';
-import { mockAdminRepository } from './mock-repository';
+import { localAdminRepository } from './local-repository';
 import { supabaseAdminRepository } from './supabase-repository';
 import { catalogueSource, isSupabaseConfigured } from '$lib/server/env';
 
@@ -25,7 +23,7 @@ function select(): AdminRepository {
 		}
 		return supabaseAdminRepository;
 	}
-	return mockAdminRepository;
+	return localAdminRepository;
 }
 
 export const adminRepo: AdminRepository = {

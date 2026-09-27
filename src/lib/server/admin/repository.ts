@@ -1,11 +1,9 @@
 /**
  * RW-143 — The admin repository seam.
  *
- * Same shape as src/lib/server/drops/: an interface here, a fixture
- * implementation and a Postgres implementation beside it, and one `index.ts`
- * that picks between them from the environment. Every admin route imports ONLY
- * this interface, which is what lets the whole area run today against
- * fixtures, with no database and no Supabase project.
+ * The local implementation exposes only forms received by the running server;
+ * the Postgres implementation supplies persistent records when Supabase is
+ * configured. Every admin route imports only this interface.
  *
  * Writes take an `actor` label because §12/RW-141 require every privileged
  * write to be attributable (app.admin_audit_log). No write method takes a

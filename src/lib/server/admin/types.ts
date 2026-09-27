@@ -23,8 +23,8 @@ export type AdminActor = {
 	readonly email: string;
 	readonly role: StaffRole;
 	/**
-	 * True when the area is running on fixtures with no Supabase configured.
-	 * Surfaced in the chrome so nobody mistakes fixture figures for real ones.
+	 * True when Supabase is absent and submissions are stored in this server
+	 * process only. Surfaced in the chrome so the storage limit is explicit.
 	 */
 	readonly preview: boolean;
 };

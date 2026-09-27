@@ -1,7 +1,13 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 import { previewAvailable, resolveAdminAuth } from '$lib/server/admin/session';
-import { canAccess, homeFor, navFor, requireSection, sectionForRoute } from '$lib/server/admin/roles';
+import {
+	canAccess,
+	homeFor,
+	navFor,
+	requireSection,
+	sectionForRoute
+} from '$lib/server/admin/roles';
 import { catalogueSource } from '$lib/server/env';
 
 /**
@@ -48,6 +54,14 @@ export const load: LayoutServerLoad = async (event) => {
 	}
 
 	const section = sectionForRoute(event.route.id);
+	const source = catalogueSource();
+
+	// Until persistent storage is configured, admin is a submissions inbox only.
+	// Sending every other route here prevents empty operational screens from
+	// suggesting that orders, stock or revenue are already being stored.
+	if (source === 'mock' && section !== 'submissions') {
+		redirect(303, '/admin/submissions');
+	}
 
 	// The dashboard is the index of the area and owner-only. A layout user is
 	// sent to their own first screen rather than refused at the front door;
@@ -60,8 +74,11 @@ export const load: LayoutServerLoad = async (event) => {
 
 	return {
 		actor: auth.actor,
-		nav: navFor(auth.actor.role),
-		source: catalogueSource(),
+		nav:
+			source === 'mock'
+				? navFor(auth.actor.role).filter((item) => item.section === 'submissions')
+				: navFor(auth.actor.role),
+		source,
 		canPreview: false
 	};
 };
