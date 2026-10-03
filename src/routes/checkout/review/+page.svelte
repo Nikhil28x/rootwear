@@ -102,13 +102,13 @@
 									</p>
 									{#if line.isPreOrder}
 										<p class="mt-2 text-[13px] leading-relaxed text-forest/70">
-											Pre-order — dispatch follows the drop opening on
+											Pre-order — ships after the drop opens on
 											{dispatchDate.format(data.launchInstant)}.
 										</p>
 									{/if}
 									{#if line.overSubscribed}
 										<p class="mt-2 text-[13px] leading-relaxed text-alert">
-											Only {line.availableNow} of this size remain. Go back and reduce the quantity.
+											Only {line.availableNow} left in this size. Go back to your cart to reduce the quantity.
 										</p>
 									{/if}
 								</div>
@@ -127,12 +127,9 @@
 					{#if data.payment.configured}
 						<p class="mt-4 max-w-[54ch] text-[15px] leading-relaxed text-forest/75">
 							{#if data.payment.name === 'razorpay'}
-								You will be handed to Razorpay to pay. Your order is confirmed by the gateway's own
-								notification, not by the page you land back on — so a dropped connection cannot lose
-								a paid order.
+								You'll pay securely with Razorpay — UPI, cards, netbanking and wallets.
 							{:else}
-								This environment is running the stand-in gateway. It creates a real payment record
-								and settles it through the same webhook the live gateway uses; it never moves money.
+								Payments aren't live in this environment. You'll be able to simulate a payment on the next page.
 							{/if}
 						</p>
 					{:else}
@@ -157,11 +154,6 @@
 							{placing ? 'Placing your order…' : 'Place order'}
 						</Button>
 					</form>
-
-					<p class="mt-4 text-[13px] leading-relaxed text-forest/75">
-						Pressing this twice is safe. A repeated submission returns the order you already placed
-						rather than making a second one.
-					</p>
 				</section>
 			</div>
 

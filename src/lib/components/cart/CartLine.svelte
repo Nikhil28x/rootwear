@@ -76,9 +76,7 @@
 			<p class="border-l-2 border-gold pl-4 text-[13px] leading-relaxed text-forest/75">
 				<span class="block text-[11px] tracking-[0.28em] text-forest uppercase font-medium">Pre-order</span>
 				<span class="mt-2 block">
-					Made for the drop. Dispatch follows the drop opening on
-					{dispatchDate.format(launchInstant)}, and your hand number is allocated when your payment
-					confirms.
+					Ships after the drop opens on {dispatchDate.format(launchInstant)}.
 				</span>
 			</p>
 		{/if}
@@ -88,8 +86,7 @@
 			     not signalled by colour alone. -->
 			<p class="border-l-2 border-alert pl-4 text-[13px] leading-relaxed text-alert">
 				Only {line.availableNow}
-				{line.availableNow === 1 ? 'piece is' : 'pieces are'} still available in this size. Reduce the
-				quantity to continue.
+				{line.availableNow === 1 ? 'piece is' : 'pieces are'} left in this size. Reduce the quantity to continue.
 			</p>
 		{/if}
 

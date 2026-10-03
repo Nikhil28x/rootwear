@@ -60,7 +60,7 @@ export const actions: Actions = {
 		const removed = id ? await account.unsubscribeNotify(auth.email, id) : false;
 		if (!removed) {
 			return fail(404, {
-				failure: 'That subscription is already gone. Nothing was changed.'
+				failure: "You're already unsubscribed from this alert."
 			});
 		}
 
@@ -78,7 +78,7 @@ export const actions: Actions = {
 		const changed = customerId && id ? await account.withdrawWaitlist(customerId, id) : false;
 		if (!changed) {
 			return fail(404, {
-				failure: 'That place in the queue is no longer yours to give up.'
+				failure: "You're no longer on this waitlist."
 			});
 		}
 

@@ -43,9 +43,9 @@
 	-->
 	<div class="mt-10 max-w-[64ch]">
 		<Callout kind="error">
-			{formatInr(data.outstanding)} is outstanding across
-			{data.outstandingCount === 1 ? 'one pre-order' : `${data.outstandingCount} pre-orders`}. A
-			piece whose balance is not cleared in time goes to the next person in the queue.
+			You have {formatInr(data.outstanding)} to pay on
+			{data.outstandingCount === 1 ? 'one pre-order' : `${data.outstandingCount} pre-orders`}. Pay
+			by the due date to keep your piece.
 		</Callout>
 	</div>
 {/if}
@@ -54,8 +54,7 @@
 	<div class="mt-14 max-w-[52rem]">
 		<Empty title="Nothing here yet." actionHref="/drops" actionLabel="See the current drop">
 			<p>
-				This is where your orders, your reserved pieces and your saved addresses will appear. You
-				never needed an account to buy from us, so it is empty until you do.
+				Your orders, pre-orders and saved addresses will appear here.
 			</p>
 		</Empty>
 	</div>
@@ -98,7 +97,7 @@
 									</p>
 								{/if}
 								<Button href="/account/orders/{latest.orderNumber}" surface="light">
-									Open this order
+									View order
 								</Button>
 							</div>
 						</div>
@@ -107,8 +106,7 @@
 					<div class="mt-6">
 						<Empty title="No orders yet." actionHref="/drops" actionLabel="See the current drop">
 							<p>
-								Anything you buy — as a guest or signed in — appears here with its tracking
-								reference once it is dispatched.
+								Your orders will appear here, with tracking once they ship.
 							</p>
 						</Empty>
 					</div>
@@ -165,9 +163,6 @@
 					</li>
 				{/each}
 			</ul>
-			<p class="mt-6 max-w-[36ch] text-[13px] leading-[1.9] text-forest/70">
-				The figure beside pre-orders counts balances still to clear, not pieces reserved.
-			</p>
 		</aside>
 	</div>
 {/if}

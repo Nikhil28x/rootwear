@@ -1,7 +1,13 @@
 import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { cartRepository } from '$lib/server/cart';
-import { mockWebhookDelivery, paymentProvider, paymentProviderName } from '$lib/server/payments';
+import {
+	checkoutKeyId,
+	mockWebhookDelivery,
+	paymentProvider,
+	paymentProviderName,
+	verifyRedirect
+} from '$lib/server/payments';
 import { DEPOSIT_PERCENT_CONFIRMED } from '$lib/config/commerce';
 
 /**
@@ -31,7 +37,7 @@ import { DEPOSIT_PERCENT_CONFIRMED } from '$lib/config/commerce';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const reservation = await cartRepository.findReservation(params.reservation);
-	if (!reservation) error(404, 'We have no reservation with that reference.');
+	if (!reservation) error(404, "We couldn't find that reservation.");
 
 	const intent = await cartRepository.findPaymentIntent({ reservationId: reservation.id });
 	const provider = paymentProvider();
@@ -44,7 +50,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		payment: {
 			name: provider.name,
 			configured: provider.isConfigured,
-			gatewayOrderId: intent?.gatewayOrderId ?? null
+			gatewayOrderId: intent?.gatewayOrderId ?? null,
+			amount: intent?.amount ?? reservation.balance,
+			/** Publishable only; null under the mock. */
+			keyId: checkoutKeyId()
 		}
 	};
 };
@@ -53,10 +62,10 @@ export const actions: Actions = {
 	/** Opens a gateway order for the BALANCE half and records the intent. */
 	pay: async ({ params }) => {
 		const reservation = await cartRepository.findReservation(params.reservation);
-		if (!reservation) return fail(404, { problem: 'We have no reservation with that reference.' });
+		if (!reservation) return fail(404, { problem: "We couldn't find that reservation." });
 
 		if (reservation.balance <= 0) {
-			return fail(409, { problem: 'There is no balance left to pay on this reservation.' });
+			return fail(409, { problem: 'Your balance is already paid.' });
 		}
 
 		const existing = await cartRepository.findPaymentIntent({ reservationId: reservation.id });
@@ -68,8 +77,7 @@ export const actions: Actions = {
 		if (!provider.isConfigured) {
 			return fail(503, {
 				problem:
-					'Card payment is not switched on yet. We will write to you with a payment link ' +
-					'before your piece is cut.'
+					"Online payment isn't available right now. We'll email you a payment link."
 			});
 		}
 
@@ -94,11 +102,28 @@ export const actions: Actions = {
 		} catch (cause) {
 			console.error('[balance] gateway order failed', cause);
 			return fail(502, {
-				problem: 'We could not reach the payment gateway. Nothing has been charged.'
+				problem: "We couldn't start your payment. You haven't been charged — please try again."
 			});
 		}
 
 		return { started: true };
+	},
+
+	/** The Razorpay modal's success payload. Never marks the balance paid. */
+	verifyPayment: async ({ params, request }) => {
+		const intent = await cartRepository.findPaymentIntent({ reservationId: params.reservation });
+		const result = await verifyRedirect(await request.formData(), intent);
+		if (!result.ok) return fail(result.status, { problem: result.problem });
+
+		// Razorpay itself says captured: settle now, through the same idempotent
+		// capture the webhook uses, so the customer is not left waiting on it.
+		if (result.captured) {
+			await cartRepository.capturePayment(result.captured).catch((cause) => {
+				console.error('[checkout] capture after verify failed', cause);
+			});
+		}
+
+		return { verified: true };
 	},
 
 	/**
@@ -107,11 +132,11 @@ export const actions: Actions = {
 	 */
 	settleMock: async ({ params, fetch }) => {
 		if (paymentProviderName() !== 'mock') {
-			return fail(403, { problem: 'The live gateway settles its own payments.' });
+			return fail(403, { problem: "Test payments aren't available here." });
 		}
 
 		const intent = await cartRepository.findPaymentIntent({ reservationId: params.reservation });
-		if (!intent) return fail(409, { problem: 'There is no payment to settle yet.' });
+		if (!intent) return fail(409, { problem: "There's no payment to complete yet." });
 
 		const delivery = await mockWebhookDelivery({
 			gatewayOrderId: intent.gatewayOrderId,
@@ -129,7 +154,7 @@ export const actions: Actions = {
 		});
 
 		if (!response.ok) {
-			return fail(502, { problem: `The stand-in gateway was refused (${response.status}).` });
+			return fail(502, { problem: `The test payment didn't go through (${response.status}). Please try again.` });
 		}
 
 		return { settled: true };

@@ -60,25 +60,24 @@
 			<span class="display text-[1.4rem] leading-none">{order.trackingRef}</span>
 		</p>
 		<p class="mt-4 max-w-[54ch] text-[13px] leading-[1.9] text-forest/75">
-			Track this with {order.courierName ?? 'the courier'} using the reference above.
+			Track with {order.courierName ?? 'the courier'} using the number above.
 			{#if order.dispatchedAt !== null}
-				Handed over {shortDateTime(order.dispatchedAt)}.
+				Shipped {shortDateTime(order.dispatchedAt)}.
 			{/if}
 			{#if order.deliveredAt !== null}
-				Marked delivered {shortDateTime(order.deliveredAt)}.
+				Delivered {shortDateTime(order.deliveredAt)}.
 			{/if}
 		</p>
 	{:else}
 		<p class="mt-5 max-w-[54ch] text-[15px] leading-[1.8] text-forest/70">
-			Nothing to track yet. A courier and a reference appear here the moment this order is handed
-			over, and we email them to you at the same time.
+			Tracking details will appear here once your order ships. We'll email them to you too.
 		</p>
 	{/if}
 </section>
 
 <section class="mt-14" aria-labelledby="lines-title">
 	<h2 id="lines-title" class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">
-		What is in it
+		Items
 	</h2>
 	<p class="mt-4 max-w-[54ch] text-[13px] leading-relaxed text-forest/70">{FIT_DISCLAIMER}</p>
 
@@ -95,7 +94,7 @@
 							Size
 						</th>
 						<th scope="col" class="px-5 py-4 text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">
-							Price paid
+							Price
 						</th>
 						<th scope="col" class="px-5 py-4 text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">
 							Qty
@@ -138,10 +137,6 @@
 		</div>
 	</div>
 
-	<p class="mt-5 max-w-[62ch] text-[13px] leading-[1.9] text-forest/70">
-		These are the prices charged on the day this order was placed, kept as they were. They are not
-		re-read from today's catalogue.
-	</p>
 </section>
 
 <div class="mt-14 grid gap-14 lg:grid-cols-2 lg:gap-20">
@@ -171,9 +166,9 @@
 		</dl>
 		<p class="mt-5 max-w-[46ch] text-[13px] leading-[1.9] text-forest/70">
 			{#if showTaxBreakUp}
-				Inclusive of {formatInr(order.tax)} GST. The break-up and our GSTIN are on the invoice.
+				Includes {formatInr(order.tax)} GST. See your invoice for details.
 			{:else}
-				All prices are inclusive of tax.
+				All prices include tax.
 			{/if}
 		</p>
 	</section>
@@ -205,7 +200,7 @@
 	<h2 id="returns-title" class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">Returns</h2>
 	<p class="mt-5 max-w-[62ch] text-[15px] leading-[1.9] text-forest/70">{RETURNS_WORDING}</p>
 	<p class="mt-4 text-[13px] text-forest/70">
-		Write to
+		To start a return, email
 		<a class="underline underline-offset-4" href="mailto:{SUPPORT_EMAIL}">{SUPPORT_EMAIL}</a>
 		with {order.orderNumber} in the subject line.
 	</p>

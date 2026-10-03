@@ -77,9 +77,9 @@
 	{#if expired}
 		<!-- Announced, not merely greyed: the hold lapsing changes what is for
 		     sale, so it is worth a screen reader's attention. -->
-		<span aria-live="polite">Hold lapsed — re-checking with the server</span>
+		<span aria-live="polite">Reservation expired — updating your cart</span>
 	{:else}
-		<span>Held for</span>
+		<span>Reserved for</span>
 		<!-- aria-live is deliberately off on the ticking figure: a value that
 		     changes every second would be read aloud every second. -->
 		<span role="timer" aria-live="off" class="ml-2 tabular-nums {strong}">{clock}</span>

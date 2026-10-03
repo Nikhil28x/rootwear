@@ -109,7 +109,7 @@ export const actions: Actions = {
 
 		if (!outcome.publicToken) {
 			return fail(500, {
-				problem: 'The order was not recorded. Nothing has been charged — please try again.',
+				problem: "We couldn't place your order. You haven't been charged — please try again.",
 				status: 'out_of_stock' as const
 			});
 		}

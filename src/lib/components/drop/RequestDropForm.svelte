@@ -56,19 +56,15 @@
 		<Eyebrow tone="gold" {surface}>Request this drop</Eyebrow>
 		<p class="display text-2xl leading-tight">{heading}</p>
 		<p class="max-w-prose text-[15px] leading-relaxed {muted}">
-			{dropName} is finished. Tell us the size you wanted and we will know exactly what to cut if it comes
-			back. Nothing is charged and no piece is held — this is a note, not an order.
+			{dropName} has sold out. Tell us the size you wanted and we'll email you if it comes back.
 		</p>
 	</div>
 
 	{#if done}
 		<p class="border-l-2 border-gold pl-4 text-[15px] leading-relaxed {muted}" role="status">
 			{done.status === 'already'
-				? `You are already on the list for this size. We have your note against ${done.email} and it is counted once.`
-				: `Counted. Your size is on the board for ${dropName}, and we will write to ${done.email} if it is cut again.`}
-		</p>
-		<p class="text-[11px] font-medium tracking-[0.18em] uppercase {faint}">
-			Reference {done.trackingId}
+				? `You're already on the list for this size.`
+				: `Thanks — we'll email ${done.email} if ${dropName} comes back.`}
 		</p>
 		<p class="text-[13px] {faint}">Want a second size as well? Add it below.</p>
 	{/if}
@@ -93,7 +89,6 @@
 				options={sizeOptions}
 				value={problem?.variantId ?? ''}
 				error={problem?.field === 'size' ? problem.message : ''}
-				hint="The size is what makes this actionable."
 			/>
 
 			<DemandField
@@ -133,7 +128,6 @@
 
 		<div class="flex flex-wrap items-center gap-5">
 			<Button type="submit" variant="solid" {surface}>Add my size</Button>
-			<p class="text-[11px] tracking-[0.2em] uppercase {faint} font-medium">No payment. No hold.</p>
 		</div>
 	</form>
 </div>

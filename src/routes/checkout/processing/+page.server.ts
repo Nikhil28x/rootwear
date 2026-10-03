@@ -1,7 +1,12 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { cartRepository } from '$lib/server/cart';
-import { mockWebhookDelivery, paymentProviderName } from '$lib/server/payments';
+import {
+	checkoutKeyId,
+	mockWebhookDelivery,
+	paymentProviderName,
+	verifyRedirect
+} from '$lib/server/payments';
 
 /**
  * §04 — the redirect-versus-webhook race, handled rather than hoped away.
@@ -22,10 +27,10 @@ export const load: PageServerLoad = async ({ url }) => {
 	const token = url.searchParams.get('order');
 	// No token means no capability to see this order. Not a redirect to a
 	// friendlier page — there is nothing here to be friendly about.
-	if (!token) error(400, 'This page needs an order reference.');
+	if (!token) error(400, "We couldn't find that order.");
 
 	const order = await cartRepository.findOrderByToken(token);
-	if (!order) error(404, 'We have no order with that reference.');
+	if (!order) error(404, "We couldn't find that order.");
 
 	// Paid already: the webhook won the race, or the customer came back later.
 	if (order.state !== 'pending_payment') redirect(303, `/order/${order.publicToken}`);
@@ -38,17 +43,50 @@ export const load: PageServerLoad = async ({ url }) => {
 			orderNumber: order.orderNumber,
 			state: order.state,
 			total: order.total,
-			email: order.email
+			email: order.email,
+			/** Handed to Razorpay so it does not ask again for what we already have. */
+			name: order.ship.name,
+			phone: order.ship.phone
 		},
 		payment: {
 			name: paymentProviderName(),
 			/** Present once a gateway order exists; null when payment is not wired. */
-			gatewayOrderId: intent?.gatewayOrderId ?? null
+			gatewayOrderId: intent?.gatewayOrderId ?? null,
+			/** The gateway's own figure for the intent, which is what the modal charges. */
+			amount: intent?.amount ?? order.total,
+			/** Publishable only; null under the mock. */
+			keyId: checkoutKeyId()
 		}
 	};
 };
 
 export const actions: Actions = {
+	/**
+	 * The Razorpay modal's success payload. Verified so the page can say
+	 * "payment received" honestly; the order stays pending until the webhook.
+	 */
+	verifyPayment: async ({ request }) => {
+		const data = await request.formData();
+		const token = (data.get('order') ?? '').toString();
+
+		const order = await cartRepository.findOrderByToken(token);
+		if (!order) return fail(404, { problem: "We couldn't find that order." });
+
+		const intent = await cartRepository.findPaymentIntent({ orderId: order.id });
+		const result = await verifyRedirect(data, intent);
+		if (!result.ok) return fail(result.status, { problem: result.problem });
+
+		// Razorpay itself says captured: settle now, through the same idempotent
+		// capture the webhook uses, so the customer is not left waiting on it.
+		if (result.captured) {
+			await cartRepository.capturePayment(result.captured).catch((cause) => {
+				console.error('[checkout] capture after verify failed', cause);
+			});
+		}
+
+		return { verified: true };
+	},
+
 	/**
 	 * The stand-in gateway settling a payment.
 	 *
@@ -62,17 +100,17 @@ export const actions: Actions = {
 	 */
 	settleMock: async ({ request, fetch }) => {
 		if (paymentProviderName() !== 'mock') {
-			return fail(403, { problem: 'The live gateway settles its own payments.' });
+			return fail(403, { problem: "Test payments aren't available here." });
 		}
 
 		const data = await request.formData();
 		const token = (data.get('order') ?? '').toString();
 
 		const order = await cartRepository.findOrderByToken(token);
-		if (!order) return fail(404, { problem: 'We have no order with that reference.' });
+		if (!order) return fail(404, { problem: "We couldn't find that order." });
 
 		const intent = await cartRepository.findPaymentIntent({ orderId: order.id });
-		if (!intent) return fail(409, { problem: 'This order has no payment to settle.' });
+		if (!intent) return fail(409, { problem: "There's no payment due on this order." });
 
 		const delivery = await mockWebhookDelivery({
 			gatewayOrderId: intent.gatewayOrderId,
@@ -92,7 +130,7 @@ export const actions: Actions = {
 		});
 
 		if (!response.ok) {
-			return fail(502, { problem: `The stand-in gateway was refused (${response.status}).` });
+			return fail(502, { problem: `The test payment didn't go through (${response.status}). Please try again.` });
 		}
 
 		return { settled: true };

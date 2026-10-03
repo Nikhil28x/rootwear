@@ -12,7 +12,7 @@
 	<title>Information — Rootwear</title>
 	<meta
 		name="description"
-		content="Shipping, returns, sizing, care, privacy and terms. Everything we are obliged to tell you, and a few things we are not."
+		content="Shipping, returns, sizing, care, privacy and terms. Everything you need to know about ordering from Rootwear."
 	/>
 </svelte:head>
 
@@ -35,9 +35,8 @@
 				Everything<br />in writing.
 			</h1>
 			<p class="mt-8 max-w-[52ch] text-[16px] leading-[1.85] text-forest/70">
-				How a parcel reaches you, what happens if something is wrong with it, what we do with what
-				you tell us, and how to choose a size you will keep. Written to be read once and then not
-				needed again.
+				Shipping, returns, sizing, care and your privacy — everything you need to know about
+				ordering from us.
 			</p>
 		</header>
 
@@ -76,8 +75,7 @@
 					Not here?
 				</h2>
 				<p class="mt-5 max-w-[38ch] text-[15px] leading-[1.8] text-forest/70">
-					Search across every page above, or write to a person. Both reach the same answer; one is
-					faster.
+					Search these pages, or get in touch — we’re happy to help.
 				</p>
 			</div>
 

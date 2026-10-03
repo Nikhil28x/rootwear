@@ -18,6 +18,7 @@ import type {
 	CaptureResult,
 	CreateGatewayOrderInput,
 	GatewayOrder,
+	GatewayPayment,
 	PaymentProvider,
 	RedirectSignatureInput,
 	RefundInput,
@@ -93,6 +94,12 @@ export const mockPaymentProvider: PaymentProvider = {
 
 	async capture(gatewayPaymentId: string, amount: Paise): Promise<CaptureResult> {
 		return { gatewayPaymentId, amount, captured: true };
+	},
+
+	async fetchPayment(gatewayPaymentId: string): Promise<GatewayPayment> {
+		// The mock has no browser handoff, so nothing ever asks; and it settles
+		// only through its signed webhook, never by being looked up.
+		return { gatewayPaymentId, gatewayOrderId: null, amount: paise(0), captured: false };
 	},
 
 	async refund(input: RefundInput): Promise<RefundResult> {

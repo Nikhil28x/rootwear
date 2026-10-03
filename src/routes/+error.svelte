@@ -89,11 +89,10 @@
 				</h1>
 				<p class="mt-8 max-w-[52ch] text-[16px] leading-[1.85] {tone.body}">
 					{#if notFound}
-						That page has never existed, or never will. Everything we have written is still where
-						you left it — the drops, and the eight information pages.
+						We couldn’t find that page. Try a search, or head to one of the links below.
 					{:else}
-						{page.error?.message ?? 'An unexpected error occurred at our end, not yours.'}
-						Try again in a moment; if it keeps happening, tell us what you were doing.
+						{page.error?.message ?? 'Something went wrong.'}
+						Please try again. If it keeps happening, let us know.
 					{/if}
 				</p>
 
@@ -101,7 +100,7 @@
 					<!-- 404 offers the two ways out: search, and the index. -->
 					<form class="mt-12 max-w-xl" method="GET" action="/search" role="search">
 						<label for="error-q" class="text-[11px] tracking-[0.2em] uppercase {tone.micro} font-medium">
-							Search the information pages
+							Search help &amp; information
 						</label>
 						<div class="mt-3 flex flex-wrap items-end gap-5">
 							<input
@@ -129,7 +128,7 @@
 			</div>
 
 			<aside class="border-t pt-8 {tone.rule} lg:sticky lg:top-28 lg:self-start">
-				<p class="text-[11px] tracking-[0.2em] uppercase {tone.micro} font-medium">Everything in writing</p>
+				<p class="text-[11px] tracking-[0.2em] uppercase {tone.micro} font-medium">Help &amp; information</p>
 				<ul class="mt-5 flex flex-col gap-3 text-[14px]">
 					{#each links as link (link.slug)}
 						<li>

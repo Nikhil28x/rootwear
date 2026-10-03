@@ -13,7 +13,7 @@
 	<title>Impact — the material record | Rootwear</title>
 	<meta
 		name="description"
-		content="What the cloth is made of, in full: composition, weight, edition size and fit, and what each figure does and does not claim."
+		content="What our cloth is made of: composition, fabric weight, how many pieces exist and how they fit."
 	/>
 </svelte:head>
 
@@ -39,9 +39,8 @@
 				What the cloth is made of.
 			</h1>
 			<p class="mt-8 max-w-[58ch] text-[16px] leading-[1.8] text-forest/75">
-				Four numbers, stated in full. Each one describes the garment itself — what it is made
-				from, how heavy it is, how many exist and how it is cut. Where a figure could be mistaken
-				for a wider claim, we say so underneath it.
+				Four numbers that describe the garment: what it’s made from, how heavy it is, how many
+				exist and how it’s cut.
 			</p>
 		</div>
 	</section>

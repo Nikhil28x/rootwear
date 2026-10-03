@@ -93,11 +93,9 @@ function refuse(status: number, detail: Failure) {
 
 /** One sentence per way a write can be refused for a reason that is not a field. */
 const REASONS: Record<'not_found' | 'conflict' | 'limit', string> = {
-	not_found: 'That address is no longer on your account. It may have been deleted in another tab.',
-	conflict:
-		'Another address was made the default at the same moment. Nothing was lost — open the ' +
-		'address you want and set it again.',
-	limit: 'You have as many saved addresses as we keep. Delete one you no longer use first.'
+	not_found: "We couldn't find that address. Please refresh and try again.",
+	conflict: 'Something changed while you were editing. Please try again.',
+	limit: "You've reached the maximum number of saved addresses. Delete one to add another."
 };
 
 export const actions: Actions = {
@@ -113,8 +111,7 @@ export const actions: Actions = {
 			return refuse(409, {
 				errors: {},
 				values: checked.raw,
-				failure:
-					'This account is not linked to a customer record yet, so there is nowhere to save an address.'
+				failure: 'You can save addresses after your first order.'
 			});
 		}
 

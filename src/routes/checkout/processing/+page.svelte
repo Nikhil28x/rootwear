@@ -11,6 +11,7 @@
 	import { enhance } from '$app/forms';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Eyebrow from '$lib/components/ui/Eyebrow.svelte';
+	import RazorpayCheckout from '$lib/components/checkout/RazorpayCheckout.svelte';
 	import { formatInr } from '$lib/money';
 	import { SUPPORT_EMAIL } from '$lib/content/business';
 	import { PAYMENT_NOT_CONFIGURED_MESSAGE } from '$lib/checkout/messages';
@@ -20,6 +21,8 @@
 
 	let problem = $derived(form && 'problem' in form ? form.problem : '');
 	let elapsed = $state(0);
+	/** Razorpay's modal reported success. Still not "paid" until the webhook lands. */
+	let handedOff = $state(false);
 
 	const POLL_MS = 3000;
 	/** After two minutes the poll stops and the page says what to do instead. */
@@ -58,17 +61,19 @@
 			<h1
 				class="display mt-6 text-[clamp(3rem,7vw,7rem)] leading-[0.82] tracking-[-0.055em] text-forest"
 			>
-				Confirming<br />with the bank.
+				Confirming<br />your payment.
 			</h1>
 
 			<p class="mt-8 max-w-[54ch] text-[16px] leading-[1.85] text-forest/70" aria-live="polite">
 				{#if givenUp}
-					This is taking longer than it should. Your order is recorded as
-					{data.order.orderNumber} and nothing is lost. Write to {SUPPORT_EMAIL} with that reference and
-					we will confirm it by hand.
+					This is taking longer than usual. Your order number is {data.order.orderNumber} — if you've
+					been charged, email {SUPPORT_EMAIL} and we'll sort it out.
+				{:else if handedOff}
+					Confirming your payment… This usually takes a few seconds. You can safely close this page —
+					we'll email your confirmation.
 				{:else}
-					Your order is placed and we are waiting for the payment notification. This page updates
-					itself — you do not need to refresh, and closing it will not lose the order.
+					Your order is placed. Confirming your payment… This usually takes a few seconds. You can safely
+					close this page — we'll email your confirmation.
 				{/if}
 			</p>
 
@@ -105,18 +110,33 @@
 				     route, so the path exercised here is the path that runs live. -->
 				<section class="mt-12 border-t border-forest/15 pt-8" aria-labelledby="mock-heading">
 					<h2 id="mock-heading" class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
-						Stand-in gateway
+						Test payment
 					</h2>
 					<p class="mt-4 max-w-[54ch] text-[15px] leading-relaxed text-forest/70">
-						Razorpay is not switched on in this environment. Settling here posts a signed
-						notification to the same webhook the live gateway calls — raw body, HMAC, event-id
-						de-duplication and all. No money moves.
+						Payments aren't live in this environment. Use this to simulate a successful payment.
 					</p>
 					<form method="POST" action="?/settleMock" class="mt-6" use:enhance>
 						<input type="hidden" name="order" value={data.order.publicToken} />
-						<Button surface="light" variant="outline" type="submit">Settle this payment</Button>
+						<Button surface="light" variant="outline" type="submit">Simulate payment</Button>
 					</form>
 				</section>
+			{:else if data.payment.name === 'razorpay' && data.payment.keyId && !handedOff}
+				<RazorpayCheckout
+					keyId={data.payment.keyId}
+					gatewayOrderId={data.payment.gatewayOrderId}
+					amount={data.payment.amount}
+					description="Order {data.order.orderNumber}"
+					email={data.order.email}
+					name={data.order.name}
+					contact={data.order.phone}
+					autoOpen
+					verifyAction="?/verifyPayment"
+					fields={{ order: data.order.publicToken }}
+					onPaid={() => {
+						handedOff = true;
+						void invalidateAll();
+					}}
+				/>
 			{/if}
 
 			<div class="mt-12 flex flex-wrap items-center gap-6">

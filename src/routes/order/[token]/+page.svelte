@@ -47,12 +47,12 @@
 
 	const STATE_NOTE: Record<string, string> = {
 		pending_payment:
-			'We have the order and are waiting for the payment notification. Nothing is cut until it lands.',
-		paid: 'Payment confirmed. Your hand number is allocated and the piece is being prepared.',
-		packed: 'Packed and waiting for the courier.',
-		dispatched: 'On its way. The tracking reference is below.',
-		delivered: 'Delivered. The seven-day window for a defect starts from this date.',
-		cancelled: 'This order was cancelled. Nothing further will be charged.',
+			"We're confirming your payment.",
+		paid: "Payment received. We're preparing your order.",
+		packed: 'Packed and ready to ship.',
+		dispatched: 'On its way. Tracking details are below.',
+		delivered: 'Delivered. You have seven days from delivery to report a defect.',
+		cancelled: "This order was cancelled. You won't be charged.",
 		refunded: 'This order was refunded in full.'
 	};
 
@@ -87,8 +87,8 @@
 		</h1>
 
 		<p class="mt-8 max-w-[54ch] text-[16px] leading-[1.85] text-forest/70">
-			{stateNote} A copy of this page has gone to {order.email}. Keep the link — it is the whole
-			record and it does not expire.
+			{stateNote} We've sent the details to {order.email}. Bookmark this page to check your order
+			anytime.
 		</p>
 
 		<div class="mt-16 grid gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-24">
@@ -111,13 +111,11 @@
 										<!-- §08: the hand number is allocated ON PAYMENT
 										     CONFIRMATION, never before. -->
 										<p class="mt-2 text-[11px] tracking-[0.28em] text-gold uppercase font-medium">
-											Piece {line.pieceNumber}
+											No. {line.pieceNumber}
 										</p>
 									{:else if line.priceSource === 'prelaunch_locked'}
 										<p class="mt-2 text-[13px] leading-relaxed text-forest/70">
-											Pre-order at the locked pre-launch price. Dispatch follows the drop opening on {longDate.format(
-												data.launchInstant
-											)}, and your hand number is allocated when payment confirms.
+											Pre-order — ships after the drop opens on {longDate.format(data.launchInstant)}.
 										</p>
 									{/if}
 								</div>
@@ -219,7 +217,7 @@
 							</dd>
 						</div>
 						<div class="mt-2 flex justify-between gap-6 border-t border-forest/20 pt-4 text-base">
-							<dt class="text-forest">Paid</dt>
+							<dt class="text-forest">Total</dt>
 							<dd class="m-0 text-forest tabular-nums">{formatInr(order.total)}</dd>
 						</div>
 					</dl>

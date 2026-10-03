@@ -14,6 +14,8 @@
 	import { enhance } from '$app/forms';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Eyebrow from '$lib/components/ui/Eyebrow.svelte';
+	import RazorpayCheckout from '$lib/components/checkout/RazorpayCheckout.svelte';
+	import { invalidateAll } from '$app/navigation';
 	import RootSystem from '$lib/components/art/RootSystem.svelte';
 	import { formatInr } from '$lib/money';
 	import { RETURNS_WORDING } from '$lib/content/returns';
@@ -29,6 +31,8 @@
 		(form && 'started' in form && form.started) || data.payment.gatewayOrderId !== null
 	);
 	let settled = $derived(reservation.state === 'balance_paid');
+	/** Razorpay's modal reported success. Still not "paid" until the webhook lands. */
+	let handedOff = $state(false);
 
 	const longDate = new Intl.DateTimeFormat('en-GB', {
 		day: 'numeric',
@@ -57,7 +61,7 @@
 			class="display mt-6 text-[clamp(3rem,7vw,7rem)] leading-[0.82] tracking-[-0.055em] text-forest"
 		>
 			{#if settled}
-				Balance<br />settled.
+				Balance<br />paid.
 			{:else}
 				The<br />balance.
 			{/if}
@@ -75,7 +79,7 @@
 					<p class="mt-3 text-[11px] tracking-[0.2em] text-forest/75 uppercase font-medium">
 						Size {reservation.size}
 						{#if reservation.pieceNumber !== null}
-							· Piece {reservation.pieceNumber} of the edition
+							· No. {reservation.pieceNumber}
 						{/if}
 					</p>
 					<p class="mt-4 text-[13px] leading-relaxed text-forest/75">{FIT_DISCLAIMER}</p>
@@ -116,27 +120,48 @@
 
 					{#if settled}
 						<p class="mt-4 max-w-[54ch] text-[15px] leading-relaxed text-forest/75" aria-live="polite">
-							This balance is paid in full. Nothing further is owed, and your piece moves into
-							dispatch. The confirmation went to {reservation.email}.
+							Your balance is paid in full. We're preparing your piece for dispatch and have sent a
+							confirmation to {reservation.email}.
 						</p>
 					{:else if !data.payment.configured}
 						<p class="mt-4 max-w-[54ch] text-[15px] leading-relaxed text-forest/75">
-							Card payment is not switched on yet. We will write to {reservation.email} with a payment
-							link before your piece is cut.
+							Online payment isn't available right now. We'll email you a payment link at
+							{reservation.email}.
 						</p>
 					{:else if started && data.payment.name === 'mock'}
 						<p class="mt-4 max-w-[54ch] text-[15px] leading-relaxed text-forest/70">
-							Razorpay is not switched on in this environment. Settling here posts a signed
-							notification to the same webhook the live gateway calls. No money moves.
+							<span class="block text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">Test payment</span>
+							<span class="mt-2 block">Payments aren't live in this environment. Use this to simulate a successful payment.</span>
 						</p>
 						<form method="POST" action="?/settleMock" class="mt-6" use:enhance>
-							<Button surface="light" variant="outline" type="submit">Settle this balance</Button>
+							<Button surface="light" variant="outline" type="submit">Simulate payment</Button>
 						</form>
 					{:else if started}
 						<p class="mt-4 max-w-[54ch] text-[15px] leading-relaxed text-forest/70" aria-live="polite">
-							A payment has been opened with the gateway. Your reservation updates when the
-							gateway's own notification arrives — not when this page reloads.
+							{#if handedOff}
+								Confirming your payment… This usually takes a few seconds. You can safely close this page —
+								we'll email your confirmation.
+							{:else}
+								Complete your payment in the Razorpay window. You'll pay securely with Razorpay — UPI,
+								cards, netbanking and wallets.
+							{/if}
 						</p>
+						{#if data.payment.name === 'razorpay' && data.payment.keyId && data.payment.gatewayOrderId && !handedOff}
+							<RazorpayCheckout
+								keyId={data.payment.keyId}
+								gatewayOrderId={data.payment.gatewayOrderId}
+								amount={data.payment.amount}
+								description="Balance on your reservation"
+								email={reservation.email}
+								label="Pay the balance · {formatInr(data.payment.amount)}"
+								autoOpen={Boolean(form && 'started' in form && form.started)}
+								verifyAction="?/verifyPayment"
+								onPaid={() => {
+									handedOff = true;
+									void invalidateAll();
+								}}
+							/>
+						{/if}
 					{:else}
 						<form method="POST" action="?/pay" class="mt-6" use:enhance>
 							<Button surface="light" variant="solid" type="submit">
@@ -144,12 +169,6 @@
 							</Button>
 						</form>
 					{/if}
-
-					<!-- §10: a coupon cannot apply to a deposit or a balance. Said
-					     plainly, rather than offering a field that only refuses. -->
-					<p class="mt-6 text-[13px] leading-relaxed text-forest/75">
-						Discount codes do not apply to a deposit or a balance payment.
-					</p>
 				</section>
 			</div>
 
@@ -177,7 +196,7 @@
 						All prices inclusive of tax
 					</p>
 					<p class="mt-3 text-[13px] leading-relaxed text-forest/75">
-						The price was locked when you reserved. It does not move with the drop.
+						Your price is locked in from when you reserved.
 					</p>
 				</section>
 

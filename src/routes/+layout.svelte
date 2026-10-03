@@ -25,6 +25,10 @@
 	 */
 	let isHome = $derived(page.route.id === '/');
 	let isAdmin = $derived(page.route.id?.startsWith('/admin') ?? false);
+	/** The product experience opens on a full-bleed hero, so the header floats over it. */
+	let isExperience = $derived(
+		page.route.id === '/drops/[drop]' || page.route.id === '/drops/[drop]/[product]'
+	);
 
 	/** Routes that sit on cream rather than forest-black. */
 	const LIGHT_ROUTES = [
@@ -78,7 +82,12 @@
 			? 'bg-paper text-forest'
 			: 'bg-forest-black text-stone-100'}"
 	>
-		<SiteHeader {surface} />
+		<!-- The experience opens on a dark hero: start the header dark, so it
+		     does not flash light before it measures what is behind it. -->
+		<SiteHeader
+			surface={isExperience ? 'dark' : surface}
+			position={isExperience ? 'fixed' : 'sticky'}
+		/>
 		{@render children()}
 	</div>
 

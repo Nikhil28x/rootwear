@@ -104,8 +104,8 @@ export const ROOTS_MOVEMENTS: readonly RootsMovement[] = [
 		eyebrow: 'The making',
 		title: ['How a drop', 'comes to exist.'],
 		lede:
-			'Five stages, in order. None of them are automated, which is the reason there are ' +
-			`${EDITION_SIZE} pieces in a drop and not more.`,
+			'Five stages, each done by hand — which is why there are only ' +
+			`${EDITION_SIZE} pieces in a drop.`,
 		surface: 'dark'
 	}
 ] as const;
@@ -285,8 +285,7 @@ export const WHY_ROOTWEAR_PRINCIPLES: readonly RootsStep[] = [
 		index: '03',
 		title: 'India only',
 		body:
-			'We ship within India and nowhere else — one country, one currency, one set of rules ' +
-			'we can actually honour. Every price on the site is shown inclusive of GST.'
+			'We ship within India only. Every price on the site includes GST.'
 	},
 	{
 		index: '04',
@@ -299,14 +298,14 @@ export const WHY_ROOTWEAR_PRINCIPLES: readonly RootsStep[] = [
 		index: '05',
 		title: 'Nothing is ever taken down',
 		body:
-			'A finished drop keeps its page, its photographs and its story, with the sold pieces ' +
-			'marked sold. The archive is the proof that the numbers were real.'
+			'A finished drop keeps its page, its photographs and its story — a lasting record of ' +
+			'every piece we have made.'
 	}
 ] as const;
 
 export const WHY_ROOTWEAR_PULLQUOTE = {
 	line: 'Built from the ground up.',
-	attribution: 'The house line, and the working method'
+	attribution: 'Rootwear'
 } as const;
 
 /* ----------------------------------------------------------- 04 the making */
@@ -324,8 +323,7 @@ export const MAKING_STEPS: readonly RootsStep[] = [
 		title: 'The cut',
 		body:
 			`One unisex block, graded across ${SIZE_RANGE_LABEL}, cut to the same measurements every ` +
-			`time. Chest and length in centimetres sit on the size guide, because “oversized” ` +
-			`on its own is how people end up with the wrong shirt. ${FIT_DISCLAIMER}`
+			`time. Exact chest and length measurements are on the size guide. ${FIT_DISCLAIMER}`
 	},
 	{
 		index: '03',
@@ -338,16 +336,15 @@ export const MAKING_STEPS: readonly RootsStep[] = [
 		index: '04',
 		title: 'The hand-numbering',
 		body:
-			`Each finished piece is numbered by hand, 01 through ${EDITION_SIZE}, on the label. The ` +
-			'number is assigned when a piece is allocated to an order, so the one you receive is the ' +
-			'one recorded against your name.'
+			`Each finished piece is numbered by hand, 01 through ${EDITION_SIZE}, on the label. ` +
+			'Your number is yours alone, recorded against your order.'
 	},
 	{
 		index: '05',
 		title: 'The dispatch',
 		body:
-			'Packed and sent by hand, with the piece number on the note. Pre-orders leave once the ' +
-			'balance is settled, and the dispatch note tells you exactly where yours sits in the queue.'
+			'Packed and sent by hand, with your piece number on the note. Pre-orders ship once the ' +
+			'balance is paid.'
 	}
 ] as const;
 
@@ -357,8 +354,7 @@ export const ROOTS_CLOSE = {
 	eyebrow: 'Where this goes next',
 	line: ['One strain.', `${EDITION_SIZE} pieces.`, 'Then the next one.'],
 	body:
-		'Everything above exists so that a drop can be small and still be honest about it. The ' +
-		'current one is open now; the finished ones are still where we left them.',
+		'Small runs, made with care. See the current drop, or browse the ones that came before.',
 	actions: [
 		{ label: 'See the current drop', href: '/drops', primary: true },
 		{ label: 'Read the size guide', href: '/policies/size-guide', primary: false }

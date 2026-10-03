@@ -6,14 +6,22 @@
 		title,
 		children,
 		open = false,
-		surface = 'light'
-	}: { title: string; children: Snippet; open?: boolean; surface?: 'light' | 'dark' } = $props();
+		surface = 'light',
+		id = undefined
+	}: {
+		title: string;
+		children: Snippet;
+		open?: boolean;
+		surface?: 'light' | 'dark';
+		/** Lets a link elsewhere on the page open this section. */
+		id?: string;
+	} = $props();
 
 	let rule = $derived(surface === 'light' ? 'border-forest/15' : 'border-white/15');
 	let tone = $derived(surface === 'light' ? 'text-forest' : 'text-stone-100');
 </script>
 
-<details class="group border-b {rule}" {open}>
+<details class="group border-b {rule}" {id} {open}>
 	<summary
 		class="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-[12px] leading-6 tracking-[0.18em] uppercase {tone} marker:hidden [&::-webkit-details-marker]:hidden font-medium"
 	>

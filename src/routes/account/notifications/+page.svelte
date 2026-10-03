@@ -14,11 +14,11 @@
 	let updated = $derived(page.url.searchParams.get('updated') === '1');
 
 	const QUEUE_LABEL = {
-		waiting: 'In the queue',
+		waiting: 'On the waitlist',
 		offered: 'Offered to you',
-		converted: 'Taken up',
-		expired: 'Offer lapsed',
-		withdrawn: 'Given up'
+		converted: 'Purchased',
+		expired: 'Offer expired',
+		withdrawn: 'Left'
 	} as const;
 
 	const QUEUE_TONE = {
@@ -44,8 +44,7 @@
 	Notifications.
 </h1>
 <p class="mt-8 max-w-[58ch] text-[16px] leading-[1.85] text-forest/70">
-	What you have asked us to tell you about, and where you stand in any queue. We write to
-	<span class="text-forest">{data.email}</span> and nowhere else, and only about the pieces listed here.
+	Restock alerts and waitlists. We'll email <span class="text-forest">{data.email}</span>.
 </p>
 
 {#if form?.failure}
@@ -53,15 +52,15 @@
 {/if}
 
 {#if updated && !form?.failure}
-	<div class="mt-10 max-w-[64ch]"><Callout kind="success">That is updated.</Callout></div>
+	<div class="mt-10 max-w-[64ch]"><Callout kind="success">Updated.</Callout></div>
 {/if}
 
 {#if nothing}
 	<div class="mt-14 max-w-[52rem]">
-		<Empty title="Nothing signed up." actionHref="/drops" actionLabel="See the current drop">
+		<Empty title="No alerts yet." actionHref="/drops" actionLabel="See the current drop">
 			<p>
-				When a size is gone you can ask to be told if it comes back, and join the queue for a
-				reserved piece that lapses. Both appear here, and both can be given up in one click.
+				When a size sells out, ask to be notified if it comes back. Your alerts and waitlist spots
+				appear here.
 			</p>
 		</Empty>
 	</div>
@@ -71,12 +70,12 @@
 
 	<section class="mt-10" aria-labelledby="notify-title">
 		<h2 id="notify-title" class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">
-			Tell me when it is back
+			Back-in-stock alerts
 		</h2>
 
 		{#if data.notifications.length === 0}
 			<p class="mt-6 max-w-[54ch] text-[15px] leading-[1.8] text-forest/75">
-				You have not asked to be told about any size.
+				No restock alerts.
 			</p>
 		{:else}
 			<ul class="mt-6 flex list-none flex-col gap-px border-t border-forest/15 p-0">
@@ -94,9 +93,9 @@
 								{/if}{row.sku ?? ''}
 							</p>
 							<p class="mt-2 text-[13px] text-forest/70">
-								You agreed to this on {shortDate(row.consentedAt)}.
+								Signed up {shortDate(row.consentedAt)}.
 								{#if row.notifiedAt !== null}
-									We wrote to you on {shortDate(row.notifiedAt)}.
+									Emailed {shortDate(row.notifiedAt)}.
 								{/if}
 							</p>
 						</div>
@@ -107,7 +106,7 @@
 									class="text-[11px] tracking-[0.2em] text-forest/75 uppercase underline-offset-4 hover:text-forest hover:underline font-medium"
 									href="/drops/{row.dropSlug}"
 								>
-									Open drop
+									View drop
 								</a>
 							{/if}
 							<form method="POST" action="?/unsubscribe" use:enhance>
@@ -126,10 +125,6 @@
 					</li>
 				{/each}
 			</ul>
-			<p class="mt-6 max-w-[62ch] text-[13px] leading-[1.9] text-forest/70">
-				Unsubscribing deletes the record of your consent rather than flagging it, so the address is
-				genuinely off that list.
-			</p>
 		{/if}
 	</section>
 
@@ -138,13 +133,12 @@
 			Waitlist
 		</h2>
 		<p class="mt-4 max-w-[56ch] text-[15px] leading-[1.8] text-forest/75">
-			The queue is ordered, and no money is taken to join it. If a reserved piece is not paid for in
-			time it is offered to the next person in line.
+			Joining is free. If a reserved piece becomes available, we'll offer it to you in turn.
 		</p>
 
 		{#if data.waitlist.length === 0}
 			<p class="mt-6 max-w-[54ch] text-[15px] leading-[1.8] text-forest/75">
-				You are not in any queue.
+				You're not on any waitlists.
 			</p>
 		{:else}
 			<ul class="mt-6 flex list-none flex-col gap-px border-t border-forest/15 p-0">
@@ -155,7 +149,7 @@
 						<div class="flex min-w-0 items-start gap-6">
 							<p class="display shrink-0 text-[1.8rem] leading-none text-forest">
 								{String(entry.position).padStart(2, '0')}
-								<span class="sr-only">place in the queue</span>
+								<span class="sr-only">place on the waitlist</span>
 							</p>
 							<div class="min-w-0">
 								<p class="text-[15px] text-forest">
@@ -183,7 +177,7 @@
 										type="submit"
 										class="text-[11px] tracking-[0.2em] text-forest uppercase underline-offset-4 hover:underline font-medium"
 									>
-										Give up my place
+										Leave waitlist
 										<span class="sr-only">
 											for {entry.productName ?? 'this piece'}{entry.size
 												? `, size ${entry.size}`

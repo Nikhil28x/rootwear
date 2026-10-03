@@ -30,44 +30,44 @@ export const RESERVATION_COPY: Record<ReservationState, StateCopy> = {
 		label: 'Awaiting deposit',
 		tone: 'attention',
 		sentence:
-			'Your deposit has not cleared yet. A piece number is allocated the moment it does, and never before.'
+			'Waiting for your deposit to confirm.'
 	},
 	reserved: {
 		label: 'Reserved',
 		tone: 'settled',
-		sentence: 'Your deposit cleared and this piece is held in your name.'
+		sentence: 'Deposit confirmed. This piece is held for you.'
 	},
 	refunded_cap_race: {
 		label: 'Refunded',
 		tone: 'closed',
 		sentence:
-			'The reserved pieces ran out before your deposit cleared, so it was refunded in full, automatically.'
+			"This edition sold out before your deposit confirmed, so we've refunded it in full."
 	},
 	cancelled: {
 		label: 'Cancelled',
 		tone: 'closed',
-		sentence: 'This reservation was cancelled under the rule shown below.'
+		sentence: 'This pre-order was cancelled. See the cancellation terms below.'
 	},
 	balance_due: {
 		label: 'Balance due',
 		tone: 'attention',
-		sentence: 'Your piece is held. Clear the balance to have it dispatched.'
+		sentence: 'Your piece is held. Pay the balance to have it shipped.'
 	},
 	balance_paid: {
 		label: 'Paid in full',
 		tone: 'settled',
-		sentence: 'Nothing further to pay. This piece is queued for dispatch.'
+		sentence: "Paid in full. We'll let you know when it ships."
 	},
 	dispatched: {
-		label: 'Dispatched',
+		label: 'Shipped',
 		tone: 'settled',
-		sentence: 'This piece has left us. Tracking is on the order below.'
+		sentence: 'On its way. Tracking is on your order below.'
 	},
 	released_to_waitlist: {
 		label: 'Released',
 		tone: 'closed',
 		sentence:
-			'The balance was not cleared in time, so this piece went to the next person in the queue.'
+			"The balance wasn't paid by the due date, so this piece is no longer held for you."
 	}
 };
 
@@ -75,27 +75,27 @@ export const ORDER_COPY: Record<OrderState, StateCopy> = {
 	pending_payment: {
 		label: 'Awaiting payment',
 		tone: 'attention',
-		sentence: 'We have not been able to confirm payment for this order yet.'
+		sentence: "We're confirming your payment."
 	},
 	paid: {
 		label: 'Paid',
 		tone: 'settled',
-		sentence: 'Payment confirmed. This order is in the queue to be packed.'
+		sentence: "Payment confirmed. We're preparing your order."
 	},
 	packed: {
 		label: 'Packed',
 		tone: 'settled',
-		sentence: 'Packed and waiting for the courier.'
+		sentence: 'Packed and ready to ship.'
 	},
 	dispatched: {
-		label: 'Dispatched',
+		label: 'Shipped',
 		tone: 'settled',
-		sentence: 'Handed to the courier.'
+		sentence: 'On its way to you.'
 	},
 	delivered: {
 		label: 'Delivered',
 		tone: 'settled',
-		sentence: 'Marked delivered.'
+		sentence: 'Your order has been delivered.'
 	},
 	cancelled: {
 		label: 'Cancelled',

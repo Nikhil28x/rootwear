@@ -34,7 +34,7 @@ export const load: PageServerLoad = async ({ url }) => {
 
 /** One sentence for every outcome that would otherwise expose an account. */
 const GENERIC_FAILURE =
-	'Those details did not match an account. Check the address and the password, and try again.';
+	"That email and password don't match. Please try again.";
 
 const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -47,13 +47,13 @@ export const actions: Actions = {
 
 		// Specific, because these are facts about the form, not about the account.
 		if (!email && !password) {
-			return fail(400, { email: '', error: 'Enter your email address and your password.' });
+			return fail(400, { email: '', error: 'Enter your email and password.' });
 		}
 		if (!email) {
-			return fail(400, { email: '', error: 'Enter the email address you used at checkout.' });
+			return fail(400, { email: '', error: 'Enter your email address.' });
 		}
 		if (!EMAIL_SHAPE.test(email)) {
-			return fail(400, { email, error: 'That does not look like an email address.' });
+			return fail(400, { email, error: 'Enter a valid email address.' });
 		}
 		if (!password) {
 			return fail(400, { email, error: 'Enter your password.' });
@@ -63,9 +63,7 @@ export const actions: Actions = {
 		if (!supabase) {
 			return fail(503, {
 				email,
-				error:
-					'Accounts are not available on this deployment yet, so there is nothing to sign in ' +
-					'to. Guest checkout is unaffected — you can order without an account.'
+				error: "Accounts aren't available yet. You can still check out as a guest."
 			});
 		}
 
@@ -77,7 +75,7 @@ export const actions: Actions = {
 			if (authError?.status === 429) {
 				return fail(429, {
 					email,
-					error: 'Too many attempts from here. Wait a minute, then try once more.'
+					error: 'Too many attempts. Please wait a minute and try again.'
 				});
 			}
 			return fail(401, { email, error: GENERIC_FAILURE });

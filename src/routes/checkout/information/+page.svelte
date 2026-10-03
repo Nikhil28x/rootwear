@@ -172,7 +172,7 @@
 							autocomplete="email"
 							inputmode="email"
 							error={errors?.email ?? ''}
-							hint="Your order confirmation and dispatch note go here."
+							hint="We'll send your order confirmation here."
 						/>
 
 						<Field
@@ -186,7 +186,7 @@
 							pattern={PHONE_PATTERN}
 							maxlength={10}
 							error={errors?.phone ?? ''}
-							hint="Ten digits, starting 6, 7, 8 or 9. The courier calls this on delivery."
+							hint="10-digit mobile number, for delivery updates."
 						/>
 					</fieldset>
 
@@ -259,8 +259,7 @@
 								{SHIP_COUNTRY_LABEL}
 							</p>
 							<p class="text-[13px] text-forest/70">
-								We ship within India only at the moment. Nothing else can be selected, and the same
-								rule is applied again when the order is created.
+								We currently ship within India only.
 							</p>
 						</div>
 					</fieldset>
@@ -275,7 +274,7 @@
 							rows={4}
 							bind:value={values.notes}
 							error={errors?.notes ?? ''}
-							hint="A gate code, a delivery window, a gift note. Kept with the order and printed on the packing list."
+							hint="Delivery instructions or a gift note."
 						/>
 					</fieldset>
 
@@ -326,12 +325,10 @@
 					     a pre-order. It states the drop instant and nothing more. -->
 					<p class="border-l-2 border-gold pl-4 text-[13px] leading-relaxed text-forest/75">
 						<span class="block text-[11px] tracking-[0.28em] text-forest uppercase font-medium">
-							Pre-order dispatch
+							Pre-order
 						</span>
 						<span class="mt-2 block">
-							At least one piece here is cut for the drop. Dispatch follows the drop opening on
-							{dispatchDate.format(data.launchInstant)}, and the hand number is allocated when
-							payment confirms.
+							Pre-order pieces ship after the drop opens on {dispatchDate.format(data.launchInstant)}.
 						</span>
 					</p>
 				{/if}
@@ -340,7 +337,7 @@
 					<!-- §10: COD is off for Drop 01. Said before the payment step, not
 					     discovered at it. -->
 					<p class="text-[13px] leading-relaxed text-forest/75">
-						Cash on delivery is not available for this drop.
+						Cash on delivery isn't available for this drop.
 					</p>
 				{/if}
 

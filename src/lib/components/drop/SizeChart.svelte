@@ -8,7 +8,7 @@
 	 * The figures come from SIZE_CHART, never retyped here: the guide, the
 	 * product page and the eventual print spec have to agree to the centimetre.
 	 */
-	import { SIZES, SIZE_CHART, SIZE_CHART_IS_PROVISIONAL, FIT_DISCLAIMER } from '$lib/drop/sizes';
+	import { SIZES, SIZE_CHART, FIT_DISCLAIMER } from '$lib/drop/sizes';
 
 	let {
 		modelHeightCm = 0,
@@ -55,9 +55,4 @@
 		</p>
 	{/if}
 
-	{#if SIZE_CHART_IS_PROVISIONAL}
-		<p class="text-[11px] tracking-[0.2em] uppercase {faint} font-medium">
-			Measurements provisional until the garment spec is signed off.
-		</p>
-	{/if}
 </div>

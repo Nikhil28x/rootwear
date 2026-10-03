@@ -96,9 +96,8 @@
 				</div>
 
 				<footer
-					class="mt-20 flex flex-wrap items-center justify-between gap-6 border-t border-forest/15 pt-8 text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium"
+					class="mt-20 flex flex-wrap items-center justify-end gap-6 border-t border-forest/15 pt-8 text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium"
 				>
-					<span>/policies/{data.policy.slug}</span>
 					<a class="transition hover:text-forest" href="/policies">All information pages</a>
 				</footer>
 			</article>

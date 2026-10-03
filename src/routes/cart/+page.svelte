@@ -90,8 +90,7 @@
 		{#if empty}
 			<div class="mt-16 max-w-[52ch]">
 				<p class="text-[16px] leading-[1.85] text-forest/70">
-					Nothing here yet. Pieces are cut in small numbered editions, so a drop is either open or
-					it is not — the archive keeps every piece on its page either way.
+					Your cart is empty.
 				</p>
 				<div class="mt-10 flex flex-wrap gap-4">
 					<Button surface="light" variant="solid" href="/drops">See the drops</Button>
@@ -111,10 +110,6 @@
 								onexpire={onHoldExpired}
 								surface="light"
 							/>
-							<p class="max-w-[46ch] text-[13px] leading-relaxed text-forest/75">
-								A drop is {cart.holdMinutes} minutes of held stock, then it goes back on sale. It keeps
-								a full basket from blocking a piece somebody is waiting for.
-							</p>
 						</div>
 					{/if}
 
@@ -143,11 +138,10 @@
 					{#if cart.hasPreOrderLine}
 						<p class="border-l-2 border-gold pl-4 text-[13px] leading-relaxed text-forest/75">
 							<span class="block text-[11px] tracking-[0.28em] text-forest uppercase font-medium">
-								Pre-order in this basket
+								Includes a pre-order
 							</span>
 							<span class="mt-2 block">
-								At least one piece here is made for the drop rather than taken off a shelf. Dispatch
-								follows the drop opening, and the hand number is allocated when payment confirms.
+								Pre-order pieces ship after the drop opens.
 							</span>
 						</p>
 					{/if}

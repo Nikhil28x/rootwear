@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { enhance } from '$app/forms';
+	import { dev } from '$app/environment';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Eyebrow from '$lib/components/ui/Eyebrow.svelte';
 	import Field from '$lib/components/ui/Field.svelte';
@@ -29,8 +30,7 @@
 		Sign in.
 	</h1>
 	<p class="mt-7 max-w-[46ch] text-[16px] leading-[1.85] text-forest/70">
-		Your orders, your pre-orders and the addresses you have saved. You never need an account to buy
-		from us — this is only here to keep track afterwards.
+		Track your orders and pre-orders, and manage your saved addresses.
 	</p>
 
 	{#if form?.error}
@@ -50,10 +50,13 @@
 	{#if !data.configured}
 		<div class="mt-9">
 			<Callout>
-				Accounts are not switched on for this deployment. Guest checkout is unaffected.
-				{#if data.canPreview}
-					For a local read-through of these screens, set <code>ACCOUNT_PREVIEW_EMAIL</code> in
-					<code>.env</code> and reload — that switch works only in dev and only while Supabase is unconfigured.
+				{#if dev}
+					Accounts aren't connected.
+					{#if data.canPreview}
+						Set <code>ACCOUNT_PREVIEW_EMAIL</code> in <code>.env</code> to preview.
+					{/if}
+				{:else}
+					Accounts aren't available yet. You can still check out as a guest.
 				{/if}
 			</Callout>
 		</div>
@@ -97,13 +100,11 @@
 
 	<div class="mt-12 border-t border-forest/15 pt-7 text-[13px] leading-[1.9] text-forest/75">
 		<p>
-			Accounts are offered after a purchase, from your order confirmation, rather than demanded
-			before one. If you have ordered as a guest and want the history attached, write to
-			<a class="underline underline-offset-4" href="mailto:{SUPPORT_EMAIL}">{SUPPORT_EMAIL}</a>
-			from the address you used and we will link it.
+			No account? You can create one from your order confirmation after you buy.
 		</p>
 		<p class="mt-4">
-			Locked out? Write to us from that same address and we will send you a way back in.
+			Trouble signing in? Email
+			<a class="underline underline-offset-4" href="mailto:{SUPPORT_EMAIL}">{SUPPORT_EMAIL}</a>.
 		</p>
 	</div>
 </div>

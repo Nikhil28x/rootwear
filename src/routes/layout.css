@@ -61,6 +61,17 @@
 	text-rendering: optimizeLegibility;
 }
 
+/*
+ * Razorpay Checkout's iframe holds a LIGHT-scheme document. When a frame's
+ * scheme differs from its embedder's, the browser paints an opaque canvas
+ * behind it — under :root's dark scheme that turned the whole see-through
+ * overlay solid white and hid the page. Matching the scheme on Razorpay's own
+ * container keeps the dimmed page visible behind the payment window.
+ */
+.razorpay-container {
+	color-scheme: light;
+}
+
 html {
 	scroll-behavior: smooth;
 	background: var(--color-forest-black);

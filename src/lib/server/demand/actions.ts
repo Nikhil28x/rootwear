@@ -25,7 +25,8 @@ import { demand } from './index';
 import { isConsentSource, type ConsentSource } from './types';
 import { isValidEmail, normaliseEmail } from './email';
 import { acceptsNotifyMe } from '$lib/domain/drop-state';
-import { isSizeSoldOut, type Drop, type Variant } from '$lib/domain/drop';
+import type { Drop, Variant } from '$lib/domain/drop';
+import { availableUnits } from '$lib/server/cart/availability';
 import type {
 	DemandField,
 	DemandIntent,
@@ -169,7 +170,9 @@ export async function handleNotifyMe(
 		return reject('notify', variantId, 'form', 'That piece no longer exists.', email, variantId);
 	}
 
-	if (!acceptsNotifyMe(drop.state) && !isSizeSoldOut(variant)) {
+	// Live availability, as the product page shows it: a size held in other
+	// carts reads as sold out there, so it must take a notify-me here too.
+	if (!acceptsNotifyMe(drop.state) && (await availableUnits(variant, event.locals.now, null)) > 0) {
 		return reject(
 			'notify',
 			variantId,

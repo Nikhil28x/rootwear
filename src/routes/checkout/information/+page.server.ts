@@ -109,7 +109,7 @@ export const actions: Actions = {
 			return fail(409, {
 				values,
 				errors,
-				problem: 'Your cart is empty — nothing was saved.'
+				problem: 'Your cart is empty.'
 			});
 		}
 

@@ -32,8 +32,7 @@
 				Look it up.
 			</h1>
 			<p class="mt-8 max-w-[52ch] text-[16px] leading-[1.85] text-stone-400">
-				Every information page — shipping, returns, sizing, care, privacy, terms and the rest —
-				searched at once.
+				Search shipping, returns, sizing, care, privacy and more.
 			</p>
 		</header>
 
@@ -62,7 +61,7 @@
 			<!-- Empty state: nothing has been asked yet, so offer the index. -->
 			<section class="mt-20 border-t border-white/12 pt-12" aria-labelledby="everything-title">
 				<h2 id="everything-title" class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
-					Everything there is
+					All information
 				</h2>
 				<ul class="mt-8 grid gap-x-12 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
 					{#each data.everything as entry (entry.slug)}
@@ -86,11 +85,11 @@
 			<section class="mt-20 border-t border-white/12 pt-12" aria-live="polite">
 				<p class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">No matches</p>
 				<p class="display mt-6 text-[clamp(1.8rem,3.4vw,2.8rem)] leading-[1.05] tracking-[-0.02em]">
-					Nothing on file for “{data.query}”.
+					No results for “{data.query}”.
 				</p>
 				<p class="mt-6 max-w-[48ch] text-[16px] leading-[1.85] text-stone-400">
-					Try a plainer word — “size”, “refund”, “deposit”, “pincode”. Or read the eight pages
-					straight through; there are not many.
+					Try a simpler word, like “size”, “refund”, “deposit” or “pincode” — or browse the pages
+					below.
 				</p>
 
 				<ul class="mt-10 flex flex-wrap gap-x-8 gap-y-3">
@@ -163,7 +162,7 @@
 						class="text-stone-100 underline decoration-gold decoration-1 underline-offset-[5px] transition hover:decoration-stone-100"
 						href="/contact">Write to us</a
 					>
-					— a person answers.
+					and we’ll help.
 				</p>
 			</section>
 		{/if}

@@ -66,27 +66,27 @@ export const actions: Actions = {
 		const errors: FieldErrors = {};
 
 		if (values.name.length === 0) {
-			errors.name = 'Tell us what to call you.';
+			errors.name = 'Please enter your name.';
 		} else if (values.name.length > LIMITS.name) {
-			errors.name = `That is longer than ${LIMITS.name} characters.`;
+			errors.name = `Please keep your name under ${LIMITS.name} characters.`;
 		}
 
 		if (values.email.length === 0) {
-			errors.email = 'We need an address to reply to.';
+			errors.email = 'Please enter your email address.';
 		} else if (values.email.length > LIMITS.email || !EMAIL.test(values.email)) {
-			errors.email = 'That does not look like an email address we could reply to.';
+			errors.email = 'Please enter a valid email address.';
 		}
 
 		if (values.subject.length === 0) {
-			errors.subject = 'Pick the closest subject so this reaches the right person.';
+			errors.subject = 'Please choose a subject.';
 		} else if (!SUBJECT_VALUES.includes(values.subject)) {
-			errors.subject = 'That is not one of the subjects on the list.';
+			errors.subject = 'Please choose a subject from the list.';
 		}
 
 		if (values.message.length === 0) {
-			errors.message = 'Tell us what has happened.';
+			errors.message = 'Please enter a message.';
 		} else if (values.message.length < 10) {
-			errors.message = 'A little more detail will get you a better answer.';
+			errors.message = 'Please add a little more detail.';
 		} else if (values.message.length > LIMITS.message) {
 			errors.message = `Keep it under ${LIMITS.message} characters — attach the rest by email.`;
 		}
@@ -120,7 +120,7 @@ export const actions: Actions = {
 				values,
 				sent: false,
 				failure:
-					'We could not record that just now. Please write to us directly — the address is below.'
+					'Sorry, your message didn’t send. Please try again, or email us directly — the address is below.'
 			});
 		}
 

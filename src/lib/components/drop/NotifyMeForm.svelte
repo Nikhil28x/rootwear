@@ -55,11 +55,8 @@
 	{#if done}
 		<p class="text-[15px] leading-relaxed {muted}" role="status">
 			{done.status === 'already'
-				? `You are already on the list for ${size}. We will write to ${done.email} the moment it comes back.`
-				: `Noted. We will write to ${done.email} when ${size} comes back, and about nothing else.`}
-		</p>
-		<p class="mt-3 text-[11px] font-medium tracking-[0.18em] uppercase {muted}">
-			Reference {done.trackingId}
+				? `You're already on the list for ${size}. We'll email ${done.email} when it's back.`
+				: `Done — we'll email ${done.email} when ${size} is back.`}
 		</p>
 	{:else}
 		<form
@@ -91,7 +88,7 @@
 				id="notify-consent-{variantId}"
 				{surface}
 				error={problem?.field === 'consent' ? problem.message : ''}
-				label="Email me when this size is available again. One message, then nothing."
+				label="Email me when this size is back in stock."
 			/>
 
 			{#if problem?.field === 'form'}

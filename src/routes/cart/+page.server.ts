@@ -10,7 +10,7 @@ import {
 } from '$lib/server/cart';
 import { catalogueIndex } from '$lib/server/cart/pricing';
 import { isOnSale } from '$lib/domain/drop-state';
-import { sellableStock } from '$lib/domain/drop';
+import { availableUnits } from '$lib/server/cart/availability';
 import { LAUNCH_INSTANT } from '$lib/drop/schedule';
 import type { CouponStatus } from '$lib/server/cart/types';
 
@@ -66,17 +66,17 @@ export const actions: Actions = {
 
 		if (!variantId) return fail(400, { problem: 'Choose a size first.' });
 		if (quantity === null || quantity < 1) {
-			return fail(400, { problem: 'That is not a quantity we can order.' });
+			return fail(400, { problem: 'Please enter a valid quantity.' });
 		}
 
 		const entry = (await catalogueIndex()).get(variantId);
-		if (!entry) return fail(404, { problem: 'That piece is no longer in the catalogue.' });
+		if (!entry) return fail(404, { problem: 'This piece is no longer available.' });
 
 		// §06: the drop's own state decides, not the page that posted. During a
 		// tease a visitor reserves with a deposit (§08); they do not buy.
 		if (!isOnSale(entry.drop.state)) {
 			return fail(409, {
-				problem: `${entry.drop.name} is not open for sale yet. Nothing has been added.`
+				problem: `${entry.drop.name} isn't open yet.`
 			});
 		}
 
@@ -85,21 +85,19 @@ export const actions: Actions = {
 			(line) => line.variantId === variantId
 		);
 
-		// §10: what is genuinely available to THIS cart — sellable stock, less
-		// every live hold in another cart, less anything already committed.
-		const [heldElsewhere, committed] = await Promise.all([
-			cartRepository.countHoldsElsewhere(variantId, locals.now, cart.id),
-			cartRepository.committedUnits(variantId)
-		]);
-		const available = sellableStock(entry.variant) - heldElsewhere - committed;
+		// §10: what is genuinely available to THIS cart — the same figure the
+		// product page shows.
+		const available = await availableUnits(entry.variant, locals.now, cart.id);
 		const wanted = (existing?.quantity ?? 0) + quantity;
 
 		if (available < wanted) {
 			return fail(409, {
 				problem:
 					available <= 0
-						? `Size ${entry.variant.size} is spoken for right now. Sold-out sizes stay on the page — try notify-me.`
-						: `Only ${available} left in size ${entry.variant.size} at this moment.`
+						? `Size ${entry.variant.size} just sold out.`
+						: existing
+							? `Only ${available} left in size ${entry.variant.size} — they're already in your cart.`
+							: `Only ${available} left in size ${entry.variant.size}.`
 			});
 		}
 
@@ -122,11 +120,11 @@ export const actions: Actions = {
 		const variantId = field(data, 'variantId');
 		const quantity = parseQuantity(field(data, 'quantity'));
 
-		if (quantity === null) return fail(400, { problem: 'That is not a quantity we can order.' });
+		if (quantity === null) return fail(400, { problem: 'Please enter a valid quantity.' });
 
 		const token = readCartToken(cookies);
 		const cart = token ? await cartRepository.findCart(token) : null;
-		if (!cart) return fail(404, { problem: 'Your cart has expired. Nothing was changed.' });
+		if (!cart) return fail(404, { problem: 'Your cart has expired. Please refresh the page and try again.' });
 
 		const lines = await cartRepository.listLines(cart.id);
 		const line = lines.find((candidate) => candidate.variantId === variantId);
@@ -141,18 +139,12 @@ export const actions: Actions = {
 		}
 
 		const entry = (await catalogueIndex()).get(variantId);
-		if (!entry) return fail(404, { problem: 'That piece is no longer in the catalogue.' });
+		if (!entry) return fail(404, { problem: 'This piece is no longer available.' });
 
-		const [heldElsewhere, committed] = await Promise.all([
-			cartRepository.countHoldsElsewhere(variantId, locals.now, cart.id),
-			cartRepository.committedUnits(variantId)
-		]);
-		const available = sellableStock(entry.variant) - heldElsewhere - committed;
+		const available = await availableUnits(entry.variant, locals.now, cart.id);
 
 		if (available < quantity) {
-			return fail(409, {
-				problem: `Only ${Math.max(0, available)} left in size ${entry.variant.size} at this moment.`
-			});
+			return fail(409, { problem: `Only ${available} left in size ${entry.variant.size}.` });
 		}
 
 		/**
@@ -174,7 +166,7 @@ export const actions: Actions = {
 
 		const token = readCartToken(cookies);
 		const cart = token ? await cartRepository.findCart(token) : null;
-		if (!cart) return fail(404, { problem: 'Your cart has expired. Nothing was changed.' });
+		if (!cart) return fail(404, { problem: 'Your cart has expired. Please refresh the page and try again.' });
 
 		await cartRepository.removeLine(cart.id, variantId);
 
@@ -199,7 +191,7 @@ export const actions: Actions = {
 
 		const token = readCartToken(cookies);
 		const cart = token ? await cartRepository.findCart(token) : null;
-		if (!cart) return fail(404, { problem: 'Your cart has expired. Nothing was changed.' });
+		if (!cart) return fail(404, { problem: 'Your cart has expired. Please refresh the page and try again.' });
 
 		// Validated against the SERVER's subtotal, recomputed a moment ago from
 		// the catalogue — never against a figure the browser sent.
@@ -219,7 +211,7 @@ export const actions: Actions = {
 	removeCoupon: async ({ cookies }) => {
 		const token = readCartToken(cookies);
 		const cart = token ? await cartRepository.findCart(token) : null;
-		if (!cart) return fail(404, { problem: 'Your cart has expired. Nothing was changed.' });
+		if (!cart) return fail(404, { problem: 'Your cart has expired. Please refresh the page and try again.' });
 
 		await cartRepository.setCoupon(cart.id, null);
 		return { updated: true };

@@ -50,12 +50,7 @@
 		<p class="font-medium {surface === 'light' ? 'text-forest' : 'text-stone-100'}">
 			{result.status === 'already' ? 'You are already on the list.' : 'You are on the list.'}
 		</p>
-		<p class="mt-1">
-			We will write to {result.email} when Drop 01 opens. Nothing has been charged.
-		</p>
-		<p class="mt-3 text-[11px] font-medium tracking-[0.18em] uppercase">
-			Reference {result.trackingId}
-		</p>
+		<p class="mt-1">We'll email {result.email} when the drop opens. You haven't been charged.</p>
 	</div>
 {:else}
 	<form method="POST" action="?/preorder" class="flex flex-col gap-5 border-t {rule} pt-6">
@@ -112,10 +107,9 @@
 		/>
 
 		<label class="flex items-start gap-3 text-[13px] leading-relaxed {muted}">
-			<input type="checkbox" name="consent" class="mt-1 size-4 shrink-0 accent-current" />
+			<input type="checkbox" name="consent" class="mt-1 size-4 shrink-0 accent-current {surface === 'light' ? '[color-scheme:light]' : ''}" />
 			<span>
-				Email and message me about this drop. We keep the list ourselves and you can ask us to
-				remove you at any time.
+				Email and message me about this drop. You can unsubscribe at any time.
 			</span>
 		</label>
 

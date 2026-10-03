@@ -33,8 +33,7 @@
 	Addresses.
 </h1>
 <p class="mt-8 max-w-[56ch] text-[16px] leading-[1.85] text-forest/70">
-	Where we send things. We ship within India only, so every address here carries an Indian pincode
-	and a mobile number the courier can actually call.
+	Your saved delivery addresses. We ship within India only.
 </p>
 
 {#if failure}
@@ -46,14 +45,13 @@
 {/if}
 
 {#if deleted}
-	<div class="mt-10 max-w-[64ch]"><Callout kind="success">That address is deleted.</Callout></div>
+	<div class="mt-10 max-w-[64ch]"><Callout kind="success">Address deleted.</Callout></div>
 {/if}
 
 {#if !data.linked}
 	<div class="mt-10 max-w-[64ch]">
 		<Callout>
-			This account is not linked to a customer record yet, so there is nowhere to save an address.
-			It links itself the first time you order.
+			You can save addresses after your first order.
 		</Callout>
 	</div>
 {/if}
@@ -64,8 +62,8 @@
 			<AddressForm
 				title={data.mode === 'edit' ? 'Edit this address' : 'Add an address'}
 				note={data.mode === 'edit'
-					? 'Changing this does not change any order already placed — those keep the address they were shipped to.'
-					: 'Your first saved address becomes the default automatically.'}
+					? 'Changes apply to future orders only.'
+					: ''}
 				action={data.mode === 'edit' ? `?edit=${data.editing?.id ?? ''}&/update` : '?new=1&/create'}
 				submitLabel={data.mode === 'edit' ? 'Save changes' : 'Save address'}
 				cancelHref="/account/addresses"
@@ -94,8 +92,7 @@
 			{data.editing.pincode}
 		</address>
 		<p class="mt-6 max-w-[48ch] text-[15px] leading-[1.8] text-forest/70">
-			Orders already placed keep the address they were shipped to. This only removes it from the
-			list you choose from at checkout.
+			Orders you've already placed won't be affected.
 		</p>
 		<form
 			method="POST"
@@ -104,12 +101,12 @@
 			use:enhance
 		>
 			<input type="hidden" name="id" value={data.editing.id} />
-			<Button type="submit" variant="solid" surface="light">Delete it</Button>
+			<Button type="submit" variant="solid" surface="light">Delete</Button>
 			<a
 				href="/account/addresses"
 				class="text-[11px] tracking-[0.2em] text-forest/75 uppercase underline-offset-4 hover:text-forest hover:underline font-medium"
 			>
-				Keep it
+				Cancel
 			</a>
 		</form>
 	</section>
@@ -121,8 +118,7 @@
 			actionLabel="Add an address"
 		>
 			<p>
-				Saving one is optional. Checkout asks for an address either way, and anything you enter
-				there can be saved afterwards.
+				Save an address for faster checkout.
 			</p>
 		</Empty>
 	</div>
@@ -188,9 +184,4 @@
 			</li>
 		{/each}
 	</ul>
-
-	<p class="mt-10 max-w-[62ch] text-[13px] leading-[1.9] text-forest/70">
-		Exactly one address is the default. Making another the default moves it across rather than
-		leaving you with two, and deleting the default promotes the one you touched most recently.
-	</p>
 {/if}

@@ -26,8 +26,7 @@ import {
 	SIZES,
 	SIZE_CHART,
 	FIT_DISCLAIMER,
-	SIZE_RANGE_LABEL,
-	SIZE_CHART_IS_PROVISIONAL
+	SIZE_RANGE_LABEL
 } from '$lib/drop/sizes';
 import {
 	BUSINESS_NAME,
@@ -61,17 +60,14 @@ const SHIPPING: PolicyBlock[] = [
 	{
 		type: 'paragraph',
 		text:
-			'Everything below applies to every order, whether it was bought outright or reserved ' +
-			'during a tease. If something here does not match what you were told, the page is ' +
-			'wrong and we would like to know.'
+			'This applies to every order, including pre-orders. If anything here is unclear, ' +
+			'write to us.'
 	},
 	{ type: 'heading', text: 'Where we ship' },
 	{
 		type: 'paragraph',
 		text:
-			'India only. We do not ship outside India at present, and an address outside India ' +
-			'cannot be entered at checkout — the restriction is enforced at the address form and ' +
-			'again when the order is created, not merely stated here.'
+			'We ship within India only, for now.'
 	},
 	{ type: 'heading', text: 'What it costs' },
 	{
@@ -81,37 +77,33 @@ const SHIPPING: PolicyBlock[] = [
 	{
 		type: 'paragraph',
 		text:
-			'A small number of pincodes are not serviceable by our courier. If yours is one of ' +
-			'them, checkout will say so before you pay rather than after.'
+			'A few pincodes are outside our courier’s reach. If yours is one of them, you’ll know ' +
+			'at checkout, before you pay.'
 	},
 	{ type: 'heading', text: 'When it leaves us' },
 	{
 		type: 'paragraph',
 		text:
-			'In this phase every order is picked, numbered, packed and handed to the courier by ' +
-			'hand. There is no warehouse and no automated fulfilment. Orders placed on a working ' +
-			'day are dispatched within two to four working days; a drop day takes longer, because ' +
-			'every piece in the edition is packed in one sitting.'
+			'Every order is numbered and packed by hand. Orders ship within two to four working ' +
+			'days; on a drop day it can take a little longer.'
 	},
 	{
 		type: 'callout',
 		text:
-			'A pre-order piece is dispatched only after its balance has cleared. Until then the ' +
-			'piece is held in your name against the edition cap and nothing moves.'
+			'Pre-orders ship once the balance is paid. Until then, your piece is kept for you.'
 	},
 	{ type: 'heading', text: 'Once it has left' },
 	{
 		type: 'paragraph',
 		text:
-			'You get the courier reference by email as soon as the parcel is handed over. Metro ' +
-			'addresses usually see it in two to four days after dispatch, the rest of the country ' +
-			'in four to seven. Those are the courier’s numbers, not a promise we can enforce.'
+			'We email your tracking number as soon as your parcel ships. Delivery usually takes two ' +
+			'to four days to metro cities and four to seven days elsewhere.'
 	},
 	{
 		type: 'paragraph',
 		text:
-			'If the parcel is refused, undeliverable or returned to us, we will write to you before ' +
-			're-sending it. A second attempt is free.'
+			'If a parcel can’t be delivered and comes back to us, we’ll get in touch to arrange a ' +
+			'second delivery, free of charge.'
 	},
 	{
 		type: 'contact',
@@ -159,21 +151,20 @@ const RETURNS: PolicyBlock[] = [
 	{
 		type: 'paragraph',
 		text:
-			'There is no returns portal and no ticket number. Every claim is read and answered by a ' +
-			'person, usually within two working days. We pay the return shipping on an accepted claim.'
+			'We usually reply within two working days. If your claim is accepted, we pay the ' +
+			'return shipping.'
 	},
 	{
 		type: 'callout',
 		text:
-			`${FIT_DISCLAIMER} Fit is the single most common reason a piece comes back, and fit is ` +
-			'not a defect — so read the size guide before you order, and write to us if you are between sizes.'
+			`${FIT_DISCLAIMER} Fit isn’t covered by returns, so check the size guide before you ` +
+			'order — and write to us if you’re between sizes.'
 	},
 	{
 		type: 'paragraph',
 		text:
-			'A replacement is only possible while a piece in your size still exists. Editions are ' +
-			'fixed and small; where nothing is left, the claim is settled as a refund to the ' +
-			'original payment method.'
+			'Each drop is a small, limited run. If there’s no replacement left in your size, we ' +
+			'refund you to your original payment method.'
 	},
 	{
 		type: 'contact',
@@ -186,8 +177,7 @@ const PRIVACY: PolicyBlock[] = [
 		type: 'paragraph',
 		text:
 			`${BUSINESS_NAME} is a ${ENTITY_TYPE.toLowerCase()} operating from India. This page says ` +
-			'what we collect, why we collect it, how long we keep it and how to make us stop. It is ' +
-			'written to be read, not to be defensible.'
+			'what we collect, why, how long we keep it, and how to ask us to stop.'
 	},
 	{ type: 'heading', text: 'What we collect' },
 	{
@@ -218,19 +208,17 @@ const PRIVACY: PolicyBlock[] = [
 	{
 		type: 'paragraph',
 		text:
-			'We never see or store your card number, UPI ID or bank details. Payment is handled ' +
-			'entirely inside the payment provider’s own page; what comes back to us is a ' +
-			'reference and a status. We do not buy data about you, we do not sell yours, and we do ' +
-			'not build a profile of you across other sites.'
+			'We never see or store your card number, UPI ID or bank details — payment is handled ' +
+			'by our payment provider. We don’t buy data about you, we don’t sell yours, and we ' +
+			'don’t track you across other sites.'
 	},
 	{ type: 'heading', text: 'Cookies and measurement' },
 	{
 		type: 'paragraph',
 		text:
-			'Strictly necessary cookies only, unless you say otherwise: one for your cart and one ' +
-			'for your session. Nothing measures you until you have agreed to it. Analytics and any ' +
-			'advertising pixel are consent-gated, off by default, and withdrawing consent stops ' +
-			'them immediately.'
+			'We use only the cookies the site needs to work — one for your cart and one for your ' +
+			'session — unless you agree to more. Analytics and advertising cookies are off until ' +
+			'you opt in, and you can turn them off again at any time.'
 	},
 	{ type: 'heading', text: 'Your rights under the DPDP Act, 2023' },
 	{
@@ -246,9 +234,7 @@ const PRIVACY: PolicyBlock[] = [
 	{
 		type: 'paragraph',
 		text:
-			'Write to us and the owner will answer. We are a small business: there is no data ' +
-			'protection officer, no privacy certification and no compliance department, and we will ' +
-			'not pretend otherwise. Requests are answered within thirty days.'
+			'Write to us and we’ll respond within thirty days.'
 	},
 	{ type: 'heading', text: 'How long we keep it' },
 	{
@@ -264,9 +250,8 @@ const PRIVACY: PolicyBlock[] = [
 	{
 		type: 'paragraph',
 		text:
-			'Only the people who have to: the payment provider, the courier carrying your parcel, ' +
-			'our email provider and our hosting provider. Each sees the minimum needed to do its ' +
-			'part. Nobody else.'
+			'Only the services we need to fulfil your order: our payment provider, courier, email ' +
+			'provider and hosting provider. Each sees only what it needs.'
 	},
 	{
 		type: 'callout',
@@ -287,42 +272,36 @@ const TERMS: PolicyBlock[] = [
 	{
 		type: 'paragraph',
 		text:
-			'India only. We cannot accept an order for delivery outside India; the restriction is ' +
-			'applied at the address form and again at order creation. Orders that reach us any ' +
-			'other way will be refunded in full.'
+			'We deliver within India only. Any order for delivery outside India will be refunded ' +
+			'in full.'
 	},
 	{ type: 'heading', text: 'Limited editions' },
 	{
 		type: 'paragraph',
 		text:
-			'Every drop is a fixed edition of hand-numbered pieces. When the edition is claimed it ' +
-			'is finished. A sold-out size stays visible on the page rather than disappearing, ' +
-			'because the scarcity is the point and because the archive is the record of what we ' +
-			'have made. If a piece ever returns, it returns on its own page as a stated re-drop — ' +
-			'never as a quiet restock.'
+			'Every drop is a limited run of hand-numbered pieces. Once it sells out, it’s gone. If ' +
+			'a piece ever comes back, it will be announced as a re-drop.'
 	},
 	{ type: 'heading', text: 'Price' },
 	{
 		type: 'paragraph',
 		text:
 			`The price that applies is the price displayed at the moment your order is placed. ${GST_LINE} ` +
-			'A pre-launch price locked during a tease stays locked for that reservation even after ' +
-			'the drop opens at the higher launch price.'
+			'If you pre-order at an early price, that price stays yours even after the drop opens.'
 	},
 	{ type: 'heading', text: 'Pre-orders, deposits and balances' },
 	{
 		type: 'paragraph',
 		text:
-			'During a tease you reserve a piece with a deposit rather than buying it outright. The ' +
-			'deposit holds a numbered piece against the edition cap at the locked price. The ' +
-			'balance is due before dispatch, and the piece leaves only once it has cleared.'
+			'Before a drop opens, you can reserve a piece with a deposit instead of paying in full. ' +
+			'The deposit secures a numbered piece at the pre-order price. The balance is due before ' +
+			'we ship.'
 	},
 	{
 		type: 'paragraph',
 		text:
-			'If a balance is not settled within the window stated in your reservation email, the ' +
-			'piece is released back to the waitlist and the deposit is refunded. We will write to ' +
-			'you before that happens, not after.'
+			'If the balance isn’t paid by the date in your reservation email, the piece is offered ' +
+			'to someone else and your deposit is refunded. We’ll remind you before that happens.'
 	},
 	{ type: 'heading', text: 'Cancellation' },
 	{
@@ -337,9 +316,8 @@ const TERMS: PolicyBlock[] = [
 	{
 		type: 'paragraph',
 		text:
-			'Photographs are taken in daylight and are not retouched to change the colour of the ' +
-			'cloth. Screens still differ. Composition and fabric weight are stated on every product ' +
-			'page as measured facts, and we make no claim about the garment beyond them.'
+			'Photographs are taken in daylight and the colour is not retouched, though screens ' +
+			'vary. Fabric composition and weight are listed on every product page.'
 	},
 	{ type: 'heading', text: 'Your account' },
 	{
@@ -369,69 +347,54 @@ const FAQ: PolicyBlock[] = [
 	{
 		type: 'paragraph',
 		text:
-			'The questions we are actually asked, answered plainly. If yours is not here, write to ' +
-			'us — the list grows from what people send.'
+			'Can’t find your answer here? Write to us.'
 	},
 	{ type: 'heading', text: 'How often do you drop?' },
 	{
 		type: 'paragraph',
 		text:
-			'There is no calendar. A drop opens when the cloth, the cut and the photographs are ' +
-			'right. Every drop is announced first on Instagram and to the notify list, with the ' +
-			'exact opening time stated in advance.'
+			'There’s no fixed schedule — a drop opens when it’s ready. Each one is announced in ' +
+			'advance on Instagram and by email, with the exact opening time.'
 	},
-	{ type: 'heading', text: 'What are the stages of a drop?' },
+	{ type: 'heading', text: 'How do drops work?' },
 	{
 		type: 'paragraph',
 		text:
-			'A teaser first, with the piece unshown and deposits taken against a hard cap. Then the ' +
-			'reveal, with a countdown and notify-me but nothing on sale. Then it goes live at an ' +
-			'exact stated time. As sizes go, the drop turns partial — sold-out sizes stay visible ' +
-			'and greyed, never hidden. Then sold out, then archived, with its story and imagery ' +
-			'intact. Nothing is ever taken down.'
+			'Each drop is a small, numbered run. Sign up to hear when the next one opens — you may ' +
+			'be able to pre-order before it does. Once it’s sold out, it’s gone.'
 	},
 	{ type: 'heading', text: 'What size should I take?' },
 	{
 		type: 'paragraph',
 		text:
 			`${FIT_DISCLAIMER} The size guide carries chest and length in centimetres for every ` +
-			`size, ${SIZE_RANGE_LABEL}, cut unisex. Measure a garment you already like flat and ` +
-			'compare it — that is more reliable than measuring yourself.'
-	},
-	{ type: 'heading', text: 'Why is there only one size axis?' },
-	{
-		type: 'paragraph',
-		text:
-			'Because a drop is one colourway. There is no colour to choose, so a colour axis would ' +
-			'sit unused on every screen. Size is the only choice you make.'
+			`size, ${SIZE_RANGE_LABEL}, cut unisex. For the best fit, measure a t-shirt you already ` +
+			'like, laid flat, and compare.'
 	},
 	{ type: 'heading', text: 'What is a pre-order, and what is the deposit?' },
 	{
 		type: 'paragraph',
 		text:
-			'During a tease you can reserve a piece with a deposit instead of paying in full. The ' +
-			'deposit locks the pre-launch price and holds a numbered piece for you against the ' +
-			'edition cap. The balance is shown to you in rupees before you pay anything, and it is ' +
-			'due before the piece is dispatched.'
+			'Before a drop opens, you can reserve a piece with a deposit instead of paying in full. ' +
+			'The deposit locks in the pre-order price and keeps a numbered piece for you. You’ll ' +
+			'see the balance before you pay anything, and it’s due before we ship.'
 	},
 	{ type: 'heading', text: 'What if I never pay the balance?' },
 	{
 		type: 'paragraph',
 		text:
-			'We write to you first. If the balance is still unsettled at the end of the window in ' +
-			'your reservation email, the piece goes back to the waitlist and your deposit is ' +
-			'refunded in full.'
+			'We’ll remind you first. If it’s still unpaid by the date in your reservation email, ' +
+			'the piece is offered to someone else and your deposit is refunded in full.'
 	},
 	{ type: 'heading', text: 'When will my order arrive?' },
 	{
 		type: 'paragraph',
 		text:
-			'Two to four working days to dispatch, then two to seven with the courier depending on ' +
-			'where you are. A pre-order starts that clock only after its balance clears. Shipping ' +
-			'is free and flat.'
+			'We ship within two to four working days, then delivery takes two to seven days ' +
+			'depending on where you are. Pre-orders ship once the balance is paid. Shipping is free.'
 	},
 	{ type: 'heading', text: 'Do you ship outside India?' },
-	{ type: 'paragraph', text: 'Not yet. India only, and the checkout will not let you try.' },
+	{ type: 'paragraph', text: 'Not yet — we ship within India only.' },
 	{ type: 'heading', text: 'Can I return it?' },
 	{
 		type: 'paragraph',
@@ -441,16 +404,15 @@ const FAQ: PolicyBlock[] = [
 	{
 		type: 'paragraph',
 		text:
-			'Rarely, and never silently. Leave a notify-me on the size you want; if a piece comes ' +
-			'back it comes back on its own page, stated as a re-drop, and the notify list is told ' +
-			'before anyone else.'
+			'Rarely. Tap “Notify me” on the size you want — if it comes back as a re-drop, you’ll ' +
+			'hear first.'
 	},
 	{ type: 'heading', text: 'What is the cloth?' },
 	{
 		type: 'paragraph',
 		text:
-			'The composition and the fabric weight in GSM are printed on every product page. Those ' +
-			'are measured facts about the garment, and they are the only claims we make about it.'
+			'A hemp-cotton blend. The exact composition and fabric weight (GSM) are listed on every ' +
+			'product page.'
 	},
 	{ type: 'contact', text: 'Still stuck? Ask us directly:' }
 ];
@@ -458,13 +420,13 @@ const FAQ: PolicyBlock[] = [
 const SIZE_GUIDE: PolicyBlock[] = [
 	{
 		type: 'callout',
-		text: `${FIT_DISCLAIMER} ${RETURNS_SHORT} A size that does not suit you is not a defect, so it is worth two minutes here.`
+		text: `${FIT_DISCLAIMER} ${RETURNS_SHORT} Fit isn’t covered by returns, so it’s worth two minutes here.`
 	},
 	{
 		type: 'paragraph',
 		text:
-			`This drop is cut ${SIZE_RANGE_LABEL}, unisex, one size axis only. All measurements are ` +
-			'of the garment laid flat, in centimetres, and are not body measurements.'
+			`This drop comes in ${SIZE_RANGE_LABEL}, cut unisex. Measurements are of the garment ` +
+			'laid flat, in centimetres — not body measurements.'
 	},
 	{
 		type: 'table',
@@ -486,7 +448,7 @@ const SIZE_GUIDE: PolicyBlock[] = [
 		text:
 			'Take a t-shirt you already wear and like. Lay it flat, measure it across the chest and ' +
 			'down the back exactly as described above, and match those two numbers to the table. ' +
-			'Measuring your own chest and adding an allowance is guesswork; measuring a garment is not.'
+			'It’s more reliable than measuring yourself.'
 	},
 	{
 		type: 'paragraph',
@@ -494,17 +456,6 @@ const SIZE_GUIDE: PolicyBlock[] = [
 			'If you land between two sizes: take the smaller one if you want the shoulder to sit ' +
 			'where a shoulder normally sits, and the larger if you want it to drop.'
 	},
-	...(SIZE_CHART_IS_PROVISIONAL
-		? [
-				{
-					type: 'callout',
-					text:
-						'These figures are provisional until the final garment specification is signed off. ' +
-						'They will be corrected here the moment it lands, and anyone who has already ordered ' +
-						'will be written to if a number moves.'
-				} as PolicyBlock
-			]
-		: []),
 	{
 		type: 'contact',
 		text: 'Between sizes, or unsure? Send us the two numbers and we will tell you which to take:'
@@ -516,8 +467,7 @@ const CARE: PolicyBlock[] = [
 		type: 'paragraph',
 		text:
 			'Hemp-cotton cloth is heavy when it arrives and softens with every wash. Treated well, ' +
-			'it outlasts the drop it came from. The three instructions on your garment label are the ' +
-			'whole of it; everything below is detail.'
+			'it will last for years. The three instructions on the label cover it; the detail is below.'
 	},
 	{ type: 'list', items: ['Wash cold', 'Line dry', 'No bleach'] },
 	{ type: 'heading', text: 'Washing' },
@@ -525,8 +475,8 @@ const CARE: PolicyBlock[] = [
 		type: 'paragraph',
 		text:
 			'Cold water, inside out, with like colours, on a gentle cycle — or by hand, which is ' +
-			'kinder still. Skip the fabric softener: it coats the fibre and takes the dry hand off ' +
-			'the cloth, which is the thing you paid for. Wash before the first wear if you want the ' +
+			'kinder still. Skip the fabric softener: it coats the fibre and dulls the feel of the ' +
+			'cloth. Wash before the first wear if you want the ' +
 			'first shrink out of the way.'
 	},
 	{ type: 'heading', text: 'Drying' },
@@ -579,23 +529,21 @@ const TRACK_ORDER: PolicyBlock[] = [
 	{
 		type: 'paragraph',
 		text:
-			'Sign in and open your order history. Every order carries its status and, once it has ' +
-			'been handed to the courier, the tracking reference against it.'
+			'Sign in and open your order history to see each order’s status and, once shipped, ' +
+			'its tracking number.'
 	},
 	{ type: 'heading', text: 'If you ordered as a guest' },
 	{
 		type: 'paragraph',
 		text:
-			'Write to us with the order number and the email you used, and we will send the ' +
-			'reference straight back. No account is needed, and making one later will attach past ' +
-			'orders placed with the same address.'
+			'Write to us with your order number and email, and we’ll send your tracking number ' +
+			'straight back. If you create an account later with the same email, your past orders ' +
+			'will appear there.'
 	},
 	{
 		type: 'callout',
 		text:
-			'We do not run a live carrier integration. What you get from us is the reference the ' +
-			'courier recorded against your parcel, exactly as it was given to us — you then follow ' +
-			'it on the courier’s own site, which knows more than we do.'
+			'Use your tracking number on the courier’s website for the latest updates.'
 	},
 	{ type: 'heading', text: 'What each status means' },
 	{
@@ -605,11 +553,11 @@ const TRACK_ORDER: PolicyBlock[] = [
 			['Placed', 'Payment cleared. Nothing has been packed yet.'],
 			[
 				'Reserved',
-				'A deposit is in and a numbered piece is held for you. The balance is still due.'
+				'Your deposit is paid and a numbered piece is kept for you. The balance is still due.'
 			],
-			['Awaiting balance', 'The piece is yours and will not move until the balance clears.'],
+			['Awaiting balance', 'Your piece is kept for you and ships once the balance is paid.'],
 			['Packed', 'Numbered, packed and waiting for the courier to collect.'],
-			['Dispatched', 'With the courier. The tracking reference is on the order.'],
+			['Dispatched', 'With the courier. Your tracking number is on the order.'],
 			['Delivered', 'The courier has marked it delivered. The 7-day returns window starts here.']
 		]
 	},
@@ -617,11 +565,11 @@ const TRACK_ORDER: PolicyBlock[] = [
 	{
 		type: 'paragraph',
 		text:
-			'A reference can take up to a day to come alive on the courier’s side, and scans ' +
-			'stall over weekends. If nothing has moved for three working days, write to us with the ' +
-			'order number and we will chase it from our end rather than ask you to.'
+			'Tracking can take up to a day to update, and often pauses over weekends. If nothing ' +
+			'has changed for three working days, write to us with your order number and we’ll ' +
+			'look into it.'
 	},
-	{ type: 'contact', text: 'To trace an order, or if the reference is dead:' }
+	{ type: 'contact', text: 'Need help with an order?' }
 ];
 
 /**
@@ -632,7 +580,7 @@ export const POLICIES: readonly Policy[] = [
 	{
 		slug: 'shipping',
 		title: 'Shipping',
-		summary: 'India only, free and flat, dispatched by hand. What that means for your parcel.',
+		summary: 'Free shipping across India. Dispatch and delivery times.',
 		body: SHIPPING,
 		updatedAt: REVISED,
 		navOrder: 10,
@@ -641,7 +589,7 @@ export const POLICIES: readonly Policy[] = [
 	{
 		slug: 'returns',
 		title: 'Returns',
-		summary: RETURNS_SHORT + ' What counts as a defect, and how a claim is handled.',
+		summary: RETURNS_SHORT + ' What counts as a defect, and how to raise a claim.',
 		body: RETURNS,
 		updatedAt: REVISED,
 		navOrder: 20,
@@ -650,7 +598,7 @@ export const POLICIES: readonly Policy[] = [
 	{
 		slug: 'size-guide',
 		title: 'Size Guide',
-		summary: 'Chest and length in centimetres for every size, and the reliable way to choose one.',
+		summary: 'Chest and length for every size, and how to choose yours.',
 		body: SIZE_GUIDE,
 		updatedAt: REVISED,
 		navOrder: 30,
@@ -659,7 +607,7 @@ export const POLICIES: readonly Policy[] = [
 	{
 		slug: 'care',
 		title: 'Care',
-		summary: 'Wash cold, line dry, no bleach — and the detail behind each of the three.',
+		summary: 'Wash cold, line dry, no bleach — and how to keep your piece at its best.',
 		body: CARE,
 		updatedAt: REVISED,
 		navOrder: 40,
@@ -668,7 +616,7 @@ export const POLICIES: readonly Policy[] = [
 	{
 		slug: 'track-order',
 		title: 'Track Order',
-		summary: 'Order number and email. What each status means, and what to do when tracking stalls.',
+		summary: 'Find your order, what each status means, and what to do if tracking stalls.',
 		body: TRACK_ORDER,
 		updatedAt: REVISED,
 		navOrder: 50,
@@ -678,7 +626,7 @@ export const POLICIES: readonly Policy[] = [
 		slug: 'faq',
 		title: 'FAQ',
 		summary:
-			'Drops, sizing, pre-orders, dispatch and returns — the questions we are actually asked.',
+			'Drops, sizing, pre-orders, shipping and returns.',
 		body: FAQ,
 		updatedAt: REVISED,
 		navOrder: 60,
@@ -688,7 +636,7 @@ export const POLICIES: readonly Policy[] = [
 		slug: 'privacy',
 		title: 'Privacy',
 		summary:
-			'What we collect, why, for how long, and how to make us stop. Written under the DPDP Act.',
+			'What we collect, why, for how long, and your rights under the DPDP Act.',
 		body: PRIVACY,
 		updatedAt: REVISED,
 		navOrder: 70,
@@ -697,7 +645,7 @@ export const POLICIES: readonly Policy[] = [
 	{
 		slug: 'terms',
 		title: 'Terms',
-		summary: `Who you are buying from, where we sell, and how a limited edition is sold. ${BUSINESS_NAME}.`,
+		summary: `Who you are buying from, where we sell, and how limited drops work. ${BUSINESS_NAME}.`,
 		body: TERMS,
 		updatedAt: REVISED,
 		navOrder: 80,

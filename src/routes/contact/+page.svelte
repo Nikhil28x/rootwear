@@ -76,7 +76,7 @@
 	<title>Contact — Rootwear</title>
 	<meta
 		name="description"
-		content="Write to Rootwear by form, email or Instagram DM. Every message is read and answered by a person."
+		content="Get in touch with Rootwear by form, email or Instagram DM. We usually reply within two working days."
 	/>
 </svelte:head>
 
@@ -100,8 +100,8 @@
 					Reach out<br />to us.
 				</h1>
 				<p class="mt-8 max-w-[52ch] text-[16px] leading-[1.85] text-forest/70">
-					There is no ticket queue and no autoresponder. A message sent here is read by the person
-					who packed your parcel, usually within two working days.
+					Questions about an order, sizing or a drop? Send us a message and we’ll reply within two
+					working days.
 				</p>
 
 				{#if sent}
@@ -115,27 +115,21 @@
 							id="sent-title"
 							class="display text-[clamp(1.8rem,3vw,2.6rem)] leading-[1.05] text-forest"
 						>
-							That has reached us.
+							Thanks — message sent.
 						</h2>
 						<p class="mt-5 max-w-[46ch] text-[16px] leading-[1.8] text-forest/75">
 							{#if form && 'name' in form && form.name}
 								Thank you, {form.name}.
 							{/if}
-							We will reply to
+							We’ll reply to
 							<span class="text-forest">{form && 'email' in form ? form.email : ''}</span>
-							— usually within two working days, and always from {SUPPORT_EMAIL}. If it is urgent,
-							the Instagram DM is faster.
+							within two working days, from {SUPPORT_EMAIL}. For anything urgent, DM us on Instagram.
 						</p>
-						{#if form && 'trackingId' in form && form.trackingId}
-							<p class="mt-4 text-[11px] font-medium tracking-[0.18em] text-forest/65 uppercase">
-								Reference {form.trackingId}
-							</p>
-						{/if}
 						<div class="mt-8 flex flex-wrap gap-4">
 							<Button surface="light" variant="outline" href="/contact" onclick={startAgain}>
 								Write another
 							</Button>
-							<Button surface="light" variant="quiet" href="/policies">Read the policies</Button>
+							<Button surface="light" variant="quiet" href="/policies">Help &amp; information</Button>
 						</div>
 					</section>
 				{:else}
@@ -218,7 +212,6 @@
 							bind:value={subject}
 							required
 							options={data.subjects}
-							hint="This decides who picks it up."
 							error={errors?.subject ?? ''}
 							surface="light"
 						/>
@@ -229,18 +222,18 @@
 							bind:value={message}
 							required
 							rows={8}
-							placeholder="Order number first, if you have one."
-							hint="For a damaged piece, attach photographs by email instead — this form takes text only."
+							placeholder="Include your order number, if you have one."
+							hint="For a damaged piece, please email us photos instead."
 							error={errors?.message ?? ''}
 							surface="light"
 						/>
 
 						<div class="flex flex-wrap items-center gap-6">
 							<Button type="submit" variant="solid" surface="light" disabled={submitting}>
-								{submitting ? 'Sending…' : 'Send it'}
+								{submitting ? 'Sending…' : 'Send message'}
 							</Button>
 							<p class="text-[12px] leading-relaxed text-forest/70">
-								We use what you write here only to answer you. Nothing else.
+								We only use your details to reply to you.
 							</p>
 						</div>
 					</form>
@@ -261,7 +254,7 @@
 								href="mailto:{SUPPORT_EMAIL}">{SUPPORT_EMAIL}</a
 							>
 							<span class="mt-1 block text-[13px] leading-relaxed text-forest/70">
-								Best for anything with an order number or a photograph attached.
+								Best for orders, and for sending photos.
 							</span>
 						</li>
 						<li>
@@ -271,7 +264,7 @@
 								rel="noreferrer noopener">{INSTAGRAM_HANDLE} — DM</a
 							>
 							<span class="mt-1 block text-[13px] leading-relaxed text-forest/70">
-								Fastest for a quick question about a drop or a size.
+								Fastest for quick questions about a drop or sizing.
 							</span>
 						</li>
 					</ul>
@@ -299,7 +292,7 @@
 						</li>
 						<li>
 							<a class="text-forest/70 transition hover:text-forest" href="/policies/faq">
-								The questions we are asked most →
+								FAQ →
 							</a>
 						</li>
 					</ul>
@@ -317,7 +310,7 @@
 						{displayValue(BUSINESS_ADDRESS)}
 					</address>
 					<p class="mt-4 text-[13px] leading-relaxed text-forest/70">
-						Post reaches us, but slowly. Email or DM is quicker for anything about an order.
+						For anything about an order, email or DM is quickest.
 					</p>
 				</div>
 			</aside>

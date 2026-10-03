@@ -16,7 +16,9 @@
 	}: { id: string; error?: string; label: string; surface?: 'dark' | 'light' } = $props();
 
 	let tone = $derived(surface === 'light' ? 'text-forest/70' : 'text-stone-400');
-	let box = $derived(surface === 'light' ? 'accent-forest' : 'accent-gold');
+	// :root is dark-scheme, so a native box on a white surface would render
+	// dark; the light surface asks for a light control explicitly.
+	let box = $derived(surface === 'light' ? 'accent-forest [color-scheme:light]' : 'accent-gold');
 	/**
 	 * Errors are marked by a rule and by their WORDS, not by colour alone —
 	 * there is no error colour in the palette and inventing one would fail the

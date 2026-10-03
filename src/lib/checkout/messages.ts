@@ -14,15 +14,14 @@ import type { CouponStatus } from '$lib/server/cart/types';
 
 export const COUPON_MESSAGE: Record<CouponStatus, string> = {
 	ok: 'Applied.',
-	not_found: 'We do not recognise that code. Check it for a stray space or a wrong letter.',
-	inactive: 'That code is no longer being accepted.',
-	expired: 'That code has passed its end date.',
-	not_yet_valid: 'That code has not started yet.',
-	exhausted: 'That code has been used the number of times it was issued for.',
-	below_minimum: 'Your cart is below the minimum this code applies to.',
+	not_found: "We don't recognise that code. Check the spelling and try again.",
+	inactive: 'This code is no longer active.',
+	expired: 'This code has expired.',
+	not_yet_valid: "This code isn't active yet.",
+	exhausted: 'This code has already been used.',
+	below_minimum: "Your cart doesn't meet the minimum spend for this code.",
 	// §10: "a coupon must NEVER be applicable to a deposit or a balance payment."
-	not_applicable_to_deposit:
-		'Codes do not apply to a deposit or a balance payment. This one is kept for a full order.'
+	not_applicable_to_deposit: "Codes can't be used on deposits or balance payments."
 };
 
 /**
@@ -33,18 +32,16 @@ export const COUPON_MESSAGE: Record<CouponStatus, string> = {
  */
 export const COMMIT_MESSAGE = {
 	committed: 'Order placed.',
-	replayed: 'You already placed this order — here it is.',
+	replayed: "Here's your order.",
 	out_of_stock:
-		'Someone reached the last of that size while you were checking out. Nothing has been ' +
-		'charged. Your cart is below with what is still available.',
-	empty_cart: 'There is nothing in your cart to order.'
+		'Sorry — that size just sold out. You have not been charged. Your cart has been updated ' +
+		"with what's still available.",
+	empty_cart: 'Your cart is empty.'
 } as const;
 
 /** §10: a short cart-reservation window, released automatically. */
 export const HOLD_EXPIRED_MESSAGE =
-	'Your hold has lapsed and the stock went back on sale. We have re-checked your cart against ' +
-	'what is left.';
+	"Your reservation expired — we've updated your cart with what's still available.";
 
 export const PAYMENT_NOT_CONFIGURED_MESSAGE =
-	'Card payment is not switched on yet. Your order is recorded and unpaid — we will write to ' +
-	'you with a payment link before anything is cut.';
+	"Online payment isn't available right now. We'll email you a payment link.";

@@ -39,8 +39,7 @@ export const IMPACT_DETAILS: readonly ImpactDetail[] = [
 				'you do not, so the garment ends up shaped by its wearer rather than by the cut alone.'
 		],
 		notClaimed:
-			'A composition is a fact about the cloth. It is not a claim about land, water or emissions, ' +
-			'and we do not make one.'
+			'In short: soft from the first wear, and it gets better with time.'
 	},
 	{
 		key: 'weight',
@@ -58,7 +57,7 @@ export const IMPACT_DETAILS: readonly ImpactDetail[] = [
 			'It also sets expectations for the first wash. A heavier jersey moves less and keeps its ' +
 				'length; this is a weight that settles rather than shrinks noticeably.'
 		],
-		notClaimed: 'Weight describes the cloth. It says nothing about how the cloth was produced.'
+		notClaimed: 'In short: opaque, structured and easy to wear year-round.'
 	},
 	{
 		key: 'edition',
@@ -69,13 +68,13 @@ export const IMPACT_DETAILS: readonly ImpactDetail[] = [
 		body: [
 			'A drop is cut once. Twenty-five pieces exist, each carrying a number from 01 to 25 written ' +
 				'by hand, and when they are gone the drop closes rather than restocking quietly.',
-			'The number is allocated when a payment confirms, never before — so it records who actually ' +
-				'holds a piece rather than who reached a page first.',
-			'A closed drop stays on the site with its story, its imagery and its price intact. The ' +
-				'archive is the record of what was made, not a list of what is currently for sale.'
+			'Your number is assigned when your payment goes through, so every number belongs to a ' +
+				'real owner.',
+			'Once a drop sells out, it stays on the site with its story and imagery, as a record of ' +
+				'what we have made.'
 		],
 		notClaimed:
-			'A small run means fewer garments made. We do not present that as an environmental outcome.'
+			'In short: when a drop is gone, it’s gone.'
 	},
 	{
 		key: 'sizes',
@@ -84,14 +83,14 @@ export const IMPACT_DETAILS: readonly ImpactDetail[] = [
 		label: 'sizes, cut unisex',
 		summary: 'XS to XL on one cut, with measurements published in cm.',
 		body: [
-			'There is one size axis and one cut. No separate blocks, no colourways — a decision that ' +
-				'keeps the run small enough to number by hand and the size guide short enough to read.',
+			'One cut, one colour, five sizes. Keeping it simple is what lets us number every piece ' +
+				'by hand.',
 			'The cut is oversized, and the size guide publishes real chest and length measurements in ' +
 				'centimetres for every size rather than describing the fit in adjectives.',
-			'Fit is the single most common reason a garment goes back, and our returns are for ' +
-				'manufacturing defects only. Publishing the numbers is how we keep that fair.'
+			'Returns are for manufacturing defects only, so we publish exact measurements to help ' +
+				'you choose the right size first time.'
 		],
-		notClaimed: 'A shorter size run is an operational choice, not a sustainability claim.'
+		notClaimed: 'In short: check the size guide before you order.'
 	}
 ];
 

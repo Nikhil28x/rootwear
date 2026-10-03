@@ -76,6 +76,14 @@ export type RefundResult = {
 	readonly state: 'initiated' | 'processed' | 'failed';
 };
 
+/** The gateway's own record of a payment, read server-to-server. */
+export type GatewayPayment = {
+	readonly gatewayPaymentId: string;
+	readonly gatewayOrderId: string | null;
+	readonly amount: Paise;
+	readonly captured: boolean;
+};
+
 /** What a webhook body must yield before anything is written. */
 export type WebhookFacts = {
 	readonly eventId: string;
@@ -118,6 +126,13 @@ export interface PaymentProvider {
 	readWebhook(rawBody: string, headers: Headers): WebhookFacts | null;
 
 	capture(gatewayPaymentId: string, amount: Paise): Promise<CaptureResult>;
+
+	/**
+	 * Asks the GATEWAY, with the secret key, what state a payment is in. This
+	 * is the gateway's word, not the browser's, which is why it may settle an
+	 * order the same way the webhook does.
+	 */
+	fetchPayment(gatewayPaymentId: string): Promise<GatewayPayment>;
 
 	refund(input: RefundInput): Promise<RefundResult>;
 }

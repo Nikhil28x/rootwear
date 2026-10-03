@@ -3,7 +3,6 @@
 	import RecordState from './RecordState.svelte';
 	import { isoDate, RESERVATION_COPY, shortDate, shortDateTime } from './state-labels';
 	import { formatInr, paise } from '$lib/money';
-	import { DEPOSIT_PERCENT_CONFIRMED } from '$lib/config/commerce';
 	import type { PreOrder } from '$lib/server/account/types';
 
 	/**
@@ -62,7 +61,7 @@
 					{#if piece}
 						<span class="display text-[1.35rem] leading-none">{piece}</span>
 					{:else}
-						<span class="text-forest/70">Allocated on payment</span>
+						<span class="text-forest/70">Assigned after your deposit</span>
 					{/if}
 				</dd>
 			</div>
@@ -81,7 +80,7 @@
 				<dt class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">Locked price</dt>
 				<dd class="mt-2 text-[15px] text-forest">
 					{formatInr(record.lockedPrice)}
-					<span class="block text-[13px] text-forest/70">Held for you. Inclusive of tax.</span>
+					<span class="block text-[13px] text-forest/70">Includes tax.</span>
 				</dd>
 			</div>
 
@@ -91,7 +90,7 @@
 					{formatInr(record.depositPaid)} paid
 					{#if depositOutstanding > 0}
 						<span class="block text-[13px] text-forest/70">
-							{formatInr(depositOutstanding)} of the deposit is not yet confirmed.
+							{formatInr(depositOutstanding)} awaiting confirmation.
 						</span>
 					{:else}
 						<span class="block text-[13px] text-forest/70">Deposit of {formatInr(record.deposit)}.</span
@@ -137,7 +136,7 @@
 							{record.orderNumber}
 						</a>
 					{:else}
-						<span class="text-forest/70">Opens when the balance clears</span>
+						<span class="text-forest/70">Created once paid in full</span>
 					{/if}
 				</dd>
 			</div>
@@ -150,12 +149,11 @@
 						Pay the balance
 					</Button>
 					<p class="max-w-[38ch] text-[13px] leading-relaxed text-forest/75">
-						{formatInr(outstanding)} to clear. Your piece is held until then.
+						{formatInr(outstanding)} due. Your piece is held until then.
 					</p>
 				{:else}
 					<p class="max-w-[46ch] text-[13px] leading-relaxed text-forest/75">
-						We will confirm by email the moment the deposit clears. Nothing further is needed from
-						you right now.
+						We'll email you once your deposit is confirmed. Nothing else to do for now.
 					</p>
 				{/if}
 			</div>
@@ -171,11 +169,6 @@
 			<p class="mt-3 max-w-[62ch] text-[13px] leading-[1.9] text-forest/75">
 				{record.cancellationRule}
 			</p>
-			{#if !DEPOSIT_PERCENT_CONFIRMED}
-				<p class="mt-3 max-w-[62ch] text-[13px] leading-[1.9] text-forest/70">
-					The figures above are the exact amounts on your reservation.
-				</p>
-			{/if}
 		</div>
 	</div>
 </article>

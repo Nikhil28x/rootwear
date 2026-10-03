@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { dev } from '$app/environment';
 	import AccountNav from '$lib/components/account/AccountNav.svelte';
 	import Callout from '$lib/components/account/Callout.svelte';
 	import HempMotif from '$lib/components/art/HempMotif.svelte';
@@ -32,7 +33,7 @@
 	</div>
 
 	<div class="mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
-		{#if data.fixtures}
+		{#if dev && data.fixtures}
 			<!--
 				A standing condition, not a response to an action, so it is a plain
 				region rather than an alert. It exists because every record below is
@@ -41,8 +42,7 @@
 			-->
 			<div class="mb-14 max-w-[70ch]">
 				<Callout>
-					These records come from the in-repo fixtures, not from a database. The screens are real;
-					the orders, reservations and addresses on them are not.
+					Sample data — not connected to a database.
 				</Callout>
 			</div>
 		{/if}

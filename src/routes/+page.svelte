@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import SiteHeader from '$lib/components/SiteHeader.svelte';
+	import { SIZE_RANGE_LABEL } from '$lib/drop/sizes';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -344,7 +345,7 @@
 				class="mt-8 flex items-center justify-between text-[9px] tracking-[0.2em] text-stone-500 uppercase"
 			>
 				<span>Made in small runs</span>
-				<span>Sizes XS—XXL</span>
+				<span>Sizes {SIZE_RANGE_LABEL}</span>
 			</div>
 
 			<div class="drop-collection-action">
@@ -375,8 +376,7 @@
 						What the cloth<br />is made of.
 					</h2>
 					<p class="mt-9 max-w-md text-sm leading-relaxed text-[#313a21]">
-						Composition, weight and edition size, stated plainly. We publish what we can
-						verify about the cloth, and nothing we cannot.
+						Composition, weight and how many exist — the facts behind every piece.
 					</p>
 					<a
 						class="mt-8 inline-flex border border-forest px-7 py-4 text-[11px] font-medium tracking-[0.2em] uppercase transition hover:bg-forest hover:text-paper"
@@ -422,8 +422,7 @@
 				Wear the change slowly.
 			</h2>
 			<p class="mt-8 max-w-[46ch] text-[15px] leading-relaxed text-forest/75">
-				Twenty-five hand-numbered pieces, cut once. When they are gone the drop closes and stays
-				on the site with its story intact.
+				Twenty-five hand-numbered pieces, cut once. When they’re gone, they’re gone.
 			</p>
 			<!-- Points at the canonical drop URL (§05), not the old /new-collection
 			     path, which only survives as a redirect. -->

@@ -21,7 +21,7 @@ export const load: PageServerLoad = async (event) => {
 	const order = customerId ? await account.findOrder(customerId, event.params.order) : null;
 
 	if (!order) {
-		error(404, 'We cannot find that order on this account.');
+		error(404, "We couldn't find that order.");
 	}
 
 	return { order };

@@ -1,18 +1,20 @@
 <script lang="ts">
 	/**
-	 * §09 — the size selector. One variant axis, XS–XL, and nothing else: there
-	 * is deliberately no colour axis in this build.
+	 * §09 — the size selector. One variant axis, XS–XL.
 	 *
-	 * §06 — "Sold-out sizes are GREYED AND STILL VISIBLE, never hidden. The
-	 * scarcity is the point." So a gone size stays in the grid, keeps its
-	 * letter, and carries the words "sold out" as text — a strike-through and a
-	 * dimmer grey alone would be a colour-only signal.
+	 * Nothing is pre-selected: a default size is how people end up with the
+	 * wrong one. The page asks for a choice on add instead.
 	 *
-	 * Real radio inputs, so the whole thing submits with the browser alone and
-	 * arrow keys move through the group for free.
+	 * §06 — sold-out sizes stay visible and greyed, never hidden. They remain
+	 * pickable so the page can offer notify-me for that exact size, and their
+	 * accessible name says "sold out" so the strike-through is not the only cue.
+	 *
+	 * Real radio inputs, visually hidden rather than laid over the label, so the
+	 * whole tile is the click target and arrow keys move through the group.
+	 *
+	 * `selectable={false}` renders a plain availability list instead, for
+	 * surfaces that preview sizes without choosing one.
 	 */
-	import { FIT_DISCLAIMER } from '$lib/drop/sizes';
-	import { RETURNS_SHORT } from '$lib/content/returns';
 	import type { SizeOffer } from './types';
 
 	let {
@@ -20,67 +22,85 @@
 		name = 'variantId',
 		idPrefix = 'size',
 		surface = 'dark',
-		/** False outside LIVE/PARTIAL/RE_DROP — the grid still shows, nothing is pickable. */
-		selectable = true
+		selectable = true,
+		selected = $bindable(''),
+		invalid = false,
+		describedBy = undefined
 	}: {
 		offers: readonly SizeOffer[];
 		name?: string;
 		idPrefix?: string;
 		surface?: 'dark' | 'light';
 		selectable?: boolean;
+		/** The chosen variant id; '' until the shopper picks one. */
+		selected?: string;
+		/** Marks the group as needing a choice, after a submit without one. */
+		invalid?: boolean;
+		describedBy?: string;
 	} = $props();
 
-	/** The first size a visitor can actually pick, so the group starts valid. */
-	let firstOpen = $derived(offers.find((offer) => !offer.soldOut)?.variantId ?? '');
-
-	let muted = $derived(surface === 'light' ? 'text-forest/70' : 'text-stone-400');
-	let faint = $derived(surface === 'light' ? 'text-forest/70' : 'text-stone-400');
-
-	let open = $derived(
-		surface === 'light'
-			? 'border-forest/60 text-forest peer-checked:bg-forest peer-checked:text-paper peer-hover:border-forest'
-			: 'border-white/30 text-stone-100 peer-checked:bg-paper peer-checked:text-forest peer-hover:border-white'
+	let light = $derived(surface === 'light');
+	let tileOpen = $derived(
+		light
+			? 'border-forest/45 text-forest hover:border-forest peer-checked:border-forest peer-checked:bg-forest peer-checked:text-paper'
+			: 'border-white/30 text-stone-100 hover:border-white peer-checked:border-paper peer-checked:bg-paper peer-checked:text-forest'
 	);
-	let gone = $derived(
-		surface === 'light' ? 'border-forest/10 text-forest/60' : 'border-white/10 text-stone-400'
+	let tileGone = $derived(
+		light
+			? 'border-forest/15 text-forest/45 hover:border-forest/40 peer-checked:border-forest peer-checked:text-forest'
+			: 'border-white/10 text-stone-500 hover:border-white/40 peer-checked:border-white peer-checked:text-stone-100'
 	);
+	let ring = $derived(light ? 'peer-focus-visible:outline-forest' : 'peer-focus-visible:outline-white');
+	let invalidRing = $derived(invalid ? (light ? 'border-alert' : 'border-alert-light') : '');
 </script>
 
-<fieldset class="flex flex-col gap-4 border-0 p-0">
-	<legend class="text-[11px] tracking-[0.28em] uppercase {faint} font-medium">Size</legend>
-
-	<div class="grid grid-cols-5 gap-2">
+{#if selectable}
+	<div
+		class="grid grid-cols-5 gap-2"
+		role="radiogroup"
+		aria-label="Size"
+		aria-invalid={invalid || undefined}
+		aria-describedby={describedBy}
+	>
 		{#each offers as offer (offer.variantId)}
-			<div class="relative">
+			<div>
 				<input
-					class="peer absolute inset-0 size-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+					class="peer sr-only"
 					type="radio"
 					{name}
 					id="{idPrefix}-{offer.variantId}"
 					value={offer.variantId}
-					disabled={offer.soldOut || !selectable}
-					checked={selectable && offer.variantId === firstOpen}
-					required
+					bind:group={selected}
+					aria-label={offer.soldOut ? `${offer.size}, sold out` : offer.size}
 				/>
 				<label
 					for="{idPrefix}-{offer.variantId}"
-					class="flex h-16 flex-col items-center justify-center gap-1 border text-[13px] tracking-[0.18em] uppercase transition select-none peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-current {offer.soldOut
-						? gone
-						: open} font-medium"
+					class="relative flex h-12 cursor-pointer items-center justify-center border text-[13px] font-medium tracking-[0.14em] uppercase transition select-none peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 {ring} {offer.soldOut
+						? tileGone
+						: tileOpen} {invalidRing}"
 				>
-					<span class={offer.soldOut ? 'line-through' : ''}>{offer.size}</span>
-					{#if offer.soldOut}
-						<span class="text-[11px] tracking-[0.2em]">Sold out</span>
-					{:else if offer.remaining <= 3}
-						<span class="text-[11px] tracking-[0.2em] tabular-nums">{offer.remaining} left</span>
-					{/if}
+					<span class={offer.soldOut ? 'line-through decoration-1' : ''} aria-hidden="true"
+						>{offer.size}</span
+					>
 				</label>
 			</div>
 		{/each}
 	</div>
-
-	<!-- §09: the fit disclaimer is MANDATORY wherever a size is shown. -->
-	<p class="text-[13px] leading-relaxed {muted}">{FIT_DISCLAIMER}</p>
-	<!-- §11: the same returns wording as checkout, the email and the policy page. -->
-	<p class="text-[11px] tracking-[0.2em] uppercase {faint} font-medium">{RETURNS_SHORT}</p>
-</fieldset>
+{:else}
+	<ul class="m-0 grid list-none grid-cols-5 gap-2 p-0" aria-label="Sizes">
+		{#each offers as offer (offer.variantId)}
+			<li
+				class="flex h-12 items-center justify-center border text-[13px] font-medium tracking-[0.14em] uppercase {offer.soldOut
+					? light
+						? 'border-forest/12 text-forest/40'
+						: 'border-white/10 text-stone-500'
+					: light
+						? 'border-forest/30 text-forest/80'
+						: 'border-white/25 text-stone-200'}"
+			>
+				<span class={offer.soldOut ? 'line-through decoration-1' : ''}>{offer.size}</span>
+				{#if offer.soldOut}<span class="sr-only">, sold out</span>{/if}
+			</li>
+		{/each}
+	</ul>
+{/if}

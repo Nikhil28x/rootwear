@@ -22,16 +22,14 @@
 	Orders.
 </h1>
 <p class="mt-8 max-w-[54ch] text-[16px] leading-[1.85] text-forest/70">
-	Every order, with the price you actually paid on the day. We keep the archive intact, so a piece
-	bought during the tease still shows its locked price here long after the drop has closed.
+	Your orders and their status.
 </p>
 
 {#if data.orders.length === 0}
 	<div class="mt-14 max-w-[52rem]">
 		<Empty title="No orders yet." actionHref="/drops" actionLabel="See the current drop">
 			<p>
-				If you ordered as a guest with a different email address, that history sits under that
-				address. Write to us and we will attach it to this account.
+				Ordered as a guest with another email? Write to us and we'll add those orders here.
 			</p>
 		</Empty>
 	</div>
@@ -50,7 +48,7 @@
 							Placed
 						</th>
 						<th scope="col" class="px-5 py-4 text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">
-							State
+							Status
 						</th>
 						<th scope="col" class="px-5 py-4 text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">
 							Pieces

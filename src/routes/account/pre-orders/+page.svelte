@@ -22,17 +22,15 @@
 	Pre-orders.
 </h1>
 <p class="mt-8 max-w-[56ch] text-[16px] leading-[1.85] text-forest/70">
-	One card for each piece you have reserved. The deposit, the balance, the piece number and the
-	order it becomes are all one record here, because that is what they are — a reservation does not
-	turn into a separate order behind your back.
+	The pieces you've reserved, and anything left to pay.
 </p>
 
 {#if data.outstandingCount > 0}
 	<div class="mt-10 max-w-[64ch]">
 		<Callout kind="error">
-			{formatInr(data.outstanding)} still to clear across
-			{data.outstandingCount === 1 ? 'one reservation' : `${data.outstandingCount} reservations`}. A
-			piece whose balance is not cleared in time is released to the next person in the queue.
+			You have {formatInr(data.outstanding)} to pay on
+			{data.outstandingCount === 1 ? 'one pre-order' : `${data.outstandingCount} pre-orders`}. Pay
+			by the due date to keep your piece.
 		</Callout>
 	</div>
 {/if}
@@ -41,8 +39,7 @@
 	<div class="mt-14 max-w-[52rem]">
 		<Empty title="No pre-orders." actionHref="/drops" actionLabel="See the current drop">
 			<p>
-				During a tease you can reserve a piece with a deposit. Its number is allocated the moment
-				that deposit clears, and never before. Anything you reserve will appear here.
+				Reserve a piece with a deposit before a drop opens, and it will appear here.
 			</p>
 		</Empty>
 	</div>
@@ -55,9 +52,4 @@
 			<PreOrderCard {record} />
 		{/each}
 	</div>
-
-	<p class="mt-12 max-w-[62ch] text-[13px] leading-[1.9] text-forest/70">
-		Cards are ordered by what needs you first, then by when you reserved. Nothing is ever removed
-		from this list — a cancelled or released reservation stays, so the history stays readable.
-	</p>
 {/if}

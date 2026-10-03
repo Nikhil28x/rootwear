@@ -25,6 +25,7 @@ import type {
 	CaptureResult,
 	CreateGatewayOrderInput,
 	GatewayOrder,
+	GatewayPayment,
 	PaymentProvider,
 	RedirectSignatureInput,
 	RefundInput,
@@ -161,6 +162,22 @@ export const razorpayPaymentProvider: PaymentProvider = {
 
 		return {
 			gatewayPaymentId: payment.id,
+			amount: paise(Math.trunc(payment.amount)),
+			captured: payment.status === 'captured'
+		};
+	},
+
+	async fetchPayment(gatewayPaymentId: string): Promise<GatewayPayment> {
+		const payment = await call<{
+			id: string;
+			order_id: string | null;
+			amount: number;
+			status: string;
+		}>(`/payments/${encodeURIComponent(gatewayPaymentId)}`, { method: 'GET' });
+
+		return {
+			gatewayPaymentId: payment.id,
+			gatewayOrderId: payment.order_id,
 			amount: paise(Math.trunc(payment.amount)),
 			captured: payment.status === 'captured'
 		};
