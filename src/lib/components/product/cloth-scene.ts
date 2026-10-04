@@ -20,14 +20,23 @@
  * yaw is capped because only the front is photographed — turning all the way
  * round would show a back this piece does not have.
  *
- * This module is only ever imported dynamically, in the browser, after the
- * photograph has painted — three.js never sits on the critical path.
+ * Two entrances, depending on what the viewer has already seen:
+ *   - dissolve: nothing but the placeholder sketch is on screen, so the cloth
+ *     materialises from the collar down, tumbling in onto its hanger;
+ *   - puff: the photograph is already showing, so the piece starts as a flat
+ *     card exactly where the photo sits (lit flat, no wind) and inflates into
+ *     cloth from the chest outward — the photo itself seems to fill with air.
+ *
+ * This module is only ever imported dynamically, in the browser —
+ * three.js never sits on the page's critical path.
  */
 import * as THREE from 'three';
 
 export type ClothScene = {
 	/** Fires once the first frame is on the canvas. */
 	ready: Promise<void>;
+	/** Starts a held entrance (the puff waits for this, frozen flat). */
+	reveal(): void;
 	destroy(): void;
 };
 
@@ -70,6 +79,17 @@ const SCROLL_TILT = 2;
 const MAX_YAW = 0.75;
 const MAX_PITCH = 0.32;
 
+/* ---- The puff entrance. ---- */
+/** The puff waits this long after the swap, so the flat card is on screen first. */
+const PUFF_DELAY = 0.12;
+/**
+ * The zoom as it fills: a kick to the scale spring. ~0.85 swells it about
+ * 8% at the peak (a fifth of a second in), then it settles with a small dip.
+ */
+const PUFF_ZOOM = 0.85;
+/** Seconds the air takes to spread from the chest to the hem and sleeve ends. */
+const PUFF_FILL = 1.1;
+
 const VERTEX_HEAD = /* glsl */ `
 	uniform float uTime;
 	uniform float uWind;
@@ -81,6 +101,9 @@ const VERTEX_HEAD = /* glsl */ `
 	uniform float uSide;  // +1 front, -1 back
 	uniform float uTop;   // object-space y of the collar
 	uniform float uCrumple; // entry shake-out, 1 → 0
+	uniform float uPuff;    // inflation, 0 (flat photo) → 1 (full pillow)
+	uniform float uFront;   // how far the air has spread from the chest, 0 → 1
+	varying float vPuff;
 
 	float foldAt(vec2 p) {
 		return texture2D(uFoldMap, p / uSize + 0.5).r * 2.0 - 1.0;
@@ -124,6 +147,14 @@ const VERTEX_HEAD = /* glsl */ `
 		}
 		d += h * ${RIPPLE_SWELL.toFixed(4)} * swell;
 		return d;
+	}
+
+	// How inflated this point is: the air spreads from the chest outward,
+	// reaching the shoulders, then the sleeve ends and the hem.
+	float puffAt(vec2 p) {
+		float k = clamp(distance(p, vec2(0.0, uTop * 0.3)) / (length(uSize) * 0.55), 0.0, 1.0);
+		float w = 0.35;
+		return uPuff * smoothstep(k, k + w, clamp(uFront, 0.0, 1.0) * (1.0 + w));
 	}
 `;
 
@@ -476,12 +507,18 @@ function clothMaterial(
 					float dx = (clothDisp(position.xy + vec2(e, 0.0)) - clothDisp(position.xy - vec2(e, 0.0))) / (2.0 * e);
 					float dy = (clothDisp(position.xy + vec2(0.0, e)) - clothDisp(position.xy - vec2(0.0, e))) / (2.0 * e);
 					objectNormal = normalize(objectNormal + vec3(-dx, -dy, 0.0) * uSide * 1.6);
+					// Flat, it is lit as flat as the photograph it replaces.
+					objectNormal = normalize(mix(vec3(0.0, 0.0, uSide), objectNormal, clamp(puffAt(position.xy), 0.0, 1.0)));
 				}`
 			)
 			.replace(
 				'#include <begin_vertex>',
 				/* glsl */ `#include <begin_vertex>
-				transformed.z += clothDisp(position.xy);`
+				{
+					float lp = puffAt(position.xy);
+					vPuff = lp;
+					transformed.z = (transformed.z + clothDisp(position.xy)) * lp;
+				}`
 			);
 		// The entry dissolve: the cloth materialises from the collar down
 		// through a noise field, its leading edge glowing the brand's gold.
@@ -490,6 +527,7 @@ function clothMaterial(
 				'#include <common>',
 				/* glsl */ `#include <common>
 				uniform float uReveal;
+				varying float vPuff;
 				float revealHash(vec2 p) {
 					p = fract(p * vec2(123.34, 456.21));
 					p += dot(p, p + 45.32);
@@ -525,6 +563,13 @@ function clothMaterial(
 				'#include <emissivemap_fragment>',
 				/* glsl */ `#include <emissivemap_fragment>
 				totalEmissiveRadiance += vec3(1.0, 0.74, 0.32) * revealGlow * 2.4;`
+			)
+			// Flat, it shows the photograph's own pixels, unlit, so it can take
+			// the photo's place without a seam; the light comes in as it fills.
+			.replace(
+				'#include <opaque_fragment>',
+				/* glsl */ `outgoingLight = mix(diffuseColor.rgb, outgoingLight, clamp(vPuff, 0.0, 1.0));
+				#include <opaque_fragment>`
 			);
 
 		if (side === -1) {
@@ -541,11 +586,17 @@ function clothMaterial(
 	return material;
 }
 
+export type ClothIntro = 'dissolve' | 'puff' | null;
+
+
+
 export async function mountCloth(
 	canvas: HTMLCanvasElement,
 	image: HTMLImageElement,
-	{ reducedMotion = false, intro = false }: { reducedMotion?: boolean; intro?: boolean } = {}
+	{ reducedMotion = false, intro = null }: { reducedMotion?: boolean; intro?: ClothIntro } = {}
 ): Promise<ClothScene> {
+	const dissolve = intro === 'dissolve';
+	const puffIn = intro === 'puff';
 	if (!image.complete || !image.naturalWidth) {
 		await new Promise<void>((resolve, reject) => {
 			image.addEventListener('load', () => resolve(), { once: true });
@@ -618,8 +669,10 @@ export async function mountCloth(
 		uFoldMap: { value: foldMap },
 		uSize: { value: new THREE.Vector2(WIDTH, front.height) },
 		uTop: { value: top },
-		uCrumple: { value: intro ? 1 : 0 },
-		uReveal: { value: intro ? 0 : 1 }
+		uCrumple: { value: dissolve ? 1 : 0 },
+		uReveal: { value: dissolve ? 0 : 1 },
+		uPuff: { value: puffIn ? 0 : 1 },
+		uFront: { value: puffIn ? 0 : 1 }
 	};
 	const backColor = new THREE.Color('#b48d5d');
 
@@ -670,16 +723,27 @@ export async function mountCloth(
 	 * it home, so it lands with a real bounce. Roll keeps the photographed
 	 * face toward the viewer the whole way in.
 	 */
-	const entry = intro
+	const entry = dissolve
 		? { y: 0.36, vy: -0.4, roll: -0.55, vroll: 1.2, scale: 0.84, vscale: 0 }
 		: { y: 0, vy: 0, roll: 0, vroll: 0, scale: 1, vscale: 0 };
-	if (intro) {
+	if (dissolve) {
 		spring.yaw = 0.55;
 		spring.vyaw = -2.6;
 		spring.pitch = -0.18;
 	}
 	let entryAge = intro ? 0 : Infinity;
-	let landed = !intro;
+	let landed = !dissolve;
+	/**
+	 * The inflation, as an under-damped spring: it overfills a little and
+	 * settles, like a breath. `breathed` marks the ring it sends through the
+	 * cloth as it fills.
+	 */
+	const puff = { value: puffIn ? 0 : 1, velocity: 0 };
+	let breathed = !puffIn;
+	let inflating = false;
+	let fillAge = 0;
+	/** A puff holds still, flat, until reveal(): nothing may move unseen. */
+	let held = puffIn;
 	const lean = { yaw: 0, pitch: 0 };
 	/** Where the piece sits: drifted toward the pointer, kicked by scrolling. */
 	const body = { x: 0, y: 0, vx: 0, vy: 0, goalX: 0, goalY: 0 };
@@ -811,7 +875,7 @@ export async function mountCloth(
 	const ready = new Promise<void>((resolve) => (firstFrame = resolve));
 
 	function step(now: number) {
-		const dt = Math.min((now - last) / 1000, 1 / 20);
+		const dt = held ? 0 : Math.min((now - last) / 1000, 1 / 20);
 		last = now;
 		clock += reducedMotion ? 0 : dt;
 
@@ -865,8 +929,28 @@ export async function mountCloth(
 				landed = true;
 				startRipple(0, top * 0.72, 1.7);
 			}
-			uniforms.uReveal.value = Math.min(1, entryAge / 0.75);
-			uniforms.uCrumple.value = Math.exp(-entryAge * 1.7);
+			if (dissolve) {
+				uniforms.uReveal.value = Math.min(1, entryAge / 0.75);
+				uniforms.uCrumple.value = Math.exp(-entryAge * 1.7);
+			}
+			if (puffIn && entryAge > PUFF_DELAY) {
+				if (!inflating) {
+					inflating = true;
+					entry.vscale += PUFF_ZOOM;
+				}
+				fillAge += dt;
+				uniforms.uFront.value = Math.min(fillAge / PUFF_FILL, 1);
+				puff.velocity = pull(puff.value, puff.velocity, 38, 0.36, 1);
+				puff.value += puff.velocity * dt;
+				uniforms.uPuff.value = Math.max(0, puff.value);
+				if (!breathed && puff.value > 0.85) {
+					breathed = true;
+					startRipple(0, top * 0.1, 1.3);
+				}
+			}
+		} else {
+			uniforms.uPuff.value = 1;
+			uniforms.uFront.value = 1;
 		}
 
 		// The body springs toward its goal: under-damped, so it bounces.
@@ -880,6 +964,9 @@ export async function mountCloth(
 
 		piece.position.x = body.x;
 		piece.position.y = entry.y + body.y;
+		// The camera frames the pillow's front (z = DEPTH) to the photograph's
+		// size, so a flat card sits there too, and only its edges fall back as it fills.
+		piece.position.z = DEPTH * (1 - THREE.MathUtils.clamp(uniforms.uPuff.value, 0, 1));
 		piece.scale.setScalar(entry.scale);
 		// The tilt springs home a little looser than the bounce, so it trails it.
 		const tipK = BOUNCE_STIFFNESS * 0.7;
@@ -896,7 +983,7 @@ export async function mountCloth(
 			2.6
 		);
 		const gust = 0.85 + Math.sin(clock * 0.31) * 0.25 + Math.sin(clock * 0.83) * 0.12;
-		const entryGust = entryAge < 6 ? 3.2 * Math.exp(-entryAge * 1.4) : 0;
+		const entryGust = entryAge < 6 ? (dissolve ? 3.2 : 1.6) * Math.exp(-entryAge * 1.4) : 0;
 		uniforms.uWind.value = reducedMotion ? 0.4 : gust + stir + entryGust;
 		uniforms.uTime.value = clock;
 
@@ -921,6 +1008,9 @@ export async function mountCloth(
 
 	return {
 		ready,
+		reveal() {
+			held = false;
+		},
 		destroy() {
 			cancelAnimationFrame(frame);
 			resizeObserver.disconnect();
