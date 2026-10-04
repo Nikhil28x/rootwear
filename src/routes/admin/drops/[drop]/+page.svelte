@@ -234,6 +234,33 @@
 	</form>
 </section>
 
+<!-- PRE-ORDER MODE --------------------------------------------------------- -->
+<section class="mt-16 flex flex-col gap-6 border-t border-white/10 pt-10">
+	<SectionHead
+		eyebrow="Selling"
+		title="Pre-order mode"
+		note="Decides the product page's button. On: Pre-order — customers leave their name, email, phone and size, and no payment is taken. Off: Buy now — the normal cart and checkout."
+	/>
+
+	<form method="POST" action="?/preorderMode" class="flex flex-wrap items-center gap-5">
+		<input type="hidden" name="dropId" value={drop.id} />
+		<input type="hidden" name="preorderMode" value={drop.preorderMode ? 'false' : 'true'} />
+		<button
+			type="submit"
+			class="border px-7 py-3 text-[11px] font-medium tracking-[0.2em] uppercase transition {drop.preorderMode
+				? 'border-white/35 text-stone-100 hover:bg-white hover:text-black'
+				: 'border-gold text-gold hover:bg-gold hover:text-forest-black'}"
+		>
+			{drop.preorderMode ? 'Switch to Buy now' : 'Switch to Pre-order'}
+		</button>
+		<span class="text-[13px] text-stone-400">
+			{drop.preorderMode
+				? 'On — the product page shows Pre-order.'
+				: 'Off — the product page shows Buy now.'}
+		</span>
+	</form>
+</section>
+
 <!-- STOCK AND CAPS --------------------------------------------------------- -->
 <section class="mt-16 flex flex-col gap-6 border-t border-white/10 pt-10">
 	<SectionHead

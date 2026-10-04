@@ -67,7 +67,17 @@
 	</label>
 
 	{#if options.length > 0}
-		<select {id} {name} bind:value {required} class={control} aria-describedby={describedBy} {...rest}>
+		<select
+			{id}
+			{name}
+			bind:value
+			{required}
+			{autocomplete}
+			class={control}
+			aria-describedby={describedBy}
+			aria-invalid={error ? 'true' : undefined}
+			{...rest}
+		>
 			<option value="" disabled>Select…</option>
 			{#each options as option (option.value)}
 				<option value={option.value}>{option.label}</option>
@@ -80,9 +90,11 @@
 			{rows}
 			{required}
 			{placeholder}
+			{autocomplete}
 			bind:value
 			class="{control} resize-y"
 			aria-describedby={describedBy}
+			aria-invalid={error ? 'true' : undefined}
 			{...rest}
 		></textarea>
 	{:else}

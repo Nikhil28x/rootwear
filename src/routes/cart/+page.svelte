@@ -12,10 +12,8 @@
 	 * the hold runs out.
 	 */
 	import { invalidateAll } from '$app/navigation';
-	import Button from '$lib/components/ui/Button.svelte';
-	import Eyebrow from '$lib/components/ui/Eyebrow.svelte';
-	import HempMotif from '$lib/components/art/HempMotif.svelte';
-	import RootSystem from '$lib/components/art/RootSystem.svelte';
+	import '$lib/components/checkout/checkout.css';
+	import CheckoutSteps from '$lib/components/checkout/CheckoutSteps.svelte';
 	import CartLine from '$lib/components/cart/CartLine.svelte';
 	import CartSummary from '$lib/components/cart/CartSummary.svelte';
 	import CouponField from '$lib/components/cart/CouponField.svelte';
@@ -50,113 +48,114 @@
 	<meta name="robots" content="noindex" />
 </svelte:head>
 
-<main class="relative isolate overflow-hidden bg-paper text-forest">
-	<div class="pointer-events-none absolute inset-0 -z-10 select-none" aria-hidden="true">
-		<div class="absolute -top-32 -right-40 h-[38rem] w-[38rem] text-forest">
-			<HempMotif opacity={0.05} seed={3} />
-		</div>
-		<div class="absolute -bottom-28 -left-32 hidden h-[26rem] w-[46rem] text-forest sm:block">
-			<RootSystem opacity={0.06} depth={5} />
-		</div>
-	</div>
-
-	<div class="mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
-		<Eyebrow tone="strong" class="text-forest/70">Cart</Eyebrow>
-		<h1
-			class="display mt-6 text-[clamp(3rem,7vw,7rem)] leading-[0.82] tracking-[-0.055em] text-forest"
-		>
-			Your<br />basket.
-		</h1>
-
-		{#if problem}
-			<!-- Announced, not merely coloured. -->
-			<p
-				role="alert"
-				class="mt-10 max-w-[56ch] border-l-2 border-alert bg-alert/[0.06] px-6 py-5 text-[15px] leading-relaxed text-alert"
-			>
-				{problem}
-			</p>
-		{/if}
-
-		{#if holdLapsed && !empty}
-			<p
-				role="status"
-				class="mt-10 max-w-[56ch] border-l-2 border-gold px-6 py-5 text-[15px] leading-relaxed text-forest/75"
-			>
-				{HOLD_EXPIRED_MESSAGE}
-			</p>
-		{/if}
-
-		{#if empty}
-			<div class="mt-16 max-w-[52ch]">
-				<p class="text-[16px] leading-[1.85] text-forest/70">
-					Your cart is empty.
-				</p>
-				<div class="mt-10 flex flex-wrap gap-4">
-					<Button surface="light" variant="solid" href="/drops">See the drops</Button>
-					<Button surface="light" variant="outline" href="/know-your-roots">Know your roots</Button>
-				</div>
+<main class="co">
+	{#if empty}
+		<header class="co-mast">
+			<div class="co-mast__text">
+				<h1 class="co-title">Cart</h1>
 			</div>
-		{:else}
-			<div class="mt-16 grid gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-24">
+			<CheckoutSteps current="cart" />
+		</header>
+		<div class="co-single">
+			{#if problem}
+				<p role="alert" class="co-alert">{problem}</p>
+			{/if}
+			<p class="co-lede">Your cart is empty.</p>
+			<div class="co-actions">
+				<a class="cta" href="/drops">See the drops</a>
+				<a class="link" href="/know-your-roots">Know your roots</a>
+			</div>
+		</div>
+	{:else}
+		<div class="co-grid co-grid--after">
+			<header class="co-mast">
+				<div class="co-mast__text">
+					<h1 class="co-title">Cart</h1>
+				</div>
+				<CheckoutSteps current="cart" />
+			</header>
+			<div class="co-main">
+				{#if problem || holdLapsed}
+					<div class="cart-notices">
+						{#if problem}
+							<!-- Announced, not merely coloured. -->
+							<p role="alert" class="co-alert">{problem}</p>
+						{/if}
+						{#if holdLapsed && !empty}
+							<p role="status" class="co-note">{HOLD_EXPIRED_MESSAGE}</p>
+						{/if}
+					</div>
+				{/if}
+
 				<div>
-					{#if cart.soonestHoldMs !== null}
-						<div
-							class="flex flex-wrap items-baseline justify-between gap-4 border-b border-forest/15 pb-5"
-						>
+					<div class="co-head">
+						<h2>Pieces</h2>
+						{#if cart.soonestHoldMs !== null}
 							<HoldTimer
 								expiresAtMs={cart.soonestHoldMs}
 								serverNowMs={cart.pricedAtMs}
 								onexpire={onHoldExpired}
 								surface="light"
 							/>
-						</div>
-					{/if}
+						{/if}
+					</div>
 
-					<ul class="m-0 list-none p-0">
+					<ul class="co-lines">
 						{#each cart.lines as line (line.variantId)}
 							<CartLine {line} launchInstant={data.launchInstant} />
 						{/each}
 					</ul>
 				</div>
-
-				<div class="flex flex-col gap-8 lg:sticky lg:top-28 lg:self-start">
-					<CouponField
-						appliedCode={cart.couponCode}
-						discount={cart.totals.discount}
-						problem={cart.couponProblem}
-						status={couponStatus}
-					/>
-
-					<CartSummary totals={cart.totals} shipping={cart.shipping}>
-						<Button surface="light" variant="solid" full href="/checkout/information">
-							Checkout
-						</Button>
-						<Button surface="light" variant="quiet" href="/drops">Keep looking</Button>
-					</CartSummary>
-
-					{#if cart.hasPreOrderLine}
-						<p class="border-l-2 border-gold pl-4 text-[13px] leading-relaxed text-forest/75">
-							<span class="block text-[11px] tracking-[0.28em] text-forest uppercase font-medium">
-								Includes a pre-order
-							</span>
-							<span class="mt-2 block">
-								Pre-order pieces ship after the drop opens.
-							</span>
-						</p>
-					{/if}
-
-					<!-- §11: the SAME returns wording as the product page, the
-					     confirmation email and the returns policy. Imported from one
-					     module, never retyped. -->
-					<section class="border-t border-forest/15 pt-6" aria-labelledby="returns-heading">
-						<h2 id="returns-heading" class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
-							Returns
-						</h2>
-						<p class="mt-4 text-[13px] leading-relaxed text-forest/70">{RETURNS_WORDING}</p>
-					</section>
-				</div>
 			</div>
-		{/if}
-	</div>
+
+			<aside class="co-aside co-card" aria-label="Order summary">
+				<CartSummary totals={cart.totals} shipping={cart.shipping}>
+					<a class="cta cta--full" href="/checkout/information">Checkout</a>
+					<a class="link link--soft" href="/drops">Keep looking</a>
+				</CartSummary>
+
+				<CouponField
+					appliedCode={cart.couponCode}
+					discount={cart.totals.discount}
+					problem={cart.couponProblem}
+					status={couponStatus}
+				/>
+
+				{#if cart.hasPreOrderLine}
+					<p class="co-note">
+						<b>Includes a pre-order</b>
+						Pre-order pieces ship after the drop opens.
+					</p>
+				{/if}
+
+				<!-- §11: the SAME returns wording as the product page, the
+				     confirmation email and the returns policy. Imported from one
+				     module, never retyped. -->
+				<section class="cart-returns" aria-labelledby="returns-heading">
+					<h2 id="returns-heading" class="co-label">Returns</h2>
+					<p class="co-fine">{RETURNS_WORDING}</p>
+				</section>
+			</aside>
+		</div>
+	{/if}
 </main>
+
+<style>
+	.cart-notices {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+	.cart-returns {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		padding-top: 18px;
+		border-top: 1px solid var(--rule);
+	}
+	.cart-returns h2 {
+		margin: 0;
+		font-weight: 400;
+		color: var(--ink);
+	}
+</style>

@@ -36,6 +36,7 @@ import type {
 import { getCatalogueClient, getServiceClient } from '$lib/server/db/clients';
 import { ZERO, paise, type Paise } from '$lib/money';
 import type { Size } from '$lib/drop/sizes';
+import { cartKeyPrefix } from './keys';
 
 const asPaise = (value: number | string | null | undefined): Paise =>
 	paise(Math.trunc(Number(value ?? 0)));
@@ -203,13 +204,21 @@ export const supabaseCartRepository: CartRepository = {
 		if (error) throw new Error(`setCoupon failed: ${error.message}`);
 	},
 
-	async validateCoupon(code: string, subtotal: Paise, kind: PaymentKind): Promise<CouponOutcome> {
+	async validateCoupon(
+		code: string,
+		subtotal: Paise,
+		kind: PaymentKind,
+		cartToken?: string | null
+	): Promise<CouponOutcome> {
 		// §10: validation is SERVER-SIDE and the refusal on a deposit or a
 		// balance lives inside the function, not in a branch out here.
+		// p_own_key_prefix (0020): this cart's own unpaid orders do not count
+		// against a limited-use code.
 		const { data, error } = await getServiceClient().rpc('apply_coupon', {
 			p_code: code,
 			p_subtotal_paise: subtotal,
-			p_payment_kind: kind
+			p_payment_kind: kind,
+			p_own_key_prefix: cartToken ? cartKeyPrefix(cartToken) : null
 		});
 
 		if (error) throw new Error(`validateCoupon failed: ${error.message}`);
@@ -455,6 +464,65 @@ export const supabaseCartRepository: CartRepository = {
 		};
 	},
 
+	async restoreLines(cartId, lines, heldUntilMs) {
+		if (lines.length === 0) return;
+		// ONE statement, so a concurrent read sees all of the cart or none of
+		// it. app.commit_order() emptied the cart in the same request, so an
+		// upsert of the exact quantities is the restore.
+		const { error } = await getServiceClient()
+			.from('cart_lines')
+			.upsert(
+				lines.map((line) => ({
+					cart_id: cartId,
+					variant_id: line.variantId,
+					quantity: line.quantity,
+					held_until: iso(heldUntilMs)
+				})),
+				{ onConflict: 'cart_id,variant_id' }
+			);
+
+		if (error) throw new Error(`restoreLines failed: ${error.message}`);
+	},
+
+	async findRecentPendingOrder(keyPrefix, sinceMs) {
+		const { data, error } = await getServiceClient().rpc('recent_pending_order', {
+			p_key_prefix: keyPrefix,
+			p_since: iso(sinceMs)
+		});
+
+		if (error) throw new Error(`findRecentPendingOrder failed: ${error.message}`);
+		return (data as string | null) ?? null;
+	},
+
+	async cancelSupersededOrders({ keyPrefix, keepKey }) {
+		// The state guard and the stock give-back are one transaction in SQL;
+		// see 0020_unpaid_order_expiry.sql.
+		const { data, error } = await getServiceClient().rpc('cancel_superseded_orders', {
+			p_key_prefix: keyPrefix,
+			p_keep_key: keepKey
+		});
+
+		if (error) throw new Error(`cancelSupersededOrders failed: ${error.message}`);
+		return Number(data ?? 0);
+	},
+
+	async cancelUnpaidOrder(orderId) {
+		const { data, error } = await getServiceClient().rpc('cancel_unpaid_orders', {
+			p_order_ids: [orderId]
+		});
+		if (error) throw new Error(`cancelUnpaidOrder failed: ${error.message}`);
+		return Number(data ?? 0) > 0;
+	},
+
+	async expireUnpaidOrders(olderThanMs) {
+		const { data, error } = await getServiceClient().rpc('expire_unpaid_orders', {
+			p_older_than: `${Math.max(0, Math.round(olderThanMs / 1000))} seconds`
+		});
+
+		if (error) throw new Error(`expireUnpaidOrders failed: ${error.message}`);
+		return Number(data ?? 0);
+	},
+
 	async recordPaymentIntent(input) {
 		const { error } = await getServiceClient().from('payments').insert({
 			order_id: input.orderId,
@@ -486,7 +554,10 @@ export const supabaseCartRepository: CartRepository = {
 
 		return {
 			orderPublicToken: row.order_public_token,
-			alreadyCaptured: row.status === 'already_captured'
+			alreadyCaptured: row.status === 'already_captured',
+			// 0020: captured against an order that had already been cancelled;
+			// a cap_race row is in app.refunds awaiting admin.
+			refundRequired: row.status === 'captured_order_cancelled'
 		};
 	},
 

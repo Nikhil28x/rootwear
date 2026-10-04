@@ -36,6 +36,7 @@ import { ZERO, addPaise, fromRupees, multiplyPaise, paise, subPaise, type Paise 
 import { depositAndBalance, PRELAUNCH_PRICE } from '$lib/config/commerce';
 import { catalogueIndex, resolvePrice } from './pricing';
 import { sellableStock } from '$lib/domain/drop';
+import { cartKeyPrefix } from './keys';
 
 /** §10: a flat India-wide rate, matching the row seeded in 0011. */
 /**
@@ -128,6 +129,80 @@ const ordersByToken = new Map<string, string>();
 const idempotency = new Map<string, string>();
 /** Units this process has committed to orders, since the fixture cannot move. */
 const sold = new Map<string, number>();
+/** What each order took from stock, so a cancellation can give it back. */
+const orderUnits = new Map<string, { variantId: string; quantity: number }[]>();
+/** app.coupon_redemptions: order id → coupon code. */
+const redemptions = new Map<string, string>();
+
+/**
+ * The `for update` on app.carts that serialises two commits of the same cart
+ * in Postgres. Without it two near-simultaneous submits could both pass the
+ * idempotency check across the `await` in commitOrder and place two orders.
+ */
+const cartLocks = new Map<string, Promise<unknown>>();
+function withCartLock<T>(token: string, run: () => Promise<T>): Promise<T> {
+	const previous = cartLocks.get(token) ?? Promise.resolve();
+	const next = previous.then(run, run);
+	const settled = next.catch(() => undefined);
+	cartLocks.set(token, settled);
+	void settled.then(() => {
+		if (cartLocks.get(token) === settled) cartLocks.delete(token);
+	});
+	return next;
+}
+
+/** Refunds owed for money captured against an order that was already cancelled. */
+const refundsOwed: { paymentId: string; amount: Paise; reason: 'cap_race' }[] = [];
+
+/** Orders placed under idempotency keys that start with `keyPrefix`. */
+function ordersUnderPrefix(keyPrefix: string): { key: string; orderId: string }[] {
+	const found: { key: string; orderId: string }[] = [];
+	for (const [key, orderId] of idempotency) {
+		if (key.startsWith(keyPrefix)) found.push({ key, orderId });
+	}
+	return found;
+}
+
+/**
+ * Mirrors app.cancel_unpaid_orders(): cancels each order that is still
+ * pending_payment and has no captured payment, then gives back its stock,
+ * its coupon redemption and its idempotency key (so the same basket checked
+ * out again places a fresh order instead of replaying a cancelled one).
+ * Synchronous on purpose — no other request can interleave with it.
+ */
+function cancelUnpaidOrders(orderIds: Iterable<string>): number {
+	let cancelled = 0;
+	for (const orderId of orderIds) {
+		const order = orders.get(orderId);
+		if (!order || order.state !== 'pending_payment') continue;
+		const paid = [...payments.values()].some(
+			(payment) =>
+				payment.orderId === orderId &&
+				(payment.state === 'captured' || payment.state === 'authorized')
+		);
+		if (paid) continue;
+
+		orders.set(orderId, { ...order, state: 'cancelled' });
+
+		for (const unit of orderUnits.get(orderId) ?? []) {
+			sold.set(unit.variantId, Math.max(0, (sold.get(unit.variantId) ?? 0) - unit.quantity));
+		}
+
+		const code = redemptions.get(orderId);
+		if (code) {
+			const coupon = COUPONS.get(code);
+			if (coupon) coupon.usedCount = Math.max(0, coupon.usedCount - 1);
+			redemptions.delete(orderId);
+		}
+
+		for (const [key, id] of idempotency) {
+			if (id === orderId) idempotency.delete(key);
+		}
+
+		cancelled += 1;
+	}
+	return cancelled;
+}
 
 type MockPayment = {
 	id: string;
@@ -138,7 +213,7 @@ type MockPayment = {
 	gatewayOrderId: string;
 	gatewayPaymentId: string | null;
 	amount: Paise;
-	state: 'created' | 'captured' | 'refunded';
+	state: 'created' | 'authorized' | 'captured' | 'refunded';
 };
 
 const payments = new Map<string, MockPayment>();
@@ -268,7 +343,12 @@ export const mockCartRepository: CartRepository = {
 		}
 	},
 
-	async validateCoupon(code: string, subtotal: Paise, kind: PaymentKind): Promise<CouponOutcome> {
+	async validateCoupon(
+		code: string,
+		subtotal: Paise,
+		kind: PaymentKind,
+		cartToken?: string | null
+	): Promise<CouponOutcome> {
 		// §10, first and without exception: a coupon must NEVER be applicable to
 		// a deposit or a balance payment. Checked before the code is even looked
 		// up, exactly as app.apply_coupon() does it.
@@ -285,7 +365,21 @@ export const mockCartRepository: CartRepository = {
 		if (coupon.validUntilMs !== null && coupon.validUntilMs < now) {
 			return couponOutcome('expired', ZERO, coupon.code);
 		}
-		if (coupon.maxUses !== null && coupon.usedCount >= coupon.maxUses) {
+		// A use held by this cart's own UNPAID order is not a use against it:
+		// that order is either paid (and the cart retired) or cancelled (and
+		// the use released) before this cart can redeem again.
+		let ownPending = 0;
+		if (cartToken) {
+			for (const { orderId } of ordersUnderPrefix(cartKeyPrefix(cartToken))) {
+				if (
+					redemptions.get(orderId) === coupon.code &&
+					orders.get(orderId)?.state === 'pending_payment'
+				) {
+					ownPending += 1;
+				}
+			}
+		}
+		if (coupon.maxUses !== null && coupon.usedCount - ownPending >= coupon.maxUses) {
 			return couponOutcome('exhausted', ZERO, coupon.code);
 		}
 		if (subtotal < coupon.minSubtotal) {
@@ -330,112 +424,177 @@ export const mockCartRepository: CartRepository = {
 		}
 	},
 
-	async commitOrder(input: CommitInput): Promise<CommitOutcome> {
-		// Idempotent replay FIRST: a retried submit returns the SAME order.
-		const replayed = idempotency.get(input.idempotencyKey);
-		if (replayed) {
-			const order = orders.get(replayed);
-			return {
-				status: 'replayed',
-				orderId: replayed,
-				publicToken: order?.publicToken ?? null,
-				orderNumber: order?.orderNumber ?? null
-			};
-		}
-
-		const cart = carts.get(input.cartToken);
-		if (!cart) return { status: 'empty_cart', orderId: null, publicToken: null, orderNumber: null };
-
-		const lines = [...linesOf(cart.id).values()];
-		if (lines.length === 0) {
-			return { status: 'empty_cart', orderId: null, publicToken: null, orderNumber: null };
-		}
-
-		const index = await catalogueIndex();
-		const nowMs = Date.now();
-
-		// Stock check across every line before anything is written, so a partial
-		// commit is impossible — the same all-or-nothing the SQL gets from its
-		// transaction.
-		for (const line of lines) {
-			const entry = index.get(line.variantId);
-			if (!entry) {
-				return { status: 'out_of_stock', orderId: null, publicToken: null, orderNumber: null };
+	commitOrder(input: CommitInput): Promise<CommitOutcome> {
+		// Serialised per cart, like the row lock app.commit_order() takes.
+		return withCartLock(input.cartToken, async () => {
+			// Idempotent replay FIRST: a retried submit returns the SAME order.
+			const replayed = idempotency.get(input.idempotencyKey);
+			if (replayed) {
+				const order = orders.get(replayed);
+				return {
+					status: 'replayed',
+					orderId: replayed,
+					publicToken: order?.publicToken ?? null,
+					orderNumber: order?.orderNumber ?? null
+				};
 			}
-			const available = sellableStock(entry.variant) - (sold.get(line.variantId) ?? 0);
-			if (available < line.quantity) {
-				return { status: 'out_of_stock', orderId: null, publicToken: null, orderNumber: null };
+
+			const cart = carts.get(input.cartToken);
+			if (!cart)
+				return { status: 'empty_cart', orderId: null, publicToken: null, orderNumber: null };
+
+			const lines = [...linesOf(cart.id).values()];
+			if (lines.length === 0) {
+				return { status: 'empty_cart', orderId: null, publicToken: null, orderNumber: null };
 			}
-		}
 
-		const orderId = randomUUID();
-		const publicToken = randomUUID().replaceAll('-', '') + randomUUID().replaceAll('-', '');
-		const orderNumber = `RW${new Date(nowMs).toISOString().slice(2, 10).replaceAll('-', '')}-${publicToken.slice(0, 5).toUpperCase()}`;
+			const index = await catalogueIndex();
+			const nowMs = Date.now();
 
-		const orderLines: OrderLineRecord[] = [];
-		let subtotal: Paise = ZERO;
-		let hasPreOrderLine = false;
+			// Stock check across every line before anything is written, so a partial
+			// commit is impossible — the same all-or-nothing the SQL gets from its
+			// transaction.
+			for (const line of lines) {
+				const entry = index.get(line.variantId);
+				if (!entry) {
+					return { status: 'out_of_stock', orderId: null, publicToken: null, orderNumber: null };
+				}
+				const available = sellableStock(entry.variant) - (sold.get(line.variantId) ?? 0);
+				if (available < line.quantity) {
+					return { status: 'out_of_stock', orderId: null, publicToken: null, orderNumber: null };
+				}
+			}
 
-		for (const line of lines) {
-			const entry = index.get(line.variantId)!;
-			// §04: the price is resolved HERE, server-side, from the drop's own
-			// launch instant. Nothing the client posted influences it.
-			const { unitPrice, priceSource, isPreOrder } = resolvePrice(entry.drop, entry.product, nowMs);
-			hasPreOrderLine ||= isPreOrder;
+			const orderId = randomUUID();
+			const publicToken = randomUUID().replaceAll('-', '') + randomUUID().replaceAll('-', '');
+			const orderNumber = `RW${new Date(nowMs).toISOString().slice(2, 10).replaceAll('-', '')}-${publicToken.slice(0, 5).toUpperCase()}`;
 
-			orderLines.push({
-				sku: entry.variant.sku,
-				name: entry.product.name,
-				size: entry.variant.size,
-				quantity: line.quantity,
-				unitPrice,
-				priceSource,
-				// §08: the hand number is allocated ON PAYMENT CONFIRMATION.
-				pieceNumber: null
+			const orderLines: OrderLineRecord[] = [];
+			let subtotal: Paise = ZERO;
+			let hasPreOrderLine = false;
+
+			for (const line of lines) {
+				const entry = index.get(line.variantId)!;
+				// §04: the price is resolved HERE, server-side, from the drop's own
+				// launch instant. Nothing the client posted influences it.
+				const { unitPrice, priceSource, isPreOrder } = resolvePrice(
+					entry.drop,
+					entry.product,
+					nowMs
+				);
+				hasPreOrderLine ||= isPreOrder;
+
+				orderLines.push({
+					sku: entry.variant.sku,
+					name: entry.product.name,
+					size: entry.variant.size,
+					quantity: line.quantity,
+					unitPrice,
+					priceSource,
+					// §08: the hand number is allocated ON PAYMENT CONFIRMATION.
+					pieceNumber: null
+				});
+
+				subtotal = addPaise(subtotal, multiplyPaise(unitPrice, line.quantity));
+				sold.set(line.variantId, (sold.get(line.variantId) ?? 0) + line.quantity);
+			}
+
+			// §10: the coupon is re-validated against the SERVER's subtotal after the
+			// commit, never against a figure the browser sent.
+			let discount: Paise = ZERO;
+			if (input.couponCode) {
+				const outcome = await this.validateCoupon(
+					input.couponCode,
+					subtotal,
+					'order',
+					input.cartToken
+				);
+				if (outcome.status === 'ok') {
+					discount = outcome.discount;
+					const coupon = COUPONS.get(input.couponCode.trim().toUpperCase());
+					if (coupon) {
+						coupon.usedCount += 1;
+						redemptions.set(orderId, coupon.code);
+					}
+				}
+			}
+
+			const total = paise(Math.max(0, subPaise(addPaise(subtotal, input.shipping), discount)));
+
+			orders.set(orderId, {
+				id: orderId,
+				orderNumber,
+				publicToken,
+				state: 'pending_payment',
+				email: input.ship.email,
+				subtotal,
+				shipping: input.shipping,
+				discount,
+				total,
+				ship: input.ship,
+				lines: orderLines,
+				courierName: null,
+				trackingRef: null,
+				placedAtMs: nowMs,
+				hasPreOrderLine
 			});
+			ordersByToken.set(publicToken, orderId);
+			idempotency.set(input.idempotencyKey, orderId);
+			orderUnits.set(
+				orderId,
+				lines.map((line) => ({ variantId: line.variantId, quantity: line.quantity }))
+			);
 
-			subtotal = addPaise(subtotal, multiplyPaise(unitPrice, line.quantity));
-			sold.set(line.variantId, (sold.get(line.variantId) ?? 0) + line.quantity);
-		}
+			cartLines.set(cart.id, new Map());
+			cart.couponCode = null;
 
-		// §10: the coupon is re-validated against the SERVER's subtotal after the
-		// commit, never against a figure the browser sent.
-		let discount: Paise = ZERO;
-		if (input.couponCode) {
-			const outcome = await this.validateCoupon(input.couponCode, subtotal, 'order');
-			if (outcome.status === 'ok') {
-				discount = outcome.discount;
-				const coupon = COUPONS.get(input.couponCode.trim().toUpperCase());
-				if (coupon) coupon.usedCount += 1;
-			}
-		}
-
-		const total = paise(Math.max(0, subPaise(addPaise(subtotal, input.shipping), discount)));
-
-		orders.set(orderId, {
-			id: orderId,
-			orderNumber,
-			publicToken,
-			state: 'pending_payment',
-			email: input.ship.email,
-			subtotal,
-			shipping: input.shipping,
-			discount,
-			total,
-			ship: input.ship,
-			lines: orderLines,
-			courierName: null,
-			trackingRef: null,
-			placedAtMs: nowMs,
-			hasPreOrderLine
+			return { status: 'committed', orderId, publicToken, orderNumber };
 		});
-		ordersByToken.set(publicToken, orderId);
-		idempotency.set(input.idempotencyKey, orderId);
+	},
 
-		cartLines.set(cart.id, new Map());
-		cart.couponCode = null;
+	async restoreLines(cartId, lines, heldUntilMs) {
+		// One synchronous write: no request can observe a half-restored cart.
+		const map = linesOf(cartId);
+		for (const line of lines) {
+			const existing = map.get(line.variantId);
+			map.set(line.variantId, {
+				variantId: line.variantId,
+				quantity: (existing?.quantity ?? 0) + line.quantity,
+				heldUntilMs
+			});
+		}
+	},
 
-		return { status: 'committed', orderId, publicToken, orderNumber };
+	async findRecentPendingOrder(keyPrefix, sinceMs) {
+		let newest: OrderRecord | null = null;
+		for (const { orderId } of ordersUnderPrefix(keyPrefix)) {
+			const order = orders.get(orderId);
+			if (!order || order.state !== 'pending_payment' || order.placedAtMs < sinceMs) continue;
+			if (!newest || order.placedAtMs > newest.placedAtMs) newest = order;
+		}
+		return newest?.publicToken ?? null;
+	},
+
+	async cancelSupersededOrders({ keyPrefix, keepKey }) {
+		const keep = idempotency.get(keepKey);
+		return cancelUnpaidOrders(
+			ordersUnderPrefix(keyPrefix)
+				.filter(({ key, orderId }) => key !== keepKey && orderId !== keep)
+				.map(({ orderId }) => orderId)
+		);
+	},
+
+	async cancelUnpaidOrder(orderId) {
+		return cancelUnpaidOrders([orderId]) > 0;
+	},
+
+	async expireUnpaidOrders(olderThanMs) {
+		const cutoff = Date.now() - olderThanMs;
+		return cancelUnpaidOrders(
+			[...orders.values()]
+				.filter((order) => order.state === 'pending_payment' && order.placedAtMs <= cutoff)
+				.map((order) => order.id)
+		);
 	},
 
 	async findOrderByToken(token: string): Promise<OrderRecord | null> {
@@ -459,23 +618,37 @@ export const mockCartRepository: CartRepository = {
 
 	async capturePayment(input) {
 		const payment = payments.get(input.gatewayOrderId);
-		if (!payment) return { orderPublicToken: null, alreadyCaptured: false };
+		if (!payment) return { orderPublicToken: null, alreadyCaptured: false, refundRequired: false };
 
 		// §04: idempotent by construction. A redelivered webhook lands here and
 		// changes nothing the second time.
 		if (payment.state === 'captured') {
 			const order = payment.orderId ? orders.get(payment.orderId) : null;
-			return { orderPublicToken: order?.publicToken ?? null, alreadyCaptured: true };
+			return {
+				orderPublicToken: order?.publicToken ?? null,
+				alreadyCaptured: true,
+				refundRequired: false
+			};
 		}
 
 		payment.state = 'captured';
 		payment.gatewayPaymentId = input.gatewayPaymentId;
 
 		let orderPublicToken: string | null = null;
+		let refundRequired = false;
 		if (payment.orderId) {
 			const order = orders.get(payment.orderId);
 			if (order) {
-				orders.set(order.id, { ...order, state: 'paid' });
+				// Same guard as app.capture_payment(): only an order still
+				// awaiting payment becomes paid.
+				if (order.state === 'pending_payment') {
+					orders.set(order.id, { ...order, state: 'paid' });
+				} else if (order.state === 'cancelled') {
+					// Paid after it expired or was superseded: its stock may
+					// already be someone else's. Recorded for refund, not revived.
+					refundsOwed.push({ paymentId: payment.id, amount: input.amount, reason: 'cap_race' });
+					refundRequired = true;
+				}
 				orderPublicToken = order.publicToken;
 			}
 		}
@@ -486,7 +659,7 @@ export const mockCartRepository: CartRepository = {
 			}
 		}
 
-		return { orderPublicToken, alreadyCaptured: false };
+		return { orderPublicToken, alreadyCaptured: false, refundRequired };
 	},
 
 	async findPaymentIntent(input): Promise<PaymentIntentRecord | null> {

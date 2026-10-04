@@ -1,7 +1,9 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { cartRepository, loadCart, readCartToken } from '$lib/server/cart';
-import { readShipValues, writeShipTo } from '$lib/server/cart/ship-session';
+import { readShipValues, toShipTo, writeShipTo } from '$lib/server/cart/ship-session';
+import { placeOrder } from '$lib/server/checkout/place';
+import { expireUnpaidOrders } from '$lib/server/checkout/expiry';
 import {
 	EMPTY_ADDRESS,
 	SHIP_COUNTRY,
@@ -22,6 +24,10 @@ import type { SavedAddress } from '$lib/server/cart/types';
  * gateway as a configurable option, pre-order dispatch note, order-notes
  * field."
  *
+ * One page: the address and the order are confirmed together, and a valid
+ * submit places the order (src/lib/server/checkout/place.ts) and hands over
+ * to payment.
+ *
  * §10 is enforced HERE AND AT ORDER CREATION, which is two places on purpose:
  * India only, pincode ^[1-9][0-9]{5}$ checked against public.pincode_exclusions,
  * phone ^[6-9][0-9]{9}$. The browser check in $lib/checkout/address.ts is a
@@ -31,6 +37,8 @@ import type { SavedAddress } from '$lib/server/cart/types';
 const field = (data: FormData, key: string) => (data.get(key) ?? '').toString().trim();
 
 export const load: PageServerLoad = async ({ cookies, locals }) => {
+	// Lapsed unpaid orders give their stock back before availability is read.
+	await expireUnpaidOrders();
 	const cart = await loadCart(cookies, locals.now);
 
 	// Nothing to check out. Sending them to the cart is the honest destination:
@@ -67,7 +75,7 @@ export const load: PageServerLoad = async ({ cookies, locals }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, cookies }) => {
+	default: async ({ request, cookies, locals }) => {
 		const data = await request.formData();
 
 		const values: AddressValues = {
@@ -101,25 +109,26 @@ export const actions: Actions = {
 			if (exclusion) errors.pincode = exclusion;
 		}
 
-		// A cart that emptied while the form was open must not become an order.
-		const token = readCartToken(cookies);
-		const cart = token ? await cartRepository.findCart(token) : null;
-		const lines = cart ? await cartRepository.listLines(cart.id) : [];
-		if (lines.length === 0) {
-			return fail(409, {
+		if (hasErrors(errors)) {
+			// A cart that emptied while the form was open must not become an order.
+			const token = readCartToken(cookies);
+			const cart = token ? await cartRepository.findCart(token) : null;
+			const lines = cart ? await cartRepository.listLines(cart.id) : [];
+			// The visitor's own words come back with the errors. Retyping an
+			// address because one field was wrong is the worst thing a form does.
+			return fail(lines.length === 0 ? 409 : 400, {
 				values,
 				errors,
-				problem: 'Your cart is empty.'
+				problem: lines.length === 0 ? 'Your cart is empty.' : ''
 			});
 		}
 
-		if (hasErrors(errors)) {
-			// The visitor's own words come back with the errors. Retyping an
-			// address because one field was wrong is the worst thing a form does.
-			return fail(400, { values, errors, problem: '' });
-		}
-
 		writeShipTo(cookies, values);
-		redirect(303, '/checkout/review');
+
+		// An empty cart is NOT short-circuited here: placeOrder lets
+		// app.commit_order() decide, which is what turns a double-submit into a
+		// replay of the order just placed rather than an empty basket.
+		const failure = await placeOrder({ cookies, now: locals.now, ship: toShipTo(values) });
+		return fail(failure.status, { ...failure.data, values, errors: {} as AddressErrors });
 	}
 };

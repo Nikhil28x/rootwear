@@ -1,6 +1,8 @@
 <script lang="ts">
 	/**
-	 * §03 template 07 — Checkout, step one: where it goes.
+	 * §03 template 07 — Checkout, on one page: where it goes, what it is, and
+	 * the button that places the order and opens payment. Nothing priced here
+	 * is posted: the action recomputes everything (src/lib/server/checkout).
 	 *
 	 * Every rule on this form is also enforced on the server (§10: "enforce at
 	 * the address form AND at order creation, not just in copy"). The `pattern`
@@ -9,14 +11,16 @@
 	 */
 	import { untrack } from 'svelte';
 	import { enhance } from '$app/forms';
-	import Button from '$lib/components/ui/Button.svelte';
-	import Eyebrow from '$lib/components/ui/Eyebrow.svelte';
+	import { page } from '$app/state';
+	import '$lib/components/checkout/checkout.css';
+	import CheckoutSteps from '$lib/components/checkout/CheckoutSteps.svelte';
 	import Field from '$lib/components/ui/Field.svelte';
-	import HempMotif from '$lib/components/art/HempMotif.svelte';
 	import CartSummary from '$lib/components/cart/CartSummary.svelte';
 	import HoldTimer from '$lib/components/cart/HoldTimer.svelte';
+	import OrderPanel from '$lib/components/checkout/OrderPanel.svelte';
 	import { formatInr } from '$lib/money';
 	import { RETURNS_WORDING } from '$lib/content/returns';
+	import { PAYMENT_NOT_CONFIGURED_MESSAGE } from '$lib/checkout/messages';
 	import { FIT_DISCLAIMER } from '$lib/drop/sizes';
 	import {
 		PINCODE_PATTERN,
@@ -43,6 +47,9 @@
 
 	let errors = $derived(form && 'errors' in form ? form.errors : undefined);
 	let problem = $derived(form && 'problem' in form ? form.problem : '');
+	let payLabel = $derived(
+		data.payment.configured ? `Pay ${formatInr(data.cart.totals.total)}` : 'Place order'
+	);
 	let errorList = $derived(
 		Object.entries(errors ?? {}).filter(([, text]) => Boolean(text)) as Array<[string, string]>
 	);
@@ -76,93 +83,82 @@
 	<meta name="robots" content="noindex" />
 </svelte:head>
 
-<main class="relative isolate overflow-hidden bg-paper text-forest">
-	<div class="pointer-events-none absolute inset-0 -z-10 select-none" aria-hidden="true">
-		<div class="absolute -top-32 -right-40 h-[36rem] w-[36rem] text-forest">
-			<HempMotif opacity={0.04} seed={8} />
-		</div>
-	</div>
+<main class="co">
+	<div class="co-grid">
+		<header class="co-mast">
+			<div class="co-mast__text">
+				<h1 class="co-title">Checkout</h1>
+			</div>
+			<CheckoutSteps current="checkout" />
+		</header>
 
-	<div class="mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
-		<Eyebrow tone="strong" class="text-forest/70">Checkout · Step one of two</Eyebrow>
-		<h1
-			class="display mt-6 text-[clamp(3rem,7vw,7rem)] leading-[0.82] tracking-[-0.055em] text-forest"
-		>
-			Where it<br />goes.
-		</h1>
-
-		<div class="mt-10 grid gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-24">
-			<div class="max-w-[46rem]">
-				{#if problem}
-					<p
-						role="alert"
-						class="mb-7 border-l-2 border-alert bg-alert/[0.06] px-6 py-5 text-[15px] leading-relaxed text-alert"
-					>
-						{problem}
+		<div class="co-main">
+			{#if page.url.searchParams.get('payment') === 'cancelled' && !problem && errorList.length === 0}
+				<div class="info-notices">
+					<p role="status" class="co-note">
+						Payment cancelled. Your cart is saved — press Pay when you're ready to try again.
 					</p>
-				{/if}
+				</div>
+			{/if}
+			{#if problem || errorList.length > 0}
+				<div class="info-notices">
+					{#if problem}
+						<p role="alert" class="co-alert">{problem}</p>
+					{/if}
 
-				{#if errorList.length > 0}
-					<!-- Errors are announced as a list, not merely coloured field by
-					     field: a screen reader gets the whole picture in one place. -->
-					<section
-						role="alert"
-						class="mb-7 border-l-2 border-alert bg-alert/[0.06] px-6 py-5"
-						aria-labelledby="errors-title"
-					>
-						<h2 id="errors-title" class="text-[11px] tracking-[0.28em] text-alert uppercase font-medium">
-							{errorList.length}
-							{errorList.length === 1 ? 'thing needs' : 'things need'} fixing
-						</h2>
-						<ul class="mt-3 flex list-none flex-col gap-1 p-0 text-[15px] text-alert">
-							{#each errorList as [key, text] (key)}
-								<li>{text}</li>
-							{/each}
-						</ul>
-					</section>
-				{/if}
+					{#if errorList.length > 0}
+						<!-- Errors are announced as a list, not merely coloured field by
+						     field: a screen reader gets the whole picture in one place. -->
+						<section role="alert" class="co-alert" aria-labelledby="errors-title">
+							<h2 id="errors-title" class="info-errors-title">
+								{errorList.length}
+								{errorList.length === 1 ? 'thing needs' : 'things need'} fixing
+							</h2>
+							<ul>
+								{#each errorList as [key, text] (key)}
+									<li>{text}</li>
+								{/each}
+							</ul>
+						</section>
+					{/if}
+				</div>
+			{/if}
 
-				{#if data.saved.length > 0}
-					<section class="mb-8 border-b border-forest/15 pb-8" aria-labelledby="saved-title">
-						<h2 id="saved-title" class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
-							Saved addresses
-						</h2>
-						<div class="mt-5 flex flex-wrap gap-3">
-							{#each data.saved as address (address.id)}
-								<button
-									type="button"
-									onclick={() => useSaved(address.id)}
-									class="border border-forest/25 px-5 py-3 text-left text-[13px] leading-relaxed text-forest/80 transition hover:border-forest hover:text-forest"
-								>
-									<span class="block text-[11px] tracking-[0.2em] text-forest uppercase font-medium">
-										{address.label}
-									</span>
-									<span class="mt-1 block">{address.line1}, {address.city} {address.pincode}</span>
-								</button>
-							{/each}
-						</div>
-					</section>
-				{/if}
+			{#if data.saved.length > 0}
+				<section aria-labelledby="saved-title">
+					<div class="co-head"><h2 id="saved-title">Saved addresses</h2></div>
+					<div class="co-saved info-saved">
+						{#each data.saved as address (address.id)}
+							<button type="button" onclick={() => useSaved(address.id)}>
+								<b>{address.label}</b>
+								<span>{address.line1}, {address.city} {address.pincode}</span>
+							</button>
+						{/each}
+					</div>
+				</section>
+			{/if}
 
-				<form
-					method="POST"
-					class="flex flex-col gap-5"
-					use:enhance={() => {
-						submitting = true;
-						return async ({ update }) => {
-							await update();
-							submitting = false;
-						};
-					}}
-				>
-					<!-- §10: India only. The country is stated and locked, not chosen:
-					     a disabled select would post nothing and a free field would
-					     invite a value the server has to refuse. -->
-					<input type="hidden" name="country" value={SHIP_COUNTRY} />
+			<form
+				method="POST"
+				class="co-form"
+				autocomplete="on"
+				use:enhance={() => {
+					submitting = true;
+					return async ({ update }) => {
+						await update();
+						submitting = false;
+					};
+				}}
+			>
+				<!-- §10: India only. The country is stated and locked, not chosen:
+				     a disabled select would post nothing and a free field would
+				     invite a value the server has to refuse. -->
+				<input type="hidden" name="country" value={SHIP_COUNTRY} />
 
-					<fieldset class="flex flex-col gap-5 border-0 p-0">
-						<legend class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">Contact</legend>
+				<fieldset>
+					<legend>Contact</legend>
 
+					<div class="co-form-pair">
 						<Field
 							label="Email"
 							name="email"
@@ -188,168 +184,244 @@
 							error={errors?.phone ?? ''}
 							hint="10-digit mobile number, for delivery updates."
 						/>
-					</fieldset>
+					</div>
+				</fieldset>
 
-					<fieldset class="flex flex-col gap-5 border-0 p-0">
-						<legend class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
-							Delivery address
-						</legend>
+				<fieldset>
+					<legend>Delivery address</legend>
 
+					<Field
+						label="Full name"
+						name="name"
+						bind:value={values.name}
+						required
+						autocomplete="name"
+						error={errors?.name ?? ''}
+					/>
+
+					<Field
+						label="Address"
+						name="line1"
+						bind:value={values.line1}
+						required
+						autocomplete="address-line1"
+						error={errors?.line1 ?? ''}
+					/>
+
+					<Field
+						label="Apartment, landmark (optional)"
+						name="line2"
+						bind:value={values.line2}
+						autocomplete="address-line2"
+						error={errors?.line2 ?? ''}
+					/>
+
+					<div class="co-form-pair">
 						<Field
-							label="Full name"
-							name="name"
-							bind:value={values.name}
+							label="Town or city"
+							name="city"
+							bind:value={values.city}
 							required
-							autocomplete="name"
-							error={errors?.name ?? ''}
+							autocomplete="address-level2"
+							error={errors?.city ?? ''}
 						/>
 
 						<Field
-							label="Address"
-							name="line1"
-							bind:value={values.line1}
+							label="Pincode"
+							name="pincode"
+							bind:value={values.pincode}
 							required
-							autocomplete="address-line1"
-							error={errors?.line1 ?? ''}
+							autocomplete="postal-code"
+							inputmode="numeric"
+							pattern={PINCODE_PATTERN}
+							maxlength={6}
+							error={errors?.pincode ?? ''}
 						/>
+					</div>
 
-						<Field
-							label="Apartment, landmark (optional)"
-							name="line2"
-							bind:value={values.line2}
-							autocomplete="address-line2"
-							error={errors?.line2 ?? ''}
-						/>
-
-						<div class="grid gap-5 sm:grid-cols-2">
-							<Field
-								label="Town or city"
-								name="city"
-								bind:value={values.city}
-								required
-								autocomplete="address-level2"
-								error={errors?.city ?? ''}
-							/>
-
-							<Field
-								label="Pincode"
-								name="pincode"
-								bind:value={values.pincode}
-								required
-								autocomplete="postal-code"
-								inputmode="numeric"
-								pattern={PINCODE_PATTERN}
-								maxlength={6}
-								error={errors?.pincode ?? ''}
-							/>
-						</div>
-
+					<div class="co-form-pair">
 						<Field
 							label="State or union territory"
 							name="state"
 							bind:value={values.state}
 							required
+							autocomplete="address-level1"
 							options={[...STATE_OPTIONS]}
 							error={errors?.state ?? ''}
 						/>
 
-						<div class="flex flex-col gap-2">
-							<p class="text-[11px] tracking-[0.2em] text-forest/75 uppercase font-medium">Country</p>
-							<p class="border-b border-forest/25 py-3 text-[15px] text-forest">
-								{SHIP_COUNTRY_LABEL}
-							</p>
-							<p class="text-[13px] text-forest/70">
-								We currently ship within India only.
-							</p>
+						<div class="co-fixed">
+							<p class="co-label">Country</p>
+							<p class="co-fixed__value">{SHIP_COUNTRY_LABEL}</p>
+							<p class="co-fine">We currently ship within India only.</p>
 						</div>
-					</fieldset>
-
-					<fieldset class="flex flex-col gap-5 border-0 p-0">
-						<legend class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
-							Order notes
-						</legend>
-						<Field
-							label="Anything we should know (optional)"
-							name="notes"
-							rows={4}
-							bind:value={values.notes}
-							error={errors?.notes ?? ''}
-							hint="Delivery instructions or a gift note."
-						/>
-					</fieldset>
-
-					<div class="flex flex-wrap items-center gap-6 pt-2">
-						<Button surface="light" variant="solid" type="submit" disabled={submitting}>
-							{submitting ? 'Checking…' : 'Review order'}
-						</Button>
-						<Button surface="light" variant="quiet" href="/cart">Back to cart</Button>
 					</div>
-				</form>
-			</div>
+				</fieldset>
 
-			<div class="flex flex-col gap-5 lg:sticky lg:top-28 lg:self-start">
-				{#if data.cart.soonestHoldMs !== null}
-					<HoldTimer
-						expiresAtMs={data.cart.soonestHoldMs}
-						serverNowMs={data.cart.pricedAtMs}
-						onexpire={() => invalidateAll()}
-						surface="light"
+				<fieldset>
+					<legend>Order notes</legend>
+					<Field
+						label="Anything we should know (optional)"
+						name="notes"
+						rows={3}
+						autocomplete="off"
+						bind:value={values.notes}
+						error={errors?.notes ?? ''}
+						hint="Delivery instructions or a gift note."
 					/>
-				{/if}
+				</fieldset>
 
+				<fieldset>
+					<legend>Payment</legend>
+					{#if data.payment.configured}
+						<p class="co-copy">
+							{#if data.payment.name === 'razorpay'}
+								You'll pay securely with Razorpay — UPI, cards, netbanking and wallets.
+							{:else}
+								Payments aren't live in this environment. You'll be able to simulate a payment on
+								the next page.
+							{/if}
+						</p>
+					{:else}
+						<p class="co-copy">{PAYMENT_NOT_CONFIGURED_MESSAGE}</p>
+					{/if}
+					{#if !data.codEnabled}
+						<!-- §10: COD is off for Drop 01. Said before the payment step, not
+						     discovered at it. -->
+						<p class="co-fine">Cash on delivery isn't available for this drop.</p>
+					{/if}
+				</fieldset>
+
+				<div class="info-actions">
+					<button class="cta cta--full" type="submit" disabled={submitting}>
+						{submitting ? 'Placing your order…' : payLabel}
+					</button>
+					<a class="link link--soft" href="/cart">Back to cart</a>
+				</div>
+			</form>
+		</div>
+
+		<aside class="co-aside" aria-label="Order summary">
+			<OrderPanel total={formatInr(data.cart.totals.total)}>
 				<section aria-labelledby="items-heading">
-					<h2 id="items-heading" class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
-						In this order
-					</h2>
-					<ul class="mt-5 flex list-none flex-col gap-4 p-0">
+					<div class="co-head">
+						<h2 id="items-heading">In this order</h2>
+						{#if data.cart.soonestHoldMs !== null}
+							<HoldTimer
+								expiresAtMs={data.cart.soonestHoldMs}
+								serverNowMs={data.cart.pricedAtMs}
+								onexpire={() => invalidateAll()}
+								surface="light"
+							/>
+						{/if}
+					</div>
+					<ul class="co-lines">
 						{#each data.cart.lines as line (line.variantId)}
-							<li class="flex justify-between gap-4 border-b border-forest/10 pb-4 text-[15px]">
-								<span class="text-forest/80">
-									{line.productName}
-									<span class="block text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">
-										Size {line.size} · {line.quantity} ×
-									</span>
+							<li class="co-line">
+								<span class="co-line__thumb" aria-hidden="true">
+									{#if line.image}<img
+											src={line.image}
+											alt=""
+											loading="lazy"
+											decoding="async"
+										/>{/if}
 								</span>
-								<span class="text-forest tabular-nums">{formatInr(line.lineTotal)}</span>
+								<span>
+									<span class="co-line__name">{line.productName}</span>
+									<span class="co-line__meta">Size {line.size} · {line.quantity} ×</span>
+									{#if line.isPreOrder}
+										<span class="co-line__meta">
+											Pre-order — ships after the drop opens on
+											{dispatchDate.format(data.launchInstant)}.
+										</span>
+									{/if}
+									{#if line.overSubscribed}
+										<span class="info-line-alert">
+											Only {line.availableNow} left in this size. Go back to your cart to reduce the quantity.
+										</span>
+									{/if}
+								</span>
+								<span class="co-line__price">{formatInr(line.lineTotal)}</span>
 							</li>
 						{/each}
 					</ul>
 					<!-- §09: the fit disclaimer follows the size wherever it appears. -->
-					<p class="mt-4 text-[13px] leading-relaxed text-forest/75">{FIT_DISCLAIMER}</p>
+					<p class="co-fine info-fit">{FIT_DISCLAIMER}</p>
 				</section>
 
 				<CartSummary totals={data.cart.totals} shipping={data.cart.shipping} />
 
-				{#if data.cart.hasPreOrderLine}
-					<!-- §03 template 07: the pre-order dispatch note, where a line is
-					     a pre-order. It states the drop instant and nothing more. -->
-					<p class="border-l-2 border-gold pl-4 text-[13px] leading-relaxed text-forest/75">
-						<span class="block text-[11px] tracking-[0.28em] text-forest uppercase font-medium">
-							Pre-order
-						</span>
-						<span class="mt-2 block">
-							Pre-order pieces ship after the drop opens on {dispatchDate.format(data.launchInstant)}.
-						</span>
+				{#if data.cart.couponCode && !data.cart.couponProblem}
+					<p class="co-fine">
+						Code <span class="info-code">{data.cart.couponCode}</span> applied
 					</p>
 				{/if}
 
-				{#if !data.codEnabled}
-					<!-- §10: COD is off for Drop 01. Said before the payment step, not
-					     discovered at it. -->
-					<p class="text-[13px] leading-relaxed text-forest/75">
-						Cash on delivery isn't available for this drop.
+				{#if data.cart.hasPreOrderLine}
+					<!-- §03 template 07: the pre-order dispatch note, where a line is
+					     a pre-order. It states the drop instant and nothing more. -->
+					<p class="co-note">
+						<b>Pre-order</b>
+						Pre-order pieces ship after the drop opens on {dispatchDate.format(data.launchInstant)}.
 					</p>
 				{/if}
 
 				<!-- §11: the SAME returns wording as the product page, the
 				     confirmation email and the returns policy page. -->
-				<section class="border-t border-forest/15 pt-6" aria-labelledby="returns-heading">
-					<h2 id="returns-heading" class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
-						Returns
-					</h2>
-					<p class="mt-4 text-[13px] leading-relaxed text-forest/70">{RETURNS_WORDING}</p>
+				<section class="info-returns" aria-labelledby="returns-heading">
+					<h2 id="returns-heading" class="co-label">Returns</h2>
+					<p class="co-fine">{RETURNS_WORDING}</p>
 				</section>
-			</div>
-		</div>
+			</OrderPanel>
+		</aside>
 	</div>
 </main>
+
+<style>
+	.info-notices {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+	.info-errors-title {
+		margin: 0;
+		font-size: 14px;
+		font-weight: 500;
+	}
+	.info-saved {
+		margin-top: 18px;
+	}
+	.info-actions {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 16px;
+		margin-top: -8px;
+	}
+	.info-line-alert {
+		display: block;
+		margin-top: 4px;
+		font-size: 13px;
+		line-height: 1.5;
+		color: var(--alert);
+	}
+	.info-code {
+		color: var(--ink);
+		letter-spacing: 0.06em;
+	}
+	.info-fit {
+		margin-top: 12px;
+	}
+	.info-returns {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		padding-top: 18px;
+		border-top: 1px solid var(--rule);
+	}
+	.info-returns h2 {
+		margin: 0;
+		font-weight: 400;
+		color: var(--ink);
+	}
+</style>

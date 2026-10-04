@@ -43,6 +43,7 @@ export async function loadExperience(
 			state: drop.state,
 			story: drop.story,
 			editionSize: drop.editionSize,
+			preorderMode: drop.preorderMode,
 			launchInstant: drop.launchInstant,
 			releasedAt: drop.archivedAt ?? drop.launchInstant
 		},

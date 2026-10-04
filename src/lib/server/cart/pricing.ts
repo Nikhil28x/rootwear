@@ -197,7 +197,8 @@ export async function buildCartView(
 	let discount: Paise = ZERO;
 	let couponProblem: CouponStatus | null = null;
 	if (cart.couponCode) {
-		const outcome = await repo.validateCoupon(cart.couponCode, subtotal, kind);
+		// The cart's own unpaid order does not count against its own code.
+		const outcome = await repo.validateCoupon(cart.couponCode, subtotal, kind, cart.token);
 		if (outcome.status === 'ok') discount = outcome.discount;
 		else couponProblem = outcome.status;
 	}

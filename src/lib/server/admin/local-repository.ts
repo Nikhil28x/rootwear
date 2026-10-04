@@ -163,6 +163,7 @@ export const localAdminRepository: AdminRepository = {
 	findDropRow: async () => null,
 	setDropState: async () => databaseRequired(),
 	setDropPublished: async () => databaseRequired(),
+	setDropPreorderMode: async () => databaseRequired(),
 	setDropLaunchInstant: async () => databaseRequired(),
 	setVariantStock: async () => databaseRequired(),
 

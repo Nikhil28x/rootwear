@@ -13,9 +13,13 @@
 	 *
 	 * A sold-out size, or any size while the drop is closed, turns the action
 	 * into notify-me for that exact size (§06).
+	 *
+	 * The drop's pre-order mode (set in admin) decides the action: on, it reads
+	 * "Pre-order" and hands the chosen size to the signup (no payment); off, it
+	 * reads "Buy now", adds to the cart and goes straight to checkout.
 	 */
 	import { enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import type { SubmitFunction } from '@sveltejs/kit';
 	import { onMount } from 'svelte';
 	import SizeSelector from '$lib/components/drop/SizeSelector.svelte';
@@ -33,7 +37,8 @@
 		onSale,
 		notifyOpen,
 		finished,
-		isPreOrder,
+		preorderMode = false,
+		onPreorder = undefined,
 		form = null
 	}: {
 		offers: readonly SizeOffer[];
@@ -46,46 +51,51 @@
 		onSale: boolean;
 		notifyOpen: boolean;
 		finished: boolean;
-		isPreOrder: boolean;
+		/** The drop takes pre-order signups instead of selling. */
+		preorderMode?: boolean;
+		/** Opens the pre-order signup for the chosen variant. */
+		onPreorder?: (variantId: string) => void;
 		form?: unknown;
 	} = $props();
 
 	let selected = $state('');
 	let selectedOffer = $derived(offers.find((offer) => offer.variantId === selected) ?? null);
 	let everythingGone = $derived(offers.every((offer) => offer.soldOut));
-	let canPick = $derived(onSale || notifyOpen);
+	let canPick = $derived(preorderMode || onSale || notifyOpen);
 
 	/** The phone panel; desktop shows sizes inline and ignores this. */
 	let panelOpen = $state(false);
 	let sizeMissing = $state(false);
 	let adding = $state(false);
 	let problem = $state('');
-	let addedSize = $state('');
 	/** Tucked away while the footer is on screen, so it never covers it. */
 	let tucked = $state(false);
 
+	// A pre-order is a signup, not stock: every size takes one, so nothing turns into notify-me.
 	let notifyFor = $derived(
-		selectedOffer && (selectedOffer.soldOut || (!onSale && notifyOpen)) ? selectedOffer : null
+		!preorderMode && selectedOffer && (selectedOffer.soldOut || (!onSale && notifyOpen))
+			? selectedOffer
+			: null
 	);
 
 	$effect(() => {
 		void selected;
 		sizeMissing = false;
 		problem = '';
-		addedSize = '';
 	});
 
 	let actionLabel = $derived.by(() => {
 		if (!canPick) return finished ? 'Sold out' : 'Coming soon';
 		if (notifyFor) return 'Notify me';
-		if (onSale && everythingGone) return 'Sold out';
-		if (adding) return 'Adding…';
-		const verb = isPreOrder ? 'Pre-order' : 'Add to cart';
+		if (!preorderMode && onSale && everythingGone) return 'Sold out';
+		if (adding) return 'One moment…';
+		const verb = preorderMode ? 'Pre-order' : 'Buy now';
 		return selectedOffer ? verb : 'Select size';
 	});
 
 	let sizeStatus = $derived.by(() => {
 		if (sizeMissing) return { tone: 'alert', text: 'Please select a size.' };
+		if (preorderMode) return { tone: 'muted', text: FIT_DISCLAIMER };
 		if (selectedOffer?.soldOut) return { tone: 'muted', text: `${selectedOffer.size} is sold out.` };
 		if (selectedOffer && onSale && selectedOffer.remaining <= 3)
 			return { tone: 'gold', text: `Only ${selectedOffer.remaining} left in ${selectedOffer.size}.` };
@@ -108,21 +118,28 @@
 			cancel();
 			return;
 		}
-		const size = selectedOffer.size;
+		if (preorderMode) {
+			// The signup lives in the page's dialog; it takes the chosen size.
+			onPreorder?.(selectedOffer.variantId);
+			panelOpen = false;
+			cancel();
+			return;
+		}
 		adding = true;
 		problem = '';
 
 		return async ({ result }) => {
-			adding = false;
 			if (result.type === 'redirect') {
-				await invalidateAll();
-				addedSize = size;
-				panelOpen = false;
+				// Buy now: in the cart, straight on to checkout.
+				await goto('/checkout/information', { invalidateAll: true });
+				adding = false;
 			} else if (result.type === 'failure') {
+				adding = false;
 				const message = (result.data as { problem?: string } | undefined)?.problem;
 				problem = message ?? 'We could not add that. Please try again.';
 				await invalidateAll();
 			} else {
+				adding = false;
 				problem = 'Something went wrong. Please try again.';
 			}
 		};
@@ -162,15 +179,7 @@
 <div class="buybar" class:buybar--tucked={tucked} aria-label="Buy {productName}" role="region">
 	<div class="buybar__card">
 		<!-- Panel: sizes on a phone, notify-me, and the result of an add. -->
-		{#if addedSize}
-			<div class="buybar__panel" role="status">
-				<p class="buybar__added">Added to your cart — {productName}, size {addedSize}.</p>
-				<div class="buybar__added-actions">
-					<a class="buybar__ghost" href="/cart">View cart</a>
-					<a class="buybar__solid" href="/checkout/information">Checkout</a>
-				</div>
-			</div>
-		{:else if notifyFor && panelOpen}
+		{#if notifyFor && panelOpen}
 			<div class="buybar__panel buybar__panel--form">
 				<NotifyMeForm
 					{dropSlug}
@@ -226,7 +235,7 @@
 					/>
 					<p
 						id="buybar-size-status"
-						class="buybar__status buybar__status--{addedSize ? 'muted' : sizeStatus.tone}"
+						class="buybar__status buybar__status--{sizeStatus.tone}"
 						aria-live="polite"
 					>
 						{sizeStatus.text}
@@ -248,7 +257,7 @@
 				<button
 					type="submit"
 					class="buybar__cta"
-					disabled={!canPick || adding || (onSale && everythingGone && !notifyFor)}
+					disabled={!canPick || adding || (!preorderMode && onSale && everythingGone && !notifyFor)}
 				>
 					{actionLabel}
 				</button>
@@ -279,7 +288,15 @@
 	.buybar--tucked {
 		transform: translateY(calc(100% + 24px));
 	}
+	/* The floating size note sits above the bar; it must leave with it. */
+	.buybar--tucked .buybar__status {
+		opacity: 0;
+		visibility: hidden;
+	}
 	.buybar__card {
+		/* Its notify-me form sits on the dark card: keep autofill dark too. */
+		--field-bg: #141a14;
+		--field-ink: #f3efe6;
 		/* Arrives last, once the hero has landed. */
 		animation: bar-in 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) 1.6s both;
 		pointer-events: auto;
@@ -436,34 +453,6 @@
 	.buybar__panel--form {
 		max-height: min(60svh, 30rem);
 		overflow-y: auto;
-	}
-	.buybar__added {
-		font-size: 14px;
-		margin: 0 0 12px;
-	}
-	.buybar__added-actions {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 8px;
-		padding-bottom: 12px;
-	}
-	.buybar__ghost,
-	.buybar__solid {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		height: 44px;
-		font-size: 11px;
-		font-weight: 500;
-		letter-spacing: 0.18em;
-		text-transform: uppercase;
-	}
-	.buybar__ghost {
-		border: 1px solid rgb(255 255 255 / 0.3);
-	}
-	.buybar__solid {
-		background: #f3efe6;
-		color: var(--color-forest-black);
 	}
 	.buybar__problem {
 		margin: 0;

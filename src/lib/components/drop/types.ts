@@ -24,6 +24,10 @@ export type ArchiveCard = {
 	readonly releasedAt: number;
 	readonly editionSize: number;
 	readonly cover: CoverImage | null;
+	/** The back of the lead piece: the grid view's hover swap. */
+	readonly back: CoverImage | null;
+	/** Every photograph of every piece: the list view's slider. */
+	readonly images: readonly CoverImage[];
 	/** §12: only a finished drop can be asked for again. */
 	readonly canRequest: boolean;
 	/** Size options for the request form, pre-labelled server-side. */

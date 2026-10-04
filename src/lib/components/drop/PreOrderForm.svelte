@@ -17,11 +17,14 @@
 		dropSlug,
 		sizeOptions,
 		surface = 'dark',
+		variantId = '',
 		form = null
 	}: {
 		dropSlug: string;
 		sizeOptions: Array<{ value: string; label: string }>;
 		surface?: 'dark' | 'light';
+		/** A size already chosen elsewhere (the buy bar); the select starts on it. */
+		variantId?: string;
 		form?: unknown;
 	} = $props();
 
@@ -33,6 +36,9 @@
 	let email = $state('');
 	let phone = $state('');
 	let size = $state('');
+	$effect(() => {
+		if (variantId) size = variantId;
+	});
 
 	$effect(() => {
 		if (!problem) return;
@@ -89,7 +95,8 @@
 				bind:value={phone}
 				required
 				{surface}
-				autocomplete="tel"
+				type="tel"
+				autocomplete="tel-national"
 				inputmode="tel"
 				hint="Ten digits, starting 6, 7, 8 or 9."
 				error={problem?.field === 'phone' ? problem.message : ''}

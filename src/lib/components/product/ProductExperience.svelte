@@ -10,7 +10,6 @@
 	 * Palette and type are the brand's own. The one addition is the cloth
 	 * ground — the khaki sampled from the garment itself — behind the label.
 	 */
-	import { dev } from '$app/environment';
 	import BuyBar from './BuyBar.svelte';
 	import ClothHero from './ClothHero.svelte';
 	import DropCountdown from '$lib/DropCountdown.svelte';
@@ -18,6 +17,7 @@
 	import PosterShowcase from '$lib/components/drop/PosterShowcase.svelte';
 	import RequestDropForm from '$lib/components/drop/RequestDropForm.svelte';
 	import PreOrderForm from '$lib/components/drop/PreOrderForm.svelte';
+	import { resultFor } from '$lib/components/drop/demand-result';
 	import { formatInr } from '$lib/money';
 	import { FIT_DISCLAIMER, SIZES, SIZE_CHART, isSize, type Size } from '$lib/drop/sizes';
 	import { onMount } from 'svelte';
@@ -25,6 +25,17 @@
 	import type { Experience } from '$lib/server/drops/experience';
 
 	let { data, form = null }: { data: Experience; form?: unknown } = $props();
+
+	/** The pre-order signup opens in a dialog from the buy bar. */
+	let preorderDialog: HTMLDialogElement | undefined = $state();
+	/** The size chosen in the buy bar, handed to the signup. */
+	let preorderVariant = $state('');
+	// The form posts and the page reloads: reopen it on its answer or its errors.
+	$effect(() => {
+		if (preorderDialog && resultFor(form, 'preorder', data.drop.slug) && !preorderDialog.open) {
+			preorderDialog.showModal();
+		}
+	});
 
 	let product = $derived(data.product);
 	let price = $derived(formatInr(data.displayPrice));
@@ -350,12 +361,21 @@
 		</section>
 	{/if}
 
-	{#if dev}
-		<!-- Dev only: the pre-order signup, to compare with the priced flow. -->
-		<section class="devpreview" aria-label="Pre-order preview (dev only)">
-			<p class="details__small">Dev preview — pre-order signup</p>
-			<PreOrderForm dropSlug={data.drop.slug} sizeOptions={data.sizeOptions} surface="light" {form} />
-		</section>
+	{#if data.drop.preorderMode}
+		<!-- Pre-order mode (set in admin): the buy bar's Pre-order opens this. -->
+		<dialog class="preorder" bind:this={preorderDialog} aria-label="Pre-order {product.name}">
+			<div class="preorder__head">
+				<p>Pre-order {product.name}</p>
+				<button type="button" aria-label="Close" onclick={() => preorderDialog?.close()}>×</button>
+			</div>
+			<PreOrderForm
+				dropSlug={data.drop.slug}
+				sizeOptions={data.sizeOptions}
+				variantId={preorderVariant}
+				surface="light"
+				{form}
+			/>
+		</dialog>
 	{/if}
 
 	<!-- Room for the bar, so the last line is never under it. -->
@@ -372,7 +392,11 @@
 	onSale={data.onSale}
 	notifyOpen={data.notifyOpen}
 	finished={data.finished}
-	isPreOrder={data.isPreOrder}
+	preorderMode={data.drop.preorderMode}
+	onPreorder={(variantId) => {
+		preorderVariant = variantId;
+		preorderDialog?.showModal();
+	}}
 	{form}
 />
 
@@ -885,9 +909,36 @@
 		color: rgb(31 56 42 / 0.65);
 	}
 
+	.preorder {
+		/* The CSS reset strips the browser's own centring of a modal. */
+		margin: auto;
+		width: min(560px, calc(100vw - 32px));
+		max-height: calc(100svh - 48px);
+		padding: 24px;
+		border: 0;
+		background: #ffffff;
+		color: var(--ink);
+	}
+	.preorder::backdrop {
+		background: rgb(11 15 11 / 0.55);
+		backdrop-filter: blur(4px);
+	}
+	.preorder__head {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 8px;
+		font-family: var(--font-display);
+		font-size: 24px;
+	}
+	.preorder__head button {
+		width: 40px;
+		height: 40px;
+		font-size: 24px;
+	}
+
 	.request,
-	.also,
-	.devpreview {
+	.also {
 		padding: 0 var(--gutter) clamp(64px, 8vw, 96px);
 		max-width: 60rem;
 	}

@@ -39,14 +39,13 @@ export type RootsLineage = {
 	readonly source: { readonly label: string; readonly href: string };
 };
 
-/** One of the four movements. `surface` drives the light/dark alternation. */
+/** One of the four movements: a numbered section with a kicker, a head and a lede. */
 export type RootsMovement = {
 	readonly id: string;
 	readonly index: string;
-	readonly eyebrow: string;
+	readonly kicker: string;
 	readonly title: readonly string[];
 	readonly lede: string;
-	readonly surface: 'light' | 'dark';
 };
 
 export const KNOW_YOUR_ROOTS_SEO = {
@@ -57,12 +56,12 @@ export const KNOW_YOUR_ROOTS_SEO = {
 } as const;
 
 export const ROOTS_HERO = {
-	eyebrow: 'The lineage · the fibre · the label · the making',
+	kicker: 'Our roots',
 	title: ['Know your', 'roots.'],
 	lede:
 		'The long thread that brought plant fibre here, what the cloth is made of, why this ' +
-		'label exists, and how a drop gets made. The history, the plant, the decisions, and the hands.',
-	jumpLabel: 'Skip to'
+		'label exists, and how a drop gets made.',
+	contentsLabel: 'Contents'
 } as const;
 
 /** The four movements, in order. The page renders them as one continuous read. */
@@ -70,43 +69,39 @@ export const ROOTS_MOVEMENTS: readonly RootsMovement[] = [
 	{
 		id: 'lineage',
 		index: '01',
-		eyebrow: 'The lineage',
+		kicker: 'The lineage',
 		title: ['An old thread,', 'carried forward.'],
 		lede:
 			'Plant cloth is not a trend we joined. It is a lineage this land has carried for ' +
-			'eight thousand years.',
-		surface: 'dark'
+			'eight thousand years.'
 	},
 	{
 		id: 'hemp',
 		index: '02',
-		eyebrow: 'The fibre',
+		kicker: 'The fibre',
 		title: ['It begins', 'as a stalk.'],
 		lede:
 			'Hemp is a bast fibre. It is stripped from the stem of Cannabis sativa rather than ' +
 			'picked from a seed head, and that one difference explains almost everything about how ' +
-			'the cloth behaves.',
-		surface: 'dark'
+			'the cloth behaves.'
 	},
 	{
 		id: 'why-rootwear',
 		index: '03',
-		eyebrow: 'The label',
+		kicker: 'The label',
 		title: ['Established', 'in Process.'],
 		lede:
 			'Rootwear is not a catalogue. It is a sequence of drops, one at a time, each one ' +
-			'finished before the next begins. The drop is the object.',
-		surface: 'light'
+			'finished before the next begins. The drop is the object.'
 	},
 	{
 		id: 'the-making',
 		index: '04',
-		eyebrow: 'The making',
+		kicker: 'The making',
 		title: ['How a drop', 'comes to exist.'],
 		lede:
 			'Five stages, each done by hand — which is why there are only ' +
-			`${EDITION_SIZE} pieces in a drop.`,
-		surface: 'dark'
+			`${EDITION_SIZE} pieces in a drop.`
 	}
 ] as const;
 
@@ -258,7 +253,6 @@ export const ROOTS_LINEAGE_CLOSE = {
 	defiant:
 		'We did not start this. We are refusing to let it be forgotten — and asking you to wear it knowing what it is.',
 	line: 'Grown slow. Worn loud. Rooted deep.',
-	sign: 'ROOTWEAR',
 	tag: 'Established in Process.',
 	action: { label: 'Join the line', href: '/drops' }
 } as const;
@@ -351,7 +345,7 @@ export const MAKING_STEPS: readonly RootsStep[] = [
 /* ---------------------------------------------------------------- the close */
 
 export const ROOTS_CLOSE = {
-	eyebrow: 'Where this goes next',
+	kicker: 'Where this goes next',
 	line: ['One strain.', `${EDITION_SIZE} pieces.`, 'Then the next one.'],
 	body:
 		'Small runs, made with care. See the current drop, or browse the ones that came before.',
@@ -359,6 +353,22 @@ export const ROOTS_CLOSE = {
 		{ label: 'See the current drop', href: '/drops', primary: true },
 		{ label: 'Read the size guide', href: '/policies/size-guide', primary: false }
 	]
+} as const;
+
+/* ---------------------------------------------------------------- the plates */
+
+/** The page's two photographs, captioned as figures. */
+export const ROOTS_PLATES = {
+	opening: {
+		src: '/images/rootwear-tree-seedling.jpg',
+		alt: 'A single seedling in a clearing of a misty forest',
+		caption: 'Before we build, we listen.'
+	},
+	cloth: {
+		src: '/images/pineapple-haze-front.jpg',
+		alt: 'The knit of a Rootwear T-shirt, close',
+		caption: 'The cloth, close. Drop 01.'
+	}
 } as const;
 
 /** One object so the route loads the whole page's copy in a single import. */
@@ -378,7 +388,8 @@ export const KNOW_YOUR_ROOTS = {
 		pullquote: WHY_ROOTWEAR_PULLQUOTE
 	},
 	making: { steps: MAKING_STEPS },
-	close: ROOTS_CLOSE
+	close: ROOTS_CLOSE,
+	plates: ROOTS_PLATES
 } as const;
 
 export type KnowYourRootsContent = typeof KNOW_YOUR_ROOTS;

@@ -81,6 +81,7 @@ type DropRow = {
 	archived_at: string | null;
 	edition_size: number;
 	published_at: string | null;
+	preorder_mode: boolean;
 };
 
 type VariantRow = {
@@ -181,7 +182,7 @@ async function loadCatalogue(): Promise<{
 		client
 			.from('drops')
 			.select(
-				'id, slug, number, name, state, launch_instant, archived_at, edition_size, published_at'
+				'id, slug, number, name, state, launch_instant, archived_at, edition_size, published_at, preorder_mode'
 			)
 			.order('launch_instant', { ascending: false }),
 		client.from('products').select('id, drop_id, name'),
@@ -771,6 +772,15 @@ export const supabaseAdminRepository: AdminRepository = {
 		await writeAudit(actor, published ? 'published' : 'unpublished', 'drop', dropId);
 	},
 
+	async setDropPreorderMode({ dropId, preorderMode, actor }) {
+		const { error } = await getCatalogueClient()
+			.from('drops')
+			.update({ preorder_mode: preorderMode })
+			.eq('id', dropId);
+		if (error) throw new Error(`pre-order mode write failed: ${error.message}`);
+		await writeAudit(actor, preorderMode ? 'pre-order mode on' : 'pre-order mode off', 'drop', dropId);
+	},
+
 	async setDropLaunchInstant({ dropId, launchInstant, actor }) {
 		if (!Number.isFinite(launchInstant)) {
 			throw new Error('The launch instant must be a real date and time.');
@@ -1281,6 +1291,7 @@ function toDropRow(
 		archivedAt: ms(drop.archived_at),
 		editionSize: drop.edition_size,
 		published: drop.published_at !== null,
+		preorderMode: drop.preorder_mode ?? false,
 		variants: variants
 			.filter((v) => variantDrop.get(v.id) === drop.id)
 			.map((v) => ({

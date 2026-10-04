@@ -2,6 +2,7 @@
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { page } from '$app/state';
+	import { onNavigate } from '$app/navigation';
 	import { setCart } from '$lib/cart/cart.svelte';
 	import SiteHeader from '$lib/components/SiteHeader.svelte';
 	import SiteFooter from '$lib/components/SiteFooter.svelte';
@@ -39,8 +40,59 @@
 		'/cart',
 		'/checkout',
 		'/drops',
-		'/impact'
+		'/impact',
+		'/order'
 	];
+	/** The colours shown when the page is pulled past its top or bottom edge. */
+	let edgeTop = $derived(isExperience ? '#0b0f0b' : '#ffffff');
+	let edgeBottom = $derived(isAdmin ? '#ffffff' : 'var(--color-forest)');
+	$effect(() => {
+		const root = document.documentElement.style;
+		root.setProperty('--edge-top', edgeTop);
+		root.setProperty('--edge-bottom', edgeBottom);
+		// The overscroll area takes the root's background colour, so match it to
+		// whichever end of the page is nearer.
+		let lowerHalf: boolean | null = null;
+		const update = () => {
+			const doc = document.documentElement;
+			const next = window.scrollY + window.innerHeight / 2 > doc.scrollHeight / 2;
+			if (next === lowerHalf) return;
+			lowerHalf = next;
+			root.setProperty('--edge-now', next ? edgeBottom : edgeTop);
+		};
+		update();
+		window.addEventListener('scroll', update, { passive: true });
+		window.addEventListener('resize', update);
+		return () => {
+			window.removeEventListener('scroll', update);
+			window.removeEventListener('resize', update);
+		};
+	});
+
+	/**
+	 * The checkout reads as one sheet: Cart → Checkout → Payment → Order slide
+	 * up going forward and down going back, with the header still.
+	 */
+	const FLOW = ['/cart', '/checkout/information', '/checkout/processing', '/order/[token]'];
+	onNavigate((navigation) => {
+		const from = FLOW.indexOf(navigation.from?.route.id ?? '');
+		const to = FLOW.indexOf(navigation.to?.route.id ?? '');
+		if (from < 0 || to < 0 || from === to) return;
+		if (!document.startViewTransition) return;
+		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+		document.documentElement.dataset.stepDir = to > from ? 'forward' : 'back';
+		return new Promise((resolve) => {
+			const transition = document.startViewTransition(async () => {
+				resolve();
+				await navigation.complete;
+			});
+			transition.finished.finally(() => {
+				delete document.documentElement.dataset.stepDir;
+			});
+		});
+	});
+
 	let surface = $derived(
 		LIGHT_ROUTES.some((r) => page.route.id?.startsWith(r)) ? 'light' : 'dark'
 	) as 'light' | 'dark';
@@ -96,7 +148,7 @@
 
 <!-- One footer for every route, the landing lockup included. -->
 {#if isHome}
-	<SiteFooter policies={data.footerPolicies ?? []} artwork={false} />
+	<SiteFooter policies={data.footerPolicies ?? []} />
 {/if}
 
 <style>

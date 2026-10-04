@@ -11,49 +11,23 @@
 	} from '$lib/content/business';
 
 	/**
-	 * One footer for the whole site — the landing page's artwork lockup, which
-	 * previously existed only there while every other route got a plain link
-	 * list.
-	 *
-	 * One treatment everywhere: the full lockup on the brand forest ground.
+	 * One footer for the whole site: the wordmark, contact, the links and the
+	 * registered address.
 	 *
 	 * §14 requires the registered business name and address here; §11 requires
 	 * email and Instagram DM. Both read from one module (RW-022).
 	 */
-	let {
-		policies = [],
-		/** The homepage sets this artwork in its own story section, just above. */
-		artwork = true
-	}: { policies?: Array<{ slug: string; title: string }>; artwork?: boolean } = $props();
+	let { policies = [] }: { policies?: Array<{ slug: string; title: string }> } = $props();
 </script>
 
 <footer id="footer" class="brand-footer" data-header-theme="dark">
-	{#if artwork}
-		<figure class="brand-footer__artwork">
-			<img
-				src="/images/rootwear-brand-story.jpg"
-				alt="Rootwear's illustrated tree manifesto: before we build, we listen; built from the ground up"
-				loading="lazy"
-			/>
-			<span class="brand-footer__desktop-tm" aria-hidden="true">TM</span>
-			<figcaption class="brand-footer__desktop-tagline">Established in Process</figcaption>
-		</figure>
-
-		<div class="brand-footer__mobile-lockup" aria-hidden="true">
-			<p>ROOTWEAR<sup>TM</sup></p>
-			<span>Established in Process</span>
-			<small>Built from the ground up.</small>
-		</div>
-	{/if}
 
 	<div class="foot">
 		<div class="foot__brand">
 			<a class="foot__mark wordmark" href="/" aria-label="Rootwear home"
 				>ROOTWEAR<sup aria-hidden="true">TM</sup></a
 			>
-			<p class="foot__about">
-				Clothing grown from hemp, cut in small numbered runs. Established in Process.
-			</p>
+			<p class="foot__about">Clothing grown from hemp, cut in small numbered runs.</p>
 			<div class="foot__reach">
 				<a href="mailto:{SUPPORT_EMAIL}">{SUPPORT_EMAIL}</a>
 				<a href={INSTAGRAM_URL} rel="noreferrer noopener">Instagram {INSTAGRAM_HANDLE}</a>
@@ -103,7 +77,7 @@
 	</div>
 
 	<div class="foot__legal">
-		<span>© {new Date().getFullYear()} {BUSINESS_NAME} · Established in Process</span>
+		<span>© {new Date().getFullYear()} {BUSINESS_NAME}</span>
 		<a
 			href="#top"
 			onclick={(event) => {

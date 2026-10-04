@@ -53,7 +53,6 @@
 	 */
 	import { onMount } from 'svelte';
 	import { deserialize } from '$app/forms';
-	import Button from '$lib/components/ui/Button.svelte';
 	import { formatInr, type Paise } from '$lib/money';
 	import { BUSINESS_NAME, SUPPORT_EMAIL } from '$lib/content/business';
 
@@ -69,7 +68,9 @@
 		autoOpen = false,
 		verifyAction,
 		fields = {},
-		onPaid
+		timeoutSeconds = undefined,
+		onPaid,
+		onDismiss = undefined
 	}: {
 		keyId: string;
 		gatewayOrderId: string;
@@ -87,6 +88,10 @@
 		/** Extra fields that action needs, such as the order's public token. */
 		fields?: Record<string, string>;
 		onPaid?: () => void;
+		/** Seconds until Razorpay closes the window on its own (the payment window). */
+		timeoutSeconds?: number;
+		/** The buyer closed the window, or it timed out, without paying. */
+		onDismiss?: () => void;
 	} = $props();
 
 	let busy = $state(false);
@@ -145,9 +150,11 @@
 					await verify(response);
 					busy = false;
 				},
+				...(timeoutSeconds ? { timeout: timeoutSeconds } : {}),
 				modal: {
 					ondismiss: () => {
 						busy = false;
+						onDismiss?.();
 					}
 				}
 			});
@@ -175,9 +182,9 @@
 </script>
 
 <div class="mt-6">
-	<Button surface="light" variant="solid" type="button" disabled={busy} onclick={open}>
+	<button class="pay" type="button" disabled={busy} onclick={open}>
 		{label ?? `Pay ${formatInr(amount)}`}
-	</Button>
+	</button>
 
 	{#if problem}
 		<p
@@ -188,3 +195,37 @@
 		</p>
 	{/if}
 </div>
+
+<style>
+	/* The house button: a black block, small uppercase. */
+	.pay {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		max-width: 420px;
+		height: 50px;
+		padding-inline: 28px;
+		background: var(--color-forest-black);
+		color: #f6f4ef;
+		font-size: 11px;
+		font-weight: 500;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		font-variant-numeric: tabular-nums;
+		cursor: pointer;
+		transition: background-color 0.25s;
+	}
+	.pay:hover {
+		background: var(--color-forest);
+	}
+	.pay:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.pay {
+			transition: none;
+		}
+	}
+</style>

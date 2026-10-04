@@ -192,6 +192,8 @@
 
 <style>
 	.head {
+		/* Holds still while checkout steps slide beneath it. */
+		view-transition-name: site-header;
 		--ink: #f3efe6;
 		--line: rgb(243 239 230 / 0.16);
 		--glass: rgb(11 15 11 / 0.7);

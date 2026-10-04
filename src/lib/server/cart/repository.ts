@@ -70,8 +70,20 @@ export interface CartRepository {
 	committedUnits(variantId: string): Promise<number>;
 
 	setCoupon(cartId: string, code: string | null): Promise<void>;
-	/** §10: validation is SERVER-SIDE. The client sends a code, gets an amount. */
-	validateCoupon(code: string, subtotal: Paise, kind: PaymentKind): Promise<CouponOutcome>;
+	/**
+	 * §10: validation is SERVER-SIDE. The client sends a code, gets an amount.
+	 *
+	 * `cartToken`, when given, names the cart asking: a redemption held by
+	 * that cart's OWN unpaid (pending_payment) order does not count against a
+	 * limited-use coupon, so a retained cart is not told its code was "already
+	 * used" by the order it abandoned. Paid orders always count.
+	 */
+	validateCoupon(
+		code: string,
+		subtotal: Paise,
+		kind: PaymentKind,
+		cartToken?: string | null
+	): Promise<CouponOutcome>;
 
 	shippingFor(subtotal: Paise): Promise<ShippingEstimate>;
 	/** Returns the exclusion reason, or null when the pincode is serviceable. */
@@ -83,6 +95,49 @@ export interface CartRepository {
 
 	commitOrder(input: CommitInput): Promise<CommitOutcome>;
 	findOrderByToken(token: string): Promise<OrderRecord | null>;
+
+	/**
+	 * Puts a committed cart's lines back in one write (the cart outlives an
+	 * unpaid order). One write rather than a line-by-line loop, so a
+	 * concurrent request never reads a half-restored cart and fingerprints it
+	 * as a different basket.
+	 */
+	restoreLines(
+		cartId: string,
+		lines: readonly StoredCartLine[],
+		heldUntilMs: number
+	): Promise<void>;
+
+	/**
+	 * The newest order this cart placed (idempotency keys under `keyPrefix`)
+	 * that is still pending_payment and was placed at or after `sinceMs`.
+	 * Public token, or null. Used to resolve a double-submit that arrives
+	 * while the first submit has the cart momentarily empty.
+	 */
+	findRecentPendingOrder(keyPrefix: string, sinceMs: number): Promise<string | null>;
+
+	/**
+	 * Cancels this cart's OTHER unpaid orders — placed under `keyPrefix` but
+	 * not under `keepKey` — releasing their stock and coupon redemptions.
+	 * Never touches an order that is paid or has a captured payment: the
+	 * state guard is in the write, not in a read before it. Returns how many
+	 * orders were cancelled.
+	 */
+	cancelSupersededOrders(input: { keyPrefix: string; keepKey: string }): Promise<number>;
+
+	/**
+	 * Cancels every pending_payment order older than `olderThanMs`, releasing
+	 * stock and coupon redemptions. Idempotent, and a payment captured
+	 * concurrently wins. Returns how many orders were cancelled.
+	 */
+	expireUnpaidOrders(olderThanMs: number): Promise<number>;
+
+	/**
+	 * Cancels ONE unpaid order now — the buyer closed the payment window.
+	 * Same guards as expiry: a paid order, or one with a captured or authorised
+	 * payment, is left alone. Returns whether it was cancelled.
+	 */
+	cancelUnpaidOrder(orderId: string): Promise<boolean>;
 
 	/** Records the gateway order so the webhook can find its way back. */
 	recordPaymentIntent(input: {
@@ -103,7 +158,17 @@ export interface CartRepository {
 		gatewayOrderId: string;
 		gatewayPaymentId: string;
 		amount: Paise;
-	}): Promise<{ orderPublicToken: string | null; alreadyCaptured: boolean }>;
+	}): Promise<{
+		orderPublicToken: string | null;
+		alreadyCaptured: boolean;
+		/**
+		 * The money landed but the order had already been cancelled (expired
+		 * unpaid, or superseded by a newer order from the same cart). The
+		 * order is NOT revived; a cap_race refund is recorded for admin to
+		 * issue, and the caller must surface it.
+		 */
+		refundRequired: boolean;
+	}>;
 
 	/**
 	 * The gateway order this order (or reservation) is waiting on.

@@ -1,38 +1,37 @@
 <script lang="ts">
-	import type { PageData } from './$types';
-	import Eyebrow from '$lib/components/ui/Eyebrow.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
-	import HempMotif from '$lib/components/art/HempMotif.svelte';
-	import HempField from '$lib/components/art/HempField.svelte';
-	import RootSystem from '$lib/components/art/RootSystem.svelte';
-	import GrowthRings from '$lib/components/art/GrowthRings.svelte';
-
 	/**
-	 * §03 template 09 — one long read, four movements: the lineage, the
-	 * fibre, the label, and the making.
+	 * §03 template 09 — "Know your roots", set in the homepage's magazine:
+	 * one long read on white, in four numbered sections.
 	 *
-	 * Every string comes from $lib/content/know-your-roots via the server load.
+	 *   Opening   the title, a short lede, the contents and a plate
+	 *   01        the lineage: a ruled table of dated, sourced entries
+	 *   02        the fibre: a close crop of the cloth, the notes, the figures
+	 *   03        the label: the principles, then the pull line
+	 *   04        the making: five stages, side by side
+	 *   Close     where this goes next, and the way in
+	 *
+	 * White page, black ink, Didot for display, hairline rules between sections
+	 * and a black rule under each section head. No prices anywhere.
+	 *
+	 * Every string comes from $lib/content/know-your-roots via the server load;
 	 * §14 is enforced there, at the source, rather than in this markup.
 	 */
+	import type { PageData } from './$types';
+
 	let { data }: { data: PageData } = $props();
 
 	let content = $derived(data.content);
 	let hero = $derived(content.hero);
 	let close = $derived(content.close);
+	let plates = $derived(content.plates);
 
-	// The four movements are ordered in the content module and rendered with
-	// bespoke interiors, so they are addressed positionally rather than looped.
+	// The four sections have bespoke interiors, so they are addressed by position.
 	let lineage = $derived(content.movements[0]);
 	let fibre = $derived(content.movements[1]);
 	let label = $derived(content.movements[2]);
 	let making = $derived(content.movements[3]);
 
-	/**
-	 * This page alternates white and forest-black movements, so the header ink
-	 * has to change with them. Each section declares `data-header-theme` and the
-	 * shared SiteHeader probes what sits behind it — the same convention the
-	 * homepage hero uses. No page-local override, no :global rule.
-	 */
+	const isExternal = (href: string) => href.startsWith('http');
 </script>
 
 <svelte:head>
@@ -40,347 +39,750 @@
 	<meta name="description" content={content.seo.description} />
 </svelte:head>
 
-<main class="roots-page bg-paper">
-	<!-- ───────────────────────────────────────────────────────── the opening -->
-	<section data-header-theme="light" class="relative isolate overflow-hidden bg-paper text-forest">
-		<div
-			class="pointer-events-none absolute -top-[16%] -right-[22%] aspect-square w-[92%] max-w-[1000px] text-forest sm:-right-[10%] sm:w-[70%]"
-		>
-			<GrowthRings opacity={0.09} seed={3} />
-		</div>
+{#snippet head(movement: (typeof content.movements)[number])}
+	<header class="head">
+		<p class="kicker"><span class="kicker__no">{movement.index}</span>{movement.kicker}</p>
+		<h2 id="movement-{movement.id}" class="head__title">
+			{#each movement.title as line, i (i)}<span>{line}</span>{/each}
+		</h2>
+		<p class="head__lede">{movement.lede}</p>
+	</header>
+{/snippet}
 
-		<div
-			class="relative mx-auto flex max-w-[1600px] flex-col px-5 py-28 sm:px-10 sm:py-40 lg:px-14"
-		>
-			<Eyebrow tone="strong" class="opacity-70">{hero.eyebrow}</Eyebrow>
-
-			<h1 class="display mt-8 text-[clamp(3rem,10vw,8.5rem)] leading-[0.82] tracking-[-0.055em]">
-				{#each hero.title as line, i (i)}<span class="block">{line}</span>{/each}
+<main class="roots" data-header-theme="light">
+	<!-- ───────── Opening: the title, the contents, the plate. ───────── -->
+	<section class="opening" aria-labelledby="roots-title">
+		<div class="opening__head">
+			<p class="kicker">{hero.kicker}</p>
+			<h1 id="roots-title" class="opening__title">
+				{#each hero.title as line, i (i)}<span><span style="--i: {i}">{line}</span></span>{/each}
 			</h1>
+			<p class="opening__lede">{hero.lede}</p>
+		</div>
 
-			<p class="mt-10 max-w-xl text-[15px] leading-[1.95] text-forest/70">{hero.lede}</p>
-
-			<nav
-				class="mt-16 flex flex-wrap gap-x-12 gap-y-5 border-t border-forest/15 pt-7"
-				aria-label="Sections of this page"
-			>
+		<nav class="toc" aria-label={hero.contentsLabel}>
+			<ol>
 				{#each content.movements as movement (movement.id)}
-					<a
-						class="group flex items-baseline gap-3 text-[11px] font-medium tracking-[0.28em] text-forest/75 uppercase transition hover:text-forest"
-						href="#{movement.id}"
-					>
-						<span class="tabular-nums">{movement.index}</span>
-						<span class="border-b border-transparent pb-1 transition group-hover:border-forest/65">
-							{movement.eyebrow}
-						</span>
-					</a>
-				{/each}
-			</nav>
-		</div>
-	</section>
-
-	<!-- 01 · the lineage -->
-	<section
-		id={lineage.id}
-		aria-labelledby="movement-{lineage.id}"
-		data-header-theme="dark"
-		class="relative isolate scroll-mt-28 overflow-hidden bg-forest text-paper"
-	>
-		<div class="pointer-events-none absolute inset-x-0 top-0 h-[52rem] text-gold">
-			<RootSystem opacity={0.09} depth={8} />
-		</div>
-
-		<div class="relative mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
-			<div class="mx-auto max-w-3xl text-center">
-				<svg
-					class="mx-auto mb-9 h-14 w-10 text-gold"
-					viewBox="0 0 40 56"
-					fill="none"
-					aria-hidden="true"
-				>
-					<path
-						d="M20 2v22M20 24c0-6-4-9-9-10M20 24c0-6 4-9 9-10M20 30c0-4-3-6-7-7M20 30c0-4 3-6 7-7"
-						stroke="currentColor"
-						stroke-width="1.3"
-						stroke-linecap="round"
-					/>
-					<path
-						d="M20 24c-3 5-9 7-14 7M20 24c3 5 9 7 14 7M20 30c-2 6-7 9-13 10M20 30c2 6 7 9 13 10M20 24v24"
-						stroke="currentColor"
-						stroke-width="1.1"
-						stroke-linecap="round"
-						opacity=".8"
-					/>
-				</svg>
-				<Eyebrow tone="gold" surface="dark">{lineage.index} — {lineage.eyebrow}</Eyebrow>
-				<h2
-					id="movement-{lineage.id}"
-					class="display mt-8 text-[clamp(2.6rem,7vw,5.75rem)] leading-[0.88] tracking-[-0.05em]"
-				>
-					{#each lineage.title as line, i (i)}<span class="block">{line}</span>{/each}
-				</h2>
-				<p
-					class="display mx-auto mt-8 max-w-[34ch] text-xl leading-[1.55] text-paper/75 italic sm:text-2xl"
-				>
-					{lineage.lede}
-				</p>
-				<p class="mx-auto mt-6 max-w-xl text-sm leading-[1.8] text-paper/55">
-					{content.lineage.close.defiant}
-				</p>
-			</div>
-
-			<div
-				class="mx-auto my-16 flex items-center justify-center gap-4 text-gold sm:my-20"
-				aria-hidden="true"
-			>
-				<span class="h-px w-16 bg-current opacity-50"></span>
-				<span class="size-1.5 rotate-45 bg-current"></span>
-				<span class="h-px w-16 bg-current opacity-50"></span>
-			</div>
-
-			<ol class="mx-auto max-w-3xl">
-				{#each content.lineage.entries as entry (entry.era)}
-					<li
-						class="relative ml-1 border-l border-gold/30 pb-14 pl-8 last:border-transparent last:pb-0 sm:pl-12"
-					>
-						<span
-							class="absolute top-1.5 -left-[5px] size-[9px] rounded-full bg-gold ring-4 ring-forest"
-							aria-hidden="true"
-						></span>
-						<p class="text-[11px] font-medium tracking-[0.24em] text-gold uppercase">
-							{entry.era}
-						</p>
-						<h3 class="display mt-2 text-[clamp(1.55rem,3.2vw,2rem)] leading-[1.1] text-paper">
-							{entry.title}
-						</h3>
-						<p class="mt-4 max-w-2xl text-[15px] leading-[1.9] text-paper/70">{entry.body}</p>
-						<a
-							class="mt-5 inline-block text-[10px] font-medium tracking-[0.2em] text-paper/65 uppercase underline decoration-gold/60 underline-offset-[6px] transition hover:text-white"
-							href={entry.source.href}
-							target={entry.source.href.startsWith('http') ? '_blank' : undefined}
-							rel={entry.source.href.startsWith('http') ? 'noreferrer noopener' : undefined}
-						>
-							{entry.source.label}{#if entry.source.href.startsWith('http')}<span class="sr-only">
-									(opens in a new tab)</span
-								>{/if}
+					<li>
+						<a href="#{movement.id}">
+							<span class="toc__no">{movement.index}</span>
+							<span class="toc__name">{movement.kicker}</span>
 						</a>
 					</li>
 				{/each}
 			</ol>
+		</nav>
 
-			<div class="mx-auto mt-20 max-w-3xl border-t border-gold/30 pt-12 text-center">
-				<p class="display text-[clamp(1.6rem,4vw,2.35rem)] leading-[1.3] italic">
-					{content.lineage.close.line}
-				</p>
-				<p class="display mt-8 tracking-[0.34em]">{content.lineage.close.sign}</p>
-				<p class="display mt-2 text-base text-gold italic">{content.lineage.close.tag}</p>
-				<div class="mt-8">
-					<Button href={content.lineage.close.action.href} variant="quiet" surface="dark">
-						{content.lineage.close.action.label}
-					</Button>
-				</div>
+		<figure class="plate">
+			<div class="plate__frame">
+				<img src={plates.opening.src} alt={plates.opening.alt} fetchpriority="high" decoding="async" />
 			</div>
-		</div>
+			<figcaption class="cap"><span>Fig. 1</span>{plates.opening.caption}</figcaption>
+		</figure>
 	</section>
 
-	<!-- 02 · the fibre -->
-	<section
-		id={fibre.id}
-		aria-labelledby="movement-{fibre.id}"
-		data-header-theme="dark"
-		class="relative isolate scroll-mt-28 overflow-hidden bg-forest-black text-stone-300"
-	>
-		<!-- Aspect-locked to the motif's own viewBox so `slice` never has to crop
-		     hard and magnify two stalks into wallpaper on a narrow screen. -->
-		<div
-			class="pointer-events-none absolute inset-x-0 bottom-0 aspect-[8/5] max-h-[72%] text-paper"
-		>
-			<HempField opacity={0.055} density={11} seed={5} />
-		</div>
+	<!-- ───────── 01 · The lineage ───────── -->
+	<section id={lineage.id} class="sec" aria-labelledby="movement-{lineage.id}">
+		{@render head(lineage)}
 
-		<div class="relative mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
-			<div class="grid gap-8 lg:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] lg:gap-16">
-				<Eyebrow tone="gold" surface="dark">{fibre.index} — {fibre.eyebrow}</Eyebrow>
-				<div>
-					<h2
-						id="movement-{fibre.id}"
-						class="display text-[clamp(2.4rem,6vw,5.5rem)] leading-[0.86] tracking-[-0.05em] text-stone-100"
-					>
-						{#each fibre.title as line, i (i)}<span class="block">{line}</span>{/each}
-					</h2>
-					<p class="mt-8 max-w-2xl text-base leading-[1.85] text-stone-300">{fibre.lede}</p>
-				</div>
-			</div>
-
-			<div
-				class="mt-20 grid gap-8 border-t border-white/10 pt-12 lg:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] lg:gap-16"
-			>
-				<Eyebrow>What it is</Eyebrow>
-				<div class="grid gap-12 md:grid-cols-2 md:gap-16">
-					<div class="flex flex-col gap-6 text-[15px] leading-[1.95] text-stone-400">
-						{#each content.hemp.body as paragraph, i (i)}<p>{paragraph}</p>{/each}
+		<ol class="ledger">
+			{#each content.lineage.entries as entry (entry.era)}
+				<li class="ledger__row">
+					<p class="ledger__era">{entry.era}</p>
+					<h3 class="ledger__title">{entry.title}</h3>
+					<div class="ledger__body">
+						<p>{entry.body}</p>
+						<a
+							class="link"
+							href={entry.source.href}
+							target={isExternal(entry.source.href) ? '_blank' : undefined}
+							rel={isExternal(entry.source.href) ? 'noreferrer noopener' : undefined}
+						>
+							{entry.source.label}{#if isExternal(entry.source.href)}<span class="sr-only">
+									(opens in a new tab)</span
+								>{/if}
+						</a>
 					</div>
+				</li>
+			{/each}
+		</ol>
 
-					<dl class="self-start">
-						{#each content.hemp.properties as property (property.term)}
-							<div class="border-t border-white/10 py-5 first:border-t-0 first:pt-0">
-								<dt class="text-[12px] font-medium tracking-[0.22em] text-stone-100 uppercase">
-									{property.term}
-								</dt>
-								<dd class="mt-2 text-[15px] leading-[1.8] text-stone-400">{property.definition}</dd>
-							</div>
-						{/each}
-					</dl>
-				</div>
-			</div>
-
-			<div
-				class="mt-20 grid gap-8 border-t border-white/10 pt-12 lg:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] lg:gap-16"
-			>
-				<Eyebrow>The blend</Eyebrow>
-				<div>
-					<p class="max-w-3xl text-lg leading-[1.7] text-stone-200 sm:text-xl">
-						{content.hemp.blendNote}
-					</p>
-
-					<ul class="mt-14 grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-4">
-						{#each content.hemp.facts as fact (fact.label)}
-							<li class="flex flex-col gap-4 border-t border-gold/40 pt-5">
-								<span
-									class="display text-[clamp(2.2rem,4.2vw,3.4rem)] leading-none tracking-[-0.04em] text-gold"
-								>
-									{fact.value}{#if fact.unit}<span class="ml-1.5 text-base tracking-normal"
-											>{fact.unit}</span
-										>{/if}
-								</span>
-								<span
-									class="text-[11px] leading-relaxed font-medium tracking-[0.2em] text-stone-400 uppercase"
-								>
-									{fact.label}
-								</span>
-							</li>
-						{/each}
-					</ul>
-				</div>
+		<div class="coda">
+			<p class="coda__line">{content.lineage.close.line}</p>
+			<div class="coda__side">
+				<p>{content.lineage.close.defiant}</p>
+				<p class="coda__tag">Rootwear — {content.lineage.close.tag}</p>
+				<a class="link" href={content.lineage.close.action.href}>{content.lineage.close.action.label}</a>
 			</div>
 		</div>
 	</section>
 
-	<!-- ────────────────────────────────────────────────────── 03 · the label -->
-	<section
-		id={label.id}
-		aria-labelledby="movement-{label.id}"
-		data-header-theme="light"
-		class="relative isolate scroll-mt-28 overflow-hidden bg-paper text-forest"
-	>
-		<div class="pointer-events-none absolute inset-x-0 top-0 aspect-[4/3] max-h-[78%] text-forest">
-			<RootSystem opacity={0.08} depth={8} />
-		</div>
+	<!-- ───────── 02 · The fibre ───────── -->
+	<section id={fibre.id} class="sec" aria-labelledby="movement-{fibre.id}">
+		{@render head(fibre)}
 
-		<div class="relative mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
-			<div class="grid gap-8 lg:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] lg:gap-16">
-				<Eyebrow tone="strong" class="opacity-70">{label.index} — {label.eyebrow}</Eyebrow>
-				<div>
-					<h2
-						id="movement-{label.id}"
-						class="display text-[clamp(2.4rem,6vw,5.5rem)] leading-[0.86] tracking-[-0.05em]"
-					>
-						{#each label.title as line, i (i)}<span class="block">{line}</span>{/each}
-					</h2>
-					<p class="mt-8 max-w-2xl text-base leading-[1.85] text-forest/75">{label.lede}</p>
+		<div class="fibre">
+			<figure class="fibre__fig">
+				<div class="fibre__frame">
+					<img src={plates.cloth.src} alt={plates.cloth.alt} loading="lazy" decoding="async" />
 				</div>
-			</div>
-
-			<ol class="mt-20">
-				{#each content.whyRootwear.principles as principle (principle.index)}
-					<li
-						class="grid gap-4 border-t border-forest/15 py-10 md:grid-cols-[4rem_minmax(0,16rem)_minmax(0,1fr)] md:items-baseline md:gap-10"
-					>
-						<span class="display text-3xl text-forest/70 tabular-nums">{principle.index}</span>
-						<h3 class="text-[12px] font-medium tracking-[0.22em] uppercase">{principle.title}</h3>
-						<p class="max-w-2xl text-[15px] leading-[1.95] text-forest/70">{principle.body}</p>
-					</li>
-				{/each}
-			</ol>
-
-			<figure class="mt-16 border-t border-forest/15 pt-14">
-				<blockquote
-					class="display max-w-[16ch] text-[clamp(2.2rem,5.4vw,4.5rem)] leading-[0.9] tracking-[-0.045em]"
-				>
-					{content.whyRootwear.pullquote.line}
-				</blockquote>
-				<figcaption class="mt-7 text-[11px] font-medium tracking-[0.28em] text-forest/70 uppercase">
-					{content.whyRootwear.pullquote.attribution}
-				</figcaption>
+				<figcaption class="cap"><span>Fig. 2</span>{plates.cloth.caption}</figcaption>
 			</figure>
-		</div>
-	</section>
 
-	<!-- 04 · the making -->
-	<section
-		id={making.id}
-		aria-labelledby="movement-{making.id}"
-		data-header-theme="dark"
-		class="relative isolate scroll-mt-28 overflow-hidden bg-forest-black text-stone-300"
-	>
-		<div
-			class="pointer-events-none absolute -top-[8%] -right-[18%] aspect-square w-[86%] max-w-[820px] text-paper sm:-right-[4%] sm:w-[52%]"
-		>
-			<HempMotif opacity={0.055} seed={9} />
-		</div>
-
-		<div class="relative mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
-			<div class="grid gap-8 lg:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] lg:gap-16">
-				<Eyebrow tone="gold" surface="dark">{making.index} — {making.eyebrow}</Eyebrow>
-				<div>
-					<h2
-						id="movement-{making.id}"
-						class="display text-[clamp(2.4rem,6vw,5.5rem)] leading-[0.86] tracking-[-0.05em] text-stone-100"
-					>
-						{#each making.title as line, i (i)}<span class="block">{line}</span>{/each}
-					</h2>
-					<p class="mt-8 max-w-2xl text-base leading-[1.85] text-stone-300">{making.lede}</p>
+			<div class="fibre__text">
+				<div class="prose">
+					{#each content.hemp.body as paragraph, i (i)}<p>{paragraph}</p>{/each}
 				</div>
-			</div>
 
-			<ol class="mt-20 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-5">
-				{#each content.making.steps as step (step.index)}
-					<li class="flex flex-col gap-5 border-t border-white/15 pt-6">
-						<span class="text-[11px] tracking-[0.28em] text-gold tabular-nums">{step.index}</span>
-						<h3 class="display text-2xl leading-[1.05] text-stone-100">{step.title}</h3>
-						<p class="text-[14px] leading-[1.85] text-stone-400">{step.body}</p>
+				<dl class="terms">
+					{#each content.hemp.properties as property (property.term)}
+						<div class="terms__row">
+							<dt>{property.term}</dt>
+							<dd>{property.definition}</dd>
+						</div>
+					{/each}
+				</dl>
+			</div>
+		</div>
+
+		<div class="blend">
+			<p class="kicker">The blend</p>
+			<p class="blend__note">{content.hemp.blendNote}</p>
+			<ul class="figures">
+				{#each content.hemp.facts as fact (fact.label)}
+					<li>
+						<span class="figures__value"
+							>{fact.value}{#if fact.unit}<small>{fact.unit}</small>{/if}</span
+						>
+						<span class="figures__label">{fact.label}</span>
 					</li>
 				{/each}
-			</ol>
+			</ul>
 		</div>
 	</section>
 
-	<!-- ─────────────────────────────────────────────────────────── the close -->
-	<section data-header-theme="dark" class="relative isolate overflow-hidden bg-forest text-paper">
-		<div
-			class="pointer-events-none absolute inset-x-0 bottom-0 aspect-[8/5] max-h-[85%] text-paper"
-		>
-			<HempField opacity={0.07} density={7} seed={17} />
-		</div>
+	<!-- ───────── 03 · The label ───────── -->
+	<section id={label.id} class="sec" aria-labelledby="movement-{label.id}">
+		{@render head(label)}
 
-		<div class="relative mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
-			<Eyebrow tone="strong" class="opacity-60">{close.eyebrow}</Eyebrow>
+		<ol class="ledger ledger--principles">
+			{#each content.whyRootwear.principles as principle (principle.index)}
+				<li class="ledger__row">
+					<p class="ledger__era">{principle.index}</p>
+					<h3 class="ledger__title">{principle.title}</h3>
+					<div class="ledger__body"><p>{principle.body}</p></div>
+				</li>
+			{/each}
+		</ol>
 
-			<p
-				class="display mt-8 max-w-[14ch] text-[clamp(2.4rem,6vw,5.5rem)] leading-[0.88] tracking-[-0.05em]"
-			>
-				{#each close.line as line, i (i)}<span class="block">{line}</span>{/each}
-			</p>
+		<figure class="quote">
+			<blockquote>{content.whyRootwear.pullquote.line}</blockquote>
+			<figcaption class="cap">{content.whyRootwear.pullquote.attribution}</figcaption>
+		</figure>
+	</section>
 
-			<p class="mt-9 max-w-xl text-[15px] leading-[1.95] text-paper/75">{close.body}</p>
+	<!-- ───────── 04 · The making ───────── -->
+	<section id={making.id} class="sec" aria-labelledby="movement-{making.id}">
+		{@render head(making)}
 
-			<div class="mt-12 flex flex-wrap items-center gap-5">
+		<ol class="steps">
+			{#each content.making.steps as step (step.index)}
+				<li>
+					<span class="steps__no">{step.index}</span>
+					<h3>{step.title}</h3>
+					<p>{step.body}</p>
+				</li>
+			{/each}
+		</ol>
+	</section>
+
+	<!-- ───────── Close: where this goes next. ───────── -->
+	<section class="sec close" aria-labelledby="close-title">
+		<p class="kicker">{close.kicker}</p>
+		<h2 id="close-title" class="close__title">
+			{#each close.line as line, i (i)}<span>{line}</span>{/each}
+		</h2>
+		<div class="close__side">
+			<p>{close.body}</p>
+			<div class="close__actions">
 				{#each close.actions as action (action.href)}
-					<Button href={action.href} variant={action.primary ? 'solid' : 'quiet'} surface="dark">
-						{action.label}
-					</Button>
+					<a class={action.primary ? 'cta' : 'link'} href={action.href}>{action.label}</a>
 				{/each}
 			</div>
 		</div>
 	</section>
 </main>
+
+<style>
+	/* Layout: the homepage's magazine — white page, black ink, Didot, hairlines, one gutter. */
+	.roots {
+		--ink: var(--color-forest-black);
+		--soft: rgb(11 15 11 / 0.62);
+		--rule: rgb(11 15 11 / 0.14);
+		--stone: #efeeeb;
+		--gutter: clamp(20px, 4vw, 56px);
+		background: #ffffff;
+		color: var(--ink);
+		overflow-x: clip;
+	}
+
+	/* ── Shared ───────────────────────────────────────────────── */
+	.kicker {
+		margin: 0;
+		font-size: 13px;
+		color: var(--soft);
+	}
+	.kicker__no {
+		margin-right: 10px;
+		color: var(--ink);
+		font-variant-numeric: tabular-nums;
+	}
+	.cta {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		height: 50px;
+		padding-inline: 28px;
+		background: var(--ink);
+		color: #f6f4ef;
+		font-size: 11px;
+		font-weight: 500;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		transition: background-color 0.25s;
+	}
+	.cta:hover {
+		background: var(--color-forest);
+	}
+	.link {
+		font-size: 14px;
+		text-decoration: underline;
+		text-underline-offset: 4px;
+		text-decoration-thickness: 1px;
+	}
+	.link:hover {
+		text-decoration-thickness: 2px;
+	}
+	.cap {
+		margin-top: 12px;
+		font-size: 13px;
+		color: var(--soft);
+	}
+	.cap span {
+		margin-right: 10px;
+		color: var(--ink);
+	}
+
+	/* ── Opening ──────────────────────────────────────────────── */
+	.opening {
+		padding: clamp(40px, 5vw, 72px) var(--gutter) clamp(80px, 10vw, 144px);
+	}
+	.opening__head {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
+		grid-template-areas:
+			'kicker kicker'
+			'title lede';
+		align-items: end;
+		column-gap: clamp(32px, 6vw, 96px);
+		row-gap: 18px;
+	}
+	.opening__head .kicker {
+		grid-area: kicker;
+	}
+	.opening__title {
+		grid-area: title;
+		margin: 0;
+		font-family: var(--font-display);
+		font-weight: 400;
+		font-size: clamp(3.4rem, 10vw, 10rem);
+		line-height: 0.86;
+		letter-spacing: -0.05em;
+	}
+	/* One entrance: each line rises out of its own mask. */
+	.opening__title > span {
+		display: block;
+		overflow: hidden;
+		/* Room for the descenders inside the mask, given back to the line below. */
+		padding-bottom: 0.16em;
+		margin-bottom: -0.16em;
+	}
+	.opening__title > span > span {
+		display: block;
+		animation: line-up 1.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+		animation-delay: calc(0.1s + var(--i) * 0.12s);
+	}
+	@keyframes line-up {
+		from {
+			transform: translateY(105%);
+		}
+	}
+	.opening__lede {
+		grid-area: lede;
+		padding-bottom: 0.6em;
+		max-width: 46ch;
+		font-size: 16px;
+		line-height: 1.65;
+		color: var(--soft);
+	}
+
+	/* The contents: four numbered entries on a black rule. */
+	.toc {
+		margin-top: clamp(40px, 5vw, 72px);
+		border-top: 1px solid var(--ink);
+	}
+	.toc ol {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.toc li + li {
+		border-left: 1px solid var(--rule);
+	}
+	.toc a {
+		display: flex;
+		align-items: baseline;
+		gap: 12px;
+		padding: 16px 16px 18px 0;
+		transition: color 0.25s;
+	}
+	.toc li + li a {
+		padding-left: 16px;
+	}
+	.toc__no {
+		font-size: 13px;
+		color: var(--soft);
+		font-variant-numeric: tabular-nums;
+	}
+	.toc__name {
+		font-family: var(--font-display);
+		font-size: clamp(1.25rem, 1.8vw, 1.7rem);
+		letter-spacing: -0.015em;
+		line-height: 1.1;
+	}
+	.toc a:hover .toc__name {
+		text-decoration: underline;
+		text-decoration-thickness: 1px;
+		text-underline-offset: 5px;
+	}
+
+	.plate {
+		margin: clamp(32px, 4vw, 56px) 0 0;
+	}
+	.plate__frame {
+		aspect-ratio: 12 / 5;
+		overflow: hidden;
+		background: var(--stone);
+	}
+	.plate__frame img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transform: scale(1.04);
+	}
+
+	/* ── Sections ─────────────────────────────────────────────── */
+	.sec {
+		padding: clamp(80px, 10vw, 144px) var(--gutter);
+		border-top: 1px solid var(--rule);
+		scroll-margin-top: 60px;
+	}
+	/* The head: kicker, title left, lede right, a black rule under it. */
+	.head {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
+		grid-template-areas:
+			'kicker kicker'
+			'title lede';
+		align-items: end;
+		column-gap: clamp(32px, 6vw, 96px);
+		row-gap: 22px;
+		padding-bottom: clamp(24px, 3vw, 40px);
+		border-bottom: 1px solid var(--ink);
+	}
+	.head .kicker {
+		grid-area: kicker;
+	}
+	.head__title {
+		grid-area: title;
+		margin: 0;
+		font-family: var(--font-display);
+		font-weight: 400;
+		font-size: clamp(2.4rem, 5.2vw, 5.6rem);
+		line-height: 0.95;
+		letter-spacing: -0.04em;
+	}
+	.head__title span {
+		display: block;
+	}
+	.head__lede {
+		grid-area: lede;
+		font-size: 15px;
+		line-height: 1.65;
+		color: var(--soft);
+	}
+
+	/* A ruled table: when, what, and the note. */
+	.ledger {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.ledger__row {
+		display: grid;
+		grid-template-columns: minmax(0, 14rem) minmax(0, 1fr) minmax(0, 1.25fr);
+		gap: clamp(16px, 3vw, 48px);
+		align-items: baseline;
+		padding: clamp(24px, 2.6vw, 36px) 0;
+		border-bottom: 1px solid var(--rule);
+	}
+	.ledger__era {
+		font-size: 13px;
+		color: var(--soft);
+		font-variant-numeric: tabular-nums;
+	}
+	.ledger__title {
+		margin: 0;
+		font-family: var(--font-display);
+		font-weight: 400;
+		font-size: clamp(1.5rem, 2.2vw, 2.1rem);
+		line-height: 1.1;
+		letter-spacing: -0.02em;
+	}
+	.ledger__body {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 14px;
+	}
+	.ledger__body p {
+		max-width: 56ch;
+		font-size: 15px;
+		line-height: 1.65;
+		color: rgb(11 15 11 / 0.75);
+	}
+	.ledger--principles .ledger__row {
+		grid-template-columns: minmax(0, 4rem) minmax(0, 1fr) minmax(0, 1.25fr);
+	}
+
+	/* The lineage's sign-off: a line set large, the note beside it. */
+	.coda {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
+		column-gap: clamp(32px, 6vw, 96px);
+		row-gap: 24px;
+		align-items: end;
+		margin-top: clamp(56px, 7vw, 104px);
+	}
+	.coda__line {
+		max-width: 16ch;
+		font-family: var(--font-display);
+		font-size: clamp(2rem, 4vw, 4rem);
+		line-height: 1;
+		letter-spacing: -0.035em;
+		text-wrap: balance;
+	}
+	.coda__side {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 14px;
+		font-size: 15px;
+		line-height: 1.65;
+		color: rgb(11 15 11 / 0.75);
+	}
+	.coda__tag {
+		font-size: 13px;
+		color: var(--soft);
+	}
+
+	/* ── The fibre ────────────────────────────────────────────── */
+	.fibre {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		gap: clamp(32px, 6vw, 96px);
+		align-items: start;
+		margin-top: clamp(40px, 5vw, 72px);
+	}
+	.fibre__fig {
+		position: sticky;
+		top: 90px;
+		margin: 0;
+	}
+	.fibre__frame {
+		aspect-ratio: 4 / 5;
+		overflow: hidden;
+		background: var(--stone);
+	}
+	/* A close crop of the cover photograph: the knit, below the script. */
+	.fibre__frame img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: 50% 86%;
+		transform: scale(2.1);
+		transform-origin: 50% 86%;
+	}
+	.fibre__text {
+		display: flex;
+		flex-direction: column;
+		gap: clamp(32px, 4vw, 48px);
+	}
+	.prose {
+		display: flex;
+		flex-direction: column;
+		gap: 18px;
+	}
+	.prose p {
+		max-width: 58ch;
+		font-size: 16px;
+		line-height: 1.7;
+		color: rgb(11 15 11 / 0.75);
+	}
+	.prose p:first-child {
+		font-family: var(--font-display);
+		font-size: clamp(1.4rem, 2vw, 1.85rem);
+		line-height: 1.25;
+		letter-spacing: -0.015em;
+		color: var(--ink);
+	}
+	.terms {
+		margin: 0;
+		border-top: 1px solid var(--ink);
+	}
+	.terms__row {
+		display: grid;
+		grid-template-columns: minmax(0, 9rem) minmax(0, 1fr);
+		gap: 20px;
+		padding: 14px 0;
+		border-bottom: 1px solid var(--rule);
+		font-size: 14px;
+		line-height: 1.6;
+	}
+	.terms__row dd {
+		margin: 0;
+		color: var(--soft);
+	}
+
+	.blend {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		gap: 24px clamp(32px, 6vw, 96px);
+		margin-top: clamp(56px, 7vw, 104px);
+		padding-top: 18px;
+		border-top: 1px solid var(--rule);
+	}
+	.blend .kicker {
+		grid-column: 1 / -1;
+	}
+	.blend__note {
+		max-width: 34ch;
+		font-family: var(--font-display);
+		font-size: clamp(1.35rem, 2vw, 1.9rem);
+		line-height: 1.2;
+		letter-spacing: -0.02em;
+		text-wrap: pretty;
+	}
+	.figures {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 32px clamp(20px, 3vw, 40px);
+		align-self: start;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.figures li {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		padding-top: 14px;
+		border-top: 1px solid var(--ink);
+	}
+	.figures__value {
+		font-family: var(--font-display);
+		font-size: clamp(2.8rem, 4.6vw, 4.4rem);
+		line-height: 0.9;
+		letter-spacing: -0.04em;
+		font-variant-numeric: lining-nums;
+	}
+	.figures__value small {
+		margin-left: 8px;
+		font-family: var(--font-sans, inherit);
+		font-size: 13px;
+		letter-spacing: 0;
+		color: var(--soft);
+	}
+	.figures__label {
+		font-size: 13px;
+		color: var(--soft);
+	}
+
+	/* ── The label ────────────────────────────────────────────── */
+	.quote {
+		margin: clamp(56px, 7vw, 104px) 0 0;
+	}
+	.quote blockquote {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: clamp(2.6rem, 7vw, 7.4rem);
+		line-height: 0.92;
+		letter-spacing: -0.045em;
+		text-wrap: balance;
+	}
+
+	/* ── The making ───────────────────────────────────────────── */
+	.steps {
+		display: grid;
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+		gap: clamp(24px, 3vw, 44px);
+		margin: clamp(40px, 5vw, 72px) 0 0;
+		padding: 0;
+		list-style: none;
+	}
+	.steps li {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		padding-top: 18px;
+		border-top: 1px solid var(--rule);
+	}
+	.steps__no {
+		font-size: 13px;
+		color: var(--soft);
+		font-variant-numeric: tabular-nums;
+	}
+	.steps h3 {
+		margin: 0;
+		font-family: var(--font-display);
+		font-weight: 400;
+		font-size: clamp(1.4rem, 1.9vw, 1.8rem);
+		line-height: 1.1;
+		letter-spacing: -0.015em;
+	}
+	.steps p {
+		font-size: 14px;
+		line-height: 1.65;
+		color: rgb(11 15 11 / 0.75);
+	}
+
+	/* ── Close ────────────────────────────────────────────────── */
+	.close {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
+		grid-template-areas:
+			'kicker kicker'
+			'title side';
+		align-items: end;
+		column-gap: clamp(32px, 6vw, 96px);
+		row-gap: 22px;
+	}
+	.close .kicker {
+		grid-area: kicker;
+	}
+	.close__title {
+		grid-area: title;
+		margin: 0;
+		font-family: var(--font-display);
+		font-weight: 400;
+		font-size: clamp(2.6rem, 6.4vw, 6.8rem);
+		line-height: 0.92;
+		letter-spacing: -0.045em;
+	}
+	.close__title span {
+		display: block;
+	}
+	.close__side {
+		grid-area: side;
+		display: flex;
+		flex-direction: column;
+		gap: 24px;
+		font-size: 15px;
+		line-height: 1.65;
+		color: rgb(11 15 11 / 0.75);
+	}
+	.close__actions {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 24px;
+		color: var(--ink);
+	}
+
+	/* ── Tablet ───────────────────────────────────────────────── */
+	@media (max-width: 1100px) {
+		.steps {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		.ledger__row,
+		.ledger--principles .ledger__row {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+		}
+		.ledger__era {
+			grid-column: 1 / -1;
+		}
+	}
+
+	/* ── Phone ────────────────────────────────────────────────── */
+	@media (max-width: 860px) {
+		.toc ol {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		.toc li:nth-child(odd) {
+			border-left: 0;
+		}
+		.toc li:nth-child(odd) a {
+			padding-left: 0;
+		}
+		.toc li:nth-child(n + 3) {
+			border-top: 1px solid var(--rule);
+		}
+		.plate__frame {
+			aspect-ratio: 4 / 3;
+		}
+		.opening__head,
+		.head,
+		.close {
+			grid-template-columns: minmax(0, 1fr);
+			grid-template-areas: 'kicker' 'title' 'lede';
+		}
+		.close {
+			grid-template-areas: 'kicker' 'title' 'side';
+		}
+		.ledger__row,
+		.ledger--principles .ledger__row {
+			grid-template-columns: minmax(0, 1fr);
+			gap: 10px;
+		}
+		.ledger__body {
+			margin-top: 4px;
+		}
+		.coda,
+		.fibre,
+		.blend {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.fibre__fig {
+			position: relative;
+			top: auto;
+		}
+		.fibre__frame {
+			aspect-ratio: 1;
+		}
+		.steps {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.terms__row {
+			grid-template-columns: minmax(0, 1fr);
+			gap: 4px;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.opening__title > span > span {
+			animation: none;
+		}
+	}
+</style>

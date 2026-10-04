@@ -69,19 +69,58 @@
 	let clock = $derived(`${minutes}:${String(seconds).padStart(2, '0')}`);
 	let expired = $derived(remainingMs <= 0);
 
-	let tone = $derived(surface === 'light' ? 'text-forest/70' : 'text-stone-400');
-	let strong = $derived(surface === 'light' ? 'text-forest' : 'text-stone-100');
+	let tone = $derived(surface === 'light' ? 'hold--light' : 'hold--dark');
 </script>
 
-<p class="text-[11px] tracking-[0.28em] uppercase {tone} {klass} font-medium">
+<p class="hold {tone} {klass}">
 	{#if expired}
 		<!-- Announced, not merely greyed: the hold lapsing changes what is for
 		     sale, so it is worth a screen reader's attention. -->
 		<span aria-live="polite">Reservation expired — updating your cart</span>
 	{:else}
+		<span class="hold__dot" aria-hidden="true"></span>
 		<span>Reserved for</span>
 		<!-- aria-live is deliberately off on the ticking figure: a value that
 		     changes every second would be read aloud every second. -->
-		<span role="timer" aria-live="off" class="ml-2 tabular-nums {strong}">{clock}</span>
+		<span role="timer" aria-live="off" class="hold__clock">{clock}</span>
 	{/if}
 </p>
+
+<style>
+	.hold {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin: 0;
+		font-size: 13px;
+	}
+	.hold--light {
+		color: rgb(11 15 11 / 0.62);
+		--hold-strong: var(--color-forest-black);
+	}
+	.hold--dark {
+		color: #a8a29e;
+		--hold-strong: #f5f5f4;
+	}
+	.hold__dot {
+		width: 7px;
+		height: 7px;
+		border-radius: 50%;
+		background: var(--hold-strong);
+		animation: hold-pulse 2.4s ease-in-out infinite;
+	}
+	@keyframes hold-pulse {
+		50% {
+			opacity: 0.25;
+		}
+	}
+	.hold__clock {
+		color: var(--hold-strong);
+		font-variant-numeric: tabular-nums;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.hold__dot {
+			animation: none;
+		}
+	}
+</style>

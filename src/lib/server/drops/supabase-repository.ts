@@ -29,6 +29,7 @@ type Row = {
 	archived_at: string | null;
 	edition_size: number;
 	published_at: string | null;
+	preorder_mode: boolean;
 	products: Array<{
 		id: string;
 		drop_id: string;
@@ -57,7 +58,7 @@ type Row = {
 
 const SELECT = `
 	id, slug, number, name, story, state, launch_instant, archived_at,
-	edition_size, published_at,
+	edition_size, published_at, preorder_mode,
 	products (
 		id, drop_id, slug, name, summary, fabric, gsm, care, fit,
 		model_height_cm, model_worn_size, launch_price_paise, prelaunch_price_paise,
@@ -111,6 +112,7 @@ function toDomain(row: Row): Drop {
 		launchInstant: Date.parse(row.launch_instant),
 		archivedAt: row.archived_at ? Date.parse(row.archived_at) : null,
 		editionSize: row.edition_size,
+		preorderMode: row.preorder_mode ?? false,
 		products
 	};
 }

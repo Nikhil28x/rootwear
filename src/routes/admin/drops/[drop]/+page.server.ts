@@ -113,6 +113,30 @@ export const actions: Actions = {
 		};
 	},
 
+	/** Pre-order mode: the storefront takes signups instead of selling. */
+	preorderMode: async (event) => {
+		const actor = await requireStaff(event);
+		const form = await event.request.formData();
+		const dropId = String(form.get('dropId') ?? '');
+		const preorderMode = String(form.get('preorderMode') ?? '') === 'true';
+
+		try {
+			await adminRepo.setDropPreorderMode({ dropId, preorderMode, actor: actorLabel(actor) });
+		} catch (cause) {
+			return fail(409, {
+				ok: false,
+				message: cause instanceof Error ? cause.message : 'Pre-order mode write failed.'
+			});
+		}
+
+		return {
+			ok: true,
+			message: preorderMode
+				? 'Pre-order mode is on: the product page now shows Pre-order.'
+				: 'Pre-order mode is off: the product page now shows Buy now.'
+		};
+	},
+
 	/**
 	 * §07 — the launch instant, and with it the whole tease schedule.
 	 *

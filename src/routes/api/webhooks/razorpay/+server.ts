@@ -56,6 +56,20 @@ async function settle(facts: WebhookFacts): Promise<void> {
 			amount: facts.amount
 		});
 
+		if (result.refundRequired) {
+			// The money landed after the order was cancelled (payment window
+			// lapsed, or the cart placed a newer order). The order is not
+			// revived — its stock may be in someone else's order now — and the
+			// capture is not dropped: a cap_race refund is recorded for admin,
+			// and the event row says so where admin will see it.
+			const note =
+				`Payment ${facts.gatewayPaymentId} captured against cancelled order ` +
+				`${result.orderPublicToken ?? '(unknown)'}; cap_race refund recorded — refund it.`;
+			console.error('[webhook] ' + note);
+			await cartRepository.markWebhookProcessed(facts.eventId, note);
+			return;
+		}
+
 		await cartRepository.markWebhookProcessed(facts.eventId, null);
 
 		if (result.alreadyCaptured) {

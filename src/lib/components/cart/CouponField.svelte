@@ -36,58 +36,156 @@
 	);
 </script>
 
-<section class="border-t border-forest/15 py-6" aria-labelledby="coupon-heading">
-	<h3 id="coupon-heading" class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
-		Discount code
-	</h3>
+<section class="coupon" aria-labelledby="coupon-heading">
+	<h3 id="coupon-heading" class="coupon__head">Discount code</h3>
 
 	{#if applied}
-		<div class="mt-4 flex flex-wrap items-center justify-between gap-4">
-			<p class="text-[15px] text-forest">
-				<span class="tracking-[0.18em] uppercase">{appliedCode}</span>
-				<span class="ml-3 text-forest/70 tabular-nums">−{formatInr(discount)}</span>
+		<div class="coupon__applied">
+			<p>
+				<span class="coupon__code">{appliedCode}</span>
+				<span class="coupon__amount">−{formatInr(discount)}</span>
 			</p>
 			<form method="POST" action="/cart?/removeCoupon" use:enhance>
-				<button
-					type="submit"
-					disabled={busy}
-					class="text-[11px] tracking-[0.2em] text-forest/75 uppercase underline-offset-4 transition hover:text-forest hover:underline disabled:opacity-40 font-medium"
-				>
-					Remove
-				</button>
+				<button type="submit" disabled={busy} class="coupon__remove">Remove</button>
 			</form>
 		</div>
 	{:else}
-		<form method="POST" action="/cart?/applyCoupon" use:enhance class="mt-4 flex items-end gap-3">
-			<div class="flex flex-1 flex-col gap-2">
-				<label for="coupon-code" class="sr-only">Discount code</label>
-				<input
-					id="coupon-code"
-					name="code"
-					type="text"
-					autocomplete="off"
-					spellcheck="false"
-					placeholder="Enter a code"
-					value={appliedCode ?? ''}
-					aria-describedby={message ? 'coupon-message' : undefined}
-					aria-invalid={message ? 'true' : undefined}
-					class="w-full border-b border-forest/25 bg-transparent px-0 py-2 text-[15px] tracking-[0.18em] text-forest uppercase placeholder:tracking-normal placeholder:text-forest/60 placeholder:normal-case focus:border-forest focus:outline-none font-medium"
-				/>
-			</div>
-			<button
-				type="submit"
-				disabled={busy}
-				class="border border-forest/60 px-5 py-2 text-[11px] tracking-[0.2em] text-forest uppercase transition hover:bg-forest hover:text-paper disabled:opacity-40 font-medium"
-			>
-				Apply
-			</button>
+		<form method="POST" action="/cart?/applyCoupon" use:enhance class="coupon__form">
+			<label for="coupon-code" class="sr-only">Discount code</label>
+			<input
+				id="coupon-code"
+				name="code"
+				type="text"
+				autocomplete="off"
+				spellcheck="false"
+				placeholder="Enter a code"
+				value={appliedCode ?? ''}
+				aria-describedby={message ? 'coupon-message' : undefined}
+				aria-invalid={message ? 'true' : undefined}
+				class="coupon__input"
+			/>
+			<button type="submit" disabled={busy} class="coupon__apply">Apply</button>
 		</form>
 	{/if}
 
 	{#if message}
 		<!-- Announced, not merely coloured. -->
-		<p id="coupon-message" role="status" class="mt-3 text-[13px] leading-relaxed text-alert">
+		<p id="coupon-message" role="status" class="coupon__message">
 			{message}
 		</p>
 	{/if}
 </section>
+
+<style>
+	.coupon {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+	.coupon__head {
+		margin: 0;
+		font-size: 13px;
+		font-weight: 400;
+		color: rgb(11 15 11 / 0.62);
+	}
+	.coupon__form {
+		display: flex;
+	}
+	.coupon__input {
+		flex: 1;
+		min-width: 0;
+		height: 50px;
+		padding: 0 14px;
+		border: 1px solid rgb(11 15 11 / 0.26);
+		border-right: 0;
+		border-radius: 0;
+		background: #ffffff;
+		color: var(--color-forest-black);
+		font: inherit;
+		font-size: 16px;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		outline: none;
+		transition: border-color 0.2s;
+	}
+	.coupon__input::placeholder {
+		letter-spacing: 0;
+		text-transform: none;
+		color: rgb(11 15 11 / 0.45);
+	}
+	.coupon__input:focus {
+		border-color: var(--color-forest-black);
+	}
+	.coupon__input[aria-invalid='true'] {
+		border-color: var(--color-alert);
+	}
+	.coupon__apply {
+		flex: none;
+		height: 50px;
+		padding-inline: 22px;
+		border: 1px solid var(--color-forest-black);
+		background: transparent;
+		color: var(--color-forest-black);
+		font-size: 11px;
+		font-weight: 500;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		transition:
+			background-color 0.25s,
+			color 0.25s;
+	}
+	.coupon__apply:hover {
+		background: var(--color-forest-black);
+		color: #f6f4ef;
+	}
+	.coupon__apply:disabled,
+	.coupon__remove:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
+	}
+	.coupon__applied {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		min-height: 50px;
+		padding: 0 14px;
+		background: #efeeeb;
+	}
+	.coupon__applied p {
+		display: flex;
+		align-items: baseline;
+		gap: 12px;
+		font-size: 15px;
+	}
+	.coupon__code {
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+	.coupon__amount {
+		color: rgb(11 15 11 / 0.62);
+		font-variant-numeric: tabular-nums;
+	}
+	.coupon__remove {
+		min-height: 44px;
+		font-size: 13px;
+		color: rgb(11 15 11 / 0.62);
+		text-decoration: underline;
+		text-underline-offset: 4px;
+	}
+	.coupon__remove:hover {
+		color: var(--color-forest-black);
+	}
+	.coupon__message {
+		font-size: 13px;
+		line-height: 1.6;
+		color: var(--color-alert);
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.coupon__input,
+		.coupon__apply {
+			transition: none;
+		}
+	}
+</style>

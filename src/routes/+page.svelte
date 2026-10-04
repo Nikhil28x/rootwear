@@ -369,7 +369,9 @@
 		position: relative;
 		height: max(420px, calc(100svh - 68px - var(--nameplate) - env(safe-area-inset-top, 0px)));
 		overflow: hidden;
-		background: var(--stone);
+		/* Paper at the top, easing into the stone cream at the foot: what
+		   shows behind the photographs as they wipe in. */
+		background: linear-gradient(to bottom, #ffffff 0%, var(--stone) 100%);
 	}
 	.spread__track {
 		display: flex;

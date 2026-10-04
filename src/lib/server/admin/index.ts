@@ -37,6 +37,7 @@ export const adminRepo: AdminRepository = {
 	findDropRow: (slug) => select().findDropRow(slug),
 	setDropState: (input) => select().setDropState(input),
 	setDropPublished: (input) => select().setDropPublished(input),
+	setDropPreorderMode: (input) => select().setDropPreorderMode(input),
 	setDropLaunchInstant: (input) => select().setDropLaunchInstant(input),
 	setVariantStock: (input) => select().setVariantStock(input),
 	listOrders: (filter) => select().listOrders(filter),

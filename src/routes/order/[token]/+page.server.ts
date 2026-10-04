@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { cartRepository } from '$lib/server/cart';
+import { settleCheckout } from '$lib/server/checkout/place';
 import { LAUNCH_INSTANT } from '$lib/drop/schedule';
 
 /**
@@ -13,9 +14,12 @@ import { LAUNCH_INSTANT } from '$lib/drop/schedule';
  * to sit behind — the unguessable URL IS the access control, and it is the
  * same link the confirmation email carries.
  */
-export const load: PageServerLoad = async ({ params, locals }) => {
+export const load: PageServerLoad = async ({ params, locals, cookies }) => {
 	const order = await cartRepository.findOrderByToken(params.token);
 	if (!order) error(404, 'We have no order with that reference.');
+
+	// A paid order retires the cart that placed it (a no-op for any other).
+	await settleCheckout(cookies, order);
 
 	return {
 		order,

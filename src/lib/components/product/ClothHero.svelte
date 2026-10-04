@@ -3,72 +3,88 @@
 	 * The hero piece: the photograph, and — where the device can — the same
 	 * photograph as a 3D cloth you can turn and touch (cloth-scene.ts).
 	 *
-	 * The entry is a race against a short deadline. If the 3D piece is ready
-	 * within it, the photograph never shows and the cloth materialises in with
-	 * its full entry (dissolve, tumble, bounce on the hanger). If not, the
-	 * photograph makes its own, simpler entrance — in pure CSS, so it happens
-	 * with no JavaScript at all — and the 3D piece fades in over it later,
-	 * already at rest. Reduced motion skips the 3D and every entrance.
+	 * On a device that can draw it, the 3D piece claims the entrance the moment
+	 * the page hydrates: the photograph stays hidden and the cloth materialises
+	 * with its full entry (dissolve, tumble, bounce on the hanger) — the photo
+	 * never shows first. Only if the 3D is not ready within FALLBACK_MS (a very
+	 * slow connection) or fails does the photograph make its own entrance, and
+	 * the 3D fades in over it later, at rest. Without JavaScript the photograph
+	 * enters in pure CSS. Reduced motion skips the 3D and every entrance.
 	 */
 	import { onMount } from 'svelte';
-	import type { ClothScene } from './cloth-scene';
+	// Loaded with the page, not after it: the 3D starts the moment the page hydrates.
+	import { mountCloth, type ClothScene } from './cloth-scene';
 
 	let { src, alt }: { src: string; alt: string } = $props();
 
-	/** Must match the photograph's CSS animation-delay below. */
-	const DEADLINE_MS = 1300;
-	/** Let the headline start before the piece arrives. */
-	const ENTRY_AFTER_MS = 450;
+	/** How long the 3D may take before the photograph is shown instead. */
+	const FALLBACK_MS = 5000;
 
 	let image: HTMLImageElement;
 	let canvas: HTMLCanvasElement;
 	/** The 3D piece has claimed the entrance; keep the photograph hidden. */
 	let claimed = $state(false);
 	let live = $state(false);
+	/** No 3D coming (or not in time): show the photograph now. */
+	let photo = $state(false);
 
 	onMount(() => {
-		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+			photo = true;
+			return;
+		}
 		const probe = document.createElement('canvas');
-		if (!probe.getContext('webgl2') && !probe.getContext('webgl')) return;
+		if (!probe.getContext('webgl2') && !probe.getContext('webgl')) {
+			photo = true;
+			return;
+		}
 
-		const mountedAt = performance.now();
 		let scene: ClothScene | null = null;
 		let cancelled = false;
 
+		// Claim now, before anything loads, so the photograph never flashes in.
+		claimed = true;
+		const fallback = setTimeout(() => {
+			if (!live) {
+				claimed = false;
+				photo = true;
+			}
+		}, FALLBACK_MS);
+
 		const start = async () => {
 			try {
-				const { mountCloth } = await import('./cloth-scene');
-				if (cancelled) return;
-
-				const elapsed = performance.now() - mountedAt;
-				const intro = elapsed < DEADLINE_MS - 150;
-				if (intro) {
-					claimed = true;
-					const wait = ENTRY_AFTER_MS - elapsed;
-					if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
-					if (cancelled) return;
-				}
+				// Still claimed: the full entrance. Timed out: fade in at rest over the photo.
+				const intro = claimed;
 
 				scene = await mountCloth(canvas, image, { intro });
 				if (cancelled) return scene.destroy();
 				await scene.ready;
 				if (!cancelled) live = true;
+				clearTimeout(fallback);
 			} catch (cause) {
+				clearTimeout(fallback);
 				// Give the photograph back; the page loses nothing.
 				claimed = false;
+				photo = true;
 				console.warn('[cloth] 3D unavailable', cause);
 			}
 		};
 		void start();
 
 		return () => {
+			clearTimeout(fallback);
 			cancelled = true;
 			scene?.destroy();
 		};
 	});
 </script>
 
-<div class="cloth3d" class:cloth3d--claimed={claimed} class:cloth3d--live={live}>
+<div
+	class="cloth3d"
+	class:cloth3d--claimed={claimed}
+	class:cloth3d--live={live}
+	class:cloth3d--photo={photo}
+>
 	<img bind:this={image} {src} {alt} fetchpriority="high" decoding="async" />
 	<canvas bind:this={canvas} aria-hidden="true"></canvas>
 </div>
@@ -90,6 +106,18 @@
 			opacity: 0;
 			transform: translateY(-5%) scale(0.95);
 		}
+	}
+	/*
+	 * With scripts, the photograph waits: the 3D piece may claim the entrance
+	 * once the page hydrates, and the photo must not flash in before it. The
+	 * long delay is only a safety net if scripts never run; the component
+	 * releases the photo at once when there will be no 3D (.cloth3d--photo).
+	 */
+	:global(.js) .cloth3d img {
+		animation-delay: 6s;
+	}
+	:global(.js) .cloth3d--photo img {
+		animation-delay: 0s;
 	}
 	.cloth3d--claimed img,
 	.cloth3d--live img {

@@ -254,6 +254,8 @@ export async function handlePreOrder(
 	const drop = await drops.findBySlug(dropSlug);
 	const variant = drop && variantId ? findVariant(drop, variantId) : null;
 	if (!drop || !variant) return fail_('form', 'That piece no longer exists.');
+	// The drop's own switch decides, not the page that posted (set in admin).
+	if (!drop.preorderMode) return fail_('form', 'Pre-orders are not open for this drop.');
 
 	if (!variantId) return fail_('size', 'Choose a size.');
 	if (name.length < 2) return fail_('name', 'Tell us who to put the piece aside for.');

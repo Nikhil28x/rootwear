@@ -56,7 +56,8 @@ export const cartRepository: CartRepository = {
 		selectRepository().countHoldsElsewhere(variantId, nowMs, exceptCartId),
 	committedUnits: (variantId) => selectRepository().committedUnits(variantId),
 	setCoupon: (cartId, code) => selectRepository().setCoupon(cartId, code),
-	validateCoupon: (code, subtotal, kind) => selectRepository().validateCoupon(code, subtotal, kind),
+	validateCoupon: (code, subtotal, kind, cartToken) =>
+		selectRepository().validateCoupon(code, subtotal, kind, cartToken),
 	shippingFor: (subtotal) => selectRepository().shippingFor(subtotal),
 	pincodeExclusion: (pincode) => selectRepository().pincodeExclusion(pincode),
 	listAddresses: (customerId) => selectRepository().listAddresses(customerId),
@@ -65,6 +66,13 @@ export const cartRepository: CartRepository = {
 		selectRepository().attachCartToCustomer(cartId, customerId),
 	commitOrder: (input) => selectRepository().commitOrder(input),
 	findOrderByToken: (token) => selectRepository().findOrderByToken(token),
+	restoreLines: (cartId, lines, heldUntilMs) =>
+		selectRepository().restoreLines(cartId, lines, heldUntilMs),
+	findRecentPendingOrder: (keyPrefix, sinceMs) =>
+		selectRepository().findRecentPendingOrder(keyPrefix, sinceMs),
+	cancelSupersededOrders: (input) => selectRepository().cancelSupersededOrders(input),
+	expireUnpaidOrders: (olderThanMs) => selectRepository().expireUnpaidOrders(olderThanMs),
+	cancelUnpaidOrder: (orderId) => selectRepository().cancelUnpaidOrder(orderId),
 	recordPaymentIntent: (input) => selectRepository().recordPaymentIntent(input),
 	capturePayment: (input) => selectRepository().capturePayment(input),
 	findPaymentIntent: (input) => selectRepository().findPaymentIntent(input),

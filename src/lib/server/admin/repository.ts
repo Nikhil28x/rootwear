@@ -61,6 +61,11 @@ export interface AdminRepository {
 		actor: string;
 	}): Promise<void>;
 	setDropPublished(input: { dropId: string; published: boolean; actor: string }): Promise<void>;
+	setDropPreorderMode(input: {
+		dropId: string;
+		preorderMode: boolean;
+		actor: string;
+	}): Promise<void>;
 	/**
 	 * §07 — the launch instant, which is the whole schedule.
 	 *

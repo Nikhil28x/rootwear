@@ -35,6 +35,24 @@ export const SUPABASE_SERVICE_ROLE_KEY = () => required('SUPABASE_SERVICE_ROLE_K
 
 export const CRON_SECRET = () => required('CRON_SECRET');
 
+/** The cron secret when set, or undefined — for endpoints that refuse rather than throw. */
+export const optionalCronSecret = () => optional('CRON_SECRET');
+
+/** Default window an order may sit unpaid before its stock goes back on sale. */
+const DEFAULT_PAYMENT_WINDOW_MINUTES = 10;
+
+/**
+ * How long a pending_payment order holds its stock, in ms.
+ * ORDER_PAYMENT_WINDOW_MINUTES, default 10. Fractions are accepted (handy for
+ * testing); anything unparseable or negative falls back to the default.
+ */
+export function orderPaymentWindowMs(): number {
+	const raw = optional('ORDER_PAYMENT_WINDOW_MINUTES');
+	const minutes = raw === undefined ? NaN : Number(raw);
+	const value = Number.isFinite(minutes) && minutes >= 0 ? minutes : DEFAULT_PAYMENT_WINDOW_MINUTES;
+	return Math.round(value * 60_000);
+}
+
 /**
  * RW-046 — one environment variable switches the catalogue between the mock
  * fixtures and Postgres, with no other code change.

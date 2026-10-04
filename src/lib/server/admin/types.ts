@@ -197,6 +197,8 @@ export type AdminDropRow = {
 	readonly archivedAt: number | null;
 	readonly editionSize: number;
 	readonly published: boolean;
+	/** Pre-order signups instead of sales; see drops.preorder_mode. */
+	readonly preorderMode: boolean;
 	readonly variants: readonly AdminVariantRow[];
 	/** From $lib/domain/drop-state — the UI never offers anything outside this. */
 	readonly legalTransitions: readonly DropState[];

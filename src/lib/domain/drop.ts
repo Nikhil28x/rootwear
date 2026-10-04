@@ -98,6 +98,11 @@ export type Drop = {
 	readonly archivedAt: number | null;
 	/** §08: 25 hand-numbered pieces. */
 	readonly editionSize: number;
+	/**
+	 * Set from admin. On, the storefront takes pre-order signups for this drop
+	 * (no payment); off, it sells through the cart.
+	 */
+	readonly preorderMode: boolean;
 
 	readonly products: readonly Product[];
 };

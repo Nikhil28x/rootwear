@@ -11,6 +11,7 @@ import {
 import { catalogueIndex } from '$lib/server/cart/pricing';
 import { isOnSale } from '$lib/domain/drop-state';
 import { availableUnits } from '$lib/server/cart/availability';
+import { expireUnpaidOrders } from '$lib/server/checkout/expiry';
 import { LAUNCH_INSTANT } from '$lib/drop/schedule';
 import type { CouponStatus } from '$lib/server/cart/types';
 
@@ -42,6 +43,10 @@ function parseQuantity(raw: string): number | null {
 }
 
 export const load: PageServerLoad = async ({ cookies, locals }) => {
+	// Lapsed unpaid orders give their stock back before availability is read
+	// (a database write, not a cookie — this load still mints nothing).
+	await expireUnpaidOrders();
+
 	// READ-ONLY. Mints nothing — a visitor who has never added anything must
 	// not acquire a cart cookie merely by looking at this page.
 	const cart = await loadCart(cookies, locals.now);
@@ -196,7 +201,12 @@ export const actions: Actions = {
 		// Validated against the SERVER's subtotal, recomputed a moment ago from
 		// the catalogue — never against a figure the browser sent.
 		const view = await loadCart(cookies, locals.now);
-		const outcome = await cartRepository.validateCoupon(code, view.totals.subtotal, 'order');
+		const outcome = await cartRepository.validateCoupon(
+			code,
+			view.totals.subtotal,
+			'order',
+			cart.token
+		);
 
 		if (outcome.status !== 'ok') {
 			return fail(400, { coupon: outcome.status });

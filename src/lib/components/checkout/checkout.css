@@ -1,0 +1,593 @@
+/*
+ * The checkout, set in the homepage's magazine: white page, black ink, one
+ * display face (Didot) for titles and totals, small sans everywhere else,
+ * hairline rules. Imported by the cart, checkout and order pages; every rule
+ * is scoped under `.co`, so nothing here reaches another route.
+ */
+.co {
+	--ink: var(--color-forest-black);
+	--soft: rgb(11 15 11 / 0.62);
+	--faint: rgb(11 15 11 / 0.4);
+	--rule: rgb(11 15 11 / 0.14);
+	--edge: rgb(11 15 11 / 0.26);
+	--stone: #efeeeb;
+	--paper: #ffffff;
+	--alert: var(--color-alert);
+	--gutter: clamp(20px, 4vw, 56px);
+	padding: 0 var(--gutter) clamp(72px, 9vw, 128px);
+	background: var(--paper);
+	color: var(--ink);
+	overflow-x: clip;
+}
+/* One centred measure for everything on the page. */
+.co > * {
+	max-width: 1240px;
+	margin-inline: auto;
+}
+
+/* ── Masthead: the page's name and the steps, over a black rule ── */
+.co > .co-mast {
+	margin-top: clamp(28px, 4vw, 56px);
+}
+.co-mast {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-end;
+	gap: 14px 32px;
+	flex-wrap: wrap;
+	padding-bottom: 14px;
+	border-bottom: 1px solid var(--ink);
+}
+.co-mast__text {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	min-width: 0;
+}
+.co-title {
+	margin: 0;
+	font-family: var(--font-display);
+	font-weight: 400;
+	font-size: clamp(2.6rem, 4.4vw, 4rem);
+	line-height: 0.95;
+	letter-spacing: -0.04em;
+	text-wrap: balance;
+}
+.co-sub {
+	font-size: 14px;
+	color: var(--soft);
+}
+
+/*
+ * ── Two columns from the top ──────────────────────────────────
+ * Left: the title row, then the work. Right: the summary, sticky, level with
+ * the title. A phone stacks title, summary (folded), work — or, with
+ * `.co-aside--after`, title, work, summary.
+ */
+.co-grid {
+	--top: clamp(28px, 4vw, 56px);
+	display: grid;
+	grid-template-columns: minmax(0, 1.35fr) minmax(340px, 1fr);
+	grid-template-rows: auto 1fr;
+	grid-template-areas:
+		'mast aside'
+		'main aside';
+	column-gap: clamp(48px, 6vw, 96px);
+	align-items: start;
+}
+.co-grid > .co-mast {
+	grid-area: mast;
+	margin-top: var(--top);
+}
+.co-main {
+	grid-area: main;
+	display: flex;
+	flex-direction: column;
+	gap: clamp(40px, 4vw, 52px);
+	min-width: 0;
+	margin-top: clamp(28px, 3vw, 40px);
+}
+.co-aside {
+	grid-area: aside;
+	position: sticky;
+	top: 96px;
+	align-self: start;
+	display: flex;
+	flex-direction: column;
+	gap: 28px;
+	min-width: 0;
+	margin-top: var(--top);
+}
+.co-single {
+	display: flex;
+	flex-direction: column;
+	gap: clamp(36px, 4vw, 52px);
+	margin-top: clamp(28px, 3.4vw, 48px);
+}
+
+/* ── Section heads: Didot, small, over a hairline ───────────── */
+.co-head {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 16px;
+	margin: 0 0 4px;
+	padding-bottom: 10px;
+	border-bottom: 1px solid var(--rule);
+}
+.co-head h2,
+.co-head h3,
+.co-head legend,
+h2.co-head {
+	margin: 0;
+	padding: 0;
+	font-family: var(--font-display);
+	font-weight: 400;
+	font-size: clamp(1.35rem, 1.6vw, 1.5rem);
+	line-height: 1.1;
+	letter-spacing: -0.015em;
+}
+.co-label {
+	font-size: 13px;
+	color: var(--soft);
+}
+
+/* ── Text ───────────────────────────────────────────────────── */
+.co-lede {
+	max-width: 54ch;
+	font-size: 16px;
+	line-height: 1.65;
+	color: rgb(11 15 11 / 0.75);
+}
+.co-copy {
+	font-size: 14px;
+	line-height: 1.65;
+	color: var(--soft);
+}
+.co-fine {
+	font-size: 13px;
+	line-height: 1.6;
+	color: var(--soft);
+}
+.co-num {
+	font-variant-numeric: tabular-nums;
+}
+.co address {
+	font-style: normal;
+	font-size: 15px;
+	line-height: 1.75;
+}
+
+/* ── Spec sheet: label, dotted leader, value ────────────────── */
+.co-spec {
+	margin: 0;
+}
+.co-spec__row {
+	display: flex;
+	align-items: baseline;
+	gap: 10px;
+	padding: 12px 0;
+	border-bottom: 1px solid var(--rule);
+	font-size: 14px;
+}
+.co-spec__row dt {
+	color: var(--soft);
+	white-space: nowrap;
+}
+.co-spec__dots {
+	flex: 1;
+	min-width: 16px;
+	border-bottom: 1px dotted rgb(11 15 11 / 0.35);
+	transform: translateY(-4px);
+}
+.co-spec__row dd {
+	margin: 0;
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+	overflow-wrap: anywhere;
+}
+.co-spec__row--total {
+	justify-content: space-between;
+	align-items: baseline;
+	padding: 18px 0 14px;
+	border-bottom: 1px solid var(--ink);
+}
+.co-spec__row--total dt {
+	color: var(--ink);
+	font-size: 15px;
+}
+.co-spec__row--total dd {
+	font-family: var(--font-display);
+	font-size: clamp(1.9rem, 2.6vw, 2.4rem);
+	line-height: 1;
+	letter-spacing: -0.02em;
+}
+
+/* ── Actions ────────────────────────────────────────────────── */
+.co .cta {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	height: 50px;
+	padding-inline: 28px;
+	border: 1px solid var(--ink);
+	background: var(--ink);
+	color: #f6f4ef;
+	font-size: 11px;
+	font-weight: 500;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition:
+		background-color 0.25s,
+		border-color 0.25s,
+		color 0.25s;
+}
+.co .cta:hover {
+	background: var(--color-forest);
+	border-color: var(--color-forest);
+}
+.co .cta:disabled,
+.co .cta[aria-disabled='true'] {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+.co .cta--full {
+	width: 100%;
+}
+.co .cta--line {
+	background: transparent;
+	color: var(--ink);
+}
+.co .cta--line:hover {
+	background: var(--ink);
+	border-color: var(--ink);
+	color: #f6f4ef;
+}
+.co .link {
+	font-size: 14px;
+	color: var(--ink);
+	text-decoration: underline;
+	text-underline-offset: 4px;
+	text-decoration-thickness: 1px;
+	cursor: pointer;
+}
+.co .link:hover {
+	text-decoration-thickness: 2px;
+}
+.co .link--soft {
+	color: var(--soft);
+}
+.co .link--soft:hover {
+	color: var(--ink);
+}
+.co-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 16px 28px;
+}
+
+/* ── Notices: an error is said in words, with a rule beside it ── */
+.co-alert {
+	padding: 14px 18px;
+	border-left: 2px solid var(--alert);
+	background: rgb(157 69 38 / 0.05);
+	font-size: 14px;
+	line-height: 1.6;
+	color: var(--alert);
+}
+.co-alert ul {
+	margin: 6px 0 0;
+	padding: 0 0 0 18px;
+}
+.co-alert strong {
+	font-weight: 500;
+}
+.co-note {
+	padding: 12px 0 12px 16px;
+	border-left: 2px solid var(--ink);
+	font-size: 13px;
+	line-height: 1.6;
+	color: var(--soft);
+}
+.co-note b {
+	display: block;
+	margin-bottom: 2px;
+	font-weight: 500;
+	color: var(--ink);
+}
+
+/* ── Order lines, compact (summary and review) ──────────────── */
+.co-lines {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.co-line {
+	display: grid;
+	grid-template-columns: 56px minmax(0, 1fr) auto;
+	gap: 14px;
+	align-items: start;
+	padding: 14px 0;
+	border-bottom: 1px solid var(--rule);
+}
+.co-line--wide {
+	grid-template-columns: 72px minmax(0, 1fr) auto;
+	gap: 18px;
+	padding: 18px 0;
+}
+.co-line__thumb {
+	display: block;
+	aspect-ratio: 4 / 5;
+	overflow: hidden;
+	background: var(--stone);
+}
+.co-line__thumb img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: 50% 24%;
+	transform: scale(1.06);
+}
+.co-line__name {
+	display: block;
+	font-size: 15px;
+	line-height: 1.35;
+}
+.co-line--wide .co-line__name {
+	font-family: var(--font-display);
+	font-size: 1.35rem;
+	line-height: 1.1;
+	letter-spacing: -0.015em;
+}
+.co-line__meta {
+	display: block;
+	margin-top: 4px;
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--soft);
+}
+.co-line__price {
+	font-size: 15px;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+/* ── Forms: light boxed fields, sentence-case labels ─────────── */
+/* Field.svelte is shared, so its look is adjusted here, under the form only. */
+.co-form {
+	display: flex;
+	flex-direction: column;
+	gap: clamp(36px, 3.6vw, 48px);
+}
+.co-form fieldset {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+	min-width: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+.co-form legend {
+	float: left;
+	width: 100%;
+	margin: 0 0 4px;
+	padding: 0 0 10px;
+	border-bottom: 1px solid var(--rule);
+	font-family: var(--font-display);
+	font-weight: 400;
+	font-size: clamp(1.35rem, 1.6vw, 1.5rem);
+	line-height: 1.1;
+	letter-spacing: -0.015em;
+	color: var(--ink);
+}
+.co-form legend + * {
+	clear: both;
+}
+.co-form label {
+	font-size: 13px;
+	font-weight: 400;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--ink);
+}
+.co-form label > span[aria-hidden='true'] {
+	color: var(--faint);
+}
+.co-form input:not([type='hidden']),
+.co-form select,
+.co-form textarea {
+	width: 100%;
+	height: 46px;
+	padding: 0 14px;
+	border: 1px solid rgb(11 15 11 / 0.18);
+	border-radius: 0;
+	background-color: var(--paper);
+	color: var(--ink);
+	font: inherit;
+	font-size: 16px;
+	line-height: 1.4;
+	outline: none;
+	transition:
+		border-color 0.2s,
+		background-color 0.2s;
+}
+.co-form textarea {
+	height: auto;
+	min-height: 104px;
+	padding: 12px 14px;
+}
+.co-form select {
+	appearance: none;
+	-webkit-appearance: none;
+	padding-right: 40px;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%230b0f0b' stroke-width='1.2'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 16px center;
+}
+.co-form input:not([type='hidden']):hover,
+.co-form select:hover,
+.co-form textarea:hover {
+	background-color: #f7f6f4;
+	border-color: rgb(11 15 11 / 0.3);
+}
+.co-form input:not([type='hidden']):focus,
+.co-form select:focus,
+.co-form textarea:focus {
+	background-color: var(--paper);
+	border-color: var(--ink);
+	box-shadow: 0 0 0 1px var(--ink);
+}
+/* A field with an error message: the box says so too. */
+.co-form div:has(> p[id$='-error']) :is(input, select, textarea) {
+	border-color: var(--alert);
+	box-shadow: 0 0 0 1px var(--alert);
+}
+.co-form p[id$='-hint'] {
+	margin-top: -2px;
+	font-size: 13px;
+	color: var(--soft);
+}
+.co-form p[id$='-error'] {
+	margin-top: -2px;
+	font-size: 13px;
+	color: var(--alert);
+}
+.co-form-pair {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	gap: 18px 16px;
+	align-items: start;
+}
+.co-fixed {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+.co-fixed .co-label {
+	color: var(--ink);
+}
+.co-fixed__value {
+	display: flex;
+	align-items: center;
+	height: 46px;
+	padding: 0 14px;
+	background: var(--stone);
+	font-size: 16px;
+}
+
+/* ── Saved addresses ────────────────────────────────────────── */
+.co-saved {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+	gap: 12px;
+}
+.co-saved button {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-height: 64px;
+	padding: 14px 16px;
+	border: 1px solid var(--edge);
+	text-align: left;
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--soft);
+	transition: border-color 0.2s;
+}
+.co-saved button:hover,
+.co-saved button:focus-visible {
+	border-color: var(--ink);
+}
+.co-saved b {
+	font-size: 15px;
+	font-weight: 400;
+	color: var(--ink);
+}
+
+/* ── Live dot ───────────────────────────────────────────────── */
+.co-dot {
+	display: inline-block;
+	flex: none;
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--ink);
+}
+.co-dot--pulse {
+	animation: co-pulse 2.4s ease-in-out infinite;
+}
+@keyframes co-pulse {
+	50% {
+		opacity: 0.25;
+	}
+}
+
+/* ── A stone card, for a summary that does not fold ─────────── */
+.co-card {
+	display: flex;
+	flex-direction: column;
+	gap: 28px;
+	padding: clamp(24px, 2.4vw, 36px);
+	background: var(--stone);
+}
+
+/* ── Phone ──────────────────────────────────────────────────── */
+@media (max-width: 960px) {
+	.co-grid {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: auto;
+		grid-template-areas:
+			'mast'
+			'aside'
+			'main';
+	}
+	.co-grid--after {
+		grid-template-areas:
+			'mast'
+			'main'
+			'aside';
+	}
+	.co-aside {
+		position: static;
+		margin-top: 24px;
+	}
+	.co-grid--after .co-aside {
+		margin-top: 48px;
+	}
+	.co-card {
+		padding: 24px 20px;
+	}
+}
+@media (max-width: 560px) {
+	.co-mast {
+		flex-direction: column;
+		align-items: stretch;
+	}
+	.co-form-pair {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.co-actions .cta {
+		width: 100%;
+	}
+	.co-actions {
+		flex-direction: column;
+		align-items: stretch;
+		text-align: center;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.co-dot--pulse {
+		animation: none;
+	}
+	.co .cta,
+	.co-form input,
+	.co-form select,
+	.co-form textarea {
+		transition: none;
+	}
+}

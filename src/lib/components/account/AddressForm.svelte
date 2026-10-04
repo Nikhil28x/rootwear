@@ -156,6 +156,7 @@
 				required
 				bind:value={stateName}
 				error={errors.state ?? ''}
+				autocomplete="address-level1"
 				options={stateOptions}
 			/>
 		</div>

@@ -1,18 +1,19 @@
 <script lang="ts">
 	/**
-	 * §04 — waiting on the gateway, not on the browser.
+	 * §04 — the pay step: first the payment itself, then waiting on the
+	 * gateway, not on the browser.
 	 *
 	 * The poll below asks the SERVER whether the order has been paid. It never
 	 * decides that itself, because the only thing that can decide it is the
 	 * webhook. A visitor who closes this tab still gets a paid order; a visitor
 	 * who sits here sees it land.
 	 */
-	import { invalidateAll } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { enhance } from '$app/forms';
-	import Button from '$lib/components/ui/Button.svelte';
-	import Eyebrow from '$lib/components/ui/Eyebrow.svelte';
+	import '$lib/components/checkout/checkout.css';
+	import CheckoutSteps from '$lib/components/checkout/CheckoutSteps.svelte';
 	import RazorpayCheckout from '$lib/components/checkout/RazorpayCheckout.svelte';
-	import { formatInr } from '$lib/money';
+	import { formatInr, multiplyPaise } from '$lib/money';
 	import { SUPPORT_EMAIL } from '$lib/content/business';
 	import { PAYMENT_NOT_CONFIGURED_MESSAGE } from '$lib/checkout/messages';
 	import type { ActionData, PageData } from './$types';
@@ -47,113 +48,237 @@
 	});
 
 	let givenUp = $derived(elapsed > GIVE_UP_MS);
+
+	/**
+	 * Closing the payment window cancels this order straight away, so its
+	 * pieces go back on sale. The cart is kept; the checkout page explains and
+	 * places a fresh order on the next Pay.
+	 */
+	async function abandon() {
+		if (handedOff) return;
+		const body = new FormData();
+		body.set('order', data.order.publicToken);
+		try {
+			await fetch('?/abandon', { method: 'POST', body, headers: { 'x-sveltekit-action': 'true' } });
+		} catch {
+			// The expiry sweep cancels it later regardless.
+		}
+		await goto('/checkout/information?payment=cancelled', { invalidateAll: true });
+	}
+
+	/** The test payment went through; the webhook is on its way. */
+	let settled = $derived(Boolean(form && 'settled' in form && form.settled));
+	let notWired = $derived(data.payment.gatewayOrderId === null);
+	/**
+	 * Nothing has been paid yet: the buyer still has the payment to make. Only
+	 * after the gateway's success handler (or the test payment) does the page
+	 * say it is confirming anything.
+	 */
+	let awaiting = $derived(
+		!notWired &&
+			!handedOff &&
+			!settled &&
+			(data.payment.name === 'mock' ||
+				(data.payment.name === 'razorpay' && Boolean(data.payment.keyId)))
+	);
+	let title = $derived(
+		notWired ? 'Order placed' : awaiting ? 'Complete your payment' : 'Confirming your payment'
+	);
 </script>
 
 <svelte:head>
-	<title>Confirming your payment — Rootwear</title>
+	<title>{title} — Rootwear</title>
 	<meta name="robots" content="noindex" />
 </svelte:head>
 
-<main class="relative isolate overflow-hidden bg-paper text-forest">
-	<div class="mx-auto max-w-[1600px] px-5 py-24 sm:px-10 sm:py-32 lg:px-14">
-		<div class="max-w-[46rem]">
-			<Eyebrow tone="strong" class="text-forest/70">Order {data.order.orderNumber}</Eyebrow>
-			<h1
-				class="display mt-6 text-[clamp(3rem,7vw,7rem)] leading-[0.82] tracking-[-0.055em] text-forest"
-			>
-				Confirming<br />your payment.
-			</h1>
+<main class="co">
+	<div class="co-grid co-grid--after">
+		<header class="co-mast">
+			<div class="co-mast__text">
+				<h1 class="co-title">{title}</h1>
+			</div>
+			<CheckoutSteps current="pay" />
+		</header>
 
-			<p class="mt-8 max-w-[54ch] text-[16px] leading-[1.85] text-forest/70" aria-live="polite">
-				{#if givenUp}
-					This is taking longer than usual. Your order number is {data.order.orderNumber} — if you've
-					been charged, email {SUPPORT_EMAIL} and we'll sort it out.
-				{:else if handedOff}
-					Confirming your payment… This usually takes a few seconds. You can safely close this page —
-					we'll email your confirmation.
-				{:else}
-					Your order is placed. Confirming your payment… This usually takes a few seconds. You can safely
-					close this page — we'll email your confirmation.
-				{/if}
-			</p>
-
-			<dl class="mt-12 flex list-none flex-col gap-3 border-t border-forest/15 pt-8 text-[15px]">
-				<div class="flex justify-between gap-6">
-					<dt class="text-forest/70">Order</dt>
-					<dd class="m-0 text-forest tabular-nums">{data.order.orderNumber}</dd>
-				</div>
-				<div class="flex justify-between gap-6">
-					<dt class="text-forest/70">Total</dt>
-					<dd class="m-0 text-forest tabular-nums">{formatInr(data.order.total)}</dd>
-				</div>
-				<div class="flex justify-between gap-6">
-					<dt class="text-forest/70">Confirmation to</dt>
-					<dd class="m-0 text-forest">{data.order.email}</dd>
-				</div>
-			</dl>
+		<div class="co-main proc">
+			{#if notWired}
+				<p class="co-lede">
+					Your order {data.order.orderNumber} is placed.
+				</p>
+				<p class="co-note">{PAYMENT_NOT_CONFIGURED_MESSAGE}</p>
+			{:else if awaiting}
+				<p class="co-lede">
+					Your order <span class="co-num">{data.order.orderNumber}</span> is reserved. Pay
+					<span class="co-num">{formatInr(data.payment.amount)}</span> to confirm it.
+				</p>
+			{:else}
+				<p class="co-lede proc-wait" aria-live="polite">
+					{#if !givenUp}<span class="co-dot co-dot--pulse" aria-hidden="true"></span>{/if}
+					<span>
+						{#if givenUp}
+							This is taking longer than usual. Your order number is {data.order.orderNumber} — if you've
+							been charged, email {SUPPORT_EMAIL} and we'll sort it out.
+						{:else}
+							Confirming your payment… This usually takes a few seconds. You can safely close this
+							page — we'll email your confirmation.
+						{/if}
+					</span>
+				</p>
+			{/if}
 
 			{#if problem}
-				<p
-					role="alert"
-					class="mt-10 border-l-2 border-alert bg-alert/[0.06] px-6 py-5 text-[15px] leading-relaxed text-alert"
-				>
-					{problem}
-				</p>
+				<p role="alert" class="co-alert">{problem}</p>
 			{/if}
 
-			{#if data.payment.gatewayOrderId === null}
-				<p class="mt-10 border-l-2 border-gold pl-4 text-[15px] leading-relaxed text-forest/75">
-					{PAYMENT_NOT_CONFIGURED_MESSAGE}
-				</p>
-			{:else if data.payment.name === 'mock'}
+			{#if !notWired && data.payment.name === 'mock' && !settled}
 				<!-- The stand-in gateway. It posts a signed body to the real webhook
 				     route, so the path exercised here is the path that runs live. -->
-				<section class="mt-12 border-t border-forest/15 pt-8" aria-labelledby="mock-heading">
-					<h2 id="mock-heading" class="text-[11px] tracking-[0.28em] text-forest/75 uppercase font-medium">
-						Test payment
-					</h2>
-					<p class="mt-4 max-w-[54ch] text-[15px] leading-relaxed text-forest/70">
-						Payments aren't live in this environment. Use this to simulate a successful payment.
-					</p>
-					<form method="POST" action="?/settleMock" class="mt-6" use:enhance>
+				<section class="proc-mock" aria-labelledby="mock-heading">
+					<div>
+						<h2 id="mock-heading" class="proc-mock__head">Test payment</h2>
+						<p class="co-copy">
+							Payments aren't live in this environment. Use this to simulate a successful payment.
+						</p>
+					</div>
+					<form method="POST" action="?/settleMock" use:enhance>
 						<input type="hidden" name="order" value={data.order.publicToken} />
-						<Button surface="light" variant="outline" type="submit">Simulate payment</Button>
+						<button class="cta cta--full" type="submit">Simulate payment</button>
 					</form>
 				</section>
-			{:else if data.payment.name === 'razorpay' && data.payment.keyId && !handedOff}
-				<RazorpayCheckout
-					keyId={data.payment.keyId}
-					gatewayOrderId={data.payment.gatewayOrderId}
-					amount={data.payment.amount}
-					description="Order {data.order.orderNumber}"
-					email={data.order.email}
-					name={data.order.name}
-					contact={data.order.phone}
-					autoOpen
-					verifyAction="?/verifyPayment"
-					fields={{ order: data.order.publicToken }}
-					onPaid={() => {
-						handedOff = true;
-						void invalidateAll();
-					}}
-				/>
+			{:else if !notWired && data.payment.name === 'razorpay' && data.payment.keyId && !handedOff}
+				<div class="proc-pay">
+					<RazorpayCheckout
+						keyId={data.payment.keyId}
+						gatewayOrderId={data.payment.gatewayOrderId!}
+						amount={data.payment.amount}
+						description="Order {data.order.orderNumber}"
+						email={data.order.email}
+						name={data.order.name}
+						contact={data.order.phone}
+						autoOpen
+						verifyAction="?/verifyPayment"
+						fields={{ order: data.order.publicToken }}
+						timeoutSeconds={data.payment.secondsLeft}
+						onPaid={() => {
+							handedOff = true;
+							void invalidateAll();
+						}}
+						onDismiss={abandon}
+					/>
+				</div>
 			{/if}
 
-			<div class="mt-12 flex flex-wrap items-center gap-6">
-				<!-- A link, not a button: with JavaScript off this is the whole poll. -->
-				<a
-					href="/checkout/processing?order={data.order.publicToken}"
-					class="text-[11px] tracking-[0.2em] text-forest/75 uppercase underline-offset-4 hover:text-forest hover:underline font-medium"
-				>
-					Check again
-				</a>
-				<a
-					href="mailto:{SUPPORT_EMAIL}"
-					class="text-[11px] tracking-[0.2em] text-forest/75 uppercase underline-offset-4 hover:text-forest hover:underline font-medium"
-				>
-					{SUPPORT_EMAIL}
-				</a>
-			</div>
+			{#if awaiting}
+				<p class="co-fine">
+					Having trouble? Email <a class="link proc-inline" href="mailto:{SUPPORT_EMAIL}"
+						>{SUPPORT_EMAIL}</a
+					>.
+				</p>
+			{:else}
+				<div class="proc-links">
+					<!-- A link, not a button: with JavaScript off this is the whole poll. -->
+					<a href="/checkout/processing?order={data.order.publicToken}" class="link">Check again</a>
+					<a href="mailto:{SUPPORT_EMAIL}" class="link link--soft">{SUPPORT_EMAIL}</a>
+				</div>
+			{/if}
 		</div>
+
+		<aside class="co-aside co-card" aria-label="Order summary">
+			<div class="co-head proc-head">
+				<h2>Order</h2>
+				<span class="co-label co-num">{data.order.orderNumber}</span>
+			</div>
+			<ul class="co-lines proc-lines">
+				{#each data.order.lines as line (line.sku)}
+					<li class="co-line proc-line">
+						<span>
+							<span class="co-line__name">{line.name}</span>
+							<span class="co-line__meta"
+								>{line.size ? `Size ${line.size} · ` : ''}{line.quantity} ×</span
+							>
+						</span>
+						<span class="co-line__price"
+							>{formatInr(multiplyPaise(line.unitPrice, line.quantity))}</span
+						>
+					</li>
+				{/each}
+			</ul>
+			<dl class="co-spec">
+				<div class="co-spec__row">
+					<dt>Subtotal</dt>
+					<span class="co-spec__dots" aria-hidden="true"></span>
+					<dd>{formatInr(data.order.subtotal)}</dd>
+				</div>
+				{#if data.order.discount > 0}
+					<div class="co-spec__row">
+						<dt>Discount</dt>
+						<span class="co-spec__dots" aria-hidden="true"></span>
+						<dd>−{formatInr(data.order.discount)}</dd>
+					</div>
+				{/if}
+				<div class="co-spec__row">
+					<dt>Shipping</dt>
+					<span class="co-spec__dots" aria-hidden="true"></span>
+					<dd>{data.order.shipping === 0 ? 'Included' : formatInr(data.order.shipping)}</dd>
+				</div>
+				<div class="co-spec__row co-spec__row--total">
+					<dt>Total</dt>
+					<dd>{formatInr(data.order.total)}</dd>
+				</div>
+			</dl>
+			<p class="co-fine proc-to">Confirmation to {data.order.email}</p>
+		</aside>
 	</div>
 </main>
+
+<style>
+	.proc-wait {
+		display: flex;
+		align-items: baseline;
+		gap: 12px;
+	}
+	.proc-wait .co-dot {
+		transform: translateY(-2px);
+	}
+	.proc-mock {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+		padding: 24px;
+		border: 1px solid var(--rule);
+	}
+	.proc-mock__head {
+		margin: 0 0 6px;
+		font-family: var(--font-display);
+		font-weight: 400;
+		font-size: 1.5rem;
+		letter-spacing: -0.02em;
+	}
+	.proc-pay :global(.pay) {
+		max-width: none;
+	}
+	.proc-pay :global(> div) {
+		margin-top: 0;
+	}
+	.proc-inline {
+		font-size: inherit;
+	}
+	.proc-links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 12px 28px;
+	}
+	.proc-head {
+		border-bottom-color: var(--ink);
+	}
+	.proc-lines {
+		margin-top: -16px;
+	}
+	.proc-line {
+		grid-template-columns: minmax(0, 1fr) auto;
+	}
+	.proc-to {
+		margin-top: -16px;
+		overflow-wrap: anywhere;
+	}
+</style>

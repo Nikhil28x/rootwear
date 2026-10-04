@@ -55,6 +55,15 @@ const RIPPLE_LIFE = 3;
 const RIPPLE_SWELL = 0.032;
 /** Pixels the pointer must travel between wake ripples: lower = denser wake. */
 const RIPPLE_SPACING = 18;
+
+/* ---- Body motion. ---- */
+/** How far the piece drifts toward the pointer on hover, in world units. */
+const HOVER_DRIFT = 0.07;
+/** How hard a scroll kicks the piece: world units per pixel scrolled. */
+const SCROLL_KICK = 0.0006;
+/** The bounce: stiffness and damping ratio of the spring that brings it home. */
+const BOUNCE_STIFFNESS = 70;
+const BOUNCE_DAMPING = 0.48;
 /** Turn limits — the back is not photographed. */
 const MAX_YAW = 0.75;
 const MAX_PITCH = 0.32;
@@ -242,7 +251,7 @@ function shellGeometry(mask: ReturnType<typeof maskFromImage>, side: 1 | -1) {
  * height drives a roughness map, so raised threads are a touch duller than
  * the hollows between them.
  */
-function surfaceMapsFromImage(image: HTMLImageElement, maxWidth = 1024) {
+function surfaceMapsFromImage(image: HTMLImageElement, maxWidth = 640) {
 	const scale = Math.min(1, maxWidth / image.naturalWidth);
 	const w = Math.round(image.naturalWidth * scale);
 	const h = Math.round(image.naturalHeight * scale);
@@ -670,6 +679,8 @@ export async function mountCloth(
 	let entryAge = intro ? 0 : Infinity;
 	let landed = !intro;
 	const lean = { yaw: 0, pitch: 0 };
+	/** Where the piece sits: drifted toward the pointer, kicked by scrolling. */
+	const body = { x: 0, y: 0, vx: 0, vy: 0, goalX: 0, goalY: 0 };
 	let dragging: { id: number; x: number; y: number; yaw: number; pitch: number } | null = null;
 
 	const raycaster = new THREE.Raycaster();
@@ -728,13 +739,33 @@ export async function mountCloth(
 			if (!inside) {
 				lean.yaw = 0;
 				lean.pitch = 0;
+				body.goalX = 0;
+				body.goalY = 0;
 				return;
 			}
 			if (!reducedMotion) wake(event, 0.12);
 			lean.yaw = THREE.MathUtils.clamp(((event.clientX - rect.left) / rect.width) * 2 - 1, -1, 1) * 0.22;
 			lean.pitch = THREE.MathUtils.clamp(((event.clientY - rect.top) / rect.height) * 2 - 1, -1, 1) * 0.1;
+			// Drift toward the pointer, on both axes.
+			body.goalX = THREE.MathUtils.clamp(((event.clientX - rect.left) / rect.width) * 2 - 1, -1, 1) * HOVER_DRIFT;
+			body.goalY = -THREE.MathUtils.clamp(((event.clientY - rect.top) / rect.height) * 2 - 1, -1, 1) * HOVER_DRIFT * 0.7;
 		}
 	}
+
+	/**
+	 * Scrolling kicks the piece: it lags against the direction of travel and
+	 * the bounce spring brings it home with an overshoot or two — the same
+	 * either way you scroll. A hard flick also stirs the cloth.
+	 */
+	let lastScroll = window.scrollY;
+	function onScroll() {
+		const delta = window.scrollY - lastScroll;
+		lastScroll = window.scrollY;
+		if (!visible || reducedMotion) return;
+		const kick = THREE.MathUtils.clamp(delta * SCROLL_KICK, -0.12, 0.12);
+		body.vy += kick * 9;
+	}
+	window.addEventListener('scroll', onScroll, { passive: true });
 	function onPointerUp(event: PointerEvent) {
 		if (!dragging || event.pointerId !== dragging.id) return;
 		dragging = null;
@@ -746,6 +777,8 @@ export async function mountCloth(
 	function onPointerLeave() {
 		lean.yaw = 0;
 		lean.pitch = 0;
+		body.goalX = 0;
+		body.goalY = 0;
 	}
 	canvas.addEventListener('pointerdown', onPointerDown);
 	window.addEventListener('pointermove', onPointerMove, { passive: true });
@@ -825,15 +858,28 @@ export async function mountCloth(
 				landed = true;
 				startRipple(0, top * 0.72, 1.7);
 			}
-			uniforms.uReveal.value = Math.min(1, entryAge / 1.05);
+			uniforms.uReveal.value = Math.min(1, entryAge / 0.75);
 			uniforms.uCrumple.value = Math.exp(-entryAge * 1.7);
 		}
 
-		piece.position.y = entry.y;
+		// The body springs toward its goal: under-damped, so it bounces.
+		const bounceDamp = 2 * Math.sqrt(BOUNCE_STIFFNESS) * BOUNCE_DAMPING;
+		body.vx += (BOUNCE_STIFFNESS * (body.goalX - body.x) - bounceDamp * body.vx) * dt;
+		body.vy += (BOUNCE_STIFFNESS * (body.goalY - body.y) - bounceDamp * body.vy) * dt;
+		body.x += body.vx * dt;
+		body.y += body.vy * dt;
+		// Never far: a hard scroll cannot throw it out of frame.
+		body.y = THREE.MathUtils.clamp(body.y, -0.22, 0.22);
+
+		piece.position.x = body.x;
+		piece.position.y = entry.y + body.y;
 		piece.scale.setScalar(entry.scale);
 		piece.rotation.set(spring.pitch, spring.yaw, entry.roll + spring.yaw * -0.06);
 		// Turning fast stirs the cloth.
-		const stir = Math.min(Math.abs(spring.vyaw) * 1.8 + Math.abs(spring.vpitch) * 1.2, 2.2);
+		const stir = Math.min(
+			Math.abs(spring.vyaw) * 1.8 + Math.abs(spring.vpitch) * 1.2 + Math.abs(body.vy) * 2.2,
+			2.6
+		);
 		const gust = 0.85 + Math.sin(clock * 0.31) * 0.25 + Math.sin(clock * 0.83) * 0.12;
 		const entryGust = entryAge < 6 ? 3.2 * Math.exp(-entryAge * 1.4) : 0;
 		uniforms.uWind.value = reducedMotion ? 0.4 : gust + stir + entryGust;
@@ -867,6 +913,7 @@ export async function mountCloth(
 			document.removeEventListener('visibilitychange', onVisibility);
 			canvas.removeEventListener('pointerdown', onPointerDown);
 			window.removeEventListener('pointermove', onPointerMove);
+			window.removeEventListener('scroll', onScroll);
 			window.removeEventListener('pointerup', onPointerUp);
 			window.removeEventListener('pointercancel', onPointerUp);
 			canvas.removeEventListener('pointerleave', onPointerLeave);

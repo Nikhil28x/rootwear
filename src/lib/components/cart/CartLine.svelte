@@ -38,68 +38,55 @@
 	let maxQuantity = $derived(Math.max(1, line.availableNow));
 </script>
 
-<li class="grid grid-cols-[6rem_1fr] gap-6 border-b border-forest/15 py-8 sm:grid-cols-[9rem_1fr]">
-	<a {href} class="block bg-forest/5" aria-hidden="true" tabindex="-1">
+<li class="line">
+	<a {href} class="line__thumb" aria-hidden="true" tabindex="-1">
 		{#if line.image}
-			<img src={line.image} alt="" class="aspect-[4/5] w-full object-cover" loading="lazy" />
+			<img src={line.image} alt="" loading="lazy" decoding="async" />
 		{/if}
 	</a>
 
-	<div class="flex flex-col gap-4">
-		<div class="flex flex-wrap items-start justify-between gap-4">
-			<div class="flex flex-col gap-2">
-				<p class="text-[11px] tracking-[0.28em] text-forest/70 uppercase font-medium">{line.dropName}</p>
-				<h2 class="display text-2xl leading-[0.95] tracking-[-0.03em] text-forest">
-					<a {href} class="underline-offset-4 hover:underline">{line.productName}</a>
-				</h2>
-				<p class="text-[11px] tracking-[0.2em] text-forest/75 uppercase font-medium">
-					Size {line.size} · {line.sku}
-				</p>
+	<div class="line__body">
+		<div class="line__top">
+			<div class="line__id">
+				<h2 class="line__name"><a {href}>{line.productName}</a></h2>
+				<p class="line__meta">{line.dropName} · Size {line.size} · {line.sku}</p>
 			</div>
 
-			<div class="text-right">
-				<p class="text-[15px] text-forest tabular-nums">{formatInr(line.lineTotal)}</p>
+			<div class="line__price">
+				<p>{formatInr(line.lineTotal)}</p>
 				{#if line.quantity > 1}
-					<p class="mt-1 text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">
-						{formatInr(line.unitPrice)} each
-					</p>
+					<p class="line__each">{formatInr(line.unitPrice)} each</p>
 				{/if}
 			</div>
 		</div>
 
 		<!-- §09: the fit disclaimer is mandatory wherever a size is shown. -->
-		<p class="text-[13px] leading-relaxed text-forest/75">{FIT_DISCLAIMER}</p>
+		<p class="line__fine">{FIT_DISCLAIMER}</p>
 
 		{#if line.isPreOrder}
 			<!-- §07/§08: a pre-order line states what is actually known — the drop's
 			     own instant, and that the hand number lands on payment. -->
-			<p class="border-l-2 border-gold pl-4 text-[13px] leading-relaxed text-forest/75">
-				<span class="block text-[11px] tracking-[0.28em] text-forest uppercase font-medium">Pre-order</span>
-				<span class="mt-2 block">
-					Ships after the drop opens on {dispatchDate.format(launchInstant)}.
-				</span>
+			<p class="line__note">
+				<b>Pre-order</b>
+				Ships after the drop opens on {dispatchDate.format(launchInstant)}.
 			</p>
 		{/if}
 
 		{#if line.overSubscribed}
 			<!-- §06: stock is finite and the scarcity is the point. Said in words,
 			     not signalled by colour alone. -->
-			<p class="border-l-2 border-alert pl-4 text-[13px] leading-relaxed text-alert">
+			<p class="line__alert">
 				Only {line.availableNow}
-				{line.availableNow === 1 ? 'piece is' : 'pieces are'} left in this size. Reduce the quantity to continue.
+				{line.availableNow === 1 ? 'piece is' : 'pieces are'} left in this size. Reduce the quantity to
+				continue.
 			</p>
 		{/if}
 
-		<div class="flex flex-wrap items-end gap-6">
-			<form method="POST" action="/cart?/updateQuantity" use:enhance class="flex items-end gap-3">
+		<div class="line__controls">
+			<form method="POST" action="/cart?/updateQuantity" use:enhance class="line__qty">
 				<input type="hidden" name="variantId" value={line.variantId} />
-				<div class="flex flex-col gap-2">
-					<label
-						for="qty-{line.variantId}"
-						class="text-[11px] tracking-[0.2em] text-forest/75 uppercase font-medium"
-					>
-						Quantity
-					</label>
+				<label for="qty-{line.variantId}">Quantity</label>
+				<div class="line__qty-row">
 					<input
 						id="qty-{line.variantId}"
 						name="quantity"
@@ -108,28 +95,194 @@
 						min="1"
 						max={maxQuantity}
 						value={line.quantity}
-						class="w-20 border-b border-forest/25 bg-transparent px-0 py-2 text-[15px] text-forest tabular-nums outline-none focus:border-forest"
 					/>
+					<button type="submit" disabled={busy}>Update</button>
 				</div>
-				<button
-					type="submit"
-					disabled={busy}
-					class="border border-forest/60 px-4 py-2 text-[11px] tracking-[0.2em] text-forest uppercase transition hover:bg-forest hover:text-paper disabled:opacity-40 font-medium"
-				>
-					Update
-				</button>
 			</form>
 
 			<form method="POST" action="/cart?/remove" use:enhance>
 				<input type="hidden" name="variantId" value={line.variantId} />
-				<button
-					type="submit"
-					disabled={busy}
-					class="pb-2 text-[11px] tracking-[0.2em] text-forest/75 uppercase underline-offset-4 transition hover:text-forest hover:underline disabled:opacity-40 font-medium"
-				>
-					Remove
-				</button>
+				<button type="submit" disabled={busy} class="line__remove">Remove</button>
 			</form>
 		</div>
 	</div>
 </li>
+
+<style>
+	.line {
+		--ink: var(--color-forest-black);
+		--soft: rgb(11 15 11 / 0.62);
+		display: grid;
+		grid-template-columns: clamp(96px, 12vw, 152px) minmax(0, 1fr);
+		gap: clamp(16px, 2.4vw, 32px);
+		padding: clamp(20px, 2.4vw, 28px) 0;
+		border-bottom: 1px solid rgb(11 15 11 / 0.14);
+	}
+	.line__thumb {
+		display: block;
+		align-self: start;
+		aspect-ratio: 4 / 5;
+		overflow: hidden;
+		background: #efeeeb;
+	}
+	.line__thumb img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: 50% 24%;
+		transform: scale(1.06);
+	}
+	.line__body {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		min-width: 0;
+	}
+	.line__top {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		gap: 16px;
+	}
+	.line__id {
+		min-width: 0;
+	}
+	.line__name {
+		margin: 0;
+		font-family: var(--font-display);
+		font-weight: 400;
+		font-size: clamp(1.5rem, 2.2vw, 2rem);
+		line-height: 1.05;
+		letter-spacing: -0.02em;
+		color: var(--ink);
+	}
+	.line__name a:hover {
+		text-decoration: underline;
+		text-decoration-thickness: 1px;
+		text-underline-offset: 5px;
+	}
+	.line__meta {
+		margin-top: 6px;
+		font-size: 13px;
+		color: var(--soft);
+	}
+	.line__price {
+		flex: none;
+		text-align: right;
+		font-size: 15px;
+		font-variant-numeric: tabular-nums;
+		color: var(--ink);
+	}
+	.line__each {
+		margin-top: 2px;
+		font-size: 13px;
+		color: var(--soft);
+	}
+	.line__fine {
+		max-width: 60ch;
+		font-size: 13px;
+		line-height: 1.6;
+		color: var(--soft);
+	}
+	.line__note {
+		padding-left: 14px;
+		border-left: 2px solid var(--ink);
+		font-size: 13px;
+		line-height: 1.6;
+		color: var(--soft);
+	}
+	.line__note b {
+		display: block;
+		font-weight: 500;
+		color: var(--ink);
+	}
+	.line__alert {
+		padding: 10px 14px;
+		border-left: 2px solid var(--color-alert);
+		background: rgb(157 69 38 / 0.05);
+		font-size: 13px;
+		line-height: 1.6;
+		color: var(--color-alert);
+	}
+	.line__controls {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: 12px 24px;
+		margin-top: 4px;
+	}
+	.line__qty {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+	.line__qty label {
+		font-size: 13px;
+		color: var(--soft);
+	}
+	.line__qty-row {
+		display: flex;
+	}
+	.line__qty input {
+		width: 72px;
+		height: 44px;
+		padding: 0 12px;
+		border: 1px solid rgb(11 15 11 / 0.26);
+		border-right: 0;
+		border-radius: 0;
+		background: #ffffff;
+		color: var(--ink);
+		font: inherit;
+		font-size: 16px;
+		font-variant-numeric: tabular-nums;
+		outline: none;
+	}
+	.line__qty input:focus {
+		border-color: var(--ink);
+	}
+	.line__qty button {
+		height: 44px;
+		padding-inline: 16px;
+		border: 1px solid var(--ink);
+		color: var(--ink);
+		font-size: 11px;
+		font-weight: 500;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		transition:
+			background-color 0.25s,
+			color 0.25s;
+	}
+	.line__qty button:hover {
+		background: var(--ink);
+		color: #f6f4ef;
+	}
+	.line__remove {
+		min-height: 44px;
+		font-size: 13px;
+		color: var(--soft);
+		text-decoration: underline;
+		text-underline-offset: 4px;
+	}
+	.line__remove:hover {
+		color: var(--ink);
+	}
+	.line button:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
+	}
+	@media (max-width: 560px) {
+		.line__top {
+			flex-direction: column;
+			gap: 6px;
+		}
+		.line__price {
+			text-align: left;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.line__qty button {
+			transition: none;
+		}
+	}
+</style>

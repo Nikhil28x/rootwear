@@ -42,6 +42,7 @@ export const DROP_01: Drop = {
 	launchInstant: LAUNCH_INSTANT,
 	archivedAt: null,
 	editionSize: EDITION_SIZE,
+	preorderMode: false,
 	products: [
 		{
 			id: 'product-01-tee',

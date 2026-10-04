@@ -57,7 +57,8 @@
 	font-family: var(--font-sans);
 	font-synthesis: none;
 	color-scheme: dark;
-	background: var(--color-paper);
+	/* The overscroll colour: see the html rule below. */
+	background: var(--edge-now, var(--color-paper));
 	text-rendering: optimizeLegibility;
 }
 
@@ -72,15 +73,87 @@
 	color-scheme: light;
 }
 
+/*
+ * Overscroll shows the canvas behind the page, which is the html background.
+ * Split it: the page's first section colour above, its last below, so a
+ * rubber-band pull at either end shows the colour of the edge it came from.
+ * The layout sets both per route; browser swipe-back/forward is untouched.
+ */
 html {
+	--edge-top: #ffffff;
+	--edge-bottom: var(--color-forest);
 	scroll-behavior: smooth;
-	background: var(--color-forest-black);
+	/* Browsers paint the overscroll area with the root's background COLOUR
+	   (not its image), so the layout swaps --edge-now between the two edges
+	   as the page passes its middle; :root above applies it. */
 }
 
 body {
 	margin: 0;
 	min-width: 320px;
 	background: var(--color-forest-black);
+}
+
+/*
+ * Browser autofill paints its own fill (olive under this site's dark colour
+ * scheme). Hold every field to its designed colours instead; a form on a dark
+ * surface sets --field-bg / --field-ink.
+ */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+	-webkit-box-shadow: 0 0 0 1000px var(--field-bg, #ffffff) inset !important;
+	box-shadow: 0 0 0 1000px var(--field-bg, #ffffff) inset !important;
+	-webkit-text-fill-color: var(--field-ink, var(--color-forest-black)) !important;
+	caret-color: var(--field-ink, var(--color-forest-black));
+	transition: background-color 100000s ease 0s;
+}
+
+/*
+ * Checkout steps slide: forward goes up, back comes down. The header holds
+ * still. Set by onNavigate in +layout.svelte; browsers without view
+ * transitions just navigate.
+ */
+::view-transition-group(site-header) {
+	animation: none;
+}
+html[data-step-dir] ::view-transition-old(root) {
+	animation: 0.45s cubic-bezier(0.7, 0, 0.2, 1) both step-out;
+}
+html[data-step-dir] ::view-transition-new(root) {
+	animation: 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both step-in;
+}
+html[data-step-dir='back'] ::view-transition-old(root) {
+	animation-name: step-out-back;
+}
+html[data-step-dir='back'] ::view-transition-new(root) {
+	animation-name: step-in-back;
+}
+@keyframes step-out {
+	to {
+		opacity: 0;
+		transform: translateY(-12vh);
+	}
+}
+@keyframes step-in {
+	from {
+		opacity: 0;
+		transform: translateY(16vh);
+	}
+}
+@keyframes step-out-back {
+	to {
+		opacity: 0;
+		transform: translateY(12vh);
+	}
+}
+@keyframes step-in-back {
+	from {
+		opacity: 0;
+		transform: translateY(-16vh);
+	}
 }
 
 button,
@@ -116,101 +189,6 @@ a:focus-visible {
 	background: var(--color-forest);
 }
 
-.brand-footer__artwork {
-	position: relative;
-	margin: 0;
-	background: #152b20;
-}
-
-.brand-footer__artwork img {
-	display: block;
-	width: 100%;
-	height: auto;
-	filter: saturate(0.88) contrast(1.04);
-}
-
-.brand-footer__desktop-tm {
-	position: absolute;
-	top: 68.5%;
-	right: 2.1%;
-	font-size: clamp(0.45rem, 0.72vw, 0.95rem);
-	font-weight: 500;
-	line-height: 1;
-	letter-spacing: 0.08em;
-	color: rgba(246, 239, 221, 0.9);
-}
-
-.brand-footer__mobile-lockup {
-	display: none;
-}
-
-@media (max-width: 720px) {
-
-	.brand-footer__artwork {
-		height: clamp(34rem, 72svh, 48rem);
-		overflow: hidden;
-		background:
-			linear-gradient(180deg, rgba(8, 27, 18, 0.02) 45%, rgba(8, 27, 18, 0.42) 100%),
-			url('/images/rootwear-roots-mobile.jpg') center top / cover no-repeat;
-	}
-
-	.brand-footer__artwork img {
-		display: none;
-	}
-
-	.brand-footer__mobile-lockup {
-		position: absolute;
-		top: 0;
-		left: 0;
-		z-index: 2;
-		display: flex;
-		width: 100%;
-		height: clamp(34rem, 72svh, 48rem);
-		padding: 2.5rem 1.5rem;
-		flex-direction: column;
-		justify-content: flex-end;
-		background: linear-gradient(180deg, transparent 58%, rgba(8, 21, 14, 0.9) 100%);
-		pointer-events: none;
-	}
-
-	.brand-footer__mobile-lockup p {
-		margin: 0;
-		font-family: Didot, 'Bodoni 72', 'Times New Roman', serif;
-		font-size: clamp(2.5rem, 11.8vw, 3.6rem);
-		line-height: 0.86;
-		letter-spacing: 0.1em;
-	}
-
-	.brand-footer__mobile-lockup p sup {
-		position: relative;
-		top: -1.15em;
-		margin-left: 0.35em;
-		font-family: var(--font-sans);
-		font-size: 0.24em;
-		font-weight: 500;
-		line-height: 1;
-		letter-spacing: 0.08em;
-		vertical-align: baseline;
-	}
-
-	.brand-footer__mobile-lockup span {
-		margin-top: 0.8rem;
-		font-family: Didot, 'Bodoni 72', 'Times New Roman', serif;
-		font-size: 1.2rem;
-		font-style: italic;
-		color: rgba(255, 255, 255, 0.86);
-	}
-
-	.brand-footer__mobile-lockup small {
-		margin-top: 1.25rem;
-		font-size: 11px;
-		letter-spacing: 0.18em;
-		text-transform: uppercase;
-		opacity: 0.68;
-	}
-
-}
-
 @media (prefers-reduced-motion: reduce) {
 	html {
 		scroll-behavior: auto;
@@ -223,33 +201,5 @@ a:focus-visible {
 		animation-duration: 1ms !important;
 		animation-iteration-count: 1 !important;
 		transition-duration: 1ms !important;
-	}
-}
-
-.brand-footer__artwork {
-	position: relative;
-}
-
-.brand-footer__desktop-tagline {
-	position: absolute;
-	top: 82%;
-	left: 72%;
-	width: 21%;
-	padding: 0.25em 0;
-	background: #1c3023;
-	font-family: Didot, 'Bodoni 72', 'Times New Roman', serif;
-	font-size: clamp(0.75rem, 1.65vw, 2.3rem);
-	font-style: italic;
-	line-height: 1.3;
-	text-align: center;
-}
-
-@media (max-width: 720px) {
-	.brand-footer__desktop-tagline {
-		display: none;
-	}
-
-	.brand-footer__desktop-tm {
-		display: none;
 	}
 }

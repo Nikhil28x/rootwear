@@ -1,5 +1,5 @@
 /**
- * The address carried between /checkout/information and /checkout/review.
+ * The address carried between visits to the checkout (/checkout/information).
  *
  * Kept in an httpOnly, SameSite=Lax cookie rather than a database row, for two
  * reasons: a guest checkout (§10) has no customer record to hang it on until
@@ -70,7 +70,11 @@ export function readShipTo(cookies: Cookies): ShipTo | null {
 	const values = readShipValues(cookies);
 	if (!values) return null;
 	if (hasErrors(validateAddress(values))) return null;
+	return toShipTo(values);
+}
 
+/** The order's shape of an address. Call only with values that passed validateAddress(). */
+export function toShipTo(values: AddressValues): ShipTo {
 	return {
 		email: values.email,
 		name: values.name,
