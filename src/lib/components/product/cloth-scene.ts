@@ -36,9 +36,25 @@ const GRID = 150;
 /** World width of the tee. Height follows the photograph's aspect. */
 const WIDTH = 2;
 /** How far the body is pillowed out, front and back, in world units. */
-const DEPTH = 0.13;
+const DEPTH = 0.25;
 /** Distance from the edge, in mask cells, at which the pillow reaches full depth. */
 const PLATEAU = 22;
+/** How many ripples can run at once. More slots = longer wakes, more GPU work. */
+const RIPPLES = 10;
+
+/* ---- Ripple tuning. Every touch, click and pointer wake uses these. ---- */
+/** Height of a ripple. 0.04 was subtle; raise for a bolder wave. */
+const RIPPLE_INTENSITY = 0.055;
+/** Rings per unit of cloth: higher = tighter, more frequent rings. */
+const RIPPLE_DENSITY = 22;
+/** How fast a ripple fades with distance: higher = smaller impact radius. */
+const RIPPLE_FALLOFF = 2.8;
+/** Seconds a ripple runs before its slot is free again. */
+const RIPPLE_LIFE = 3;
+/** How strongly a passing ring swells the folds it crosses. */
+const RIPPLE_SWELL = 0.032;
+/** Pixels the pointer must travel between wake ripples: lower = denser wake. */
+const RIPPLE_SPACING = 18;
 /** Turn limits — the back is not photographed. */
 const MAX_YAW = 0.75;
 const MAX_PITCH = 0.32;
@@ -46,10 +62,18 @@ const MAX_PITCH = 0.32;
 const VERTEX_HEAD = /* glsl */ `
 	uniform float uTime;
 	uniform float uWind;
-	uniform vec4 uRipple; // xy: point in object space, z: start time, w: strength
+	// Up to RIPPLES at once. xy: point in object space, z: start time, w: strength.
+	uniform vec4 uRipples[${RIPPLES}];
+	// The garment's fold relief (0.5 = flat), from the photograph.
+	uniform sampler2D uFoldMap;
+	uniform vec2 uSize;
 	uniform float uSide;  // +1 front, -1 back
 	uniform float uTop;   // object-space y of the collar
 	uniform float uCrumple; // entry shake-out, 1 → 0
+
+	float foldAt(vec2 p) {
+		return texture2D(uFoldMap, p / uSize + 0.5).r * 2.0 - 1.0;
+	}
 
 	float clothDisp(vec2 p) {
 		// More give toward the hem and the sleeve ends than at the collar.
@@ -68,11 +92,26 @@ const VERTEX_HEAD = /* glsl */ `
 			0.5 * sin((p.x + p.y) * 11.0 + uTime * 13.0)
 		) * (0.4 + freedom);
 
-		float age = uTime - uRipple.z;
-		if (age > 0.0 && uRipple.w > 0.0) {
-			float r = distance(p, uRipple.xy);
-			d += uRipple.w * 0.075 * exp(-age * 1.5) * exp(-r * 1.6) * sin(r * 15.0 - age * 10.0);
+		// Ripples that travel the garment's own relief: slower over a fold's
+		// ridge and faster through its hollow, so a ring bends along the folds;
+		// ridges lift more than hollows; and as a ring passes, the folds it
+		// crosses swell for a moment, as if the cloth were pushed.
+		float h = foldAt(p);
+		float swell = 0.0;
+		for (int i = 0; i < ${RIPPLES}; i++) {
+			vec4 r = uRipples[i];
+			float age = uTime - r.z;
+			if (age > 0.0 && age < ${RIPPLE_LIFE.toFixed(1)} && r.w > 0.0) {
+				float dist = distance(p, r.xy);
+				float travel = dist * (1.0 + 0.6 * h);
+				float env = exp(-age * 1.5) * exp(-dist * ${RIPPLE_FALLOFF.toFixed(3)});
+				float lift = 0.5 + 0.95 * smoothstep(-0.6, 0.8, h);
+				d += r.w * ${RIPPLE_INTENSITY.toFixed(4)} * lift * env * sin(travel * ${RIPPLE_DENSITY.toFixed(1)} - age * 11.0);
+				float ring = travel - age * 0.82;
+				swell += r.w * env * exp(-ring * ring * 7.0);
+			}
 		}
+		d += h * ${RIPPLE_SWELL.toFixed(4)} * swell;
 		return d;
 	}
 `;
@@ -299,6 +338,93 @@ function surfaceMapsFromImage(image: HTMLImageElement, maxWidth = 1024) {
 	return { normalMap: toTexture(normal), roughnessMap: toTexture(rough) };
 }
 
+/**
+ * The fold map: the photograph's MEDIUM-scale shape — folds, the hem's drape,
+ * the creases at the sleeves — as height. A band-pass of its brightness: a
+ * soft blur keeps the folds and drops the knit, and subtracting a much wider
+ * blur drops the studio's light falloff. Small, because it is read per
+ * vertex, not per pixel.
+ */
+function foldMapFromImage(image: HTMLImageElement, width = 256) {
+	const w = width;
+	const h = Math.round((image.naturalHeight / image.naturalWidth) * w);
+	const canvas = document.createElement('canvas');
+	canvas.width = w;
+	canvas.height = h;
+	const context = canvas.getContext('2d', { willReadFrequently: true });
+	if (!context) throw new Error('2d context unavailable');
+	context.drawImage(image, 0, 0, w, h);
+	const px = context.getImageData(0, 0, w, h).data;
+
+	const lum = new Float32Array(w * h);
+	const inside = new Uint8Array(w * h);
+	let mean = 0;
+	let count = 0;
+	for (let i = 0; i < w * h; i++) {
+		lum[i] = (0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2]) / 255;
+		inside[i] = px[i * 4 + 3] > 8 ? 1 : 0;
+		if (inside[i]) {
+			mean += lum[i];
+			count++;
+		}
+	}
+	// Outside the garment reads as its average, so the edge is not a cliff.
+	mean /= Math.max(count, 1);
+	for (let i = 0; i < w * h; i++) if (!inside[i]) lum[i] = mean;
+
+	const blur = (src: Float32Array, radius: number) => {
+		const tmp = new Float32Array(w * h);
+		const out = new Float32Array(w * h);
+		const span = 2 * radius + 1;
+		for (let y = 0; y < h; y++) {
+			let sum = 0;
+			for (let x = -radius; x <= radius; x++) sum += src[y * w + Math.min(w - 1, Math.max(0, x))];
+			for (let x = 0; x < w; x++) {
+				tmp[y * w + x] = sum / span;
+				sum += src[y * w + Math.min(w - 1, x + radius + 1)] - src[y * w + Math.max(0, x - radius)];
+			}
+		}
+		for (let x = 0; x < w; x++) {
+			let sum = 0;
+			for (let y = -radius; y <= radius; y++) sum += tmp[Math.min(h - 1, Math.max(0, y)) * w + x];
+			for (let y = 0; y < h; y++) {
+				out[y * w + x] = sum / span;
+				sum += tmp[Math.min(h - 1, y + radius + 1) * w + x] - tmp[Math.max(0, y - radius) * w + x];
+			}
+		}
+		return out;
+	};
+	const folds = blur(lum, 3);
+	const light = blur(lum, 28);
+
+	const band = new Float32Array(w * h);
+	let peak = 1e-4;
+	for (let i = 0; i < w * h; i++) {
+		band[i] = inside[i] ? folds[i] - light[i] : 0;
+		peak = Math.max(peak, Math.abs(band[i]));
+	}
+	const data = new Uint8Array(w * h * 4);
+	for (let i = 0; i < w * h; i++) {
+		const v = Math.round((0.5 + 0.5 * Math.max(-1, Math.min(1, band[i] / peak))) * 255);
+		data[i * 4] = data[i * 4 + 1] = data[i * 4 + 2] = v;
+		data[i * 4 + 3] = 255;
+	}
+	const texture = new THREE.DataTexture(data, w, h, THREE.RGBAFormat);
+	texture.colorSpace = THREE.NoColorSpace;
+	texture.flipY = true;
+	texture.magFilter = THREE.LinearFilter;
+	texture.minFilter = THREE.LinearFilter;
+	texture.needsUpdate = true;
+	return texture;
+}
+
+/** A flat fold map, for when the photograph cannot be read. */
+function flatFoldMap() {
+	const texture = new THREE.DataTexture(new Uint8Array([128, 128, 128, 255]), 1, 1, THREE.RGBAFormat);
+	texture.needsUpdate = true;
+	return texture;
+}
+
 function clothMaterial(
 	texture: THREE.Texture,
 	side: 1 | -1,
@@ -443,10 +569,43 @@ export async function mountCloth(
 	const back = shellGeometry(mask, -1);
 	const top = front.height / 2;
 
+	let foldMap: THREE.DataTexture;
+	try {
+		foldMap = foldMapFromImage(image);
+	} catch (cause) {
+		console.warn('[cloth] fold map unavailable', cause);
+		foldMap = flatFoldMap();
+	}
+	const ripples = Array.from({ length: RIPPLES }, () => new THREE.Vector4(0, 0, -100, 0));
+	/**
+	 * Starts a ripple without cutting one short: it takes a slot whose ripple
+	 * has run its course, or failing that the one with the least energy left.
+	 * Ripples add together, so a moving pointer builds up a wake.
+	 */
+	function startRipple(x: number, y: number, strength: number) {
+		let slot = 0;
+		let weakest = Infinity;
+		for (let i = 0; i < RIPPLES; i++) {
+			const age = clock - ripples[i].z;
+			if (age >= RIPPLE_LIFE || ripples[i].w <= 0) {
+				slot = i;
+				break;
+			}
+			const left = ripples[i].w * Math.exp(-age * 1.5);
+			if (left < weakest) {
+				weakest = left;
+				slot = i;
+			}
+		}
+		ripples[slot].set(x, y, clock, strength);
+	}
+
 	const uniforms: Record<string, THREE.IUniform> = {
 		uTime: { value: 0 },
 		uWind: { value: 1 },
-		uRipple: { value: new THREE.Vector4(0, 0, -100, 0) },
+		uRipples: { value: ripples },
+		uFoldMap: { value: foldMap },
+		uSize: { value: new THREE.Vector2(WIDTH, front.height) },
 		uTop: { value: top },
 		uCrumple: { value: intro ? 1 : 0 },
 		uReveal: { value: intro ? 0 : 1 }
@@ -524,7 +683,7 @@ export async function mountCloth(
 		const hit = raycaster.intersectObject(frontMesh, false)[0] ?? raycaster.intersectObject(backMesh, false)[0];
 		if (!hit) return false;
 		const local = piece.worldToLocal(hit.point.clone());
-		uniforms.uRipple.value.set(local.x, local.y, clock, strength);
+		startRipple(local.x, local.y, strength);
 		return true;
 	}
 
@@ -534,9 +693,24 @@ export async function mountCloth(
 		canvas.setPointerCapture(event.pointerId);
 		canvas.style.cursor = 'grabbing';
 	}
+	/** The last trail ripple, so a moving pointer leaves a wake, not a flood. */
+	let trail = { t: 0, x: 0, y: 0 };
+	function wake(event: PointerEvent, base: number) {
+		const now = performance.now();
+		const moved = Math.hypot(event.clientX - trail.x, event.clientY - trail.y);
+		// By distance, not time: one ripple per stretch of travel, so a slow
+		// pass and a fast one leave the same even wake.
+		if (moved < RIPPLE_SPACING || now - trail.t < 40) return;
+		const speed = moved / Math.max(now - trail.t, 16);
+		if (ripple(event, Math.min(base * (0.5 + speed), base * 1.6))) {
+			trail = { t: now, x: event.clientX, y: event.clientY };
+		}
+	}
+
 	function onPointerMove(event: PointerEvent) {
 		const rect = canvas.getBoundingClientRect();
 		if (dragging && event.pointerId === dragging.id) {
+			wake(event, 0.35);
 			target.yaw = THREE.MathUtils.clamp(dragging.yaw + (event.clientX - dragging.x) * 0.006, -MAX_YAW, MAX_YAW);
 			target.pitch = THREE.MathUtils.clamp(dragging.pitch + (event.clientY - dragging.y) * 0.004, -MAX_PITCH, MAX_PITCH);
 			return;
@@ -556,6 +730,7 @@ export async function mountCloth(
 				lean.pitch = 0;
 				return;
 			}
+			if (!reducedMotion) wake(event, 0.12);
 			lean.yaw = THREE.MathUtils.clamp(((event.clientX - rect.left) / rect.width) * 2 - 1, -1, 1) * 0.22;
 			lean.pitch = THREE.MathUtils.clamp(((event.clientY - rect.top) / rect.height) * 2 - 1, -1, 1) * 0.1;
 		}
@@ -648,7 +823,7 @@ export async function mountCloth(
 			// It catches on the hanger: a ring runs down from the collar.
 			if (!landed && entry.y <= 0.004) {
 				landed = true;
-				uniforms.uRipple.value.set(0, top * 0.72, clock, 1.7);
+				startRipple(0, top * 0.72, 1.7);
 			}
 			uniforms.uReveal.value = Math.min(1, entryAge / 1.05);
 			uniforms.uCrumple.value = Math.exp(-entryAge * 1.7);
@@ -700,6 +875,7 @@ export async function mountCloth(
 			(frontMesh.material as THREE.Material).dispose();
 			(backMesh.material as THREE.Material).dispose();
 			texture.dispose();
+			foldMap.dispose();
 			surface?.normalMap.dispose();
 			surface?.roughnessMap.dispose();
 			renderer.dispose();
