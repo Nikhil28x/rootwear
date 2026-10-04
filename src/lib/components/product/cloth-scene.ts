@@ -64,6 +64,8 @@ const SCROLL_KICK = 0.0006;
 /** The bounce: stiffness and damping ratio of the spring that brings it home. */
 const BOUNCE_STIFFNESS = 70;
 const BOUNCE_DAMPING = 0.48;
+/** How far a scroll turns the piece about its vertical axis. */
+const SCROLL_TILT = 2;
 /** Turn limits — the back is not photographed. */
 const MAX_YAW = 0.75;
 const MAX_PITCH = 0.32;
@@ -681,6 +683,8 @@ export async function mountCloth(
 	const lean = { yaw: 0, pitch: 0 };
 	/** Where the piece sits: drifted toward the pointer, kicked by scrolling. */
 	const body = { x: 0, y: 0, vx: 0, vy: 0, goalX: 0, goalY: 0 };
+	/** A scroll also turns the piece about its vertical axis, sprung home. */
+	const tip = { yaw: 0, vyaw: 0 };
 	let dragging: { id: number; x: number; y: number; yaw: number; pitch: number } | null = null;
 
 	const raycaster = new THREE.Raycaster();
@@ -764,6 +768,9 @@ export async function mountCloth(
 		if (!visible || reducedMotion) return;
 		const kick = THREE.MathUtils.clamp(delta * SCROLL_KICK, -0.12, 0.12);
 		body.vy += kick * 9;
+		// Turn about its vertical axis with the motion: scrolling down swings it
+		// one way, up the other, and the spring brings it back to face front.
+		tip.vyaw += kick * SCROLL_TILT * 1;
 	}
 	window.addEventListener('scroll', onScroll, { passive: true });
 	function onPointerUp(event: PointerEvent) {
@@ -874,7 +881,15 @@ export async function mountCloth(
 		piece.position.x = body.x;
 		piece.position.y = entry.y + body.y;
 		piece.scale.setScalar(entry.scale);
-		piece.rotation.set(spring.pitch, spring.yaw, entry.roll + spring.yaw * -0.06);
+		// The tilt springs home a little looser than the bounce, so it trails it.
+		const tipK = BOUNCE_STIFFNESS * 0.7;
+		const tipDamp = 2 * Math.sqrt(tipK) * 0.25;
+		tip.vyaw += (-tipK * tip.yaw - tipDamp * tip.vyaw) * dt;
+		// Capped well short of the unphotographed back.
+		tip.yaw = THREE.MathUtils.clamp(tip.yaw + tip.vyaw * dt, -0.6, 0.6);
+		const yaw = THREE.MathUtils.clamp(spring.yaw + tip.yaw, -(MAX_YAW + 0.12), MAX_YAW + 0.12);
+
+		piece.rotation.set(spring.pitch, yaw, entry.roll + yaw * -0.06);
 		// Turning fast stirs the cloth.
 		const stir = Math.min(
 			Math.abs(spring.vyaw) * 1.8 + Math.abs(spring.vpitch) * 1.2 + Math.abs(body.vy) * 2.2,
