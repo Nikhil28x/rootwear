@@ -1,42 +1,40 @@
 import type { PageServerLoad } from './$types';
 import { drops } from '$lib/server/drops';
 import { isOnSale, acceptsNotifyMe } from '$lib/domain/drop-state';
+import { loadExperience } from '$lib/server/drops/experience';
 
 /**
- * The homepage drop section used to advertise a hardcoded '₹3,490' — a third
- * price matching neither settled figure (§10 fixes ₹4,100 at launch and ₹3,400
- * pre-launch). It now carries the drop's AVAILABILITY instead of a price, so
- * there is one fewer place a stale number can hide.
+ * The homepage leads with the product, so it reads the live drop through the
+ * SAME loader as the product experience: one price authority, one stock
+ * figure, one set of images. Nothing on this page is a hand-typed copy of a
+ * fact that lives on the drop record.
  */
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, cookies }) => {
 	const drop = await drops.findLiveDrop();
-	if (!drop) return { dropStatus: null };
+	const product = drop?.products[0];
+	if (!drop || !product) return { feature: null };
+
+	const experience = await loadExperience(drop, product, { now: locals.now, cookies });
 
 	const onSale = isOnSale(drop.state);
 	const beforeLaunch = locals.now < drop.launchInstant;
-
-	/**
-	 * "Open for pre-order" means you can commit now and it dispatches after the
-	 * drop's stated instant — which is exactly where Drop 01 sits while it is
-	 * open ahead of its launch date. Once that instant passes the same piece is
-	 * simply available.
-	 */
-	const label = onSale
+	const status = onSale
 		? beforeLaunch
 			? 'Open for pre-order'
 			: 'Available now'
 		: drop.state === 'SOLD_OUT'
 			? 'Sold out'
 			: acceptsNotifyMe(drop.state)
-				? 'Notify me'
+				? 'Coming soon'
 				: 'Coming soon';
 
+	const remaining = experience.offers.reduce((sum, offer) => sum + offer.remaining, 0);
+
 	return {
-		dropStatus: {
-			label,
-			slug: drop.slug,
-			name: drop.name,
-			launchInstant: drop.launchInstant
+		feature: {
+			...experience,
+			status,
+			remaining
 		}
 	};
 };

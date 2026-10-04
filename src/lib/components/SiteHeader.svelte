@@ -1,22 +1,24 @@
 <script lang="ts">
 	import { getCart } from '$lib/cart/cart.svelte';
+	import { page } from '$app/state';
+	import { SUPPORT_EMAIL, INSTAGRAM_HANDLE, INSTAGRAM_URL } from '$lib/content/business';
 
 	/**
 	 * THE header. One component for every route, including the homepage, which
 	 * used to carry its own copy of this markup — which is how the two drifted
 	 * into looking like different sites.
 	 *
-	 * The glass treatment (inset shell, hairline border, backdrop blur) and its
-	 * light/dark variants live in src/routes/layout.css under .site-header*,
-	 * so both the styling and its transitions are shared rather than restated.
+	 * A slim bar, clear over whatever is behind it until the page scrolls, then
+	 * frosted glass with a hairline. Its ink follows the section behind it
+	 * (the probe below); on a phone the menu opens as a full-screen sheet.
 	 */
 	type NavItem = { label: string; href: string };
 
 	let {
 		/** Nav entries. The homepage passes its in-page anchors instead. */
 		items = [
-			{ label: 'Know your roots', href: '/know-your-roots' },
-			{ label: 'The Drop', href: '/drops' },
+			{ label: 'Shop', href: '/drops' },
+			{ label: 'Our roots', href: '/know-your-roots' },
 			{ label: 'Impact', href: '/impact' },
 			{ label: 'Contact', href: '/contact' }
 		],
@@ -27,13 +29,16 @@
 		/** Default ground. Overridden per section by the probe below. */
 		surface = 'dark',
 		/** `fixed` floats over a hero; `sticky` reserves its own band. */
-		position = 'sticky'
+		position = 'sticky',
+		/** A page with its own masthead hides the small mark until it scrolls. */
+		markOnTop = true
 	}: {
 		items?: NavItem[];
 		cta?: NavItem;
 		home?: string;
 		surface?: 'dark' | 'light';
 		position?: 'fixed' | 'sticky';
+		markOnTop?: boolean;
 	} = $props();
 
 	const cart = getCart();
@@ -64,10 +69,14 @@
 	 * run in a background tab — a tab scrolled while hidden would come back
 	 * showing the wrong ink for the section behind it.
 	 */
+	/** Clear at the top of the page, frosted once it scrolls. */
+	let scrolled = $state(false);
+
 	function probeSurface() {
 		const y = window.scrollY;
 		if (y === lastY) return;
 		lastY = y;
+		scrolled = y > 24;
 
 		let answer: 'dark' | 'light' | null = null;
 		for (const section of document.querySelectorAll<HTMLElement>('[data-header-theme]')) {
@@ -93,6 +102,19 @@
 		window.addEventListener('load', reprobe);
 		return () => window.removeEventListener('load', reprobe);
 	});
+
+	function isCurrent(href: string) {
+		if (href.startsWith('#')) return false;
+		return page.url.pathname === href || page.url.pathname.startsWith(`${href}/`);
+	}
+
+	// The open sheet owns the screen: no scrolling the page behind it.
+	$effect(() => {
+		document.documentElement.style.overflow = menuOpen ? 'hidden' : '';
+		return () => {
+			document.documentElement.style.overflow = '';
+		};
+	});
 </script>
 
 <svelte:window
@@ -103,79 +125,319 @@
 
 <header
 	data-site-header
-	data-header-theme={resolved}
-	class="site-header {position} inset-x-0 top-0 z-50 px-4 pt-4 text-stone-100 sm:px-7 sm:pt-6"
-	class:site-header--light={resolved === 'light'}
+	data-header-theme={menuOpen ? 'dark' : resolved}
+	class="head head--{position}"
+	class:head--light={resolved === 'light' && !menuOpen}
+	class:head--solid={scrolled && !menuOpen}
 >
-	<div
-		class="site-header__shell mx-auto flex max-w-[1600px] items-center justify-between border border-white/15 bg-black/10 px-4 py-3 backdrop-blur-md sm:px-6"
-	>
-		<a class="wordmark text-lg tracking-[0.22em]" href={home} aria-label="Rootwear home">
-			ROOTWEAR<sup
-				class="relative -top-[0.7em] ml-1 align-baseline text-[0.4em] leading-none tracking-[0.08em]"
-				aria-hidden="true">TM</sup
-			>
+	<div class="head__bar">
+		<a
+			class="head__mark wordmark"
+			class:head__mark--away={!markOnTop && !scrolled && !menuOpen}
+			href={home}
+			aria-label="Rootwear home"
+		>
+			ROOTWEAR<sup aria-hidden="true">TM</sup>
 		</a>
 
-		<nav
-			class="hidden items-center gap-8 text-[12px] font-medium tracking-[0.2em] uppercase md:flex"
-			aria-label="Primary"
-		>
+		<nav class="head__nav" aria-label="Primary">
 			{#each items as item (item.href)}
-				<a class="nav-link" href={item.href}>{item.label}</a>
+				<a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>{item.label}</a>
 			{/each}
 		</nav>
 
-		<div class="flex items-center gap-3">
+		<div class="head__end">
 			{#if cta}
-				<a
-					class="site-header__cta hidden border border-white/25 px-4 py-2 text-[11px] font-medium tracking-[0.2em] uppercase transition hover:border-white hover:bg-white hover:text-black sm:block"
-					href={cta.href}>{cta.label}</a
-				>
+				<a class="head__cta" href={cta.href}>{cta.label}</a>
 			{/if}
-
-			<a
-				class="site-header__cta border border-white/25 px-4 py-2 text-[11px] font-medium tracking-[0.2em] uppercase transition hover:border-white hover:bg-white hover:text-black"
-				href="/cart"
-			>
-				Cart{#if cart.count > 0}<span class="ml-2 tabular-nums">({cart.count})</span>{/if}
+			<a class="head__cart" href="/cart" aria-label="Cart, {cart.count} {cart.count === 1 ? 'item' : 'items'}">
+				Cart
+				<span class="head__count" class:head__count--on={cart.count > 0}>{cart.count}</span>
 			</a>
-
 			<button
 				type="button"
-				class="site-header__menu grid size-9 place-items-center border border-white/25 md:hidden"
-				aria-label="Toggle navigation"
+				class="head__menu"
+				aria-label={menuOpen ? 'Close menu' : 'Open menu'}
 				aria-expanded={menuOpen}
 				aria-controls="site-nav-mobile"
 				onclick={() => (menuOpen = !menuOpen)}
 			>
-				<span class="menu-icon" class:open={menuOpen}></span>
+				<span class="head__burger" class:head__burger--open={menuOpen} aria-hidden="true"></span>
 			</button>
 		</div>
 	</div>
 
 	{#if menuOpen}
-		<nav
-			id="site-nav-mobile"
-			class="site-header__mobile mt-2 border border-white/15 bg-forest-black/95 p-5 backdrop-blur-xl md:hidden"
-			aria-label="Mobile"
-		>
-			{#each items as item (item.href)}
-				<a
-					class="block border-b border-white/10 py-4 text-[15px] font-medium tracking-[0.18em] uppercase last:border-0"
-					href={item.href}
-					onclick={() => (menuOpen = false)}
-				>
-					{item.label}
-				</a>
-			{/each}
-			{#if cta}
-				<a
-					class="block border-b border-white/10 py-4 text-[15px] font-medium tracking-[0.18em] uppercase last:border-0"
-					href={cta.href}
-					onclick={() => (menuOpen = false)}>{cta.label}</a
-				>
-			{/if}
-		</nav>
+		<div id="site-nav-mobile" class="sheet">
+			<nav aria-label="Mobile">
+				{#each items as item, index (item.href)}
+					<a
+						href={item.href}
+						style="--i: {index}"
+						aria-current={isCurrent(item.href) ? 'page' : undefined}
+						onclick={() => (menuOpen = false)}>{item.label}</a
+					>
+				{/each}
+				{#if cta}
+					<a href={cta.href} style="--i: {items.length}" onclick={() => (menuOpen = false)}>{cta.label}</a>
+				{/if}
+			</nav>
+			<div class="sheet__foot">
+				<a href="mailto:{SUPPORT_EMAIL}">{SUPPORT_EMAIL}</a>
+				<a href={INSTAGRAM_URL} rel="noreferrer noopener">{INSTAGRAM_HANDLE}</a>
+			</div>
+		</div>
 	{/if}
 </header>
+
+<style>
+	.head {
+		--ink: #f3efe6;
+		--line: rgb(243 239 230 / 0.16);
+		--glass: rgb(11 15 11 / 0.7);
+		inset-inline: 0;
+		top: 0;
+		z-index: 50;
+		color: var(--ink);
+		transition: color 0.3s ease;
+	}
+	.head--fixed {
+		position: fixed;
+	}
+	.head--sticky {
+		position: sticky;
+	}
+	.head--light {
+		--ink: var(--color-forest);
+		--line: rgb(31 56 42 / 0.14);
+		--glass: rgb(255 255 255 / 0.78);
+	}
+	.head__bar {
+		display: grid;
+		grid-template-columns: 1fr auto 1fr;
+		align-items: center;
+		gap: 24px;
+		height: 68px;
+		padding: env(safe-area-inset-top, 0px) clamp(20px, 4vw, 56px) 0;
+		border-bottom: 1px solid transparent;
+		transition:
+			background-color 0.35s ease,
+			border-color 0.35s ease,
+			backdrop-filter 0.35s ease;
+	}
+	.head--solid .head__bar {
+		background: var(--glass);
+		border-color: var(--line);
+		backdrop-filter: blur(16px) saturate(1.3);
+		-webkit-backdrop-filter: blur(16px) saturate(1.3);
+	}
+	.head__mark {
+		justify-self: start;
+		font-size: 19px;
+		letter-spacing: 0.24em;
+	}
+	.head__mark {
+		transition:
+			opacity 0.35s ease,
+			transform 0.35s ease;
+	}
+	.head__mark--away {
+		opacity: 0;
+		transform: translateY(-6px);
+		pointer-events: none;
+	}
+	.head__mark sup {
+		margin-left: 2px;
+		font-size: 0.38em;
+		letter-spacing: 0.06em;
+		vertical-align: 1.1em;
+	}
+	.head__nav {
+		display: flex;
+		gap: clamp(20px, 2.6vw, 36px);
+		font-size: 14px;
+	}
+	.head__nav a {
+		position: relative;
+		padding: 6px 0;
+		opacity: 0.82;
+		transition: opacity 0.2s;
+	}
+	.head__nav a:hover,
+	.head__nav a[aria-current='page'] {
+		opacity: 1;
+	}
+	.head__nav a::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		height: 1px;
+		background: currentColor;
+		transform: scaleX(0);
+		transform-origin: right;
+		transition: transform 0.25s ease;
+	}
+	.head__nav a:hover::after,
+	.head__nav a[aria-current='page']::after {
+		transform: scaleX(1);
+		transform-origin: left;
+	}
+	.head__end {
+		justify-self: end;
+		display: flex;
+		align-items: center;
+		gap: 18px;
+		font-size: 14px;
+	}
+	.head__cta {
+		padding: 8px 14px;
+		border: 1px solid var(--line);
+		transition: border-color 0.2s;
+	}
+	.head__cta:hover {
+		border-color: currentColor;
+	}
+	.head__cart {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+	}
+	.head__count {
+		display: inline-grid;
+		place-items: center;
+		min-width: 22px;
+		height: 22px;
+		padding-inline: 6px;
+		border-radius: 999px;
+		font-size: 12px;
+		font-variant-numeric: tabular-nums;
+		border: 1px solid var(--line);
+		transition:
+			background-color 0.3s,
+			color 0.3s;
+	}
+	.head__count--on {
+		background: var(--color-gold);
+		border-color: var(--color-gold);
+		color: var(--color-forest-black);
+	}
+	.head__menu {
+		display: none;
+		width: 40px;
+		height: 40px;
+		place-items: center;
+		margin-right: -10px;
+	}
+	.head__burger,
+	.head__burger::before,
+	.head__burger::after {
+		display: block;
+		width: 20px;
+		height: 1.5px;
+		background: currentColor;
+		transition: transform 0.3s ease, opacity 0.2s;
+	}
+	.head__burger {
+		position: relative;
+	}
+	.head__burger::before,
+	.head__burger::after {
+		content: '';
+		position: absolute;
+		left: 0;
+	}
+	.head__burger::before {
+		transform: translateY(-6px);
+	}
+	.head__burger::after {
+		transform: translateY(6px);
+	}
+	.head__burger--open {
+		background: transparent;
+	}
+	.head__burger--open::before {
+		transform: rotate(45deg);
+	}
+	.head__burger--open::after {
+		transform: rotate(-45deg);
+	}
+	.head :global(:focus-visible) {
+		outline: 1px solid currentColor;
+		outline-offset: 4px;
+	}
+
+	/* The phone sheet: the whole screen, the links set large. */
+	.sheet {
+		position: fixed;
+		inset: 0;
+		z-index: -1;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		padding: calc(110px + env(safe-area-inset-top, 0px)) clamp(20px, 4vw, 56px)
+			calc(32px + env(safe-area-inset-bottom, 0px));
+		background: var(--color-forest-black);
+		color: #f3efe6;
+		animation: sheet-in 0.35s ease both;
+	}
+	.sheet nav {
+		display: flex;
+		flex-direction: column;
+	}
+	.sheet nav a {
+		padding: 10px 0;
+		font-family: var(--font-display);
+		font-size: clamp(2.6rem, 11vw, 3.6rem);
+		line-height: 1;
+		letter-spacing: -0.03em;
+		border-bottom: 1px solid rgb(243 239 230 / 0.1);
+		animation: sheet-link 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+		animation-delay: calc(80ms + var(--i) * 50ms);
+	}
+	.sheet nav a[aria-current='page'] {
+		color: var(--color-gold);
+	}
+	.sheet__foot {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		font-size: 14px;
+		color: rgb(243 239 230 / 0.7);
+	}
+	@keyframes sheet-in {
+		from {
+			opacity: 0;
+		}
+	}
+	@keyframes sheet-link {
+		from {
+			opacity: 0;
+			transform: translateY(16px);
+		}
+	}
+
+	@media (max-width: 860px) {
+		.head__bar {
+			grid-template-columns: 1fr auto;
+			height: 60px;
+		}
+		.head__nav,
+		.head__cta {
+			display: none;
+		}
+		.head__menu {
+			display: grid;
+		}
+		.head__mark {
+			font-size: 17px;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.sheet,
+		.sheet nav a {
+			animation: none;
+		}
+	}
+</style>

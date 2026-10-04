@@ -96,7 +96,7 @@
 
 <!-- One footer for every route, the landing lockup included. -->
 {#if isHome}
-	<SiteFooter policies={data.footerPolicies ?? []} />
+	<SiteFooter policies={data.footerPolicies ?? []} artwork={false} />
 {/if}
 
 <style>
