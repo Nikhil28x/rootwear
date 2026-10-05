@@ -365,8 +365,8 @@ export const ROOTS_PLATES = {
 		caption: 'Before we build, we listen.'
 	},
 	cloth: {
-		src: '/images/pineapple-haze-front.jpg',
-		alt: 'The knit of a Rootwear T-shirt, close',
+		src: '/images/drop-01/tree-1600.webp',
+		alt: 'The open knit of the Pineapple Haze tee, close, under its embroidered tree',
 		caption: 'The cloth, close. Drop 01.'
 	}
 } as const;

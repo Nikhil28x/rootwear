@@ -11,6 +11,9 @@ import type { Size } from '$lib/drop/sizes';
 export type CoverImage = {
 	readonly url: string;
 	readonly alt: string;
+	/** Pixel size when known, so a frame can take the photograph's own shape. */
+	readonly width?: number;
+	readonly height?: number;
 };
 
 /** One card in the chronological grid (§03 template 03). */

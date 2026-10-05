@@ -10,6 +10,7 @@
 	 * Both controls are real form posts, so the cart works with JavaScript off.
 	 * `use:enhance` only removes the navigation.
 	 */
+	import { srcsetOf } from '$lib/media/responsive';
 	import { enhance } from '$app/forms';
 	import { formatInr } from '$lib/money';
 	import { FIT_DISCLAIMER } from '$lib/drop/sizes';
@@ -41,7 +42,14 @@
 <li class="line">
 	<a {href} class="line__thumb" aria-hidden="true" tabindex="-1">
 		{#if line.image}
-			<img src={line.image} alt="" loading="lazy" decoding="async" />
+			<img
+				src={line.image}
+				srcset={srcsetOf(line.image)}
+				sizes="120px"
+				alt=""
+				loading="lazy"
+				decoding="async"
+			/>
 		{/if}
 	</a>
 

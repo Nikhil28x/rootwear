@@ -12,6 +12,7 @@
 	 */
 	import BuyBar from './BuyBar.svelte';
 	import ClothHero from './ClothHero.svelte';
+	import { srcsetOf } from '$lib/media/responsive';
 	import DropCountdown from '$lib/DropCountdown.svelte';
 	import DropStateMark from '$lib/components/drop/DropStateMark.svelte';
 	import PosterShowcase from '$lib/components/drop/PosterShowcase.svelte';
@@ -150,7 +151,12 @@
 
 		{#if byRole.piece}
 			<div class="hero__piece">
-				<ClothHero src={byRole.piece.url} alt={byRole.piece.alt} />
+				<ClothHero
+					src={byRole.piece.url}
+					alt={byRole.piece.alt}
+					width={byRole.piece.width}
+					height={byRole.piece.height}
+				/>
 			</div>
 		{/if}
 
@@ -191,14 +197,28 @@
 	<section class="pair" aria-label="Front and back">
 		{#if byRole.lead}
 			<figure class="pair__front">
-				<img src={byRole.lead.url} alt={byRole.lead.alt} loading="lazy" decoding="async" />
+				<img
+					src={byRole.lead.url}
+					srcset={srcsetOf(byRole.lead.url)}
+					sizes="(max-width: 860px) 100vw, 58vw"
+					alt={byRole.lead.alt}
+					loading="lazy"
+					decoding="async"
+				/>
 				<figcaption>Model is {product.modelHeightCm} cm, wearing size {product.modelWornSize}.</figcaption>
 			</figure>
 		{/if}
 		{#if byRole.detail}
 			<figure class="pair__back">
-				<img src={byRole.detail.url} alt={byRole.detail.alt} loading="lazy" decoding="async" />
-				<figcaption>Turn it over: the tree sits across the back.</figcaption>
+				<img
+					src={byRole.detail.url}
+					srcset={srcsetOf(byRole.detail.url)}
+					sizes="(max-width: 860px) 72vw, 33vw"
+					alt={byRole.detail.alt}
+					loading="lazy"
+					decoding="async"
+				/>
+				<figcaption>Turn it over: the back carries its own embroidery.</figcaption>
 			</figure>
 		{/if}
 	</section>
@@ -206,7 +226,14 @@
 	<!-- ───────── Worn, edge to edge. -->
 	{#if byRole.worn}
 		<section class="worn" data-header-theme="dark" aria-label="Worn">
-			<img src={byRole.worn.url} alt={byRole.worn.alt} loading="lazy" decoding="async" />
+			<img
+				src={byRole.worn.url}
+				srcset={srcsetOf(byRole.worn.url)}
+				sizes="100vw"
+				alt={byRole.worn.alt}
+				loading="lazy"
+				decoding="async"
+			/>
 			<p class="worn__line">Cut {product.fit.toLowerCase()}, for every day.</p>
 		</section>
 	{/if}
@@ -351,7 +378,13 @@
 				{#each data.alsoInDrop as item (item.slug)}
 					<li>
 						<a href="/drops/{data.drop.slug}/{item.slug}">
-							{#if item.image}<img src={item.image.url} alt={item.image.alt} loading="lazy" />{/if}
+							{#if item.image}<img
+									src={item.image.url}
+									srcset={srcsetOf(item.image.url)}
+									sizes="(max-width: 860px) 50vw, 25vw"
+									alt={item.image.alt}
+									loading="lazy"
+								/>{/if}
 							<span>{item.name}</span>
 							<span class="tabular-nums">{formatInr(item.price)}</span>
 						</a>
@@ -606,10 +639,8 @@
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-		object-position: 50% 22%;
-		/* The editorial frame has a pale strip down its right edge; crop it. */
-		transform: scale(1.07);
-		transform-origin: 20% 30%;
+		/* Both faces, and the bud on her back, sit in the upper third. */
+		object-position: 50% 24%;
 	}
 	.worn__line {
 		position: absolute;
@@ -1014,6 +1045,10 @@
 		}
 		.worn {
 			height: 80svh;
+		}
+		/* A phone keeps the bud on her back and his face. */
+		.worn img {
+			object-position: 42% 24%;
 		}
 		.fit,
 		.info__row,

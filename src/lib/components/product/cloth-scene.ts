@@ -590,6 +590,35 @@ export type ClothIntro = 'dissolve' | 'puff' | null;
 
 
 
+/** The average colour of the piece: its opaque pixels, sampled small. */
+function clothColour(image: HTMLImageElement): THREE.Color | null {
+	try {
+		const size = 32;
+		const canvas = document.createElement('canvas');
+		canvas.width = size;
+		canvas.height = size;
+		const context = canvas.getContext('2d', { willReadFrequently: true });
+		if (!context) return null;
+		context.drawImage(image, 0, 0, size, size);
+		const { data } = context.getImageData(0, 0, size, size);
+		let r = 0;
+		let g = 0;
+		let b = 0;
+		let n = 0;
+		for (let i = 0; i < data.length; i += 4) {
+			if (data[i + 3] < 250) continue;
+			r += data[i];
+			g += data[i + 1];
+			b += data[i + 2];
+			n++;
+		}
+		if (n === 0) return null;
+		return new THREE.Color().setRGB(r / n / 255, g / n / 255, b / n / 255, THREE.SRGBColorSpace);
+	} catch {
+		return null;
+	}
+}
+
 export async function mountCloth(
 	canvas: HTMLCanvasElement,
 	image: HTMLImageElement,
@@ -674,7 +703,15 @@ export async function mountCloth(
 		uPuff: { value: puffIn ? 0 : 1 },
 		uFront: { value: puffIn ? 0 : 1 }
 	};
-	const backColor = new THREE.Color('#b48d5d');
+	// The inside of the piece: its own cloth, a shade down. Neutral until the
+	// photograph can be sampled, so any colourway works without a constant.
+	const backColor = new THREE.Color('#b8ab98');
+	const sampleBack = () => {
+		const colour = clothColour(image);
+		if (colour) backColor.copy(colour).multiplyScalar(0.82);
+	};
+	if (image.complete && image.naturalWidth > 0) sampleBack();
+	else image.addEventListener('load', sampleBack, { once: true });
 
 	const piece = new THREE.Group();
 	const frontMesh = new THREE.Mesh(front.geometry, clothMaterial(texture, 1, uniforms, backColor, surface));

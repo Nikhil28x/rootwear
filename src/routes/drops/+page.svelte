@@ -14,6 +14,7 @@
 	import RequestDropForm from '$lib/components/drop/RequestDropForm.svelte';
 	import { INSTAGRAM_HANDLE, INSTAGRAM_URL } from '$lib/content/business';
 	import { isOnSale } from '$lib/domain/drop-state';
+	import { srcsetOf } from '$lib/media/responsive';
 	import type { PageData, ActionData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -105,6 +106,9 @@
 		}
 	}
 
+	/** The strip shows photographs only; the cutout stays out of it. */
+	const photosOf = (card: Card) => card.images.filter((image) => !image.url.endsWith('.png'));
+
 	const issueNo = (card: Card) => String(card.number).padStart(2, '0');
 
 	/** The next issue, teased: its number, and a hint of the last piece's shape. */
@@ -185,7 +189,14 @@
 						<a class="row__main" href="/drops/{card.slug}">
 							<span class="row__no">{issueNo(card)}</span>
 							<span class="row__thumb">
-								{#if card.cover}<img src={card.cover.url} alt="" loading="lazy" decoding="async" />{/if}
+								{#if card.cover}<img
+										src={card.cover.url}
+										srcset={srcsetOf(card.cover.url)}
+										sizes="160px"
+										alt=""
+										loading="lazy"
+										decoding="async"
+									/>{/if}
 							</span>
 							<span class="row__name">{card.name}</span>
 							<span class="row__facts">
@@ -203,17 +214,27 @@
 						<!-- Opens on hover; a phone always shows it, as a swipeable strip. -->
 						<div class="row__reveal" aria-hidden="true">
 							<div class="row__slider">
-								<div class="strip">
+								<div class="strip" style="--count: {photosOf(card).length}">
 									{#each [0, 1] as copy (copy)}
-										{#each card.images as image (`${copy}-${image.url}`)}
+										{#each photosOf(card) as image (`${copy}-${image.url}`)}
 											<a
 												class="strip__frame"
 												class:strip__frame--cut={image.url.endsWith('.png')}
 												class:strip__frame--dup={copy > 0}
 												href="/drops/{card.slug}"
 												tabindex="-1"
+												style={image.width && image.height && !image.url.endsWith('.png')
+													? `--ar: ${image.width} / ${image.height}`
+													: undefined}
 											>
-												<img src={image.url} alt="" loading="lazy" decoding="async" />
+												<img
+													src={image.url}
+													srcset={srcsetOf(image.url)}
+													sizes="(max-width: 860px) 60vw, 24vw"
+													alt=""
+													loading="lazy"
+													decoding="async"
+												/>
 											</a>
 										{/each}
 									{/each}
@@ -255,6 +276,8 @@
 							<img
 								class="card__img"
 								src={card.cover.url}
+								srcset={srcsetOf(card.cover.url)}
+								sizes="(max-width: 860px) 100vw, 33vw"
 								alt={card.cover.alt}
 								loading={index < 3 ? 'eager' : 'lazy'}
 								decoding="async"
@@ -264,6 +287,8 @@
 							<img
 								class="card__img card__img--back"
 								src={card.back.url}
+								srcset={srcsetOf(card.back.url)}
+								sizes="(max-width: 860px) 100vw, 33vw"
 								alt=""
 								loading="lazy"
 								decoding="async"
@@ -499,7 +524,8 @@
 		gap: 12px;
 		width: max-content;
 		padding-bottom: 24px;
-		animation: drift 38s linear infinite;
+		/* The same pace whatever the number of photographs: ~9.5s each. */
+		animation: drift calc(var(--count, 4) * 9.5s) linear infinite;
 		animation-play-state: paused;
 	}
 	@keyframes drift {
@@ -510,7 +536,8 @@
 	.strip__frame {
 		display: block;
 		height: clamp(300px, 42vh, 500px);
-		aspect-ratio: 4 / 5;
+		/* Each photograph in its own shape; the cutout in the 4:5 default. */
+		aspect-ratio: var(--ar, 4 / 5);
 		overflow: hidden;
 		background: var(--stone);
 	}
@@ -519,12 +546,10 @@
 		height: 100%;
 		object-fit: cover;
 		object-position: 50% 24%;
-		transform: scale(1.06);
 	}
 	.strip__frame--cut img {
 		object-fit: contain;
 		padding: 9%;
-		transform: none;
 	}
 	@media (hover: hover) and (min-width: 861px) {
 		.row:hover .row__reveal,

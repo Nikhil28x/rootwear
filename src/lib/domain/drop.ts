@@ -55,6 +55,11 @@ export type ProductImage = {
 	readonly alt: string;
 	/** §09 imagery requirement: a lead shot, 2+ detail shots (one fabric close-up), a worn shot. */
 	readonly role: 'lead' | 'detail' | 'fabric' | 'worn';
+	/** A short figure caption ("On the back"); pages fall back to their own. */
+	readonly caption?: string;
+	/** Pixel size, when known, so a frame can hold its shape before the image arrives. */
+	readonly width?: number;
+	readonly height?: number;
 };
 
 export type Product = {

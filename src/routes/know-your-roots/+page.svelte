@@ -16,6 +16,7 @@
 	 * Every string comes from $lib/content/know-your-roots via the server load;
 	 * §14 is enforced there, at the source, rather than in this markup.
 	 */
+	import { srcsetOf } from '$lib/media/responsive';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -124,7 +125,14 @@
 		<div class="fibre">
 			<figure class="fibre__fig">
 				<div class="fibre__frame">
-					<img src={plates.cloth.src} alt={plates.cloth.alt} loading="lazy" decoding="async" />
+					<img
+						src={plates.cloth.src}
+						srcset={srcsetOf(plates.cloth.src)}
+						sizes="(max-width: 860px) 100vw, 40vw"
+						alt={plates.cloth.alt}
+						loading="lazy"
+						decoding="async"
+					/>
 				</div>
 				<figcaption class="cap"><span>Fig. 2</span>{plates.cloth.caption}</figcaption>
 			</figure>
@@ -516,14 +524,11 @@
 		overflow: hidden;
 		background: var(--stone);
 	}
-	/* A close crop of the cover photograph: the knit, below the script. */
+	/* The knit close, exported at this frame's shape. */
 	.fibre__frame img {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-		object-position: 50% 86%;
-		transform: scale(2.1);
-		transform-origin: 50% 86%;
 	}
 	.fibre__text {
 		display: flex;

@@ -62,7 +62,12 @@ function toCard(drop: Drop): ArchiveCard {
 		cover: coverOf(drop),
 		back: backOf(drop),
 		images: drop.products.flatMap((product) =>
-			product.images.map((image) => ({ url: image.url, alt: image.alt }))
+			product.images.map((image) => ({
+				url: image.url,
+				alt: image.alt,
+				width: image.width,
+				height: image.height
+			}))
 		),
 		canRequest: acceptsDropRequest(drop.state),
 		sizeOptions: sizeOptionsOf(drop)

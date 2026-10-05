@@ -57,26 +57,96 @@ export const DROP_01: Drop = {
 			fit: 'Relaxed oversized',
 			modelHeightCm: 178,
 			modelWornSize: 'M',
+			// The campaign shoot. The first image of each role is the one a page
+			// asks for; the further details fill the galleries in order.
 			images: [
 				{
-					url: '/images/pineapple-haze-front.jpg',
-					alt: 'Pineapple Haze hemp-cotton T-shirt worn from the front',
-					role: 'lead'
+					url: '/images/drop-01/front-1600.webp',
+					width: 1600,
+					height: 2000,
+					alt: 'The Pineapple Haze tee worn from the front: the tree and the script embroidered on the chest',
+					role: 'lead',
+					caption: 'Front'
 				},
 				{
-					url: '/images/pineapple-haze-back.jpg',
-					alt: 'The back of the Pineapple Haze T-shirt, showing the tree artwork',
-					role: 'detail'
+					url: '/images/drop-01/back-1600.webp',
+					width: 1600,
+					height: 2000,
+					alt: 'The back of the Pineapple Haze tee, with the embroidered bud between the shoulders',
+					role: 'detail',
+					caption: 'Back'
 				},
 				{
 					url: '/images/pineapple-haze-shirt-cutout.png',
-					alt: 'Close-up of the hemp-cotton jersey, showing the weave',
-					role: 'fabric'
+					width: 1152,
+					height: 1366,
+					alt: 'The Pineapple Haze tee, laid flat',
+					role: 'fabric',
+					caption: 'The piece'
 				},
 				{
-					url: '/images/pineapple-haze-editorial.jpg',
-					alt: 'The Pineapple Haze T-shirt worn, photographed in the campaign',
-					role: 'worn'
+					url: '/images/drop-01/worn-2400.webp',
+					width: 2400,
+					height: 1946,
+					alt: 'Two people in the Pineapple Haze tee, one turned to show the back',
+					role: 'worn',
+					caption: 'Worn'
+				},
+				{
+					url: '/images/drop-01/sitting-1600.webp',
+					width: 1600,
+					height: 2000,
+					alt: 'Sitting on the studio floor in the Pineapple Haze tee and brown cargo trousers',
+					role: 'detail',
+					caption: 'Sitting'
+				},
+				{
+					url: '/images/drop-01/pair-1600.webp',
+					width: 1600,
+					height: 1000,
+					alt: 'The tee from the front and from the back, worn side by side',
+					role: 'detail',
+					caption: 'Front and back'
+				},
+				{
+					url: '/images/drop-01/floor-1600.webp',
+					width: 1600,
+					height: 1600,
+					alt: 'Leaning back on one arm in the Pineapple Haze tee',
+					role: 'detail',
+					caption: 'At ease'
+				},
+				{
+					url: '/images/drop-01/standing-1600.webp',
+					width: 1600,
+					height: 2000,
+					alt: 'The Pineapple Haze tee worn loose over brown cargo trousers',
+					role: 'detail',
+					caption: 'Worn loose'
+				},
+				{
+					url: '/images/drop-01/seated-1600.webp',
+					width: 1600,
+					height: 2000,
+					alt: 'Two people in the Pineapple Haze tee, one seated',
+					role: 'detail',
+					caption: 'In pairs'
+				},
+				{
+					url: '/images/drop-01/duo-1600.webp',
+					width: 1600,
+					height: 2000,
+					alt: 'Two people standing in the Pineapple Haze tee',
+					role: 'detail',
+					caption: 'Together'
+				},
+				{
+					url: '/images/drop-01/full-1600.webp',
+					width: 1600,
+					height: 2000,
+					alt: 'Full length in the Pineapple Haze tee, one hand at the hem',
+					role: 'detail',
+					caption: 'Full length'
 				}
 			],
 			variants: SIZES.map((size) => ({

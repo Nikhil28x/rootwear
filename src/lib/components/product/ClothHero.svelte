@@ -14,7 +14,12 @@
 	import { onMount, tick } from 'svelte';
 	import type { ClothScene } from './cloth-scene';
 
-	let { src, alt }: { src: string; alt: string } = $props();
+	let {
+		src,
+		alt,
+		width = 1152,
+		height = 1366
+	}: { src: string; alt: string; width?: number; height?: number } = $props();
 
 	let image: HTMLImageElement;
 	let canvas: HTMLCanvasElement;
@@ -91,7 +96,14 @@
 	class:cloth3d--photo={stage === 'photo'}
 	class:cloth3d--cloth={stage === 'cloth'}
 >
-	<img bind:this={image} {src} {alt} fetchpriority="high" decoding="async" />
+	<img
+		bind:this={image}
+		{src}
+		{alt}
+		style="--w: {width}; --h: {height}"
+		fetchpriority="high"
+		decoding="async"
+	/>
 	<canvas bind:this={canvas} aria-hidden="true"></canvas>
 </div>
 
@@ -104,7 +116,7 @@
 		width: 100%;
 		height: auto;
 		/* Holds the piece's place before the photograph has a size of its own. */
-		aspect-ratio: auto 1152 / 1366;
+		aspect-ratio: auto var(--w) / var(--h);
 		/* Without scripts, the photograph makes its own entrance. */
 		animation: photo-in 1s cubic-bezier(0.2, 0.7, 0.2, 1) 1.3s both;
 	}

@@ -31,6 +31,7 @@
 		type AddressValues
 	} from '$lib/checkout/address';
 	import { invalidateAll } from '$app/navigation';
+	import { srcsetOf } from '$lib/media/responsive';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -321,6 +322,8 @@
 								<span class="co-line__thumb" aria-hidden="true">
 									{#if line.image}<img
 											src={line.image}
+											srcset={srcsetOf(line.image)}
+											sizes="96px"
 											alt=""
 											loading="lazy"
 											decoding="async"

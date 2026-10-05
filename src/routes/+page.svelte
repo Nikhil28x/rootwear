@@ -19,6 +19,7 @@
 	import SiteHeader from '$lib/components/SiteHeader.svelte';
 	import SizeSelector from '$lib/components/drop/SizeSelector.svelte';
 	import { SIZE_RANGE_LABEL } from '$lib/drop/sizes';
+	import { srcsetOf } from '$lib/media/responsive';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -46,40 +47,25 @@
 	});
 
 	/**
-	 * The details: the worn shot, then close crops cut from the cover's own
-	 * photographs — the chest embroidery from the front, the tree from the
-	 * back — so the page shows something new rather than the same frames again.
-	 * `focus` is the crop's centre and `zoom` how far in it goes.
+	 * The details: every photograph of the piece in the record's own order,
+	 * each framed in its own shape (tall, square or wide) so the slider has a
+	 * rhythm. Photographs only — the cutout has its own place above.
 	 */
-	type Detail = { url: string; alt: string; caption: string; focus: string; zoom: number; shape: string };
+	type Detail = { url: string; alt: string; caption: string; shape: string };
+	function shapeOf(image: { width?: number; height?: number }) {
+		if (!image.width || !image.height) return 'tall';
+		const ratio = image.width / image.height;
+		return ratio > 1.15 ? 'wide' : ratio > 0.9 ? 'square' : 'tall';
+	}
 	let details = $derived.by(() => {
-		const list: Detail[] = [];
-		if (byRole.lead)
-			list.push({ ...byRole.lead, caption: 'Front', focus: '50% 24%', zoom: 1.06, shape: 'tall' });
-		if (byRole.worn)
-			list.push({ ...byRole.worn, caption: 'Worn', focus: '50% 30%', zoom: 1.05, shape: 'tall' });
-		if (byRole.lead)
-			list.push({
-				url: byRole.lead.url,
-				alt: 'The chest embroidery, close',
-				caption: 'The script, embroidered',
-				focus: '50% 57%',
-				zoom: 2.6,
-				shape: 'square'
-			});
-		if (byRole.detail)
-			list.push({
-				url: byRole.detail.url,
-				alt: 'The tree print on the back, close',
-				caption: 'The tree, across the back',
-				focus: '57% 52%',
-				zoom: 1.9,
-				shape: 'wide'
-			});
-		if (byRole.detail)
-			list.push({ ...byRole.detail, caption: 'Back', focus: '50% 24%', zoom: 1.06, shape: 'tall' });
-		if (byRole.piece)
-			list.push({ ...byRole.piece, caption: 'The piece', focus: '50% 50%', zoom: 1, shape: 'cut' });
+		const images = product?.images ?? [];
+		const photos = images.filter((image) => !image.url.endsWith('.png'));
+		const list: Detail[] = photos.map((image) => ({
+			url: image.url,
+			alt: image.alt,
+			caption: image.caption ?? (image.role === 'lead' ? 'Front' : 'Detail'),
+			shape: shapeOf(image)
+		}));
 		return list;
 	});
 
@@ -103,7 +89,7 @@
 	let spread = $derived(
 		[
 			byRole.lead ? { ...byRole.lead, label: 'Front' } : null,
-			byRole.detail ? { ...byRole.detail, label: 'Back, the tree' } : null
+			byRole.detail ? { ...byRole.detail, label: 'Back' } : null
 		].filter((half) => half !== null)
 	);
 	/** Which half a phone is showing; desktop shows both. */
@@ -142,9 +128,12 @@
 			<div class="spread">
 				<div class="spread__track" bind:this={spreadTrack} onscroll={onSpreadScroll}>
 					{#each spread as half, index (half.url)}
-						<figure class="spread__half" style="--i: {index}">
+						<!-- The front keeps the face; the back sits lower so the whole back of the tee shows. -->
+						<figure class="spread__half" style="--i: {index}; --pos: {index === 0 ? '50% 18%' : '50% 62%'}">
 							<img
 								src={half.url}
+								srcset={srcsetOf(half.url)}
+								sizes="(max-width: 860px) 100vw, 50vw"
 								alt={half.alt}
 								fetchpriority={index === 0 ? 'high' : 'auto'}
 								decoding="async"
@@ -191,7 +180,14 @@
 		<section id="piece" class="piece" aria-labelledby="piece-title">
 			{#if featurePhoto}
 				<figure class="piece__photo" class:piece__photo--cut={featurePhoto.url.endsWith('.png')}>
-					<img src={featurePhoto.url} alt={featurePhoto.alt} loading="lazy" decoding="async" />
+					<img
+						src={featurePhoto.url}
+						srcset={srcsetOf(featurePhoto.url)}
+						sizes="(max-width: 860px) 100vw, 45vw"
+						alt={featurePhoto.alt}
+						loading="lazy"
+						decoding="async"
+					/>
 				</figure>
 			{/if}
 
@@ -235,14 +231,12 @@
 					<ul class="slider__track">
 						{#each [0, 1] as copy (copy)}
 							{#each details as detail, index (`${copy}-${detail.caption}`)}
-								<li
-									class="fig fig--{detail.shape}"
-									style="--focus: {detail.focus}; --zoom: {detail.zoom}"
-									aria-hidden={copy > 0}
-								>
+								<li class="fig fig--{detail.shape}" aria-hidden={copy > 0}>
 									<a href={dropHref} class="fig__frame" tabindex={copy > 0 ? -1 : 0}>
 										<img
 											src={detail.url}
+											srcset={srcsetOf(detail.url)}
+											sizes="(max-width: 860px) 80vw, 40vw"
 											alt={copy > 0 ? '' : detail.alt}
 											loading="lazy"
 											decoding="async"
@@ -405,13 +399,11 @@
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-		object-position: 50% 22%;
-		/* The studio frames carry a pale strip at the edge. */
-		transform: scale(1.09);
+		object-position: var(--pos, 50% 18%);
 		transition: transform 1.4s cubic-bezier(0.2, 0.7, 0.2, 1);
 	}
 	.spread__half:hover img {
-		transform: scale(1.12);
+		transform: scale(1.03);
 	}
 	.spread__tabs {
 		display: none;
@@ -587,7 +579,7 @@
 		margin: 0;
 		padding: 0 var(--gutter);
 		list-style: none;
-		animation: drift 70s linear infinite;
+		animation: drift 95s linear infinite;
 	}
 	.slider:hover .slider__track,
 	.slider:focus-within .slider__track {
@@ -613,24 +605,22 @@
 	.fig--cut .fig__frame {
 		aspect-ratio: 4 / 5;
 	}
+	/* One height, one baseline: the frames differ only in width. */
 	.fig--square .fig__frame {
 		aspect-ratio: 1;
 	}
 	.fig--wide .fig__frame {
 		aspect-ratio: 16 / 10;
 	}
-	/* Each crop is a photograph zoomed in on its own focus. */
+	/* Each photograph is exported at its frame's shape; cover only trims a pixel. */
 	.fig__frame img {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-		object-position: var(--focus);
-		transform: scale(var(--zoom));
-		transform-origin: var(--focus);
 		transition: transform 1.4s cubic-bezier(0.2, 0.7, 0.2, 1);
 	}
 	.fig__frame:hover img {
-		transform: scale(calc(var(--zoom) * 1.05));
+		transform: scale(1.05);
 	}
 	.fig--cut .fig__frame img {
 		object-fit: contain;

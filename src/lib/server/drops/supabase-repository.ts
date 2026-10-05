@@ -44,7 +44,16 @@ type Row = {
 		model_worn_size: Size | null;
 		launch_price_paise: number;
 		prelaunch_price_paise: number;
-		product_images: Array<{ url: string; alt: string; role: ProductImage['role']; position: number }>;
+		product_images: Array<{
+			url: string;
+			alt: string;
+			role: ProductImage['role'];
+			position: number;
+			// From 0021; absent until that migration is applied.
+			caption?: string | null;
+			width?: number | null;
+			height?: number | null;
+		}>;
 		variants: Array<{
 			id: string;
 			product_id: string;
@@ -62,7 +71,7 @@ const SELECT = `
 	products (
 		id, drop_id, slug, name, summary, fabric, gsm, care, fit,
 		model_height_cm, model_worn_size, launch_price_paise, prelaunch_price_paise,
-		product_images ( url, alt, role, position ),
+		product_images ( * ),
 		variants ( id, product_id, sku, size, stock_count, reserved_count )
 	)
 `;
@@ -71,7 +80,13 @@ function toDomain(row: Row): Drop {
 	const products: Product[] = row.products.map((p) => {
 		const images: ProductImage[] = [...p.product_images]
 			.sort((a, b) => a.position - b.position)
-			.map(({ url, alt, role }) => ({ url, alt, role }));
+			.map(({ url, alt, role, caption, width, height }) => ({
+				url,
+				alt,
+				role,
+				...(caption ? { caption } : {}),
+				...(width && height ? { width, height } : {})
+			}));
 
 		const variants: Variant[] = p.variants.map((v) => ({
 			id: v.id,
