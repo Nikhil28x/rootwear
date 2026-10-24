@@ -17,4 +17,4 @@ export const load: LayoutServerLoad = async (event) => {
 };
 
 /** Tabs whose screens exist; the rest appear as they are built. */
-const BUILT_TABS = new Set(['/admin/settings/channels', '/admin/settings/staff']);
+const BUILT_TABS = new Set(['/admin/settings/business', '/admin/settings/channels', '/admin/settings/staff']);

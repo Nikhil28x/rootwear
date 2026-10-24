@@ -185,6 +185,7 @@ const BUILT = new Set<AdminSection>([
 	'orders',
 	'reservations',
 	'fulfilment',
+	'invoices',
 	'contact',
 	'layout',
 	'messages',
@@ -246,6 +247,8 @@ export function sectionForRoute(routeId: string | null): AdminSection | null {
 	const id = routeId ?? '/admin';
 	// The settings index only redirects to the first tab this person can open.
 	if (id.startsWith('/admin/account') || id === '/admin/settings') return null;
+	// One invoice opens for orders.view OR finance.view; the page checks both.
+	if (id.startsWith('/admin/invoices/[id]')) return null;
 	if (id.startsWith('/admin/orders/packing-list')) return 'fulfilment';
 	if (id.startsWith('/admin/settings/staff')) return 'staff';
 	const match = ADMIN_SECTIONS.filter((section) => section !== 'dashboard').find((section) =>

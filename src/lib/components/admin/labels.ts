@@ -20,3 +20,26 @@ export const MESSAGE_STATUS: Record<string, Label> = {
 export function label(map: Record<string, Label>, key: string): Label {
 	return map[key] ?? { label: key.replace(/_/g, ' '), tone: 'neutral' };
 }
+
+export const ORDER_STATE: Record<string, Label> = {
+	pending_payment: { label: 'Unpaid', tone: 'neutral' },
+	paid: { label: 'To pack', tone: 'warning' },
+	packed: { label: 'Packed', tone: 'info' },
+	dispatched: { label: 'Dispatched', tone: 'accent' },
+	delivered: { label: 'Delivered', tone: 'success' },
+	cancelled: { label: 'Cancelled', tone: 'neutral' },
+	refunded: { label: 'Refunded', tone: 'neutral' }
+};
+
+export const RETURN_STATUS: Record<string, Label> = {
+	requested: { label: 'Return expected', tone: 'warning' },
+	received: { label: 'Return received', tone: 'info' },
+	completed: { label: 'Return closed', tone: 'success' },
+	rejected: { label: 'Return rejected', tone: 'neutral' }
+};
+
+export const REFUND_STATE: Record<string, Label> = {
+	initiated: { label: 'Refund pending', tone: 'warning' },
+	processed: { label: 'Refunded', tone: 'success' },
+	failed: { label: 'Refund failed', tone: 'danger' }
+};

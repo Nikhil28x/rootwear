@@ -18,7 +18,9 @@ const RISKY = /^[=+\-@\t\r]/;
 function cell(value: unknown): string {
 	if (value === null || value === undefined) return '""';
 	let text = String(value);
-	if (RISKY.test(text)) text = `'${text}`;
+	// A plain number (a credit note's -500.00) cannot be a formula, and
+	// prefixing it would stop a spreadsheet summing the column.
+	if (RISKY.test(text) && !/^-?\d+(\.\d+)?$/.test(text)) text = `'${text}`;
 	return `"${text.replaceAll('"', '""')}"`;
 }
 

@@ -1,32 +1,49 @@
-import { error } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
-import { adminRepo } from '$lib/server/admin';
-import { ORDER_STATES, type OrderState } from '$lib/server/admin/types';
-import { requireSection } from '$lib/server/admin/roles';
-import { resolveAdminAuth } from '$lib/server/admin/session';
+import { fail } from '@sveltejs/kit';
+import type { Actions, PageServerLoad } from './$types';
+import { can, requirePermission, requireSection } from '$lib/server/admin/roles';
+import { actorLabel, staffActor } from '$lib/server/admin/session';
+import { listOrders, markPacked, ORDER_PAGE_SIZE, orderCounts } from '$lib/server/orders/admin';
+import { readOrderFilter } from '$lib/server/orders/filters';
+import { listDrops } from '$lib/server/catalogue/admin';
 
 /**
- * RW-158 — Orders.
- *
- * §12: orders are OWNER data. requireSection refuses a 'layout' account here
- * even though the nav never showed them the link.
+ * RW-158 — Orders. The default view is what needs doing: paid orders not yet
+ * dispatched. Every other state is a tab away.
  */
 export const load: PageServerLoad = async (event) => {
-	const auth = await resolveAdminAuth(event);
-	if (auth.status !== 'staff') error(403, 'Staff access required.');
-	requireSection(auth.actor, 'orders');
+	const actor = await staffActor(event);
+	requireSection(actor, 'orders');
 
-	const stateParam = event.url.searchParams.get('state');
-	const state = (ORDER_STATES as readonly string[]).includes(stateParam ?? '')
-		? (stateParam as OrderState)
-		: undefined;
-
-	const orders = await adminRepo.listOrders({ state });
+	const { filter, raw } = readOrderFilter(event.url.searchParams);
+	const page = Math.max(1, Number(event.url.searchParams.get('page')) || 1);
+	const [result, counts, drops] = await Promise.all([
+		listOrders(filter, page),
+		orderCounts(),
+		listDrops()
+	]);
 
 	return {
-		now: event.locals.now,
-		orders,
-		states: ORDER_STATES,
-		filter: { state: state ?? '' }
+		...result,
+		counts,
+		page,
+		pageSize: ORDER_PAGE_SIZE,
+		filters: raw,
+		drops: drops.map((d) => ({ id: d.id, label: `Drop ${String(d.number).padStart(2, '0')} — ${d.name}` })),
+		canEdit: can(actor, 'orders.edit'),
+		query: event.url.search
 	};
+};
+
+export const actions: Actions = {
+	pack: async (event) => {
+		const actor = await staffActor(event);
+		requirePermission(actor, 'orders.edit');
+		const ids = (await event.request.formData()).getAll('ids').map(String);
+		if (!ids.length) return fail(400, { error: 'Select the orders to mark packed.' });
+		const moved = await markPacked(ids, actorLabel(actor));
+		const skipped = ids.length - moved;
+		return {
+			message: `${moved} marked packed.${skipped ? ` ${skipped} skipped — only paid orders can be packed.` : ''}`
+		};
+	}
 };

@@ -1,143 +1,186 @@
 <script lang="ts">
-	import { addPaise, formatInr } from '$lib/money';
-	import SectionHead from '$lib/components/admin/SectionHead.svelte';
-	import TableShell from '$lib/components/admin/TableShell.svelte';
-	import StatePill from '$lib/components/admin/StatePill.svelte';
-	import StatTile from '$lib/components/admin/StatTile.svelte';
-	import { humanise, orderTone, shortDateTime } from '$lib/components/admin/tone';
+	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
+	import { Download, FileText, PackageCheck, Printer, Receipt, Search, Tag, X } from '@lucide/svelte';
+	import Chip from '$lib/components/admin/ui/Chip.svelte';
+	import EmptyState from '$lib/components/admin/ui/EmptyState.svelte';
+	import PageHeader from '$lib/components/admin/ui/PageHeader.svelte';
+	import Pager from '$lib/components/admin/ui/Pager.svelte';
+	import Tabs from '$lib/components/admin/ui/Tabs.svelte';
+	import { submitter } from '$lib/components/admin/enhance';
+	import { getToaster } from '$lib/components/admin/toast.svelte';
+	import { ORDER_STATE, label } from '$lib/components/admin/labels';
+	import { shortDateTime, timeAgo } from '$lib/components/admin/tone';
+	import { formatInr } from '$lib/money';
 
 	let { data } = $props();
+	const toaster = getToaster();
 
-	let awaitingDispatch = $derived(
-		data.orders.filter((order) => order.state === 'paid' || order.state === 'packed').length
-	);
-	let value = $derived(
-		addPaise(
-			...data.orders.filter((o) => o.state !== 'cancelled').map((o) => o.total)
-		)
-	);
+	let selected = $state<string[]>([]);
+	$effect.pre(() => {
+		void data.orders;
+		selected = [];
+	});
+	let allSelected = $derived(data.orders.length > 0 && selected.length === data.orders.length);
+	let filtered = $derived(Boolean(data.filters.q || data.filters.from || data.filters.to || data.filters.drop));
+
+	const tabs = $derived([
+		{ href: '/admin/orders', label: 'To ship', count: data.counts.to_ship, exact: true },
+		{ href: '/admin/orders?view=dispatched', label: 'Dispatched', count: data.counts.dispatched },
+		{ href: '/admin/orders?view=returns', label: 'Returns', count: data.counts.returns || null },
+		{ href: '/admin/orders?view=all', label: 'All paid' },
+		{ href: '/admin/orders?view=pending_payment', label: 'Unpaid', count: data.counts.pending_payment || null },
+		{ href: '/admin/orders?view=cancelled', label: 'Cancelled' }
+	]);
+
+	function printUrl(kind: 'invoice' | 'label' | 'packing') {
+		return `/admin/orders/print?kind=${kind}&ids=${selected.join(',')}`;
+	}
+
+	let exportUrl = $derived(`/admin/orders/export${data.query}`);
 </script>
 
-<svelte:head>
-	<title>Orders — Rootwear operations</title>
-	<meta name="robots" content="noindex, nofollow" />
-</svelte:head>
+<svelte:head><title>Orders · Rootwear admin</title></svelte:head>
 
-<SectionHead
-	level={1}
-	eyebrow="Fulfilment"
-	title="Orders"
-	note="Every order, pre-order and open sale alike. A pre-order line carries its reservation and its piece number, so the one continuous record stays intact from deposit to doorstep."
->
-	{#snippet actions()}
-		<a
-			href="/admin/orders/packing-list"
-			class="border border-gold px-7 py-3 text-[11px] tracking-[0.2em] text-gold uppercase transition hover:bg-gold hover:text-forest-black font-medium"
-		>
-			Packing list
-		</a>
-	{/snippet}
-</SectionHead>
+<div class="flex flex-col gap-6">
+	<PageHeader title="Orders" description="Paid orders, newest first. Pack, dispatch and print from here.">
+		{#snippet actions()}
+			<a href={exportUrl} class="q-btn q-btn-secondary"><Download /> Export CSV</a>
+		{/snippet}
+	</PageHeader>
 
-<div class="mt-10 grid gap-px bg-white/10 sm:grid-cols-3">
-	<StatTile label="Orders" value={String(data.orders.length)} note="Matching the current filter." />
-	<StatTile
-		label="Awaiting dispatch"
-		value={String(awaitingDispatch)}
-		note="Paid or packed, not yet handed over."
-		severity={awaitingDispatch > 0 ? 'watch' : 'none'}
-	/>
-	<StatTile label="Value" value={formatInr(value)} note="Cancelled orders excluded." />
-</div>
+	<Tabs label="Order views" {tabs} />
 
-<form method="GET" class="mt-12 flex flex-wrap items-end gap-6 border-y border-white/10 py-6">
-	<div class="flex min-w-[12rem] flex-col gap-2">
-		<label for="f-state" class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">State</label>
-		<select
-			id="f-state"
-			name="state"
-			value={data.filter.state}
-			class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-[15px] text-stone-100 outline-none focus:border-white"
-		>
-			<option value="">Every state</option>
-			{#each data.states as state (state)}
-				<option value={state}>{humanise(state)}</option>
-			{/each}
+	<form method="GET" class="flex flex-wrap items-end gap-2" data-sveltekit-keepfocus>
+		{#if data.filters.view}<input type="hidden" name="view" value={data.filters.view} />{/if}
+		<div class="relative min-w-[240px] flex-1 sm:max-w-[360px]">
+			<Search size={16} strokeWidth={1.5} class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-q-tertiary" />
+			<label for="o-q" class="sr-only">Search orders</label>
+			<input id="o-q" name="q" type="search" class="q-input pl-9" placeholder="Order, name, email, phone, pincode" value={data.filters.q} />
+		</div>
+		<label for="o-drop" class="sr-only">Drop</label>
+		<select id="o-drop" name="drop" class="q-select w-auto" onchange={(e) => e.currentTarget.form?.requestSubmit()}>
+			<option value="">All drops</option>
+			{#each data.drops as drop (drop.id)}<option value={drop.id} selected={data.filters.drop === drop.id}>{drop.label}</option>{/each}
 		</select>
-	</div>
-	<button
-		type="submit"
-		class="border border-white/35 px-7 py-3 text-[11px] tracking-[0.2em] text-stone-100 uppercase transition hover:bg-white hover:text-black font-medium"
-	>
-		Apply
-	</button>
-	<a
-		href="/admin/orders"
-		class="text-[11px] tracking-[0.2em] text-stone-400 uppercase underline underline-offset-4 hover:text-stone-200 font-medium"
-	>
-		Clear
-	</a>
-</form>
+		<label class="flex items-center gap-2 text-[13px] text-q-secondary">From <input name="from" type="date" class="q-input w-auto" value={data.filters.from} /></label>
+		<label class="flex items-center gap-2 text-[13px] text-q-secondary">To <input name="to" type="date" class="q-input w-auto" value={data.filters.to} /></label>
+		<button type="submit" class="q-btn q-btn-secondary">Search</button>
+		{#if filtered}
+			<a href="/admin/orders{data.filters.view ? `?view=${data.filters.view}` : ''}" class="q-btn q-btn-ghost"><X /> Clear</a>
+		{/if}
+	</form>
 
-<div class="mt-12">
-	<TableShell caption="Orders" note="Newest first">
-		<thead>
-			<tr class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Order</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">State</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Customer</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Ships to</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-right">Pieces</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-right">Total</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Tracking</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Placed</th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each data.orders as order (order.id)}
-				<tr class="text-stone-200">
-					<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal">
-						<a class="text-paper underline decoration-white/25 underline-offset-4 hover:decoration-paper" href="/admin/orders/{order.id}">
-							{order.orderNumber}
-						</a>
-						{#if order.isPreOrder}
-							<span class="mt-1 block text-[11px] tracking-[0.18em] text-gold uppercase font-medium">
-								Pre-order
-							</span>
-						{/if}
-					</th>
-					<td class="border-b border-white/5 px-4 py-3">
-						<StatePill label={humanise(order.state)} tone={orderTone(order.state)} />
-					</td>
-					<td class="border-b border-white/5 px-4 py-3 text-[15px]">{order.email}</td>
-					<td class="border-b border-white/5 px-4 py-3 text-[15px]">
-						{order.shipTo.city}, {order.shipTo.state}
-						<span class="block text-[13px] text-stone-400 tabular-nums">{order.shipTo.pincode}</span>
-					</td>
-					<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">{order.pieceCount}</td>
-					<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">
-						{formatInr(order.total)}
-					</td>
-					<td class="border-b border-white/5 px-4 py-3 text-[13px] text-stone-400">
-						{#if order.trackingRef}
-							{order.courierName}
-							<span class="block text-stone-400 tabular-nums">{order.trackingRef}</span>
-						{:else}
-							<span class="text-stone-400">—</span>
-						{/if}
-					</td>
-					<td class="border-b border-white/5 px-4 py-3 text-[13px] whitespace-nowrap tabular-nums">
-						{shortDateTime(order.createdAt)}
-					</td>
-				</tr>
+	{#if data.orders.length === 0}
+		<div class="q-card">
+			{#if filtered}
+				<EmptyState icon={Search} title="No orders match" body="Try the order number, the customer’s email or their phone number." compact />
+			{:else if !data.filters.view}
+				<EmptyState icon={PackageCheck} title="Nothing to ship" body="Paid orders waiting to be packed and dispatched appear here." compact />
 			{:else}
-				<tr>
-					<td colspan="8" class="px-4 py-10 text-[15px] text-stone-400">
-						No orders in this view. Open sales appear the moment the drop goes live; pre-orders
-						appear when a balance clears.
-					</td>
-				</tr>
-			{/each}
-		</tbody>
-	</TableShell>
+				<EmptyState icon={Receipt} title="No orders here" body="Orders in this state will appear here." compact />
+			{/if}
+		</div>
+	{:else}
+		<div class="q-table-wrap">
+			<table class="q-table">
+				<thead>
+					<tr>
+						<th scope="col" class="w-10">
+							<input
+								type="checkbox"
+								class="q-check"
+								aria-label="Select all orders on this page"
+								checked={allSelected}
+								onchange={() => (selected = allSelected ? [] : data.orders.map((o) => o.id))}
+							/>
+						</th>
+						<th scope="col">Order</th>
+						<th scope="col">Customer</th>
+						<th scope="col">Status</th>
+						<th scope="col" class="num">Pieces</th>
+						<th scope="col" class="num">Total</th>
+						<th scope="col" class="num">Placed</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each data.orders as order (order.id)}
+						{@const status = label(ORDER_STATE, order.state)}
+						<tr
+							aria-selected={selected.includes(order.id)}
+							data-href="/admin/orders/{order.id}"
+							onclick={(e) => {
+								if (!(e.target as HTMLElement).closest('a, input, label')) goto(`/admin/orders/${order.id}`);
+							}}
+						>
+							<td>
+								<input type="checkbox" class="q-check" aria-label="Select {order.number}" value={order.id} bind:group={selected} />
+							</td>
+							<td>
+								<a href="/admin/orders/{order.id}" class="row-link q-mono">{order.number}</a>
+								{#if order.isPreOrder}<span class="block text-[12px] text-q-tertiary">Pre-order</span>{/if}
+							</td>
+							<td>
+								<p class="text-q-text">{order.name}</p>
+								<p class="text-[13px] text-q-secondary">{order.email}{order.city ? ` · ${order.city}` : ''}</p>
+							</td>
+							<td>
+								<div class="flex flex-wrap gap-1.5">
+									<Chip label={status.label} tone={status.tone} />
+									{#if order.openReturn}<Chip label="Return open" tone="warning" />{/if}
+								</div>
+								{#if order.trackingRef}<p class="mt-1 text-[12px] text-q-tertiary">{order.courierName} {order.trackingRef}</p>{/if}
+							</td>
+							<td class="num">{order.pieces}</td>
+							<td class="num font-medium text-q-text">{formatInr(order.total)}</td>
+							<td class="num text-q-secondary" title={shortDateTime(order.createdAt)}>{timeAgo(order.createdAt)}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+		<Pager page={data.page} pageSize={data.pageSize} total={data.total} />
+	{/if}
 </div>
+
+{#if selected.length}
+	<div class="bulk-bar fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-[720px] flex-wrap items-center gap-2 rounded-[14px] bg-q-inverse p-2 pl-4 text-q-on-inverse sm:bottom-6" role="region" aria-label="Selected orders">
+		<p class="mr-auto text-[14px] font-medium">{selected.length} selected</p>
+		{#if data.canEdit}
+			<form method="POST" action="?/pack" use:enhance={submitter(toaster)}>
+				{#each selected as id (id)}<input type="hidden" name="ids" value={id} />{/each}
+				<button type="submit" class="bulk-btn"><PackageCheck size={16} strokeWidth={1.5} /> Mark packed</button>
+			</form>
+		{/if}
+		<a class="bulk-btn" href={printUrl('packing')} target="_blank" rel="noopener"><Printer size={16} strokeWidth={1.5} /> Packing slips</a>
+		<a class="bulk-btn" href={printUrl('label')} target="_blank" rel="noopener"><Tag size={16} strokeWidth={1.5} /> Labels</a>
+		<a class="bulk-btn" href={printUrl('invoice')} target="_blank" rel="noopener"><FileText size={16} strokeWidth={1.5} /> Invoices</a>
+		<button type="button" class="bulk-btn" aria-label="Clear selection" onclick={() => (selected = [])}><X size={16} strokeWidth={1.5} /></button>
+	</div>
+{/if}
+
+<style>
+	.bulk-bar {
+		animation: bulk-in 200ms ease-out;
+	}
+	.bulk-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		height: 36px;
+		padding: 0 12px;
+		border-radius: 10px;
+		font-size: 14px;
+		font-weight: 500;
+		color: inherit;
+	}
+	.bulk-btn:hover {
+		background: rgb(255 255 255 / 0.1);
+	}
+	@keyframes bulk-in {
+		from {
+			transform: translateY(8px);
+			opacity: 0;
+		}
+	}
+</style>

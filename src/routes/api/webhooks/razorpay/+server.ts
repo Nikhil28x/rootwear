@@ -2,6 +2,8 @@ import type { RequestHandler } from './$types';
 import { cartRepository } from '$lib/server/cart';
 import { paymentProvider } from '$lib/server/payments';
 import type { WebhookFacts } from '$lib/server/payments/types';
+import { onOrderPaidByToken } from '$lib/server/orders/admin';
+import { catalogueSource } from '$lib/server/env';
 
 /**
  * RW-098 / §04 — "THE WEBHOOK IS THE SOURCE OF TRUTH for payment success, not
@@ -74,6 +76,15 @@ async function settle(facts: WebhookFacts): Promise<void> {
 
 		if (result.alreadyCaptured) {
 			console.info('[webhook] already captured', facts.eventId);
+		}
+
+		// The invoice and the confirmation message. Both are idempotent, so a
+		// redelivered event issues no second invoice and sends no second email;
+		// and neither can fail the capture, which has already been recorded.
+		if (result.orderPublicToken && catalogueSource() === 'supabase') {
+			await onOrderPaidByToken(result.orderPublicToken).catch((error) =>
+				console.error('[webhook] after-payment work failed', error)
+			);
 		}
 	} catch (cause) {
 		// The event row keeps the reason, so a failed capture is visible in

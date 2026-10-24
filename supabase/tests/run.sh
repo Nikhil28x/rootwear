@@ -206,6 +206,12 @@ BELOW=$(Q -c "update public.variants set reserve_cap=2, reserved_count=2 where i
 check "stock never drops below what is reserved" "$BELOW" "1"
 check "order lines snapshot size and tax" "$(Q -c "select variant_snapshot||'/'||hsn_snapshot||'/'||gst_rate_snapshot from app.order_lines limit 1;")" "M/6109/5.00"
 
+# --- documents (0025) ---------------------------------------------------------
+for n in 1 2 3 4 5 6; do Q -c "select app.next_document_number('invoice:RW:26-27');" >"$RUNDIR/n$n" 2>&1 & done
+wait
+check "concurrent invoice numbers are unique and gapless" "$(cat "$RUNDIR"/n? | sort -n | tr '\n' ' ' | xargs)" "1 2 3 4 5 6"
+check "each financial year starts again at 1" "$(Q -c "select app.next_document_number('invoice:RW:27-28');")" "1"
+
 # --- RLS --------------------------------------------------------------------
 Q -c "grant usage on schema public to anon, authenticated;
       grant select on all tables in schema public to anon, authenticated;" >/dev/null

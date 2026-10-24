@@ -217,6 +217,9 @@
 				<p class="co-fine">{BUSINESS_NAME}</p>
 			</section>
 
+			{#if !['pending_payment', 'cancelled'].includes(order.state)}
+				<a class="cta cta--line cta--full" href="{page.url.pathname}/invoice">Download invoice</a>
+			{/if}
 			<a class="cta cta--line cta--full" href="/drops">See the drops</a>
 		</aside>
 	</div>
