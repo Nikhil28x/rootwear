@@ -53,3 +53,30 @@ export const CHECKOUT_STATUS: Record<string, Label> = {
 	bought_later: { label: 'Bought later', tone: 'success' },
 	dismissed: { label: 'Dismissed', tone: 'neutral' }
 };
+
+export const LEAD_STAGE: Record<string, Label> = {
+	new: { label: 'New', tone: 'info' },
+	contacted: { label: 'Contacted', tone: 'accent' },
+	interested: { label: 'Interested', tone: 'warning' },
+	won: { label: 'Won', tone: 'success' },
+	lost: { label: 'Lost', tone: 'neutral' }
+};
+
+export const LEAD_SOURCE_LABEL: Record<string, string> = {
+	website: 'Website',
+	instagram: 'Instagram',
+	whatsapp: 'WhatsApp',
+	meta_ads: 'Meta ad',
+	referral: 'Referral',
+	event: 'Event',
+	other: 'Other'
+};
+
+/** "919812345678" → "+91 98123 45678". Anything else is shown as stored. */
+export function formatPhone(phone: string | null | undefined): string {
+	if (!phone) return '';
+	const digits = phone.replace(/\D/g, '');
+	if (/^91[6-9]\d{9}$/.test(digits)) return `+91 ${digits.slice(2, 7)} ${digits.slice(7)}`;
+	if (/^[6-9]\d{9}$/.test(digits)) return `+91 ${digits.slice(0, 5)} ${digits.slice(5)}`;
+	return phone;
+}

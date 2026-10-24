@@ -27,6 +27,8 @@ import { isValidEmail, normaliseEmail } from './email';
 import { acceptsNotifyMe } from '$lib/domain/drop-state';
 import type { Drop, Variant } from '$lib/domain/drop';
 import { availableUnits } from '$lib/server/cart/availability';
+import { leadFromForm } from '$lib/server/leads/admin';
+import { variantLabel } from '$lib/domain/drop';
 import type {
 	DemandField,
 	DemandIntent,
@@ -69,8 +71,17 @@ function readSource(raw: FormDataEntryValue | null, fallback: ConsentSource): Co
  * rather than only hidden in the markup: a drop that is still on sale does not
  * need a petition, it needs a cart.
  */
+/** The product and size a demand form was about, as one line for a lead. */
+function interestOf(drop: Drop, variantId: string): string {
+	for (const product of drop.products) {
+		const variant = product.variants.find((v) => v.id === variantId);
+		if (variant) return `${product.name} — ${variantLabel(product, variant)}`;
+	}
+	return drop.name;
+}
+
 export async function handleRequestDrop(
-	event: Pick<RequestEvent, 'request' | 'locals'>,
+	event: Pick<RequestEvent, 'request' | 'locals' | 'cookies'>,
 	defaultSource: ConsentSource
 ): Promise<DemandActionResult> {
 	const data = await event.request.formData();
@@ -137,6 +148,15 @@ export async function handleRequestDrop(
 		// §04: the server's instant, stamped once per request.
 		consentedAt: event.locals.now
 	});
+	await leadFromForm(event.cookies, {
+		kind: 'drop_request',
+		trackingId: receipt.trackingId,
+		email,
+		dropId: drop.id,
+		interest: interestOf(drop, variant.id),
+		detail: note,
+		consent: true
+	});
 
 	return {
 		ok: true,
@@ -156,7 +176,7 @@ export async function handleRequestDrop(
  * describing, and `acceptsNotifyMe(LIVE)` is false.
  */
 export async function handleNotifyMe(
-	event: Pick<RequestEvent, 'request' | 'locals'>,
+	event: Pick<RequestEvent, 'request' | 'locals' | 'cookies'>,
 	defaultSource: ConsentSource
 ): Promise<DemandActionResult> {
 	const data = await event.request.formData();
@@ -211,6 +231,14 @@ export async function handleNotifyMe(
 		consentSource: readSource(data.get('source'), defaultSource),
 		consentedAt: event.locals.now
 	});
+	await leadFromForm(event.cookies, {
+		kind: 'notify_me',
+		trackingId: receipt.trackingId,
+		email,
+		dropId: drop.id,
+		interest: interestOf(drop, variant.id),
+		consent: true
+	});
 
 	return {
 		ok: true,
@@ -235,7 +263,7 @@ const INDIAN_MOBILE = /^[6-9][0-9]{9}$/;
  * posted id cannot reach a piece from another drop (§04).
  */
 export async function handlePreOrder(
-	event: Pick<RequestEvent, 'request' | 'locals'>,
+	event: Pick<RequestEvent, 'request' | 'locals' | 'cookies'>,
 	defaultSource: ConsentSource
 ): Promise<DemandActionResult> {
 	const data = await event.request.formData();
@@ -276,6 +304,16 @@ export async function handlePreOrder(
 		phone,
 		consentSource: readSource(data.get('source'), defaultSource),
 		consentedAt: event.locals.now
+	});
+	await leadFromForm(event.cookies, {
+		kind: 'preorder',
+		trackingId: receipt.trackingId,
+		name,
+		email,
+		phone,
+		dropId: drop.id,
+		interest: interestOf(drop, variant.id),
+		consent: true
 	});
 
 	return {

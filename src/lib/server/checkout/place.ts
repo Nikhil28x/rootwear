@@ -4,6 +4,8 @@ import { clearShipTo } from '$lib/server/cart/ship-session';
 import { cartKeyPrefix } from '$lib/server/cart/keys';
 import { expireUnpaidOrders } from '$lib/server/checkout/expiry';
 import type { OrderRecord, ShipTo, StoredCartLine } from '$lib/server/cart/types';
+import { stampOrder } from '$lib/server/attribution/touch';
+import { catalogueSource } from '$lib/server/env';
 import { paymentProvider } from '$lib/server/payments';
 import { COMMIT_MESSAGE } from '$lib/checkout/messages';
 
@@ -165,6 +167,10 @@ export async function placeOrder({
 	 * the same order arriving twice, and minting a second payment intent for
 	 * it is how a customer ends up charged twice.
 	 */
+	if (outcome.status === 'committed' && outcome.orderId && catalogueSource() === 'supabase') {
+		await stampOrder(outcome.orderId, cookies);
+	}
+
 	if (outcome.status === 'committed' && outcome.orderId) {
 		const provider = paymentProvider();
 		if (provider.isConfigured) {

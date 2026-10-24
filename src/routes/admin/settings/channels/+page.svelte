@@ -19,7 +19,8 @@
 			['WHATSAPP_PHONE_NUMBER_ID', 'Meta → WhatsApp → API Setup → Phone number ID'],
 			['WHATSAPP_ACCESS_TOKEN', 'A permanent System User token with whatsapp_business_messaging'],
 			['META_APP_SECRET', 'Meta app → Settings → Basic → App secret (verifies webhooks)'],
-			['META_VERIFY_TOKEN', 'Any long random string; paste the same value into Meta’s webhook form']
+			['META_VERIFY_TOKEN', 'Any long random string; paste the same value into Meta’s webhook form'],
+			['META_PAGE_ACCESS_TOKEN', 'For lead ads: a Page token with leads_retrieval, to read each submission']
 		]
 	} as const;
 </script>

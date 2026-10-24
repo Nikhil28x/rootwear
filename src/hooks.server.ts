@@ -3,6 +3,7 @@ import { sequence } from '@sveltejs/kit/hooks';
 import { serverNow } from '$lib/server/clock';
 import { createAnonClient } from '$lib/server/db/clients';
 import { isSupabaseConfigured } from '$lib/server/env';
+import { recordTouch, touchFrom } from '$lib/server/attribution/touch';
 
 /**
  * RW-019 — Request-scoped server clock.
@@ -60,6 +61,20 @@ const auth: Handle = async ({ event, resolve }) => {
 	});
 };
 
+/**
+ * Campaign attribution: a landing tagged with utm_* (or a Meta / Google click
+ * id) is remembered in a first-party cookie, so the lead or order it leads
+ * to can say where it came from. Page requests only; admin and APIs skip it.
+ */
+const touch: Handle = async ({ event, resolve }) => {
+	const path = event.url.pathname;
+	if (event.request.method === 'GET' && !path.startsWith('/admin') && !path.startsWith('/api')) {
+		const landed = touchFrom(event.url, event.request.headers.get('referer'), event.locals.now);
+		if (landed) recordTouch(event.cookies, landed);
+	}
+	return resolve(event);
+};
+
 /** Baseline hardening. */
 const security: Handle = async ({ event, resolve }) => {
 	const response = await resolve(event);
@@ -78,4 +93,4 @@ const security: Handle = async ({ event, resolve }) => {
 	return response;
 };
 
-export const handle = sequence(clock, auth, security);
+export const handle = sequence(clock, touch, auth, security);

@@ -1,3 +1,4 @@
+import { leadFromForm } from '$lib/server/leads/admin';
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { contactInbox } from '$lib/server/content';
@@ -48,7 +49,7 @@ export const load: PageServerLoad = async () => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, locals }) => {
+	default: async ({ request, locals, cookies }) => {
 		const data = await request.formData();
 
 		const values: Values = {
@@ -111,6 +112,17 @@ export const actions: Actions = {
 				isSpam: trap.length > 0
 			});
 			trackingId = receipt.trackingId;
+			if (!trap) {
+				await leadFromForm(cookies, {
+					kind: 'contact',
+					trackingId,
+					name: values.name,
+					email: values.email,
+					interest: SUBJECT_LABEL.get(values.subject) ?? values.subject,
+					detail: values.message,
+					consent: false
+				});
+			}
 		} catch (cause) {
 			console.error('[contact] submit failed', cause);
 			return fail(500, {

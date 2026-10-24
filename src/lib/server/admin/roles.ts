@@ -187,6 +187,7 @@ const BUILT = new Set<AdminSection>([
 	'fulfilment',
 	'invoices',
 	'carts',
+	'leads',
 	'contact',
 	'layout',
 	'messages',

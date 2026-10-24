@@ -212,6 +212,13 @@ wait
 check "concurrent invoice numbers are unique and gapless" "$(cat "$RUNDIR"/n? | sort -n | tr '\n' ' ' | xargs)" "1 2 3 4 5 6"
 check "each financial year starts again at 1" "$(Q -c "select app.next_document_number('invoice:RW:27-28');")" "1"
 
+# --- leads (0027) --------------------------------------------------------------
+NOWHERE=$(Q -c "insert into app.leads (source) values ('other');" 2>&1 | grep -c 'leads_reachable' || true)
+check "a lead needs some way to reach them" "$NOWHERE" "1"
+Q -c "insert into app.leads (email, source, external_id) values ('x@e.com','website','RW-1');" >/dev/null
+DUPL=$(Q -c "insert into app.leads (email, source, external_id) values ('x@e.com','website','RW-1');" 2>&1 | grep -c 'duplicate key' || true)
+check "a redelivered lead is refused by its external id" "$DUPL" "1"
+
 # --- RLS --------------------------------------------------------------------
 Q -c "grant usage on schema public to anon, authenticated;
       grant select on all tables in schema public to anon, authenticated;" >/dev/null

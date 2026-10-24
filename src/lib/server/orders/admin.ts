@@ -18,6 +18,7 @@ import { paise, type Paise } from '$lib/money';
 import { issueCreditNote, documentsForOrder, issueInvoice, type InvoiceDocument } from './invoices';
 import { notifyOrder } from './notify';
 import { attributeRecovery } from '$lib/server/carts/admin';
+import { markWonByOrder } from '$lib/server/leads/admin';
 
 export class OrderError extends Error {}
 
@@ -1025,6 +1026,7 @@ export async function exchangeOptions(order: OrderDetail): Promise<{ id: string;
 export async function onOrderPaid(orderId: string): Promise<void> {
 	await issueInvoice(orderId).catch((error) => console.error('[orders] invoice failed', error));
 	await attributeRecovery(orderId).catch((error) => console.error('[orders] attribution failed', error));
+	await markWonByOrder(orderId).catch((error) => console.error('[orders] lead win failed', error));
 	await notifyOrder(orderId, 'confirmed').catch((error) => console.error('[orders] confirmation failed', error));
 }
 
