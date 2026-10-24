@@ -1,30 +1,35 @@
 import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad, RequestEvent } from './$types';
 import { adminRepo } from '$lib/server/admin';
-import { requireSection } from '$lib/server/admin/roles';
-import { actorLabel, resolveAdminAuth } from '$lib/server/admin/session';
+import { can, requirePermission, requireSection } from '$lib/server/admin/roles';
+import { actorLabel, staffActor } from '$lib/server/admin/session';
+import { auditFor } from '$lib/server/admin/audit';
 import { DROP_STATES, canTransition, isOnSale, type DropState } from '$lib/domain/drop-state';
 import { parseIstInput } from '$lib/components/admin/tone';
 import { STAGE_COUNT, STAGE_DURATION_MS } from '$lib/drop/schedule';
+import {
+	CatalogueError,
+	dropStateEvents,
+	findDrop,
+	listDrops,
+	moveProduct,
+	rotatePreviewToken,
+	updateDropDetails
+} from '$lib/server/catalogue/admin';
+import { siteUrl } from '$lib/server/messaging/config';
+import { formatInr } from '$lib/money';
 
 /**
- * RW-157 — Editing one drop.
+ * RW-157 — One drop: its pieces, state, schedule and visibility.
  *
- * THE TRANSITION GUARD IS THE POINT OF THIS SCREEN. §06 defines seven states
- * and a fixed set of legal edges between them. The UI never offers an illegal
- * one — the select is built from legalTransitionsFrom() — and the action
- * re-checks before writing, because a select is markup and markup can be
- * posted around.
+ * THE TRANSITION GUARD IS THE POINT OF THE STATE CONTROL. §06 defines seven
+ * states and a fixed set of legal edges between them. The UI never offers an
+ * illegal one — the select is built from legalTransitionsFrom() — and the
+ * action re-checks before writing, because a select is markup and markup can
+ * be posted around.
  *
  * Nothing here deletes anything. The archive is the brand's proof of history.
  */
-
-async function requireStaff(event: RequestEvent) {
-	const auth = await resolveAdminAuth(event);
-	if (auth.status !== 'staff') error(403, 'Staff access required.');
-	requireSection(auth.actor, 'drops');
-	return auth.actor;
-}
 
 /** A posted state string is untrusted until it is one of the seven. */
 function parseState(value: FormDataEntryValue | null): DropState | null {
@@ -32,181 +37,154 @@ function parseState(value: FormDataEntryValue | null): DropState | null {
 	return (DROP_STATES as readonly string[]).includes(text) ? (text as DropState) : null;
 }
 
+async function editor(event: RequestEvent) {
+	const actor = await staffActor(event);
+	requirePermission(actor, 'catalogue.edit');
+	const drop = await findDrop(event.params.drop);
+	if (!drop) error(404, 'That drop no longer exists.');
+	return { actor, drop };
+}
+
 export const load: PageServerLoad = async (event) => {
-	await requireStaff(event);
+	const actor = await staffActor(event);
+	requireSection(actor, 'drops');
 
-	const drop = await adminRepo.findDropRow(event.params.drop);
-	if (!drop) error(404, `No drop with the slug "${event.params.drop}".`);
+	const drop = await findDrop(event.params.drop);
+	if (!drop) error(404, `No drop at "${event.params.drop}".`);
 
-	// §06 / RW-043: warn if moving this drop live would make it the second one.
-	const all = await adminRepo.listDropRows();
+	const [all, events, audit] = await Promise.all([
+		listDrops(),
+		dropStateEvents(drop.id),
+		auditFor('drop', drop.id, 30)
+	]);
 	const othersLive = all.filter((row) => row.id !== drop.id && isOnSale(row.state));
 
 	return {
 		now: event.locals.now,
-		drop,
+		canEdit: can(actor, 'catalogue.edit'),
+		created: event.url.searchParams.has('created'),
+		drop: {
+			...drop,
+			products: drop.products.map((p) => ({
+				id: p.id,
+				slug: p.slug,
+				name: p.name,
+				status: p.status,
+				price: formatInr(p.launchPrice),
+				prelaunchPrice: p.prelaunchPrice !== p.launchPrice ? formatInr(p.prelaunchPrice) : null,
+				sizes: p.sizes,
+				colours: p.colourways.map((c) => ({ name: c.name, swatch: c.swatch })),
+				image: p.images[0]?.url ?? null,
+				totals: p.totals
+			}))
+		},
+		previewUrl: drop.previewToken ? `${siteUrl()}/drops/${drop.slug}?preview=${drop.previewToken}` : null,
 		othersLive: othersLive.map((row) => `Drop ${String(row.number).padStart(2, '0')} ${row.name}`),
 		/**
 		 * §07 — the tease run is derived from the launch instant, not stored
-		 * beside it: one stage per day, counted back from launch. Sent to the
-		 * page so the operator can see what moving the instant does to the
-		 * schedule before they move it.
+		 * beside it: one stage per day, counted back from launch.
 		 */
 		schedule: {
 			stageCount: STAGE_COUNT,
 			stageDurationMs: STAGE_DURATION_MS,
 			teaseStart: drop.launchInstant - STAGE_COUNT * STAGE_DURATION_MS
-		}
+		},
+		history: [
+			...events.map((e) => ({
+				at: e.at,
+				title: `${e.from ? `${e.from} → ` : ''}${e.to}`,
+				detail: e.trigger === 'schedule' ? 'By the schedule' : null,
+				actor: e.actor
+			})),
+			...audit
+				.filter((a) => !a.action.startsWith('state '))
+				.map((a) => ({ at: a.occurredAt, title: a.action.charAt(0).toUpperCase() + a.action.slice(1), detail: null, actor: a.actor }))
+		].sort((a, b) => b.at - a.at)
 	};
 };
 
 export const actions: Actions = {
 	/** §06 — move the drop to another state, if and only if the edge is legal. */
 	transition: async (event) => {
-		const actor = await requireStaff(event);
-		const form = await event.request.formData();
-		const dropId = String(form.get('dropId') ?? '');
-		const from = parseState(form.get('from'));
-		const to = parseState(form.get('to'));
-
-		if (!from || !to) {
-			return fail(400, { ok: false, message: 'Unknown drop state.' });
+		const { actor, drop } = await editor(event);
+		const to = parseState((await event.request.formData()).get('to'));
+		if (!to) return fail(400, { error: 'Pick a state to move to.' });
+		if (!canTransition(drop.state, to)) {
+			return fail(400, { error: `A drop in ${drop.state} cannot move to ${to}.` });
 		}
-		if (!canTransition(from, to)) {
-			return fail(400, {
-				ok: false,
-				message: `${from} cannot become ${to}. §06 does not allow that edge.`
-			});
-		}
-
-		try {
-			await adminRepo.setDropState({ dropId, from, to, actor: actorLabel(actor) });
-		} catch (cause) {
-			return fail(409, {
-				ok: false,
-				message: cause instanceof Error ? cause.message : 'State write failed.'
-			});
-		}
-
-		return { ok: true, message: `State moved to ${to}.` };
+		await adminRepo.setDropState({ dropId: drop.id, from: drop.state, to, actor: actorLabel(actor) });
+		return { message: `Moved to ${to}.` };
 	},
 
-	/** Publication gates anon visibility, separately from state (§06 + 0007 RLS). */
+	/** Publication: the archive, the cart and the public URL follow this. */
 	publish: async (event) => {
-		const actor = await requireStaff(event);
-		const form = await event.request.formData();
-		const dropId = String(form.get('dropId') ?? '');
-		const published = String(form.get('published') ?? '') === 'true';
-
-		try {
-			await adminRepo.setDropPublished({ dropId, published, actor: actorLabel(actor) });
-		} catch (cause) {
-			return fail(409, {
-				ok: false,
-				message: cause instanceof Error ? cause.message : 'Publish write failed.'
-			});
+		const { actor, drop } = await editor(event);
+		const published = (await event.request.formData()).get('published') === 'true';
+		if (published && !drop.products.some((p) => p.status === 'active')) {
+			return fail(400, { error: 'Make at least one product live before publishing the drop.' });
 		}
-
-		return {
-			ok: true,
-			message: published ? 'Drop is now visible on the site.' : 'Drop is hidden from the site.'
-		};
+		await adminRepo.setDropPublished({ dropId: drop.id, published, actor: actorLabel(actor) });
+		return { message: published ? 'Published. The drop is on the site.' : 'Hidden from the site.' };
 	},
 
 	/** Pre-order mode: the storefront takes signups instead of selling. */
 	preorderMode: async (event) => {
-		const actor = await requireStaff(event);
-		const form = await event.request.formData();
-		const dropId = String(form.get('dropId') ?? '');
-		const preorderMode = String(form.get('preorderMode') ?? '') === 'true';
-
-		try {
-			await adminRepo.setDropPreorderMode({ dropId, preorderMode, actor: actorLabel(actor) });
-		} catch (cause) {
-			return fail(409, {
-				ok: false,
-				message: cause instanceof Error ? cause.message : 'Pre-order mode write failed.'
-			});
-		}
-
+		const { actor, drop } = await editor(event);
+		const preorderMode = (await event.request.formData()).get('preorderMode') === 'true';
+		await adminRepo.setDropPreorderMode({ dropId: drop.id, preorderMode, actor: actorLabel(actor) });
 		return {
-			ok: true,
 			message: preorderMode
-				? 'Pre-order mode is on: the product page now shows Pre-order.'
-				: 'Pre-order mode is off: the product page now shows Buy now.'
+				? 'Pre-order mode on: the product page shows Pre-order.'
+				: 'Pre-order mode off: the product page shows Buy now.'
 		};
 	},
 
 	/**
-	 * §07 — the launch instant, and with it the whole tease schedule.
-	 *
-	 * The operator types a wall clock; it is read as IST here, once, at the
-	 * edge. Everything downstream is an epoch millisecond, so no other module
-	 * has to know what zone the brand runs on.
-	 *
-	 * Moving an instant that has already passed is ALLOWED but not silent: a
-	 * mistyped launch time is a real thing to have to correct, and refusing the
-	 * correction would leave the wrong figure on the customer's countdown. The
-	 * page warns before the submit and the audit log records both values.
+	 * §07 — the launch instant, and with it the whole tease schedule. The
+	 * operator types IST; it is parsed once, here, to an epoch millisecond.
 	 */
 	launchInstant: async (event) => {
-		const actor = await requireStaff(event);
-		const form = await event.request.formData();
-		const dropId = String(form.get('dropId') ?? '');
-
-		const launchInstant = parseIstInput(String(form.get('launchInstant') ?? ''));
-		if (launchInstant === null) {
-			return fail(400, { ok: false, message: 'Give the launch as a date and a time of day.' });
-		}
-
-		try {
-			await adminRepo.setDropLaunchInstant({
-				dropId,
-				launchInstant,
-				actor: actorLabel(actor)
-			});
-		} catch (cause) {
-			return fail(409, {
-				ok: false,
-				message: cause instanceof Error ? cause.message : 'Launch instant write failed.'
-			});
-		}
-
-		return { ok: true, message: 'Launch instant saved. The tease schedule has moved with it.' };
+		const { actor, drop } = await editor(event);
+		const launchInstant = parseIstInput(String((await event.request.formData()).get('launchInstant') ?? ''));
+		if (launchInstant === null) return fail(400, { error: 'Pick the launch date and time.' });
+		await adminRepo.setDropLaunchInstant({ dropId: drop.id, launchInstant, actor: actorLabel(actor) });
+		return { message: 'Launch saved. The countdown and tease schedule moved with it.' };
 	},
 
-	/**
-	 * §09 per-size stock and the §08 reservation cap. Saved one size at a time
-	 * so a mistake in one field cannot silently rewrite the other four.
-	 */
-	stock: async (event) => {
-		const actor = await requireStaff(event);
+	details: async (event) => {
+		const { actor, drop } = await editor(event);
 		const form = await event.request.formData();
-		const variantId = String(form.get('variantId') ?? '');
-		const stockCount = Number(form.get('stockCount'));
-		const reserveCap = Number(form.get('reserveCap'));
-
-		if (!Number.isInteger(stockCount) || !Number.isInteger(reserveCap)) {
-			return fail(400, { ok: false, message: 'Stock and cap must be whole numbers.' });
-		}
-		if (stockCount < 0 || reserveCap < 0) {
-			return fail(400, { ok: false, message: 'Stock and cap cannot be negative.' });
-		}
-
 		try {
-			await adminRepo.setVariantStock({
-				variantId,
-				stockCount,
-				reserveCap,
+			await updateDropDetails({
+				dropId: drop.id,
+				name: String(form.get('name') ?? ''),
+				story: String(form.get('story') ?? ''),
+				editionSize: Number(form.get('editionSize')),
 				actor: actorLabel(actor)
 			});
-		} catch (cause) {
-			return fail(409, {
-				ok: false,
-				message: cause instanceof Error ? cause.message : 'Stock write failed.'
-			});
+		} catch (err) {
+			if (err instanceof CatalogueError) return fail(400, { error: err.message });
+			throw err;
 		}
+		return { message: 'Details saved.' };
+	},
 
-		return { ok: true, message: 'Stock saved.' };
+	preview: async (event) => {
+		const { actor, drop } = await editor(event);
+		await rotatePreviewToken(drop.id, actorLabel(actor));
+		return {
+			message: drop.previewToken ? 'New preview link made. The old one no longer works.' : 'Preview link ready.'
+		};
+	},
+
+	moveProduct: async (event) => {
+		const { actor } = await editor(event);
+		const form = await event.request.formData();
+		await moveProduct({
+			productId: String(form.get('productId') ?? ''),
+			direction: form.get('direction') === 'up' ? -1 : 1,
+			actor: actorLabel(actor)
+		});
+		return {};
 	}
 };

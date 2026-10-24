@@ -51,7 +51,8 @@ export const drops: DropRepository = {
 	findLiveDrop: async () => {
 		const drop = await selectRepository().findLiveDrop();
 		return drop ? withResolvedState(drop, serverNow()) : null;
-	}
+	},
+	previewToken: (slug) => selectRepository().previewToken(slug)
 };
 
 export type { DropRepository };

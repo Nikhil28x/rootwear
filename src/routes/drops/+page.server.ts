@@ -4,7 +4,7 @@ import { demand } from '$lib/server/demand';
 import { handleRequestDrop } from '$lib/server/demand/actions';
 import { acceptsDropRequest, isFinished } from '$lib/components/drop/marks';
 import type { ArchiveCard } from '$lib/components/drop/types';
-import type { Drop } from '$lib/domain/drop';
+import { variantLabel, type Drop } from '$lib/domain/drop';
 
 /**
  * RW-026 — §03 template 03: the drop archive. "The index of every drop
@@ -43,7 +43,9 @@ function sizeOptionsOf(drop: Drop) {
 	return drop.products.flatMap((product) =>
 		product.variants.map((variant) => ({
 			value: variant.id,
-			label: many ? `${product.name} — ${variant.size}` : variant.size
+			label: many
+				? `${product.name} — ${variantLabel(product, variant)}`
+				: variantLabel(product, variant)
 		}))
 	);
 }

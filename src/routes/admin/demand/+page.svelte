@@ -5,7 +5,7 @@
 	import StatTile from '$lib/components/admin/StatTile.svelte';
 	import Notice from '$lib/components/admin/Notice.svelte';
 	import { dropTone, humanise, shortDateTime } from '$lib/components/admin/tone';
-	import { SIZES } from '$lib/drop/sizes';
+	import { compareSizes } from '$lib/drop/sizes';
 
 	let { data } = $props();
 
@@ -35,7 +35,7 @@
 		}
 		return [...byDrop.values()].map((board) => ({
 			...board,
-			rows: [...board.rows].sort((a, b) => SIZES.indexOf(a.size) - SIZES.indexOf(b.size))
+			rows: [...board.rows].sort((a, b) => compareSizes(a.size, b.size))
 		}));
 	});
 

@@ -1,99 +1,86 @@
 <script lang="ts">
-	import SectionHead from '$lib/components/admin/SectionHead.svelte';
-	import TableShell from '$lib/components/admin/TableShell.svelte';
-	import StatePill from '$lib/components/admin/StatePill.svelte';
-	import Notice from '$lib/components/admin/Notice.svelte';
-	import { dropTone, humanise, shortDateTime } from '$lib/components/admin/tone';
-	import { DROP_STATE_DESCRIPTION } from '$lib/domain/drop-state';
+	import { goto } from '$app/navigation';
+	import { Package, Plus } from '@lucide/svelte';
+	import Chip from '$lib/components/admin/ui/Chip.svelte';
+	import EmptyState from '$lib/components/admin/ui/EmptyState.svelte';
+	import PageHeader from '$lib/components/admin/ui/PageHeader.svelte';
+	import { dropNumber, dropState } from '$lib/components/admin/drop-labels';
+	import { shortDateTime } from '$lib/components/admin/tone';
 
 	let { data } = $props();
-
-	function stock(row: (typeof data.rows)[number]) {
-		return row.variants.reduce((n, v) => n + v.stockCount, 0);
-	}
-	function reserved(row: (typeof data.rows)[number]) {
-		return row.variants.reduce((n, v) => n + v.reservedCount, 0);
-	}
 </script>
 
-<svelte:head>
-	<title>Drops — Rootwear operations</title>
-	<meta name="robots" content="noindex, nofollow" />
-</svelte:head>
+<svelte:head><title>Drops · Rootwear admin</title></svelte:head>
 
-<SectionHead
-	level={1}
-	eyebrow="Catalogue"
-	title="Drops"
-	note="State, launch instant, stock and caps. A drop is never deleted — a finished one moves to the archive with its story and its price history intact."
-/>
+<div class="flex flex-col gap-6">
+	<PageHeader
+		title="Drops"
+		description="Every drop, newest first. A finished drop moves to the archive; nothing is deleted."
+	>
+		{#snippet actions()}
+			{#if data.canEdit && data.drops.length > 0}
+				<a href="/admin/drops/new" class="q-btn q-btn-primary"><Plus /> New drop</a>
+			{/if}
+		{/snippet}
+	</PageHeader>
 
-{#if data.liveWarning}
-	<div class="mt-8">
-		<Notice kind="warning">
-			{data.liveWarning.length} drops are on sale at once ({data.liveWarning.join(', ')}). The
-			storefront resolves a single live drop, so one of these will not be reachable from the front
-			page.
-		</Notice>
-	</div>
-{/if}
-
-<div class="mt-10">
-	<TableShell caption="Every drop" note="Newest first">
-		<thead>
-			<tr class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Drop</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">State</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Launch (IST)</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-right">Edition</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-right">Stock</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-right">Reserved</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Published</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-right">Edit</th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each data.rows as row (row.id)}
-				<tr class="text-stone-200">
-					<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal">
-						<span class="block text-paper">
-							Drop {String(row.number).padStart(2, '0')} — {row.name}
-						</span>
-						<span class="block text-[13px] text-stone-400">/drops/{row.slug}</span>
-					</th>
-					<td class="border-b border-white/5 px-4 py-3">
-						<StatePill
-							label={humanise(row.state)}
-							tone={dropTone(row.state)}
-							title={DROP_STATE_DESCRIPTION[row.state]}
-						/>
-					</td>
-					<td class="border-b border-white/5 px-4 py-3 text-[13px] whitespace-nowrap tabular-nums">
-						{shortDateTime(row.launchInstant)}
-					</td>
-					<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">{row.editionSize}</td>
-					<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">{stock(row)}</td>
-					<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">{reserved(row)}</td>
-					<td class="border-b border-white/5 px-4 py-3">
-						<StatePill
-							label={row.published ? 'Live on site' : 'Hidden'}
-							tone={row.published ? 'outline' : 'quiet'}
-						/>
-					</td>
-					<td class="border-b border-white/5 px-4 py-3 text-right">
-						<a
-							class="text-[13px] tracking-[0.16em] text-stone-300 uppercase underline underline-offset-4 hover:text-paper font-medium"
-							href="/admin/drops/{row.slug}">Open</a
-						>
-					</td>
-				</tr>
-			{:else}
-				<tr>
-					<td colspan="8" class="px-4 py-10 text-[15px] text-stone-400">
-						No drops yet. Drop 01 is seeded by the catalogue fixtures and by migration 0008.
-					</td>
-				</tr>
-			{/each}
-		</tbody>
-	</TableShell>
+	{#if data.drops.length === 0}
+		<div class="q-card">
+			<EmptyState icon={Package} title="No drops yet" body="Create the first drop, then add its pieces, sizes and photos.">
+				{#snippet action()}
+					{#if data.canEdit}<a href="/admin/drops/new" class="q-btn q-btn-primary"><Plus /> New drop</a>{/if}
+				{/snippet}
+			</EmptyState>
+		</div>
+	{:else}
+		<div class="q-table-wrap">
+			<table class="q-table">
+				<thead>
+					<tr>
+						<th scope="col">Drop</th>
+						<th scope="col">State</th>
+						<th scope="col">Launch (IST)</th>
+						<th scope="col" class="num">Products</th>
+						<th scope="col" class="num">In stock</th>
+						<th scope="col" class="num">Reserved</th>
+						<th scope="col" class="num">Sold</th>
+						<th scope="col">On the site</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each data.drops as drop (drop.id)}
+						{@const state = dropState(drop.state)}
+						<tr data-href="/admin/drops/{drop.slug}" onclick={(e) => { if (!(e.target as HTMLElement).closest('a')) goto(`/admin/drops/${drop.slug}`); }}>
+							<td>
+								<div class="flex items-center gap-3">
+									{#if drop.lead}
+										<img src={drop.lead} alt="" class="size-10 flex-none rounded-[8px] bg-q-muted object-cover" />
+									{:else}
+										<span class="flex size-10 flex-none items-center justify-center rounded-[8px] bg-q-muted text-q-tertiary"><Package size={16} strokeWidth={1.5} /></span>
+									{/if}
+									<div class="flex flex-col">
+										<a href="/admin/drops/{drop.slug}" class="row-link">Drop {dropNumber(drop.number)} — {drop.name}</a>
+										<span class="text-[13px] text-q-secondary">/drops/{drop.slug}</span>
+									</div>
+								</div>
+							</td>
+							<td><Chip label={state.label} tone={state.tone} /></td>
+							<td class="whitespace-nowrap text-q-secondary">{shortDateTime(drop.launchInstant)}</td>
+							<td class="num">
+								{drop.products}
+								{#if drop.drafts}<span class="block text-[12px] text-q-tertiary">{drop.drafts} draft</span>{/if}
+							</td>
+							<td class="num">{drop.totals.stock}</td>
+							<td class="num">{drop.totals.reserved}</td>
+							<td class="num">{drop.totals.sold}</td>
+							<td>
+								{#if drop.published}<Chip label="Published" tone="success" />{:else}<Chip label="Hidden" />{/if}
+								{#if drop.preorderMode}<span class="mt-1 block text-[12px] text-q-tertiary">Pre-order mode</span>{/if}
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	{/if}
 </div>

@@ -1,352 +1,256 @@
 <script lang="ts">
-	import SectionHead from '$lib/components/admin/SectionHead.svelte';
-	import TableShell from '$lib/components/admin/TableShell.svelte';
-	import StatePill from '$lib/components/admin/StatePill.svelte';
+	import { enhance } from '$app/forms';
+	import { ArrowDown, ArrowUp, Check, Copy, ExternalLink, Image, Link, Plus } from '@lucide/svelte';
+	import Chip from '$lib/components/admin/ui/Chip.svelte';
+	import EmptyState from '$lib/components/admin/ui/EmptyState.svelte';
+	import Field from '$lib/components/admin/ui/Field.svelte';
+	import PageHeader from '$lib/components/admin/ui/PageHeader.svelte';
+	import Section from '$lib/components/admin/ui/Section.svelte';
+	import Timeline from '$lib/components/admin/ui/Timeline.svelte';
 	import Notice from '$lib/components/admin/Notice.svelte';
-	import { dropTone, humanise, istInputValue, shortDate, shortDateTime } from '$lib/components/admin/tone';
+	import { submitter } from '$lib/components/admin/enhance';
+	import { getToaster } from '$lib/components/admin/toast.svelte';
+	import { DROP_STATE, PRODUCT_STATUS, dropNumber, dropState } from '$lib/components/admin/drop-labels';
+	import { istInputValue, relativeDays, shortDateTime } from '$lib/components/admin/tone';
 	import { DROP_STATE_DESCRIPTION } from '$lib/domain/drop-state';
-	import { FIT_DISCLAIMER } from '$lib/drop/sizes';
-	import { LAUNCH_TIME_CONFIRMED } from '$lib/drop/schedule';
 
 	let { data, form } = $props();
+	const toaster = getToaster();
 
 	let drop = $derived(data.drop);
-	let totalStock = $derived(drop.variants.reduce((n, v) => n + v.stockCount, 0));
-	let totalReserved = $derived(drop.variants.reduce((n, v) => n + v.reservedCount, 0));
+	let status = $derived(dropState(drop.state));
+	let launchValue = $state('');
+	let nextState = $state('');
+	let copied = $state(false);
+	$effect.pre(() => {
+		launchValue = istInputValue(data.drop.launchInstant);
+		nextState = '';
+	});
 
-	/** Warn before the transition, not after: this edge would make a second live drop. */
-	let liveEdges = $derived(new Set(['LIVE', 'PARTIAL', 'RE_DROP']));
+	let launchMoved = $derived(launchValue !== istInputValue(drop.launchInstant));
+	let launchPassed = $derived(drop.launchInstant <= data.now);
+	let goingLive = $derived(['LIVE', 'RE_DROP', 'PARTIAL'].includes(nextState));
+	let hasLive = $derived(drop.products.some((p) => p.status === 'active'));
 
-	/**
-	 * §07 — the tease run, derived rather than stored: one stage per day,
-	 * counted back from the launch instant. Listed out so the operator sees the
-	 * dates the customer will see, not an abstract stage count.
-	 */
-	let stages = $derived(
-		Array.from({ length: data.schedule.stageCount }, (_, i) => ({
-			index: i + 1,
-			at: data.schedule.teaseStart + i * data.schedule.stageDurationMs
-		}))
-	);
-
-	let launched = $derived(drop.launchInstant <= data.now);
+	async function copyPreview() {
+		if (!data.previewUrl) return;
+		await navigator.clipboard.writeText(data.previewUrl);
+		copied = true;
+		setTimeout(() => (copied = false), 2000);
+	}
 </script>
 
-<svelte:head>
-	<title>Drop {String(drop.number).padStart(2, '0')} — Rootwear operations</title>
-	<meta name="robots" content="noindex, nofollow" />
-</svelte:head>
+<svelte:head><title>Drop {dropNumber(drop.number)} {drop.name} · Rootwear admin</title></svelte:head>
 
-<p class="text-[11px] tracking-[0.24em] text-stone-400 uppercase font-medium">
-	<a class="underline underline-offset-4 hover:text-stone-200" href="/admin/drops">Drops</a>
-	<span aria-hidden="true"> / </span>{drop.slug}
-</p>
-
-<div class="mt-6">
-	<SectionHead
-		level={1}
-		eyebrow="Drop {String(drop.number).padStart(2, '0')}"
-		title={drop.name}
-		note={DROP_STATE_DESCRIPTION[drop.state]}
-	/>
-</div>
-
-<div class="mt-6 flex flex-wrap items-center gap-4">
-	<StatePill label={humanise(drop.state)} tone={dropTone(drop.state)} />
-	<StatePill
-		label={drop.published ? 'Live on site' : 'Hidden from site'}
-		tone={drop.published ? 'outline' : 'quiet'}
-	/>
-	<p class="text-[13px] text-stone-400 tabular-nums">
-		Launch {shortDateTime(drop.launchInstant)} IST · edition of {drop.editionSize} · {totalStock} in
-		stock · {totalReserved} reserved
-	</p>
-	<a
-		class="text-[13px] tracking-[0.16em] text-stone-400 uppercase underline underline-offset-4 hover:text-paper font-medium"
-		href="/drops/{drop.slug}"
+<div class="flex flex-col gap-8">
+	<PageHeader
+		title="Drop {dropNumber(drop.number)} — {drop.name}"
+		description="/drops/{drop.slug}"
+		back={{ href: '/admin/drops', label: 'Drops' }}
 	>
-		View on site →
-	</a>
-</div>
+		{#snippet meta()}
+			<Chip label={status.label} tone={status.tone} />
+			{#if drop.published}<Chip label="Published" tone="success" />{:else}<Chip label="Hidden" />{/if}
+		{/snippet}
+		{#snippet actions()}
+			{#if drop.published}
+				<a class="q-btn q-btn-secondary" href="/drops/{drop.slug}" target="_blank" rel="noopener"><ExternalLink /> View on site</a>
+			{/if}
+			{#if data.canEdit}
+				<a class="q-btn q-btn-primary" href="/admin/drops/{drop.slug}/products/new"><Plus /> Add product</a>
+			{/if}
+		{/snippet}
+	</PageHeader>
 
-{#if form?.message}
-	<div class="mt-8">
-		<!-- The action says whether it succeeded. Reading that off the wording
-		     would break the first time a message was reworded. -->
-		<Notice kind={form.ok ? 'success' : 'error'}>{form.message}</Notice>
-	</div>
-{/if}
-
-<!-- STATE ------------------------------------------------------------------ -->
-<section class="mt-16 flex flex-col gap-6 border-t border-white/10 pt-10">
-	<SectionHead
-		eyebrow="Lifecycle"
-		title="State"
-		note="Seven states, with a fixed set of legal moves between them. Only the moves that are legal from here are offered, and the server checks again before it writes."
-	/>
-
-	{#if drop.legalTransitions.length === 0}
-		<Notice kind="info">
-			{humanise(drop.state)} is terminal. Nothing moves out of it, and nothing is ever deleted.
-		</Notice>
-	{:else}
-		<form method="POST" action="?/transition" class="flex flex-wrap items-end gap-6">
-			<input type="hidden" name="dropId" value={drop.id} />
-			<input type="hidden" name="from" value={drop.state} />
-
-			<div class="flex min-w-[16rem] flex-col gap-2">
-				<label for="to-state" class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
-					Move to
-				</label>
-				<select
-					id="to-state"
-					name="to"
-					required
-					class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-[15px] text-stone-100 outline-none focus:border-white"
-				>
-					{#each drop.legalTransitions as next (next)}
-						<option value={next}>{humanise(next)} — {DROP_STATE_DESCRIPTION[next]}</option>
-					{/each}
-				</select>
-			</div>
-
-			<button
-				type="submit"
-				class="border border-white/35 px-7 py-3 text-[11px] tracking-[0.2em] text-stone-100 uppercase transition hover:bg-white hover:text-black font-medium"
-			>
-				Move state
-			</button>
-		</form>
-
-		{#if data.othersLive.length > 0 && drop.legalTransitions.some( (next) => liveEdges.has(next) )}
-			<Notice kind="warning">
-				{data.othersLive.join(', ')} {data.othersLive.length === 1 ? 'is' : 'are'} already on sale.
-				Moving this drop to a selling state gives you two at once — the model allows it, but the
-				storefront resolves a single live drop, so one of them will not be reachable from the front
-				page.
-			</Notice>
-		{/if}
+	{#if form?.error}<Notice kind="error">{form.error}</Notice>{/if}
+	{#if data.created}
+		<Notice kind="success">Drop created. Add its first product, then preview it before publishing.</Notice>
 	{/if}
-</section>
 
-<!-- SCHEDULE --------------------------------------------------------------- -->
-<section class="mt-16 flex flex-col gap-6 border-t border-white/10 pt-10">
-	<SectionHead
-		eyebrow="Timing"
-		title="Launch instant"
-		note="One figure sets the whole schedule. The tease counts back from it at one stage per day, the countdown on the drop page counts down to it, and the sell-out curve is measured from it. There is no separate stage calendar to keep in step."
-	/>
+	<div class="grid gap-10 xl:grid-cols-[minmax(0,1fr)_360px]">
+		<div class="flex min-w-0 flex-col gap-10">
+			<Section title="Products" description="Pieces in this drop, in the order the site shows them. Drafts stay off the site.">
+				{#if drop.products.length === 0}
+					<div class="q-card">
+						<EmptyState icon={Image} title="No products yet" body="Add the first piece: its name, price, sizes and photos." compact>
+							{#snippet action()}
+								{#if data.canEdit}<a class="q-btn q-btn-primary" href="/admin/drops/{drop.slug}/products/new"><Plus /> Add product</a>{/if}
+							{/snippet}
+						</EmptyState>
+					</div>
+				{:else}
+					<ul class="q-card q-divide">
+						{#each drop.products as product, index (product.id)}
+							{@const status = PRODUCT_STATUS[product.status]}
+							<li class="flex items-center gap-4 p-3 pr-4">
+								{#if product.image}
+									<img src={product.image} alt="" class="size-14 flex-none rounded-[10px] bg-q-muted object-cover" />
+								{:else}
+									<span class="flex size-14 flex-none items-center justify-center rounded-[10px] bg-q-muted text-q-tertiary"><Image size={20} strokeWidth={1.5} /></span>
+								{/if}
+								<div class="flex min-w-0 flex-1 flex-col gap-1">
+									<div class="flex flex-wrap items-center gap-2">
+										<a href="/admin/drops/{drop.slug}/products/{product.id}" class="truncate text-[14px] font-medium text-q-text hover:underline">{product.name}</a>
+										<Chip label={status.label} tone={status.tone} />
+									</div>
+									<p class="text-[13px] text-q-secondary">
+										{[
+											product.price,
+											product.prelaunchPrice && `${product.prelaunchPrice} before launch`,
+											product.sizes.join(', ') || 'No sizes',
+											product.colours.length &&
+												`${product.colours.length} colour${product.colours.length === 1 ? '' : 's'}`
+										]
+											.filter(Boolean)
+											.join(' · ')}
+									</p>
+								</div>
+								<div class="hidden text-right text-[13px] text-q-secondary tabular-nums sm:block">
+									<p><span class="text-q-text">{product.totals.stock}</span> in stock</p>
+									<p>{product.totals.sold} sold · {product.totals.reserved} reserved</p>
+								</div>
+								{#if data.canEdit && drop.products.length > 1}
+									<form method="POST" action="?/moveProduct" class="flex flex-col" use:enhance={submitter(toaster)}>
+										<input type="hidden" name="productId" value={product.id} />
+										<button type="submit" name="direction" value="up" class="q-btn q-btn-ghost q-btn-sm q-btn-icon" aria-label="Move {product.name} up" disabled={index === 0}><ArrowUp /></button>
+										<button type="submit" name="direction" value="down" class="q-btn q-btn-ghost q-btn-sm q-btn-icon" aria-label="Move {product.name} down" disabled={index === drop.products.length - 1}><ArrowDown /></button>
+									</form>
+								{/if}
+							</li>
+						{/each}
+					</ul>
+				{/if}
+			</Section>
 
-	<form method="POST" action="?/launchInstant" class="flex flex-wrap items-end gap-6">
-		<input type="hidden" name="dropId" value={drop.id} />
-
-		<div class="flex min-w-[16rem] flex-col gap-2">
-			<label for="launch-instant" class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
-				Launch date and time (IST)
-			</label>
-			<input
-				id="launch-instant"
-				name="launchInstant"
-				type="datetime-local"
-				required
-				value={istInputValue(drop.launchInstant)}
-				aria-describedby="launch-hint"
-				class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-[15px] text-stone-100 tabular-nums outline-none focus:border-white"
-			/>
-			<p id="launch-hint" class="text-[13px] text-stone-400">
-				Read as India Standard Time, whatever zone this browser is in.
-			</p>
+			<Section title="Details">
+				<form method="POST" action="?/details" class="flex max-w-[640px] flex-col gap-4" use:enhance={submitter(toaster)}>
+					<fieldset disabled={!data.canEdit} class="flex flex-col gap-4">
+						<div class="grid gap-4 sm:grid-cols-[1fr_160px]">
+							<Field label="Name" id="d-name">
+								{#snippet children({ describedBy })}
+									<input id="d-name" name="name" class="q-input" value={drop.name} aria-describedby={describedBy} />
+								{/snippet}
+							</Field>
+							<Field label="Edition size" id="d-edition" help="Pieces in total.">
+								{#snippet children({ describedBy })}
+									<input id="d-edition" name="editionSize" type="number" min="1" class="q-input" value={drop.editionSize} aria-describedby={describedBy} />
+								{/snippet}
+							</Field>
+						</div>
+						<Field label="Story" id="d-story">
+							{#snippet children({ describedBy })}
+								<textarea id="d-story" name="story" class="q-textarea min-h-[140px]" aria-describedby={describedBy}>{drop.story}</textarea>
+							{/snippet}
+						</Field>
+					</fieldset>
+					{#if data.canEdit}<div><button type="submit" class="q-btn q-btn-secondary">Save details</button></div>{/if}
+				</form>
+			</Section>
 		</div>
 
-		<button
-			type="submit"
-			class="border border-white/35 px-7 py-3 text-[11px] tracking-[0.2em] text-stone-100 uppercase transition hover:bg-white hover:text-black font-medium"
-		>
-			Save launch instant
-		</button>
-	</form>
+		<aside class="flex flex-col gap-10">
+			<Section title="On the site">
+				<div class="q-card q-divide">
+					<div class="flex items-start justify-between gap-3 p-4">
+						<div class="flex flex-col gap-0.5">
+							<p class="text-[14px] font-medium text-q-text">{drop.published ? 'Published' : 'Hidden'}</p>
+							<p class="text-[13px] leading-[18px] text-q-secondary">
+								{drop.published
+									? 'In the archive and open to buy when its state allows.'
+									: hasLive
+										? 'Only you and people with the preview link can see it.'
+										: 'Make a product live before publishing.'}
+							</p>
+						</div>
+						{#if data.canEdit}
+							<form method="POST" action="?/publish" use:enhance={submitter(toaster)}>
+								<input type="hidden" name="published" value={drop.published ? 'false' : 'true'} />
+								<button type="submit" class="q-btn q-btn-sm {drop.published ? 'q-btn-secondary' : 'q-btn-primary'}" disabled={!drop.published && !hasLive}>
+									{drop.published ? 'Hide' : 'Publish'}
+								</button>
+							</form>
+						{/if}
+					</div>
+					<div class="flex items-start justify-between gap-3 p-4">
+						<div class="flex flex-col gap-0.5">
+							<p class="text-[14px] font-medium text-q-text">Pre-order mode {drop.preorderMode ? 'on' : 'off'}</p>
+							<p class="text-[13px] leading-[18px] text-q-secondary">
+								{drop.preorderMode ? 'The button reads Pre-order and takes signups, not payment.' : 'The button reads Buy now and sells through the cart.'}
+							</p>
+						</div>
+						{#if data.canEdit}
+							<form method="POST" action="?/preorderMode" use:enhance={submitter(toaster)}>
+								<input type="hidden" name="preorderMode" value={drop.preorderMode ? 'false' : 'true'} />
+								<button type="submit" class="q-btn q-btn-secondary q-btn-sm">Turn {drop.preorderMode ? 'off' : 'on'}</button>
+							</form>
+						{/if}
+					</div>
+					{#if !drop.published}
+						<div class="flex flex-col gap-3 p-4">
+							<div class="flex flex-col gap-0.5">
+								<p class="text-[14px] font-medium text-q-text">Preview link</p>
+								<p class="text-[13px] leading-[18px] text-q-secondary">Anyone with this link sees the drop as the public will, before it is published.</p>
+							</div>
+							{#if data.previewUrl}
+								<div class="flex items-center gap-2">
+									<code class="q-mono min-w-0 flex-1 truncate rounded-[8px] bg-q-muted px-2 py-1.5 text-[12px]">{data.previewUrl}</code>
+									<button type="button" class="q-btn q-btn-secondary q-btn-sm" onclick={copyPreview}>{#if copied}<Check /> Copied{:else}<Copy /> Copy{/if}</button>
+								</div>
+								<a class="q-link w-fit text-[13px]" href={data.previewUrl} target="_blank" rel="noopener">Open preview</a>
+							{/if}
+							{#if data.canEdit}
+								<form method="POST" action="?/preview" use:enhance={submitter(toaster)}>
+									<button type="submit" class="q-btn q-btn-secondary q-btn-sm"><Link /> {data.previewUrl ? 'Make a new link' : 'Make a preview link'}</button>
+								</form>
+							{/if}
+						</div>
+					{/if}
+				</div>
+			</Section>
 
-	{#if launched}
-		<Notice kind="warning">
-			This drop launched on {shortDateTime(drop.launchInstant)} IST. Moving the instant now moves the
-			line the sell-out curve is measured against, so the shape of everything already recorded will
-			change. Correct a mistyped time by all means — just know that is what it does.
-		</Notice>
-	{/if}
+			<Section title="State" description={DROP_STATE_DESCRIPTION[drop.state]}>
+				{#if data.canEdit && drop.legalTransitions.length}
+					<form method="POST" action="?/transition" class="flex flex-col gap-3" use:enhance={submitter(toaster)}>
+						<div class="flex gap-2">
+							<label for="d-state" class="sr-only">Move to</label>
+							<select id="d-state" name="to" class="q-select" bind:value={nextState} required>
+								<option value="" disabled>Move to…</option>
+								{#each drop.legalTransitions as next (next)}
+									<option value={next}>{DROP_STATE[next]?.label ?? next}</option>
+								{/each}
+							</select>
+							<button type="submit" class="q-btn q-btn-secondary" disabled={!nextState}>Move</button>
+						</div>
+						{#if nextState}
+							<p class="q-help">{DROP_STATE_DESCRIPTION[nextState as keyof typeof DROP_STATE_DESCRIPTION]}</p>
+						{/if}
+						{#if goingLive && data.othersLive.length}
+							<Notice kind="warning">{data.othersLive.join(' and ')} is already on sale. The homepage shows the newest published drop.</Notice>
+						{/if}
+					</form>
+				{/if}
+			</Section>
 
-	{#if !LAUNCH_TIME_CONFIRMED}
-		<Notice kind="info">
-			The exact time of day is still an open item awaiting a written answer. The time saved here is
-			what the countdown will show, so it is a decision, not a placeholder.
-		</Notice>
-	{/if}
+			<Section title="Launch" description="The countdown and the daily tease stages run from this one time.">
+				<form method="POST" action="?/launchInstant" class="flex flex-col gap-3" use:enhance={submitter(toaster)}>
+					<fieldset disabled={!data.canEdit} class="flex gap-2">
+						<label for="d-launch" class="sr-only">Launch, IST</label>
+						<input id="d-launch" name="launchInstant" type="datetime-local" class="q-input" bind:value={launchValue} />
+						{#if data.canEdit}<button type="submit" class="q-btn q-btn-secondary" disabled={!launchMoved}>Save</button>{/if}
+					</fieldset>
+					<p class="q-help">
+						{shortDateTime(drop.launchInstant)} IST · {relativeDays(drop.launchInstant, data.now)}.
+						Tease starts {shortDateTime(data.schedule.teaseStart)} ({data.schedule.stageCount} daily stages).
+					</p>
+					{#if launchMoved && launchPassed}
+						<Notice kind="warning">This drop has already launched. Moving the time changes the date customers see on it.</Notice>
+					{/if}
+				</form>
+			</Section>
 
-	<div class="flex flex-col gap-4">
-		<p class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
-			Tease schedule, derived
-		</p>
-		<ol class="flex flex-wrap gap-px bg-white/10">
-			{#each stages as stage (stage.index)}
-				<li class="flex min-w-[7rem] flex-1 flex-col gap-1.5 bg-forest/40 px-4 py-3">
-					<span class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
-						Stage {stage.index}
-					</span>
-					<span class="text-[13px] text-stone-200 tabular-nums">{shortDate(stage.at)}</span>
-				</li>
-			{/each}
-			<li class="flex min-w-[7rem] flex-1 flex-col gap-1.5 bg-forest/40 px-4 py-3">
-				<span class="text-[11px] tracking-[0.2em] text-gold uppercase font-medium">Launch</span>
-				<span class="text-[13px] text-paper tabular-nums">{shortDateTime(drop.launchInstant)}</span>
-			</li>
-		</ol>
-		<p class="text-[13px] leading-relaxed text-stone-400">
-			{data.schedule.stageCount} stages, one a day, opening {shortDate(data.schedule.teaseStart)}. The
-			run length follows the number of stage assets supplied — adding one lengthens the tease and
-			moves its start, with no date to edit here.
-		</p>
+			<Section title="History">
+				<Timeline events={data.history} empty="No changes recorded yet." />
+			</Section>
+		</aside>
 	</div>
-</section>
-
-<!-- PUBLICATION ------------------------------------------------------------ -->
-<section class="mt-16 flex flex-col gap-6 border-t border-white/10 pt-10">
-	<SectionHead
-		eyebrow="Visibility"
-		title="Publication"
-		note="Separate from state. An unpublished drop is invisible to the public even while it teases internally — the row-level policy gates anon reads on publication, not on state."
-	/>
-
-	<form method="POST" action="?/publish" class="flex flex-wrap items-center gap-5">
-		<input type="hidden" name="dropId" value={drop.id} />
-		<input type="hidden" name="published" value={drop.published ? 'false' : 'true'} />
-		<button
-			type="submit"
-			class="border px-7 py-3 text-[11px] tracking-[0.2em] uppercase transition {drop.published
-				? 'border-white/35 text-stone-100 hover:bg-white hover:text-black'
-				: 'border-gold text-gold hover:bg-gold hover:text-forest-black'} font-medium"
-		>
-			{drop.published ? 'Hide from the site' : 'Publish to the site'}
-		</button>
-		<span class="text-[13px] text-stone-400">
-			{drop.published
-				? 'Anyone can reach /drops/' + drop.slug + ' right now.'
-				: 'Nobody outside this screen can reach this drop.'}
-		</span>
-	</form>
-</section>
-
-<!-- PRE-ORDER MODE --------------------------------------------------------- -->
-<section class="mt-16 flex flex-col gap-6 border-t border-white/10 pt-10">
-	<SectionHead
-		eyebrow="Selling"
-		title="Pre-order mode"
-		note="Decides the product page's button. On: Pre-order — customers leave their name, email, phone and size, and no payment is taken. Off: Buy now — the normal cart and checkout."
-	/>
-
-	<form method="POST" action="?/preorderMode" class="flex flex-wrap items-center gap-5">
-		<input type="hidden" name="dropId" value={drop.id} />
-		<input type="hidden" name="preorderMode" value={drop.preorderMode ? 'false' : 'true'} />
-		<button
-			type="submit"
-			class="border px-7 py-3 text-[11px] font-medium tracking-[0.2em] uppercase transition {drop.preorderMode
-				? 'border-white/35 text-stone-100 hover:bg-white hover:text-black'
-				: 'border-gold text-gold hover:bg-gold hover:text-forest-black'}"
-		>
-			{drop.preorderMode ? 'Switch to Buy now' : 'Switch to Pre-order'}
-		</button>
-		<span class="text-[13px] text-stone-400">
-			{drop.preorderMode
-				? 'On — the product page shows Pre-order.'
-				: 'Off — the product page shows Buy now.'}
-		</span>
-	</form>
-</section>
-
-<!-- STOCK AND CAPS --------------------------------------------------------- -->
-<section class="mt-16 flex flex-col gap-6 border-t border-white/10 pt-10">
-	<SectionHead
-		eyebrow="Inventory"
-		title="Stock and caps by size"
-		note="Stock is the physical count. The cap is the ceiling on how many of that size may be reserved during the tease — it is a policy figure, not a count, so it can sit above or below stock. Reserved is maintained by the allocation function alone and is never edited by hand."
-	/>
-
-	<TableShell caption="Stock and reservation caps" note={FIT_DISCLAIMER}>
-		<thead>
-			<tr class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Size</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">SKU</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-right">Reserved</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-right">Sellable</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Stock</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Reserve cap</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-right">Save</th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each drop.variants as variant (variant.id)}
-				{@const sellable = Math.max(0, variant.stockCount - variant.reservedCount)}
-				<tr class="text-stone-200">
-					<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal text-paper">
-						{variant.size}
-					</th>
-					<td class="border-b border-white/5 px-4 py-3 text-[13px] text-stone-400">{variant.sku}</td>
-					<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">
-						{variant.reservedCount}
-					</td>
-					<td
-						class="border-b border-white/5 px-4 py-3 text-right tabular-nums {sellable === 0
-							? 'text-gold'
-							: ''}"
-					>
-						{sellable}{#if sellable === 0}<span class="sr-only"> — sold out</span>{/if}
-					</td>
-					<td class="border-b border-white/5 px-4 py-3">
-						<label class="sr-only" for="stock-{variant.id}">
-							Stock count for size {variant.size}
-						</label>
-						<input
-							id="stock-{variant.id}"
-							form="save-{variant.id}"
-							name="stockCount"
-							type="number"
-							min="0"
-							step="1"
-							value={variant.stockCount}
-							class="w-20 border-b border-white/25 bg-transparent px-0 py-2 text-[15px] text-stone-100 tabular-nums outline-none focus:border-white"
-						/>
-					</td>
-					<td class="border-b border-white/5 px-4 py-3">
-						<label class="sr-only" for="cap-{variant.id}">
-							Reservation cap for size {variant.size}
-						</label>
-						<input
-							id="cap-{variant.id}"
-							form="save-{variant.id}"
-							name="reserveCap"
-							type="number"
-							min="0"
-							step="1"
-							value={variant.reserveCap}
-							class="w-20 border-b border-white/25 bg-transparent px-0 py-2 text-[15px] text-stone-100 tabular-nums outline-none focus:border-white"
-						/>
-					</td>
-					<td class="border-b border-white/5 px-4 py-3 text-right">
-						<form method="POST" action="?/stock" id="save-{variant.id}">
-							<input type="hidden" name="variantId" value={variant.id} />
-							<button
-								type="submit"
-								class="border border-white/25 px-4 py-2 text-[11px] tracking-[0.18em] text-stone-200 uppercase transition hover:bg-white hover:text-black font-medium"
-							>
-								Save
-							</button>
-						</form>
-					</td>
-				</tr>
-			{/each}
-		</tbody>
-	</TableShell>
-
-	<p class="text-[13px] leading-relaxed text-stone-400">
-		Sold-out sizes stay visible and greyed on the storefront rather than disappearing — the scarcity
-		is the point, and a size that vanishes reads as a bug.
-	</p>
-</section>
+</div>

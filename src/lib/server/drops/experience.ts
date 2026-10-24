@@ -12,7 +12,7 @@
  */
 import type { Cookies } from '@sveltejs/kit';
 import type { Drop, Product } from '$lib/domain/drop';
-import { claimedCount } from '$lib/domain/drop';
+import { claimedCount, variantLabel } from '$lib/domain/drop';
 import { acceptsDeposits, acceptsNotifyMe, isOnSale } from '$lib/domain/drop-state';
 import { acceptsDropRequest, isFinished } from '$lib/components/drop/marks';
 import { resolveStage } from '$lib/drop/stage-resolver';
@@ -60,7 +60,10 @@ export async function loadExperience(
 		claimed: claimedCount(drop),
 		showCountdown: preLaunch,
 		stage: resolveStage(DROP_01_SCHEDULE, now),
-		sizeOptions: product.variants.map((variant) => ({ value: variant.id, label: variant.size })),
+		sizeOptions: product.variants.map((variant) => ({
+			value: variant.id,
+			label: variantLabel(product, variant)
+		})),
 		canonicalPath: single ? `/drops/${drop.slug}` : `/drops/${drop.slug}/${product.slug}`,
 		/** §09: "cross-sell within the drop" — the other pieces, never a catalogue. */
 		alsoInDrop: drop.products

@@ -24,5 +24,9 @@ export const mockDropRepository: DropRepository = {
 	async findLiveDrop() {
 		// §06: the storefront assumes one live drop even though the model permits two.
 		return ALL.find((drop) => isOnSale(drop.state) || drop.state === 'TEASE') ?? null;
+	},
+
+	async previewToken() {
+		return null;
 	}
 };

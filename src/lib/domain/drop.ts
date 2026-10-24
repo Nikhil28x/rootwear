@@ -6,12 +6,13 @@
  *
  * - §04: prices are integer paise and never come from the client.
  * - §06: drop state is an explicit stored value, never inferred from stock.
- * - §09: ONE variant axis (size). There is deliberately no colour axis.
+ * - §09: size is the main variant axis. Colourways are optional per product
+ *   (Drop 01 has none); a product without them behaves exactly as before.
  * - §09: fabric, GSM and care are FIELDS, not prose inside a description,
  *   so they render consistently on the PDP, the size guide and invoices.
  */
 import type { Paise } from '$lib/money';
-import type { Size } from '$lib/drop/sizes';
+import type { Size, SizeChartRow } from '$lib/drop/sizes';
 import type { DropState } from './drop-state';
 
 /** §09: a numbered piece. Allocated ON PAYMENT CONFIRMATION, never before (§08). */
@@ -31,6 +32,8 @@ export type Variant = {
 	/** §09 SKU convention RW-D01-TEE-M. */
 	readonly sku: string;
 	readonly size: Size;
+	/** Null for a product without colourways. */
+	readonly colourwayId: string | null;
 	/** §09: per-size stock count. Authoritative only server-side. */
 	readonly stockCount: number;
 	/**
@@ -60,6 +63,18 @@ export type ProductImage = {
 	/** Pixel size, when known, so a frame can hold its shape before the image arrives. */
 	readonly width?: number;
 	readonly height?: number;
+	/** Set when the photograph shows one colourway; null or absent for all of them. */
+	readonly colourwayId?: string | null;
+};
+
+/** One colour a product is cut in. */
+export type Colourway = {
+	readonly id: string;
+	readonly name: string;
+	/** Two to four letters, used in the SKU. */
+	readonly code: string;
+	/** "#1f382a", for the swatch. Null shows the name only. */
+	readonly swatch: string | null;
 };
 
 export type Product = {
@@ -81,6 +96,10 @@ export type Product = {
 
 	readonly images: readonly ProductImage[];
 	readonly variants: readonly Variant[];
+	/** Empty for a product without colourways. In display order. */
+	readonly colourways: readonly Colourway[];
+	/** Measurements per size. Empty falls back to Drop 01's chart (chartFor). */
+	readonly sizeChart: readonly SizeChartRow[];
 
 	/** §10: two distinct prices so §08's locked-price behaviour has something to lock. */
 	readonly launchPrice: Paise;
@@ -108,6 +127,11 @@ export type Drop = {
 	 * (no payment); off, it sells through the cart.
 	 */
 	readonly preorderMode: boolean;
+	/**
+	 * Published in admin. An unpublished drop is a draft: it is left out of the
+	 * archive and the cart, and its page needs the secret preview link.
+	 */
+	readonly published: boolean;
 
 	readonly products: readonly Product[];
 };
@@ -119,4 +143,16 @@ export function claimedCount(drop: Drop): number {
 			total + product.variants.reduce((n, variant) => n + variant.reservedCount, 0),
 		0
 	);
+}
+
+/** The colour name of a variant, or null for a product without colourways. */
+export function colourOf(product: Product, variant: Variant): string | null {
+	if (!variant.colourwayId) return null;
+	return product.colourways.find((c) => c.id === variant.colourwayId)?.name ?? null;
+}
+
+/** "Black / XL", or just "XL" when there is no colour. */
+export function variantLabel(product: Product, variant: Variant): string {
+	const colour = colourOf(product, variant);
+	return colour ? `${colour} / ${variant.size}` : variant.size;
 }

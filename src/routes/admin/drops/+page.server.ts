@@ -1,31 +1,32 @@
-import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { adminRepo } from '$lib/server/admin';
-import { requireSection } from '$lib/server/admin/roles';
-import { resolveAdminAuth } from '$lib/server/admin/session';
-import { isOnSale } from '$lib/domain/drop-state';
+import { can, requireSection } from '$lib/server/admin/roles';
+import { staffActor } from '$lib/server/admin/session';
+import { listDrops } from '$lib/server/catalogue/admin';
 
 /**
- * RW-156 — The drop index.
- *
- * §06: "Nothing is ever deleted." There is no delete action on this screen and
- * there never will be — a finished drop moves to ARCHIVED and stays listed.
+ * Every drop, newest first. A drop is never deleted — a finished one moves to
+ * the archive with its story and price history intact.
  */
 export const load: PageServerLoad = async (event) => {
-	const auth = await resolveAdminAuth(event);
-	if (auth.status !== 'staff') error(403, 'Staff access required.');
-	requireSection(auth.actor, 'drops');
-
-	const rows = await adminRepo.listDropRows();
-	const live = rows.filter((row) => isOnSale(row.state));
-
+	const actor = await staffActor(event);
+	requireSection(actor, 'drops');
+	const drops = await listDrops();
 	return {
-		now: event.locals.now,
-		rows,
-		// §06 / RW-043: the model permits two, the storefront assumes one.
-		liveWarning:
-			live.length > 1
-				? live.map((row) => `Drop ${String(row.number).padStart(2, '0')} ${row.name}`)
-				: null
+		canEdit: can(actor, 'catalogue.edit'),
+		drops: drops.map((drop) => ({
+			id: drop.id,
+			slug: drop.slug,
+			number: drop.number,
+			name: drop.name,
+			state: drop.state,
+			launchInstant: drop.launchInstant,
+			published: drop.published,
+			preorderMode: drop.preorderMode,
+			editionSize: drop.editionSize,
+			products: drop.products.length,
+			drafts: drop.products.filter((p) => p.status === 'draft').length,
+			lead: drop.products[0]?.images[0]?.url ?? null,
+			totals: drop.totals
+		}))
 	};
 };

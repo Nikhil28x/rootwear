@@ -43,6 +43,7 @@ export const DROP_01: Drop = {
 	archivedAt: null,
 	editionSize: EDITION_SIZE,
 	preorderMode: false,
+	published: true,
 	products: [
 		{
 			id: 'product-01-tee',
@@ -154,9 +155,12 @@ export const DROP_01: Drop = {
 				productId: 'product-01-tee',
 				sku: buildSku(1, 'TEE', size),
 				size,
+				colourwayId: null,
 				stockCount: STOCK_BY_SIZE[size],
 				reservedCount: RESERVED_BY_SIZE[size]
 			})),
+			colourways: [],
+			sizeChart: [],
 			launchPrice: LAUNCH_PRICE,
 			prelaunchPrice: PRELAUNCH_PRICE
 		}

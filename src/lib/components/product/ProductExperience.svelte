@@ -20,7 +20,7 @@
 	import PreOrderForm from '$lib/components/drop/PreOrderForm.svelte';
 	import { resultFor } from '$lib/components/drop/demand-result';
 	import { formatInr } from '$lib/money';
-	import { FIT_DISCLAIMER, SIZES, SIZE_CHART, isSize, type Size } from '$lib/drop/sizes';
+	import { FIT_DISCLAIMER, chartFor, type Size } from '$lib/drop/sizes';
 	import { onMount } from 'svelte';
 	import { RETURNS_WORDING } from '$lib/content/returns';
 	import type { Experience } from '$lib/server/drops/experience';
@@ -92,18 +92,26 @@
 	});
 
 	/* ---- Find your size: starts on the model's size; the buy bar can set it. */
+	/** One row per size this piece is cut in, from its own chart (§09). */
+	let chart = $derived(chartFor(product));
 	let guideSize = $state<Size>('M');
 	$effect.pre(() => {
-		if (isSize(product.modelWornSize)) guideSize = product.modelWornSize;
+		guideSize = chart.some((row) => row.size === product.modelWornSize)
+			? product.modelWornSize
+			: (chart[Math.floor(chart.length / 2)]?.size ?? 'M');
 	});
-	let guide = $derived(SIZE_CHART[guideSize]);
+	let guide = $derived(
+		chart.find((row) => row.size === guideSize) ?? chart[0] ?? { size: guideSize, chestCm: 0, lengthCm: 0 }
+	);
 	/** The tee drawing grows with the chest, relative to the middle size. */
-	let teeScale = $derived(guide.chestCm / SIZE_CHART.M.chestCm);
+	let teeScale = $derived(
+		guide.chestCm / (chart[Math.floor(chart.length / 2)]?.chestCm || guide.chestCm || 1)
+	);
 
 	onMount(() => {
 		const pick = (event: Event) => {
 			const size = (event as CustomEvent<string>).detail;
-			if (isSize(size)) guideSize = size;
+			if (chart.some((row) => row.size === size)) guideSize = size;
 		};
 		window.addEventListener('rootwear:size-guide', pick);
 		return () => window.removeEventListener('rootwear:size-guide', pick);
@@ -298,13 +306,13 @@
 
 		<div class="fit__tool">
 			<div class="fit__sizes" role="radiogroup" aria-label="Size to measure">
-				{#each SIZES as size (size)}
+				{#each chart as row (row.size)}
 					<button
 						type="button"
 						role="radio"
-						aria-checked={guideSize === size}
-						class:fit__size--on={guideSize === size}
-						onclick={() => (guideSize = size)}>{size}</button
+						aria-checked={guideSize === row.size}
+						class:fit__size--on={guideSize === row.size}
+						onclick={() => (guideSize = row.size)}>{row.size}</button
 					>
 				{/each}
 			</div>
@@ -426,6 +434,7 @@
 	notifyOpen={data.notifyOpen}
 	finished={data.finished}
 	preorderMode={data.drop.preorderMode}
+	colourways={product.colourways}
 	onPreorder={(variantId) => {
 		preorderVariant = variantId;
 		preorderDialog?.showModal();

@@ -47,6 +47,8 @@ export type PricedCartLine = {
 	readonly variantId: string;
 	readonly sku: string;
 	readonly size: Size;
+	/** Null for a product without colourways. */
+	readonly colour: string | null;
 	readonly quantity: number;
 	readonly unitPrice: Paise;
 	readonly lineTotal: Paise;

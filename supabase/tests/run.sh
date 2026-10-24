@@ -195,6 +195,17 @@ wait
 check "two overlapping claims never take the same message" "$(( $(cat "$RUNDIR/c1") + $(cat "$RUNDIR/c2") ))/$(Q -c "select count(*) from app.message_outbox where status='sending';")" "6/6"
 check "a claim counts the attempt" "$(Q -c "select min(attempts) from app.message_outbox;")" "1"
 
+# --- catalogue (0024) ---------------------------------------------------------
+check "an unknown size is refused" "$(Q -c "insert into public.variants (id,product_id,sku,size) values ('v-bad','product-01-tee','RW-D01-TEE-ZZ','ZZ');" 2>&1 | grep -c 'violates foreign key' || true)" "1"
+Q -c "insert into public.variants (id,product_id,sku,size,stock_count) values ('variant-01-tee-xxl','product-01-tee','RW-D01-TEE-XXL','XXL',2);" >/dev/null
+check "XXL is a size once listed" "$(Q -c "select count(*) from public.variants where size='XXL';")" "1"
+DUP=$(Q -c "insert into public.variants (id,product_id,sku,size) values ('v-dup','product-01-tee','RW-D01-TEE-XXL2','XXL');" 2>&1 | grep -c 'duplicate key' || true)
+check "one variant per product, colour and size" "$DUP" "1"
+check "stock adjusts with a movement" "$(Q -c "select app.adjust_stock('variant-01-tee-xxl', 3, 'restock', 'batch 2', 'test');")/$(Q -c "select count(*) from app.stock_movements where variant_id='variant-01-tee-xxl';")" "5/1"
+BELOW=$(Q -c "update public.variants set reserve_cap=2, reserved_count=2 where id='variant-01-tee-xxl'; select app.adjust_stock('variant-01-tee-xxl', -4, 'damaged', null, 'test');" 2>&1 | grep -c 'cannot go below' || true)
+check "stock never drops below what is reserved" "$BELOW" "1"
+check "order lines snapshot size and tax" "$(Q -c "select variant_snapshot||'/'||hsn_snapshot||'/'||gst_rate_snapshot from app.order_lines limit 1;")" "M/6109/5.00"
+
 # --- RLS --------------------------------------------------------------------
 Q -c "grant usage on schema public to anon, authenticated;
       grant select on all tables in schema public to anon, authenticated;" >/dev/null

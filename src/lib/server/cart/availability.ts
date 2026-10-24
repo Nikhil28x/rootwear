@@ -49,6 +49,7 @@ export async function sizeOffers(
 			return {
 				variantId: variant.id,
 				size: variant.size,
+				colourwayId: variant.colourwayId,
 				sku: variant.sku,
 				soldOut: remaining <= 0,
 				remaining

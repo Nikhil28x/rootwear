@@ -18,4 +18,6 @@ export interface DropRepository {
 	 * resolves one and admin warns on a second (RW-043).
 	 */
 	findLiveDrop(): Promise<Drop | null>;
+	/** The secret preview token of an unpublished drop, or null. Never sent to a browser. */
+	previewToken(slug: string): Promise<string | null>;
 }

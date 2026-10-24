@@ -10,14 +10,19 @@
 		label: string;
 	} = $props();
 
+	/**
+	 * A tab with a query string is a filter of a list: it matches the URL
+	 * whole. A tab marked `exact` matches its path only (not sub-pages), and
+	 * gives way to a filter tab of the same path that matches — so "All" is
+	 * not lit while "Queued" is. Any other tab also matches its sub-pages.
+	 */
 	function current(tab: { href: string; exact?: boolean }): boolean {
 		const path = page.url.pathname;
 		const here = path + page.url.search;
-		// A tab with a query string is a filter of the same list: match it whole.
 		if (tab.href.includes('?')) return here === tab.href;
-		// `exact`: this URL and no filters, e.g. the "All" tab of a filtered list.
-		if (tab.exact) return here === tab.href;
-		return path === tab.href || path.startsWith(tab.href + '/');
+		const filterActive = tabs.some((t) => t.href.includes('?') && t.href.startsWith(tab.href + '?') && here === t.href);
+		if (tab.exact) return path === tab.href && !filterActive;
+		return (path === tab.href || path.startsWith(tab.href + '/')) && !filterActive;
 	}
 </script>
 

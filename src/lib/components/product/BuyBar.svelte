@@ -39,9 +39,12 @@
 		finished,
 		preorderMode = false,
 		onPreorder = undefined,
+		colourways = [],
 		form = null
 	}: {
 		offers: readonly SizeOffer[];
+		/** The product's colours, in order. Empty hides the colour picker. */
+		colourways?: readonly { id: string; name: string; swatch: string | null }[];
 		productName: string;
 		/** Already formatted, e.g. ₹4,100. */
 		price: string;
@@ -58,8 +61,26 @@
 		form?: unknown;
 	} = $props();
 
+	/*
+	 * Colour first, then size. The first colour with anything left is chosen
+	 * up front (a colour is a look, not a fit, so a default is harmless); the
+	 * size still waits for the shopper.
+	 */
+	let colour = $state('');
+	$effect.pre(() => {
+		if (colourways.length && !colourways.some((c) => c.id === colour)) {
+			colour =
+				colourways.find((c) => offers.some((o) => o.colourwayId === c.id && !o.soldOut))?.id ??
+				colourways[0].id;
+		}
+	});
+	let colourName = $derived(colourways.find((c) => c.id === colour)?.name ?? '');
+	let shown = $derived(
+		colourways.length ? offers.filter((offer) => offer.colourwayId === colour) : offers
+	);
+
 	let selected = $state('');
-	let selectedOffer = $derived(offers.find((offer) => offer.variantId === selected) ?? null);
+	let selectedOffer = $derived(shown.find((offer) => offer.variantId === selected) ?? null);
 	let everythingGone = $derived(offers.every((offer) => offer.soldOut));
 	let canPick = $derived(preorderMode || onSale || notifyOpen);
 
@@ -214,19 +235,42 @@
 				<div class="buybar__name">
 					<span class="buybar__title">{productName}</span>
 					<span class="buybar__price">
-						{price}{#if priceNote}<span class="buybar__note"> · {priceNote}</span>{/if}
+						{price}{#if priceNote}<span class="buybar__note">{` · ${priceNote}`}</span>{/if}
 					</span>
 				</div>
 			</div>
 
 			{#if canPick}
 				<div class="buybar__sizes">
+					{#if colourways.length > 1}
+						<div class="buybar__sizes-head">
+							<span id="buybar-colour-label">Colour: {colourName}</span>
+						</div>
+						<div class="buybar__colours" role="radiogroup" aria-labelledby="buybar-colour-label">
+							{#each colourways as option (option.id)}
+								<label class="buybar__colour" class:buybar__colour--on={colour === option.id}>
+									<input
+										class="sr-only"
+										type="radio"
+										name="colour"
+										value={option.id}
+										bind:group={colour}
+										onchange={() => (selected = '')}
+									/>
+									{#if option.swatch}
+										<span class="buybar__swatch" style="background: {option.swatch}" aria-hidden="true"></span>
+									{/if}
+									{option.name}
+								</label>
+							{/each}
+						</div>
+					{/if}
 					<div class="buybar__sizes-head">
 						<span id="buybar-size-label">Size{#if selectedOffer}: {selectedOffer.size}{/if}</span>
 						<a href="#size-guide" onclick={openSizeGuide}>Size guide</a>
 					</div>
 					<SizeSelector
-						{offers}
+						offers={shown}
 						idPrefix="buy"
 						surface="dark"
 						bind:selected
@@ -377,6 +421,39 @@
 		justify-content: space-between;
 		font-size: 12px;
 		color: rgb(243 239 230 / 0.8);
+	}
+	.buybar__colours {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+	.buybar__colour {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		min-height: 44px;
+		padding: 0 14px;
+		border: 1px solid rgb(255 255 255 / 0.3);
+		font-size: 13px;
+		cursor: pointer;
+		transition: border-color 0.15s ease-out;
+	}
+	.buybar__colour:hover {
+		border-color: #fff;
+	}
+	.buybar__colour--on {
+		border-color: #f3efe6;
+		background: rgb(243 239 230 / 0.12);
+	}
+	.buybar__colour:has(input:focus-visible) {
+		outline: 2px solid #fff;
+		outline-offset: 2px;
+	}
+	.buybar__swatch {
+		width: 14px;
+		height: 14px;
+		border-radius: 999px;
+		box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.35);
 	}
 	.buybar__sizes-head a {
 		text-decoration: underline;

@@ -41,6 +41,8 @@ export type ArchiveCard = {
 export type SizeOffer = {
 	readonly variantId: string;
 	readonly size: Size;
+	/** Null when the product has no colourways. */
+	readonly colourwayId: string | null;
 	readonly sku: string;
 	/** §06: sold-out sizes are GREYED AND VISIBLE, never removed. */
 	readonly soldOut: boolean;

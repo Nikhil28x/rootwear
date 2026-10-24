@@ -17,7 +17,7 @@
  */
 import { isOnSale, acceptsDeposits } from '$lib/domain/drop-state';
 import type { Drop, Product, Variant } from '$lib/domain/drop';
-import { sellableStock } from '$lib/domain/drop';
+import { sellableStock, colourOf, variantLabel } from '$lib/domain/drop';
 import { drops } from '$lib/server/drops';
 import { ZERO, addPaise, multiplyPaise, paise, subPaise, type Paise } from '$lib/money';
 import { CART_HOLD_MINUTES } from '$lib/config/commerce';
@@ -170,6 +170,7 @@ export async function buildCartView(
 			variantId: line.variantId,
 			sku: variant.sku,
 			size: variant.size,
+			colour: colourOf(product, variant),
 			quantity: line.quantity,
 			unitPrice,
 			lineTotal: multiplyPaise(unitPrice, line.quantity),
@@ -179,7 +180,7 @@ export async function buildCartView(
 			dropName: drop.name,
 			dropState: drop.state,
 			image: image?.url ?? null,
-			imageAlt: image?.alt ?? `${product.name}, ${variant.size}`,
+			imageAlt: image?.alt ?? `${product.name}, ${variantLabel(product, variant)}`,
 			priceSource,
 			isPreOrder,
 			heldUntilMs: line.heldUntilMs,

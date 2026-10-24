@@ -57,7 +57,9 @@
 		<div class="line__top">
 			<div class="line__id">
 				<h2 class="line__name"><a {href}>{line.productName}</a></h2>
-				<p class="line__meta">{line.dropName} · Size {line.size} · {line.sku}</p>
+				<p class="line__meta">
+					{[line.dropName, line.colour, `Size ${line.size}`, line.sku].filter(Boolean).join(' · ')}
+				</p>
 			</div>
 
 			<div class="line__price">

@@ -3,15 +3,18 @@ import type { Actions, PageServerLoad } from './$types';
 import { drops } from '$lib/server/drops';
 import { handleNotifyMe, handlePreOrder, handleRequestDrop } from '$lib/server/demand/actions';
 import { loadExperience } from '$lib/server/drops/experience';
+import { requireVisible } from '$lib/server/drops/visibility';
 
 /**
  * §05: the piece is NESTED UNDER ITS DROP — /drops/01-pineapple-haze/tee.
  * It renders the same experience as the drop URL, focused on this piece;
  * see $lib/server/drops/experience.ts.
  */
-export const load: PageServerLoad = async ({ params, locals, cookies }) => {
+export const load: PageServerLoad = async (event) => {
+	const { params, locals, cookies } = event;
 	const drop = await drops.findBySlug(params.drop);
 	if (!drop) error(404, 'No such drop');
+	await requireVisible(drop, event);
 
 	const product = drop.products.find((item) => item.slug === params.product);
 	if (!product) error(404, 'No such piece in this drop');

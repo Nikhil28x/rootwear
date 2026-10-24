@@ -1,6 +1,7 @@
 <script lang="ts">
 	/**
-	 * §09 — the size selector. One variant axis, XS–XL.
+	 * §09 — the size selector. One tile per size the piece is cut in (XS–XL for
+	 * Drop 01; later drops pick their own), for the colour already chosen.
 	 *
 	 * Nothing is pre-selected: a default size is how people end up with the
 	 * wrong one. The page asks for a choice on add instead.
@@ -56,7 +57,7 @@
 
 {#if selectable}
 	<div
-		class="grid grid-cols-5 gap-2"
+		class="grid grid-cols-[repeat(auto-fill,minmax(3.25rem,1fr))] gap-2"
 		role="radiogroup"
 		aria-label="Size"
 		aria-invalid={invalid || undefined}
@@ -87,7 +88,7 @@
 		{/each}
 	</div>
 {:else}
-	<ul class="m-0 grid list-none grid-cols-5 gap-2 p-0" aria-label="Sizes">
+	<ul class="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(3.25rem,1fr))] gap-2 p-0" aria-label="Sizes">
 		{#each offers as offer (offer.variantId)}
 			<li
 				class="flex h-12 items-center justify-center border text-[13px] font-medium tracking-[0.14em] uppercase {offer.soldOut

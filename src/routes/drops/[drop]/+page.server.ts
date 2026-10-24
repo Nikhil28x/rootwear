@@ -3,6 +3,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { drops } from '$lib/server/drops';
 import { handleNotifyMe, handlePreOrder, handleRequestDrop } from '$lib/server/demand/actions';
 import { loadExperience } from '$lib/server/drops/experience';
+import { requireVisible } from '$lib/server/drops/visibility';
 
 /**
  * RW-045 — §05: "The same URL survives the drop's whole life — live, sold out,
@@ -13,9 +14,11 @@ import { loadExperience } from '$lib/server/drops/experience';
  * $lib/server/drops/experience.ts. Stage and price are resolved from
  * `locals.now`, the request-scoped server clock (RW-039).
  */
-export const load: PageServerLoad = async ({ params, locals, cookies }) => {
+export const load: PageServerLoad = async (event) => {
+	const { params, locals, cookies } = event;
 	const drop = await drops.findBySlug(params.drop);
 	if (!drop) error(404, 'No such drop');
+	await requireVisible(drop, event);
 
 	const product = drop.products[0];
 	if (!product) error(404, 'This drop has no pieces yet');
