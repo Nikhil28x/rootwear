@@ -114,7 +114,7 @@
 				</p>
 			</div>
 
-			<div class="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+			<div class="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
 				<TableShell
 					caption="Drop {String(drop.number).padStart(2, '0')} by size"
 					note="cut = remaining + reserved + sold"

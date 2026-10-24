@@ -74,7 +74,7 @@
 		</Notice>
 	{/if}
 
-	<div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+	<div class="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
 		<form
 			method="POST"
 			action="?/save"

@@ -81,7 +81,7 @@
 		>
 	{/if}
 
-	<div class="grid gap-10 xl:grid-cols-[minmax(0,1fr)_360px]">
+	<div class="grid grid-cols-1 gap-10 xl:grid-cols-[minmax(0,1fr)_360px]">
 		<div class="flex min-w-0 flex-col gap-10">
 			<Section
 				title="Products"

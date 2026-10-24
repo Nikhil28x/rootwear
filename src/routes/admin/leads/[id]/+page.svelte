@@ -113,7 +113,7 @@
 		</div>
 	{/if}
 
-	<div class="grid gap-10 xl:grid-cols-[minmax(0,1fr)_340px]">
+	<div class="grid grid-cols-1 gap-10 xl:grid-cols-[minmax(0,1fr)_340px]">
 		<div class="flex min-w-0 flex-col gap-8">
 			{#if data.canEdit}
 				<Section title="Log or reply">

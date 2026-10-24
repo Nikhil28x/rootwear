@@ -58,7 +58,7 @@
 			/>
 		</div>
 	{:else}
-		<div class="grid gap-8 xl:grid-cols-[minmax(0,1fr)_320px]">
+		<div class="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_320px]">
 			<ul class="q-card q-divide">
 				{#each data.orders as order (order.id)}
 					{@const st = label(ORDER_STATE, order.state)}

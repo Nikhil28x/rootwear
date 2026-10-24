@@ -55,7 +55,7 @@
 		/>
 	</div>
 
-	<div class="grid gap-10 xl:grid-cols-[minmax(0,1fr)_400px]">
+	<div class="grid grid-cols-1 gap-10 xl:grid-cols-[minmax(0,1fr)_400px]">
 		<Section title="Revenue, last 14 days" description="Paid orders by the day they were placed.">
 			<div class="q-card p-4"><RevenueBars days={t.daily} /></div>
 		</Section>
