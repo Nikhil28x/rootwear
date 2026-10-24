@@ -9,9 +9,13 @@
  * into client code. Nothing here may ever be re-exported from a shared module.
  */
 import { env } from '$env/dynamic/private';
+import { env as publicEnv } from '$env/dynamic/public';
 
 function optional(name: string): string | undefined {
-	const value = env[name];
+	// $env/dynamic/private EXCLUDES every PUBLIC_-prefixed variable, so reading
+	// PUBLIC_SUPABASE_URL from it always came back undefined and the backend
+	// could never switch on. Public names are read from the public module.
+	const value = name.startsWith('PUBLIC_') ? publicEnv[name] : env[name];
 	return value && value.length > 0 ? value : undefined;
 }
 
