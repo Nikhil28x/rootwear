@@ -1,0 +1,531 @@
+/*
+ * The admin workspace: tokens for dark mode, and the small set of shared
+ * classes every admin screen is built from (buttons, fields, tables, chips).
+ *
+ * Imported by src/routes/admin/+layout.svelte only. Everything is scoped under
+ * .admin-theme so the storefront is untouched.
+ *
+ * Theme: follows the operating system unless the person picked one, in which
+ * case the shell carries data-theme="light" or "dark" (set server-side from a
+ * cookie, so there is no flash of the wrong theme on load).
+ */
+
+.admin-theme {
+	/* Legacy brand tokens, remapped so screens written before the CMS follow
+	   the same neutral palette and switch to dark mode with everything else. */
+	--color-forest-black: var(--color-q-surface);
+	--color-forest: var(--color-q-surface);
+	--color-paper: var(--color-q-text);
+	--color-cream: var(--color-q-text);
+	--color-stone-100: var(--color-q-text);
+	--color-stone-200: var(--color-q-body);
+	--color-stone-300: var(--color-q-body);
+	--color-stone-400: var(--color-q-secondary);
+	--color-stone-500: var(--color-q-tertiary);
+	--color-stone-700: var(--color-q-border-strong);
+	--color-white: var(--color-q-text);
+	--color-black: var(--color-q-surface);
+	--color-gold: var(--color-q-warning-text);
+	--color-alert-light: var(--color-q-danger-text);
+
+	--q-shadow-popover: 0 4px 16px rgba(24, 24, 27, 0.08);
+	--q-shadow-modal: 0 16px 48px rgba(24, 24, 27, 0.12);
+	--q-shadow-active: 0 1px 2px rgba(24, 24, 27, 0.06);
+	--q-halo: rgba(171, 209, 189, 0.4);
+
+	min-height: 100svh;
+	background: var(--color-q-canvas);
+	color: var(--color-q-body);
+	color-scheme: light;
+	font-family: var(--font-sans);
+	font-size: 14px;
+	line-height: 20px;
+	font-variant-numeric: tabular-nums;
+	-webkit-font-smoothing: antialiased;
+}
+
+.admin-theme[data-theme='dark'] {
+	--color-q-frame: #0a0a0b;
+	--color-q-canvas: #111113;
+	--color-q-surface: #1a1a1d;
+	--color-q-raised: #232327;
+	--color-q-muted: #2c2c31;
+	--color-q-pressed: #333338;
+	--color-q-inverse: #2c2c31;
+	--color-q-border: #26262a;
+	--color-q-border-strong: #36363c;
+	--color-q-border-input: #75757f;
+	--color-q-text: #ededef;
+	--color-q-body: #d4d4d8;
+	--color-q-secondary: #a1a1aa;
+	--color-q-tertiary: #94949d;
+	--color-q-disabled: #52525b;
+	--color-q-on-inverse: #ededef;
+	--color-q-accent: #579c74;
+	--color-q-accent-hover: #82bb98;
+	--color-q-accent-pressed: #afd5bd;
+	--color-q-accent-link: #82bb98;
+	--color-q-accent-tint: #0b1f15;
+	--color-q-accent-ring: #3a7f58;
+	--color-q-on-accent: #0b1f15;
+	--color-q-success: #4ade80;
+	--color-q-success-text: #4ade80;
+	--color-q-success-tint: #052e16;
+	--color-q-warning: #fbbf24;
+	--color-q-warning-text: #fbbf24;
+	--color-q-warning-tint: #451a03;
+	--color-q-danger: #f87171;
+	--color-q-danger-text: #f87171;
+	--color-q-danger-tint: #450a0a;
+	--color-q-info: #60a5fa;
+	--color-q-info-text: #60a5fa;
+	--color-q-info-tint: #172554;
+	--q-shadow-popover: 0 0 0 1px #36363c;
+	--q-shadow-modal: 0 0 0 1px #36363c;
+	--q-shadow-active: 0 0 0 1px #36363c;
+	--q-halo: rgba(58, 127, 88, 0.4);
+	color-scheme: dark;
+}
+
+/* No explicit choice: follow the operating system. Same values as above. */
+@media (prefers-color-scheme: dark) {
+	.admin-theme:not([data-theme='light']) {
+		--color-q-frame: #0a0a0b;
+		--color-q-canvas: #111113;
+		--color-q-surface: #1a1a1d;
+		--color-q-raised: #232327;
+		--color-q-muted: #2c2c31;
+		--color-q-pressed: #333338;
+		--color-q-inverse: #2c2c31;
+		--color-q-border: #26262a;
+		--color-q-border-strong: #36363c;
+		--color-q-border-input: #75757f;
+		--color-q-text: #ededef;
+		--color-q-body: #d4d4d8;
+		--color-q-secondary: #a1a1aa;
+		--color-q-tertiary: #94949d;
+		--color-q-disabled: #52525b;
+		--color-q-on-inverse: #ededef;
+		--color-q-accent: #579c74;
+		--color-q-accent-hover: #82bb98;
+		--color-q-accent-pressed: #afd5bd;
+		--color-q-accent-link: #82bb98;
+		--color-q-accent-tint: #0b1f15;
+		--color-q-accent-ring: #3a7f58;
+		--color-q-on-accent: #0b1f15;
+		--color-q-success: #4ade80;
+		--color-q-success-text: #4ade80;
+		--color-q-success-tint: #052e16;
+		--color-q-warning: #fbbf24;
+		--color-q-warning-text: #fbbf24;
+		--color-q-warning-tint: #451a03;
+		--color-q-danger: #f87171;
+		--color-q-danger-text: #f87171;
+		--color-q-danger-tint: #450a0a;
+		--color-q-info: #60a5fa;
+		--color-q-info-text: #60a5fa;
+		--color-q-info-tint: #172554;
+		--q-shadow-popover: 0 0 0 1px #36363c;
+		--q-shadow-modal: 0 0 0 1px #36363c;
+		--q-shadow-active: 0 0 0 1px #36363c;
+		--q-halo: rgba(58, 127, 88, 0.4);
+		color-scheme: dark;
+	}
+}
+
+/*
+ * Component classes sit in Tailwind's `components` layer so a utility on the
+ * same element (w-auto, pl-9, ...) still wins, as it would for any Tailwind
+ * component.
+ */
+@layer components {
+	/* ------------------------------------------------------------------------ */
+	/* Focus: one visible ring everywhere in admin.                              */
+	/* ------------------------------------------------------------------------ */
+	.admin-theme :where(a, button, summary, [tabindex]):focus-visible {
+		outline: 2px solid var(--color-q-accent-ring);
+		outline-offset: 2px;
+		border-radius: 6px;
+	}
+
+	/* ------------------------------------------------------------------------ */
+	/* Buttons: 28 / 36 / 44, radius 10, one primary per page.                   */
+	/* ------------------------------------------------------------------------ */
+	.q-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		height: 36px;
+		padding: 0 16px;
+		border-radius: 10px;
+		border: 1px solid transparent;
+		font-size: 14px;
+		line-height: 20px;
+		font-weight: 500;
+		white-space: nowrap;
+		cursor: pointer;
+		user-select: none;
+		text-decoration: none;
+		transition:
+			background-color 150ms ease-out,
+			border-color 150ms ease-out,
+			color 150ms ease-out,
+			transform 100ms ease-out;
+	}
+	.q-btn:active:not(:disabled) {
+		transform: scale(0.97);
+	}
+	.q-btn:disabled,
+	.q-btn[aria-disabled='true'] {
+		cursor: not-allowed;
+		opacity: 0.5;
+	}
+	.q-btn svg {
+		width: 16px;
+		height: 16px;
+		flex: none;
+	}
+	.q-btn-sm {
+		height: 28px;
+		padding: 0 10px;
+		font-size: 13px;
+		gap: 6px;
+	}
+	.q-btn-lg {
+		height: 44px;
+		padding: 0 20px;
+	}
+	.q-btn-icon {
+		width: 36px;
+		padding: 0;
+	}
+	.q-btn-sm.q-btn-icon {
+		width: 28px;
+	}
+
+	.q-btn-primary {
+		background: var(--color-q-accent);
+		color: var(--color-q-on-accent);
+	}
+	.q-btn-primary:hover:not(:disabled) {
+		background: var(--color-q-accent-hover);
+	}
+	.q-btn-primary:active:not(:disabled) {
+		background: var(--color-q-accent-pressed);
+	}
+
+	.q-btn-secondary {
+		background: var(--color-q-muted);
+		color: var(--color-q-text);
+	}
+	.q-btn-secondary:hover:not(:disabled) {
+		background: var(--color-q-pressed);
+	}
+	.q-btn-secondary:active:not(:disabled) {
+		border-color: var(--color-q-border-strong);
+	}
+
+	.q-btn-ghost {
+		background: transparent;
+		color: var(--color-q-body);
+	}
+	.q-btn-ghost:hover:not(:disabled) {
+		background: var(--color-q-muted);
+		color: var(--color-q-text);
+	}
+	.q-btn-ghost:active:not(:disabled) {
+		background: var(--color-q-pressed);
+	}
+
+	.q-btn-danger {
+		background: var(--color-q-danger);
+		color: #ffffff;
+	}
+	.admin-theme[data-theme='dark'] .q-btn-danger {
+		color: #450a0a;
+	}
+	.q-btn-danger:hover:not(:disabled) {
+		background: var(--color-q-danger-text);
+	}
+
+	.q-btn-danger-ghost {
+		background: transparent;
+		color: var(--color-q-danger-text);
+	}
+	.q-btn-danger-ghost:hover:not(:disabled) {
+		background: var(--color-q-danger-tint);
+	}
+
+	.q-btn[data-loading='true'] {
+		pointer-events: none;
+		opacity: 0.7;
+	}
+
+	.q-link {
+		color: var(--color-q-accent-link);
+		text-decoration: underline;
+		text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+		text-underline-offset: 3px;
+	}
+	.q-link:hover {
+		text-decoration-color: currentColor;
+	}
+
+	/* ------------------------------------------------------------------------ */
+	/* Fields: 36px, label above, helper below.                                  */
+	/* ------------------------------------------------------------------------ */
+	.q-label {
+		display: block;
+		font-size: 14px;
+		line-height: 20px;
+		font-weight: 500;
+		color: var(--color-q-text);
+	}
+	.q-help {
+		font-size: 13px;
+		line-height: 18px;
+		color: var(--color-q-secondary);
+	}
+	.q-error {
+		font-size: 13px;
+		line-height: 18px;
+		color: var(--color-q-danger-text);
+	}
+
+	.q-input,
+	.q-select,
+	.q-textarea {
+		display: block;
+		width: 100%;
+		height: 36px;
+		padding: 0 12px;
+		border-radius: 10px;
+		border: 1px solid var(--color-q-border-input);
+		background: var(--color-q-surface);
+		color: var(--color-q-text);
+		font: inherit;
+		font-size: 14px;
+		outline: none;
+		transition:
+			border-color 150ms ease-out,
+			box-shadow 150ms ease-out;
+	}
+	.q-textarea {
+		height: auto;
+		min-height: 88px;
+		padding: 8px 12px;
+		resize: vertical;
+	}
+	.q-select {
+		appearance: none;
+		padding-right: 36px;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b6b74' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+		background-repeat: no-repeat;
+		background-position: right 12px center;
+	}
+	.q-input::placeholder,
+	.q-textarea::placeholder {
+		color: var(--color-q-tertiary);
+	}
+	.q-input:focus,
+	.q-select:focus,
+	.q-textarea:focus {
+		border-color: var(--color-q-accent);
+		box-shadow: 0 0 0 3px var(--q-halo);
+	}
+	.q-input:disabled,
+	.q-select:disabled,
+	.q-textarea:disabled {
+		background: var(--color-q-muted);
+		color: var(--color-q-disabled);
+		cursor: not-allowed;
+	}
+	.q-input[aria-invalid='true'],
+	.q-select[aria-invalid='true'],
+	.q-textarea[aria-invalid='true'] {
+		border-color: var(--color-q-danger);
+	}
+	.q-input-sm,
+	.q-select-sm {
+		height: 28px;
+		font-size: 13px;
+		border-radius: 8px;
+	}
+
+	.q-check {
+		width: 16px;
+		height: 16px;
+		accent-color: var(--color-q-accent);
+		border-radius: 6px;
+		flex: none;
+		cursor: pointer;
+	}
+
+	/* ------------------------------------------------------------------------ */
+	/* Surfaces                                                                   */
+	/* ------------------------------------------------------------------------ */
+	.q-card {
+		background: var(--color-q-surface);
+		border: 1px solid var(--color-q-border);
+		border-radius: 14px;
+	}
+	.q-divide > * + * {
+		border-top: 1px solid var(--color-q-border);
+	}
+
+	/* ------------------------------------------------------------------------ */
+	/* Tables: sticky 13px header, right-aligned numbers.                         */
+	/* ------------------------------------------------------------------------ */
+	.q-table-wrap {
+		overflow-x: auto;
+		background: var(--color-q-surface);
+		border: 1px solid var(--color-q-border);
+		border-radius: 14px;
+	}
+	.q-table {
+		width: 100%;
+		border-collapse: separate;
+		border-spacing: 0;
+		font-size: 14px;
+	}
+	.q-table th {
+		position: sticky;
+		top: 0;
+		z-index: 1;
+		background: var(--color-q-surface);
+		text-align: left;
+		font-size: 13px;
+		line-height: 18px;
+		font-weight: 500;
+		color: var(--color-q-secondary);
+		padding: 10px 16px;
+		border-bottom: 1px solid var(--color-q-border);
+		white-space: nowrap;
+	}
+	.q-table td {
+		padding: 12px 16px;
+		border-bottom: 1px solid var(--color-q-border);
+		vertical-align: middle;
+		color: var(--color-q-body);
+	}
+	.q-table tbody tr:last-child td {
+		border-bottom: 0;
+	}
+	.q-table tbody tr[data-href] {
+		cursor: pointer;
+	}
+	.q-table tbody tr:hover td {
+		background: var(--color-q-muted);
+	}
+	.q-table tbody tr[aria-selected='true'] td {
+		background: var(--color-q-accent-tint);
+	}
+	.q-table .num {
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+	}
+	.q-table .row-link {
+		color: var(--color-q-text);
+		font-weight: 500;
+		text-decoration: none;
+	}
+	.q-table .row-link:hover {
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+
+	/* ------------------------------------------------------------------------ */
+	/* Chips                                                                       */
+	/* ------------------------------------------------------------------------ */
+	.q-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		height: 22px;
+		padding: 0 8px;
+		border-radius: 999px;
+		font-size: 12px;
+		line-height: 16px;
+		font-weight: 500;
+		white-space: nowrap;
+		background: var(--color-q-muted);
+		color: var(--color-q-secondary);
+	}
+	.q-chip::before {
+		content: '';
+		width: 6px;
+		height: 6px;
+		border-radius: 999px;
+		background: currentColor;
+		opacity: 0.9;
+	}
+	.q-chip[data-dot='false']::before {
+		display: none;
+	}
+	.q-chip[data-tone='accent'] {
+		background: var(--color-q-accent-tint);
+		color: var(--color-q-accent-link);
+	}
+	.q-chip[data-tone='success'] {
+		background: var(--color-q-success-tint);
+		color: var(--color-q-success-text);
+	}
+	.q-chip[data-tone='warning'] {
+		background: var(--color-q-warning-tint);
+		color: var(--color-q-warning-text);
+	}
+	.q-chip[data-tone='danger'] {
+		background: var(--color-q-danger-tint);
+		color: var(--color-q-danger-text);
+	}
+	.q-chip[data-tone='info'] {
+		background: var(--color-q-info-tint);
+		color: var(--color-q-info-text);
+	}
+
+	.q-kbd {
+		display: inline-flex;
+		align-items: center;
+		height: 20px;
+		padding: 0 6px;
+		border-radius: 6px;
+		border: 1px solid var(--color-q-border-strong);
+		font-size: 12px;
+		color: var(--color-q-secondary);
+	}
+
+	.q-skeleton {
+		border-radius: 6px;
+		background: var(--color-q-muted);
+		animation: q-pulse 1.4s linear infinite;
+	}
+	@keyframes q-pulse {
+		50% {
+			opacity: 0.55;
+		}
+	}
+
+	/* Tabular figures and mono for codes (order numbers, SKUs, tracking IDs). */
+	.q-mono {
+		font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+		font-size: 13px;
+	}
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.admin-theme *,
+	.admin-theme *::before,
+	.admin-theme *::after {
+		animation-duration: 0.01ms !important;
+		transition-duration: 0.01ms !important;
+	}
+}
+
+@media print {
+	.admin-theme {
+		background: #fff;
+		color: #000;
+	}
+}

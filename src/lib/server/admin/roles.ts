@@ -1,24 +1,20 @@
 /**
- * RW-141 — §12 role split, expressed once.
+ * RW-141 — Who may open which admin screen, expressed once.
  *
- * "TWO PEOPLE HAVE ACCESS. ROOTWEAR OWNS PRODUCTS, STOCK AND ORDERS.
- *  TRONE OWNS LAYOUT, BANNERS AND NEW PAGES."
+ * Access started as §12's two roles ("ROOTWEAR OWNS PRODUCTS, STOCK AND
+ * ORDERS. TRONE OWNS LAYOUT, BANNERS AND NEW PAGES."). The CMS needs packers,
+ * support and an accountant, so it is now a permission list per person
+ * (src/lib/admin/permissions.ts, app.staff.permissions). Trone's account
+ * carries exactly 'layout.edit', which is the old 'layout' role unchanged.
  *
- *   owner  (Aaron) — everything: drops, products, stock and caps, launch
- *                    schedules, orders, reservations, waitlist, balance links,
- *                    dispatch, customers, the subscriber list, every report.
- *   layout (Trone) — page layouts, hero and banner design, campaign slots,
- *                    site copy outside product listings, new pages, navigation.
- *                    "NO ACCESS TO ORDERS, CUSTOMER RECORDS OR PAYOUTS."
- *
- * The database already enforces this with RLS (0007, 0010, 0012). This module
- * enforces it a SECOND time, in the request path, because hiding a nav item is
- * not access control: a 'layout' user who types /admin/orders must be refused,
- * not merely un-linked. Every admin load calls requireSection() before it
- * touches a repository.
+ * This module enforces access in the request path, because hiding a nav item
+ * is not access control: someone without 'orders.view' who types
+ * /admin/orders must be refused, not merely un-linked. Every admin load calls
+ * requireSection() or requirePermission() before it touches a repository.
  */
 import { error } from '@sveltejs/kit';
-import type { AdminActor, StaffRole } from './types';
+import type { PermissionKey } from '$lib/admin/permissions';
+import type { AdminActor } from './types';
 
 export const ADMIN_SECTIONS = [
 	'dashboard',
@@ -28,122 +24,206 @@ export const ADMIN_SECTIONS = [
 	'orders',
 	'reservations',
 	'fulfilment',
+	'invoices',
+	'carts',
+	'leads',
+	'customers',
 	'contact',
-	'layout'
+	'coupons',
+	'broadcasts',
+	'influencers',
+	'layout',
+	'messages',
+	'settings',
+	'staff',
+	'audit'
 ] as const;
 
 export type AdminSection = (typeof ADMIN_SECTIONS)[number];
 
-/**
- * What each role may reach. Written as an allow-list per role rather than a
- * deny-list, so a section added later is INACCESSIBLE to 'layout' until
- * somebody deliberately lists it here.
- */
-const ALLOWED: Record<StaffRole, readonly AdminSection[]> = {
-	owner: ADMIN_SECTIONS,
-	// §12, verbatim: layout access only.
-	layout: ['layout']
+/** The permission that opens each section. */
+const SECTION_PERMISSION: Record<AdminSection, PermissionKey> = {
+	dashboard: 'reports.view',
+	submissions: 'leads.view',
+	drops: 'catalogue.view',
+	demand: 'reports.view',
+	orders: 'orders.view',
+	reservations: 'orders.view',
+	fulfilment: 'orders.view',
+	invoices: 'finance.view',
+	carts: 'carts.view',
+	leads: 'leads.view',
+	customers: 'customers.view',
+	contact: 'leads.view',
+	coupons: 'marketing.edit',
+	broadcasts: 'marketing.edit',
+	influencers: 'marketing.edit',
+	layout: 'layout.edit',
+	messages: 'messages.view',
+	settings: 'settings.edit',
+	staff: 'staff.manage',
+	audit: 'audit.view'
 };
 
-export function canAccess(role: StaffRole, section: AdminSection): boolean {
-	return ALLOWED[role].includes(section);
+export function can(actor: AdminActor, permission: PermissionKey): boolean {
+	return actor.isOwner || actor.permissions.includes(permission);
+}
+
+export function canAccess(actor: AdminActor, section: AdminSection): boolean {
+	return can(actor, SECTION_PERMISSION[section]);
 }
 
 /** The refusal text. Says what the boundary IS, not merely that access failed. */
-export const FORBIDDEN_MESSAGE =
-	'Layout access only. Orders, customer records and payouts are owner-only (§12). ' +
-	'Ask Aaron if you need a figure from one of those screens.';
+export function forbiddenMessage(permission: PermissionKey): string {
+	return (
+		`Your account does not have the "${permission}" permission. ` +
+		'Ask an owner to add it from Settings → Staff if you need this screen.'
+	);
+}
 
-/** Throws 403 unless this actor's role covers the section. */
+/** Throws 403 unless this actor holds the permission. */
+export function requirePermission(actor: AdminActor, permission: PermissionKey): void {
+	if (!can(actor, permission)) error(403, forbiddenMessage(permission));
+}
+
+/** Throws 403 unless this actor may open the section. */
 export function requireSection(actor: AdminActor, section: AdminSection): void {
-	if (!canAccess(actor.role, section)) error(403, FORBIDDEN_MESSAGE);
+	requirePermission(actor, SECTION_PERMISSION[section]);
 }
 
-/** Convenience for the many owner-only screens. */
+/** For the few actions only an owner may take, such as promoting another owner. */
 export function requireOwner(actor: AdminActor): void {
-	if (actor.role !== 'owner') error(403, FORBIDDEN_MESSAGE);
+	if (!actor.isOwner) error(403, 'Only an owner can do this.');
 }
+
+export type AdminNavIcon =
+	| 'chart'
+	| 'inbox'
+	| 'package'
+	| 'receipt'
+	| 'clock'
+	| 'truck'
+	| 'cart'
+	| 'users'
+	| 'user'
+	| 'megaphone'
+	| 'ticket'
+	| 'sparkles'
+	| 'layout'
+	| 'trending'
+	| 'file'
+	| 'message'
+	| 'settings'
+	| 'shield'
+	| 'history';
 
 export type AdminNavItem = {
 	readonly section: AdminSection;
 	readonly href: string;
 	readonly label: string;
-	readonly blurb: string;
+	readonly icon: AdminNavIcon;
+};
+
+export type AdminNavGroup = {
+	readonly label: string | null;
+	readonly items: readonly AdminNavItem[];
 };
 
 /** Ordered as the work is done: read the numbers, then act on them. */
-const NAV: readonly AdminNavItem[] = [
+const NAV: readonly AdminNavGroup[] = [
 	{
-		section: 'dashboard',
-		href: '/admin',
-		label: 'Reports',
-		blurb: 'Performance, ledger, demand, revenue'
+		label: null,
+		items: [{ section: 'dashboard', href: '/admin', label: 'Overview', icon: 'chart' }]
 	},
 	{
-		section: 'submissions',
-		href: '/admin/submissions',
-		label: 'Submissions',
-		blurb: 'All customer forms and tracking IDs'
+		label: 'Sell',
+		items: [
+			{ section: 'drops', href: '/admin/drops', label: 'Drops', icon: 'package' },
+			{ section: 'orders', href: '/admin/orders', label: 'Orders', icon: 'receipt' },
+			{ section: 'reservations', href: '/admin/reservations', label: 'Pre-orders', icon: 'clock' },
+			{ section: 'fulfilment', href: '/admin/orders/packing-list', label: 'Packing list', icon: 'truck' },
+			{ section: 'carts', href: '/admin/carts', label: 'Carts', icon: 'cart' },
+			{ section: 'invoices', href: '/admin/invoices', label: 'Invoices', icon: 'file' }
+		]
 	},
 	{
-		section: 'demand',
-		href: '/admin/demand',
-		label: 'Demand',
-		blurb: 'Requests, notify-me and waitlist by size'
+		label: 'People',
+		items: [
+			{ section: 'leads', href: '/admin/leads', label: 'Leads', icon: 'inbox' },
+			{ section: 'customers', href: '/admin/customers', label: 'Customers', icon: 'users' },
+			{ section: 'submissions', href: '/admin/submissions', label: 'Form inbox', icon: 'message' },
+			{ section: 'demand', href: '/admin/demand', label: 'Demand', icon: 'trending' }
+		]
 	},
 	{
-		section: 'drops',
-		href: '/admin/drops',
-		label: 'Drops',
-		blurb: 'State, launch instant, stock and caps'
-	},
-	{
-		section: 'orders',
-		href: '/admin/orders',
-		label: 'Orders',
-		blurb: 'Payment, packing and dispatch'
-	},
-	{
-		section: 'reservations',
-		href: '/admin/reservations',
-		label: 'Reservations',
-		blurb: 'Deposits, balances, piece numbers'
-	},
-	{
-		section: 'fulfilment',
-		href: '/admin/orders/packing-list',
-		label: 'Packing list',
-		blurb: 'Printable list and address labels'
-	},
-	{
-		section: 'contact',
-		href: '/admin/contact',
-		label: 'Contact',
-		blurb: 'Submissions from the contact form'
-	},
-	{
-		section: 'layout',
-		href: '/admin/layout',
-		label: 'Layout',
-		blurb: 'Pages, banners, campaign slots, navigation'
+		label: 'Grow',
+		items: [
+			{ section: 'coupons', href: '/admin/coupons', label: 'Coupons', icon: 'ticket' },
+			{ section: 'broadcasts', href: '/admin/broadcasts', label: 'Broadcasts', icon: 'megaphone' },
+			{ section: 'influencers', href: '/admin/influencers', label: 'Seeding', icon: 'sparkles' },
+			{ section: 'layout', href: '/admin/layout', label: 'Layout', icon: 'layout' }
+		]
 	}
 ];
 
+/** Pinned to the bottom of the sidebar. */
+const NAV_FOOTER: readonly AdminNavItem[] = [
+	{ section: 'messages', href: '/admin/messages', label: 'Messages', icon: 'message' },
+	{ section: 'audit', href: '/admin/audit', label: 'Audit log', icon: 'history' },
+	{ section: 'settings', href: '/admin/settings', label: 'Settings', icon: 'settings' }
+];
+
 /**
- * The nav this role may see. Filtered here AND enforced per route — the nav is
- * a convenience, `requireSection` is the control.
+ * Sections whose screens exist. A section is listed here once its route is
+ * built, so the nav never links to a 404 while the CMS is being filled in.
  */
-export function navFor(role: StaffRole): AdminNavItem[] {
-	return NAV.filter((item) => canAccess(role, item.section));
+const BUILT = new Set<AdminSection>([
+	'dashboard',
+	'submissions',
+	'drops',
+	'demand',
+	'orders',
+	'reservations',
+	'fulfilment',
+	'contact',
+	'layout',
+	'messages',
+	'settings',
+	'staff',
+	'audit'
+]);
+
+function visible(actor: AdminActor, item: AdminNavItem): boolean {
+	return BUILT.has(item.section) && canAccess(actor, item.section);
 }
 
 /**
- * Where this role lands after signing in. The dashboard is owner-only, so a
- * 'layout' user is sent to the first screen they actually own rather than
- * bounced off a 403 the moment they log in.
+ * The nav this person may see. Filtered here AND enforced per route — the nav
+ * is a convenience, requireSection is the control.
  */
-export function homeFor(role: StaffRole): string {
-	return navFor(role)[0]?.href ?? '/admin/layout';
+export function navFor(actor: AdminActor): { groups: AdminNavGroup[]; footer: AdminNavItem[] } {
+	const groups = NAV.map((group) => ({
+		label: group.label,
+		items: group.items.filter((item) => visible(actor, item))
+	})).filter((group) => group.items.length > 0);
+
+	// Settings is reachable by anyone who can manage staff, even without
+	// settings.edit, because the staff screen lives under it.
+	const footer = NAV_FOOTER.filter(
+		(item) =>
+			visible(actor, item) ||
+			(item.section === 'settings' && BUILT.has('staff') && canAccess(actor, 'staff'))
+	);
+	return { groups, footer };
+}
+
+/**
+ * Where this person lands after signing in: the first screen they can open,
+ * rather than a 403 the moment they log in.
+ */
+export function homeFor(actor: AdminActor): string {
+	const { groups, footer } = navFor(actor);
+	return groups[0]?.items[0]?.href ?? footer[0]?.href ?? '/admin/account';
 }
 
 /**
@@ -151,30 +231,53 @@ export function homeFor(role: StaffRole): string {
  * Rejects protocol-relative URLs ("//evil.example") and anything outside
  * /admin, so a crafted ?next= cannot turn the login form into an open redirect.
  */
-export function safeNext(next: string | null, role: StaffRole): string {
-	if (!next) return homeFor(role);
-	if (!next.startsWith('/admin') || next.startsWith('//')) return homeFor(role);
+export function safeNext(next: string | null, actor: AdminActor): string {
+	if (!next) return homeFor(actor);
+	if (!next.startsWith('/admin') || next.startsWith('//')) return homeFor(actor);
 	return next;
 }
 
 /**
  * Map a SvelteKit route id to the section that guards it. Longest prefixes
  * first: /admin/orders/packing-list is fulfilment, /admin/orders is orders.
+ * Returns null for screens every staff member may open (their own account).
  */
-export function sectionForRoute(routeId: string | null): AdminSection {
+export function sectionForRoute(routeId: string | null): AdminSection | null {
 	const id = routeId ?? '/admin';
+	// The settings index only redirects to the first tab this person can open.
+	if (id.startsWith('/admin/account') || id === '/admin/settings') return null;
 	if (id.startsWith('/admin/orders/packing-list')) return 'fulfilment';
-	if (id.startsWith('/admin/submissions')) return 'submissions';
-	if (id.startsWith('/admin/orders')) return 'orders';
-	if (id.startsWith('/admin/reservations')) return 'reservations';
-	if (id.startsWith('/admin/demand')) return 'demand';
-	if (id.startsWith('/admin/drops')) return 'drops';
-	if (id.startsWith('/admin/contact')) return 'contact';
-	if (id.startsWith('/admin/layout')) return 'layout';
-	return 'dashboard';
+	if (id.startsWith('/admin/settings/staff')) return 'staff';
+	const match = ADMIN_SECTIONS.filter((section) => section !== 'dashboard').find((section) =>
+		id.startsWith(`/admin/${section}`)
+	);
+	return match ?? 'dashboard';
 }
 
-export const ROLE_LABEL: Record<StaffRole, string> = {
-	owner: 'Owner — products, stock, orders',
-	layout: 'Layout — pages, banners, navigation'
-};
+/** A short description of what someone can do, for the staff list. */
+export function accessSummary(actor: Pick<AdminActor, 'isOwner' | 'permissions'>): string {
+	if (actor.isOwner) return 'Owner — full access';
+	const count = actor.permissions.length;
+	if (count === 0) return 'No access';
+	return `${count} permission${count === 1 ? '' : 's'}`;
+}
+
+/**
+ * Privilege escalation guard for the staff screens. Someone who can manage
+ * staff but is not an owner may only hand out permissions they hold
+ * themselves, and may not touch an owner's account. Otherwise "manage staff"
+ * would be a back door to every other permission, including on their own row.
+ * Returns the refusal sentence, or null when allowed.
+ */
+export function grantRefusal(
+	actor: AdminActor,
+	permissions: readonly string[],
+	target?: { isOwner: boolean }
+): string | null {
+	if (actor.isOwner) return null;
+	if (target?.isOwner) return 'Only an owner can change an owner’s access.';
+	const beyond = permissions.filter((key) => !actor.permissions.includes(key as PermissionKey));
+	return beyond.length
+		? `You can only give permissions you have yourself. Remove: ${beyond.join(', ')}.`
+		: null;
+}

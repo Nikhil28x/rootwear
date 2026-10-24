@@ -73,10 +73,10 @@
 	note="Page layouts, hero and banner design, campaign slots, site copy outside product listings, new pages and navigation."
 />
 
-{#if data.role === 'layout'}
+{#if !data.isOwner}
 	<div class="mt-8">
 		<Notice kind="info">
-			This account has layout access. Orders, customer records and payouts are owner-only — those
+			This account has layout access only. Orders, customer records and payouts need other permissions — those
 			screens are not linked here and will refuse the request if reached directly.
 		</Notice>
 	</div>

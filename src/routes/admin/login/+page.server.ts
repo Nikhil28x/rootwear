@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { findStaffRole, previewAvailable } from '$lib/server/admin/session';
+import { findStaffMember, previewAvailable } from '$lib/server/admin/session';
 import { safeNext } from '$lib/server/admin/roles';
 import { isSupabaseConfigured } from '$lib/server/env';
 import {
@@ -10,6 +10,8 @@ import {
 	verifyLocalAdmin
 } from '$lib/server/admin/local-session';
 import { env } from '$env/dynamic/private';
+import type { AdminActor } from '$lib/server/admin/types';
+import { recordSignIn } from '$lib/server/admin/staff';
 
 /**
  * RW-151 — Staff sign-in.
@@ -41,6 +43,16 @@ export const load: PageServerLoad = async ({ url }) => {
 	};
 };
 
+/** The local-credentials account is the owner of a database-less preview. */
+const LOCAL_OWNER: AdminActor = {
+	userId: 'local-owner',
+	email: 'local',
+	name: null,
+	isOwner: true,
+	permissions: [],
+	preview: true
+};
+
 const GENERIC_FAILURE = 'Those details did not match a Rootwear staff account.';
 
 export const actions: Actions = {
@@ -58,7 +70,7 @@ export const actions: Actions = {
 		if (!supabase) {
 			if (verifyLocalAdmin(loginId, password)) {
 				await setLocalAdminSession(event.cookies);
-				redirect(303, safeNext(next, 'owner'));
+				redirect(303, safeNext(next, LOCAL_OWNER));
 			}
 			return fail(503, {
 				email: loginId,
@@ -83,12 +95,21 @@ export const actions: Actions = {
 		}
 
 		// Signed in is not staff. app.staff is the membership list.
-		const role = await findStaffRole(data.user.id);
-		if (!role) {
+		const member = await findStaffMember(data.user.id);
+		if (!member) {
 			await supabase.auth.signOut();
 			return fail(403, { email: loginId, error: GENERIC_FAILURE });
 		}
 
-		redirect(303, safeNext(next, role));
+		await recordSignIn(data.user.id);
+		redirect(
+			303,
+			safeNext(next, {
+				userId: data.user.id,
+				email: data.user.email ?? loginId,
+				preview: false,
+				...member
+			})
+		);
 	}
 };

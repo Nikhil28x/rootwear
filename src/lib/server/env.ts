@@ -15,7 +15,9 @@ function optional(name: string): string | undefined {
 	// $env/dynamic/private EXCLUDES every PUBLIC_-prefixed variable, so reading
 	// PUBLIC_SUPABASE_URL from it always came back undefined and the backend
 	// could never switch on. Public names are read from the public module.
-	const value = name.startsWith('PUBLIC_') ? publicEnv[name] : env[name];
+	const value = name.startsWith('PUBLIC_')
+		? (publicEnv as Record<string, string | undefined>)[name]
+		: env[name];
 	return value && value.length > 0 ? value : undefined;
 }
 

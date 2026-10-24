@@ -107,10 +107,9 @@
 	<!-- The homepage renders its own SiteHeader (anchored hero, drop CTA, fixed). -->
 	{@render children()}
 {:else if isAdmin}
-	<!-- Operations is a separate, light workspace without the storefront chrome. -->
-	<div class="admin-theme">
-		{@render children()}
-	</div>
+	<!-- Operations is a separate workspace without the storefront chrome. Its
+	     own layout (src/routes/admin/+layout.svelte) sets the theme. -->
+	{@render children()}
 {:else}
 	<!--
 		The ground AND the ink.
@@ -150,32 +149,3 @@
 {#if isHome}
 	<SiteFooter policies={data.footerPolicies ?? []} />
 {/if}
-
-<style>
-	/**
-	 * Admin components use the shared brand tokens. Remapping those tokens at
-	 * the route boundary gives the complete workspace a high-contrast light
-	 * surface while leaving every storefront route unchanged.
-	 */
-	.admin-theme {
-		--color-forest-black: #ffffff;
-		--color-forest: #ffffff;
-		--color-paper: #173925;
-		--color-cream: #173925;
-		--color-stone-100: #14251a;
-		--color-stone-200: #21382a;
-		--color-stone-300: #385242;
-		--color-stone-400: #607066;
-		--color-stone-500: #87948c;
-		--color-stone-700: #cbd2cd;
-		--color-white: #173925;
-		--color-black: #ffffff;
-		--color-gold: #7d5d13;
-		--color-alert-light: #9f342d;
-
-		min-height: 100svh;
-		background: #ffffff;
-		color: #21382a;
-		color-scheme: light;
-	}
-</style>

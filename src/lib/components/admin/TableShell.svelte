@@ -2,13 +2,8 @@
 	import type { Snippet } from 'svelte';
 
 	/**
-	 * Every wide table in the admin area scrolls INSIDE ITS OWN CONTAINER. The
-	 * page body must never scroll sideways: an admin screen is read on a laptop
-	 * and a phone, and a by-size table with eight numeric columns does not fit
-	 * on the second.
-	 *
-	 * The caption is a real <caption>, not a heading above the table, so a
-	 * screen reader announces what the table is when it enters it.
+	 * A titled table. The caption is also the table's accessible name, so a
+	 * screen reader announces which of several tables on a page it is in.
 	 */
 	let {
 		children,
@@ -18,25 +13,34 @@
 	}: { children: Snippet; caption: string; captionVisible?: boolean; note?: string } = $props();
 </script>
 
-<div class="border border-white/10">
+<div class="q-table-wrap legacy-table">
 	{#if captionVisible}
-		<div class="flex flex-wrap items-baseline justify-between gap-3 border-b border-white/10 px-5 py-4">
-			<p class="text-[11px] tracking-[0.28em] text-stone-300 uppercase font-medium">{caption}</p>
-			{#if note}<p class="text-[13px] text-stone-400">{note}</p>{/if}
+		<div
+			class="flex flex-wrap items-baseline justify-between gap-3 border-b border-q-border px-4 py-3"
+		>
+			<p class="text-[14px] leading-[20px] font-semibold text-q-text">{caption}</p>
+			{#if note}<p class="text-[13px] text-q-secondary">{note}</p>{/if}
 		</div>
 	{/if}
-	<div class="admin-scroll overflow-x-auto">
-		<table class="w-full min-w-[46rem] border-collapse text-[15px]">
-			<caption class="sr-only">{caption}</caption>
-			{@render children()}
-		</table>
-	</div>
+	<table class="q-table min-w-[46rem]">
+		<caption class="sr-only">{caption}</caption>
+		{@render children()}
+	</table>
 </div>
 
 <style>
-	/* A visible, quiet scrollbar: a table that scrolls should look like it does. */
-	.admin-scroll {
-		scrollbar-width: thin;
-		scrollbar-color: color-mix(in srgb, var(--color-cream) 28%, transparent) transparent;
+	/*
+	 * Screens written before the CMS put uppercase, wide-tracked utility
+	 * classes on their own <th> cells. Neutralised here so every table reads
+	 * the same without rewriting each screen's markup.
+	 */
+	.legacy-table :global(th) {
+		text-transform: none !important;
+		letter-spacing: 0 !important;
+		font-size: 13px !important;
+		font-weight: 500 !important;
+	}
+	.legacy-table :global(td) {
+		font-size: 14px;
 	}
 </style>

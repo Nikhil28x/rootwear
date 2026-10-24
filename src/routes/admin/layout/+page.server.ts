@@ -25,7 +25,7 @@ export const load: PageServerLoad = async (event) => {
 	const rows = await adminRepo.listDropRows();
 
 	return {
-		role: auth.actor.role,
+		isOwner: auth.actor.isOwner,
 		// Identity and visibility only. No stock, no caps, no money.
 		slots: rows.map((row) => ({
 			id: row.id,

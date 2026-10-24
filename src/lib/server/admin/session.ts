@@ -20,10 +20,11 @@
  */
 import { dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
-import type { RequestEvent } from '@sveltejs/kit';
+import { error, type RequestEvent } from '@sveltejs/kit';
 import { getServiceClient } from '$lib/server/db/clients';
 import { isSupabaseConfigured } from '$lib/server/env';
-import type { AdminActor, StaffRole } from './types';
+import { isPermissionKey, type PermissionKey } from '$lib/admin/permissions';
+import type { AdminActor } from './types';
 import { readLocalAdminSession } from './local-session';
 
 export type AdminAuth =
@@ -40,7 +41,7 @@ export type AdminAuth =
  * There is no hardcoded email and no hardcoded password anywhere in this file
  * — real credentials are created out of band by scripts/create-admin.mjs.
  */
-function previewRole(): StaffRole | null {
+function previewRole(): 'owner' | 'layout' | null {
 	if (!dev || isSupabaseConfigured()) return null;
 	const role = env.ADMIN_PREVIEW_ROLE;
 	return role === 'owner' || role === 'layout' ? role : null;
@@ -75,7 +76,9 @@ async function resolve(event: RequestEvent): Promise<AdminAuth> {
 			actor: {
 				userId: 'local-owner',
 				email: localId,
-				role: 'owner',
+				name: null,
+				isOwner: true,
+				permissions: [],
 				preview: true
 			}
 		};
@@ -88,7 +91,9 @@ async function resolve(event: RequestEvent): Promise<AdminAuth> {
 			actor: {
 				userId: 'preview',
 				email: 'fixture preview',
-				role: preview,
+				name: null,
+				isOwner: preview === 'owner',
+				permissions: preview === 'layout' ? ['layout.edit'] : [],
 				preview: true
 			}
 		};
@@ -100,31 +105,70 @@ async function resolve(event: RequestEvent): Promise<AdminAuth> {
 	const { user } = await event.locals.safeGetSession();
 	if (!user) return { status: 'anonymous' };
 
-	const role = await findStaffRole(user.id);
-	if (!role) return { status: 'not_staff', email: user.email ?? 'unknown' };
+	const member = await findStaffMember(user.id);
+	if (!member) return { status: 'not_staff', email: user.email ?? 'unknown' };
 
 	return {
 		status: 'staff',
-		actor: { userId: user.id, email: user.email ?? 'unknown', role, preview: false }
+		actor: {
+			userId: user.id,
+			email: user.email ?? 'unknown',
+			name: member.name,
+			isOwner: member.isOwner,
+			permissions: member.permissions,
+			preview: false
+		}
 	};
 }
 
-/** Reads app.staff. Returns null for a signed-in customer, which is not an error. */
-export async function findStaffRole(userId: string): Promise<StaffRole | null> {
+export type StaffMember = {
+	readonly isOwner: boolean;
+	readonly permissions: readonly PermissionKey[];
+	readonly name: string | null;
+};
+
+/**
+ * Reads app.staff. Returns null for a signed-in customer and for a
+ * deactivated staff member, neither of which is an error.
+ */
+export async function findStaffMember(userId: string): Promise<StaffMember | null> {
 	const { data, error: queryError } = await getServiceClient()
 		.from('staff')
-		.select('role')
+		.select('is_owner, permissions, display_name, active')
 		.eq('user_id', userId)
 		.maybeSingle();
 
 	// Fail CLOSED. A lookup that errors is not a grant.
 	if (queryError || !data) return null;
 
-	const role = (data as { role?: string }).role;
-	return role === 'owner' || role === 'layout' ? role : null;
+	const row = data as {
+		is_owner: boolean;
+		permissions: string[] | null;
+		display_name: string | null;
+		active: boolean;
+	};
+	if (!row.active) return null;
+
+	return {
+		isOwner: row.is_owner === true,
+		// Unknown keys (a permission since removed from the code) grant nothing.
+		permissions: (row.permissions ?? []).filter(isPermissionKey),
+		name: row.display_name
+	};
 }
 
 /** For the audit log: who did this, in a form that survives the user being deleted. */
 export function actorLabel(actor: AdminActor): string {
 	return actor.preview ? 'fixture-preview' : actor.email;
+}
+
+/**
+ * The signed-in staff member, or a 403. For loads and actions under /admin,
+ * where the layout guard has already redirected anonymous visitors — this is
+ * the second, per-route check that does not trust the layout to have run.
+ */
+export async function staffActor(event: RequestEvent): Promise<AdminActor> {
+	const auth = await resolveAdminAuth(event);
+	if (auth.status !== 'staff') error(403, 'Staff access required.');
+	return auth.actor;
 }

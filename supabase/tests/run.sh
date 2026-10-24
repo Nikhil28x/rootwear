@@ -80,7 +80,10 @@ DISTINCT=$(Q -c "select count(distinct piece_number) from app.reservations where
 check "concurrent cross-size allocation keeps numbers unique" "$TOTAL/$DISTINCT" "5/5"
 
 # --- order commit -----------------------------------------------------------
+# Pin the launch a week out so the pre-launch price applies whatever today's
+# date is; the seed's real launch instant has already passed.
 Q >/dev/null <<'SQL'
+update public.drops set launch_instant = now() + interval '7 days' where id = 'drop-01';
 insert into app.carts (id,token,expires_at) values ('55555555-0000-0000-0000-000000000000','tok', now()+interval '1 hour');
 insert into app.cart_lines (cart_id,variant_id,quantity,held_until)
 values ('55555555-0000-0000-0000-000000000000','variant-01-tee-m',1, now()+interval '15 minutes');
@@ -161,6 +164,36 @@ case "$RACE" in
   "captured/0/paid/0"|"captured_order_cancelled/1/cancelled/1") ok "capture racing expiry settles one way ($RACE)";;
   *) bad "capture racing expiry settles one way" "$RACE";;
 esac
+
+# --- staff permissions (0022) ------------------------------------------------
+# auth.uid() reads the request's JWT subject, as Supabase's own does.
+Q >/dev/null <<'SQL'
+create or replace function auth.uid() returns uuid language sql stable as $fn$
+  select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $fn$;
+insert into auth.users (id, email) values
+ ('aaaa0000-0000-0000-0000-00000000000a','owner@e.com'),
+ ('aaaa0000-0000-0000-0000-00000000000b','packer@e.com');
+insert into app.staff (user_id, role, is_owner, permissions) values
+ ('aaaa0000-0000-0000-0000-00000000000a','owner', true, '{}'),
+ ('aaaa0000-0000-0000-0000-00000000000b','staff', false, '{orders.view}');
+SQL
+LAST=$(Q -c "update app.staff set is_owner=false where user_id='aaaa0000-0000-0000-0000-00000000000a';" 2>&1 | grep -c "At least one active owner" || true)
+check "the last owner cannot be demoted" "$LAST" "1"
+LASTDEL=$(Q -c "delete from app.staff where user_id='aaaa0000-0000-0000-0000-00000000000a';" 2>&1 | grep -c "At least one active owner" || true)
+check "the last owner cannot be removed" "$LASTDEL" "1"
+check "a granted permission is held" "$(Q -c "select set_config('request.jwt.claim.sub','aaaa0000-0000-0000-0000-00000000000b',false); select app.has_permission('orders.view');" | tail -1)" "t"
+check "an ungranted permission is not" "$(Q -c "select set_config('request.jwt.claim.sub','aaaa0000-0000-0000-0000-00000000000b',false); select app.has_permission('orders.refund');" | tail -1)" "f"
+check "an owner holds every permission" "$(Q -c "select set_config('request.jwt.claim.sub','aaaa0000-0000-0000-0000-00000000000a',false); select app.has_permission('anything.at.all');" | tail -1)" "t"
+Q -c "update app.staff set active=false where user_id='aaaa0000-0000-0000-0000-00000000000b';" >/dev/null
+check "a deactivated person holds nothing" "$(Q -c "select set_config('request.jwt.claim.sub','aaaa0000-0000-0000-0000-00000000000b',false); select app.has_permission('orders.view');" | tail -1)" "f"
+
+# --- outbox (0023) ------------------------------------------------------------
+Q -c "insert into app.message_outbox (channel, recipient, body) select 'email', 'r'||n||'@e.com', 'x' from generate_series(1,6) n;" >/dev/null
+Q -c "select count(*) from app.claim_outbox(4);" >"$RUNDIR/c1" 2>&1 &
+Q -c "select count(*) from app.claim_outbox(4);" >"$RUNDIR/c2" 2>&1 &
+wait
+check "two overlapping claims never take the same message" "$(( $(cat "$RUNDIR/c1") + $(cat "$RUNDIR/c2") ))/$(Q -c "select count(*) from app.message_outbox where status='sending';")" "6/6"
+check "a claim counts the attempt" "$(Q -c "select min(attempts) from app.message_outbox;")" "1"
 
 # --- RLS --------------------------------------------------------------------
 Q -c "grant usage on schema public to anon, authenticated;

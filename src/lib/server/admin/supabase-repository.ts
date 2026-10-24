@@ -29,6 +29,7 @@ import type { DropState } from '$lib/domain/drop-state';
 import { addPaise, paise, ZERO, type Paise } from '$lib/money';
 import type { Size } from '$lib/drop/sizes';
 import { getCatalogueClient, getServiceClient } from '$lib/server/db/clients';
+import { writeAudit } from './audit';
 import type { AdminRepository } from './repository';
 import type {
 	AdminContactSubmission,
@@ -239,22 +240,6 @@ function toShipTo(order: OrderRow): ShipTo {
 		phone: order.ship_phone,
 		country: order.ship_country ?? 'IN'
 	};
-}
-
-async function writeAudit(
-	actor: string,
-	action: string,
-	entity: string,
-	entityId: string,
-	detail: Record<string, unknown> = {}
-): Promise<void> {
-	// §12/RW-141: every privileged write is attributable after the fact.
-	// A failed audit insert must not silently swallow the write it describes,
-	// so it throws rather than logging quietly.
-	const { error } = await getServiceClient()
-		.from('admin_audit_log')
-		.insert({ actor_email: actor, action, entity, entity_id: entityId, detail });
-	if (error) throw new Error(`audit write failed: ${error.message}`);
 }
 
 /* -------------------------------------------------------------------------- */

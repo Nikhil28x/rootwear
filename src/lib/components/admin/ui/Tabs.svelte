@@ -1,0 +1,47 @@
+<script lang="ts">
+	import { page } from '$app/state';
+
+	/** Link tabs: each tab is a URL, so the view survives a refresh and a share. */
+	let {
+		tabs,
+		label
+	}: {
+		tabs: readonly { href: string; label: string; count?: number | null; exact?: boolean }[];
+		label: string;
+	} = $props();
+
+	function current(tab: { href: string; exact?: boolean }): boolean {
+		const path = page.url.pathname;
+		const here = path + page.url.search;
+		// A tab with a query string is a filter of the same list: match it whole.
+		if (tab.href.includes('?')) return here === tab.href;
+		// `exact`: this URL and no filters, e.g. the "All" tab of a filtered list.
+		if (tab.exact) return here === tab.href;
+		return path === tab.href || path.startsWith(tab.href + '/');
+	}
+</script>
+
+<nav aria-label={label} class="-mx-1 overflow-x-auto">
+	<ul class="flex min-w-max gap-1 border-b border-q-border px-1">
+		{#each tabs as tab (tab.href)}
+			{@const active = current(tab)}
+			<li>
+				<a
+					href={tab.href}
+					aria-current={active ? 'page' : undefined}
+					class="relative flex h-10 items-center gap-2 px-3 text-[14px] leading-[20px] font-medium transition-colors {active
+						? 'text-q-text after:absolute after:inset-x-3 after:-bottom-px after:h-0.5 after:rounded-full after:bg-q-text'
+						: 'text-q-secondary hover:text-q-text'}"
+				>
+					{tab.label}
+					{#if tab.count !== undefined && tab.count !== null}
+						<span
+							class="rounded-full bg-q-muted px-1.5 text-[12px] leading-[16px] text-q-secondary tabular-nums"
+							>{tab.count}</span
+						>
+					{/if}
+				</a>
+			</li>
+		{/each}
+	</ul>
+</nav>

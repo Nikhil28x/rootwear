@@ -48,6 +48,49 @@
 	   measured only 4.14:1 on the forest one. */
 	--color-alert-light: #e08b63; /* forest 4.85 · near-black 7.40 */
 
+	/*
+	 * Admin workspace tokens (prefix q-). Light values here; the dark set lives
+	 * in src/lib/components/admin/admin.css, scoped to the admin shell, so no
+	 * storefront route can pick them up by accident. The accent is a forest
+	 * ramp taken from the brand green and used only for action, selection and
+	 * focus — everything else in admin is neutral.
+	 */
+	--color-q-frame: #f4f4f5;
+	--color-q-canvas: #fafafa;
+	--color-q-surface: #ffffff;
+	--color-q-raised: #ffffff;
+	--color-q-muted: #f4f4f5;
+	--color-q-pressed: #e4e4e7;
+	--color-q-inverse: #18181b;
+	--color-q-border: #e4e4e7;
+	--color-q-border-strong: #d4d4d8;
+	--color-q-border-input: #8a8a93;
+	--color-q-text: #18181b;
+	--color-q-body: #27272a;
+	--color-q-secondary: #52525b;
+	--color-q-tertiary: #6b6b74;
+	--color-q-disabled: #a1a1aa;
+	--color-q-on-inverse: #fafafa;
+	--color-q-accent: #2a6646;
+	--color-q-accent-hover: #215238;
+	--color-q-accent-pressed: #1b422e;
+	--color-q-accent-link: #2a6646;
+	--color-q-accent-tint: #eef6f1;
+	--color-q-accent-ring: #3a7f58;
+	--color-q-on-accent: #ffffff;
+	--color-q-success: #16a34a;
+	--color-q-success-text: #15803d;
+	--color-q-success-tint: #f0fdf4;
+	--color-q-warning: #d97706;
+	--color-q-warning-text: #b45309;
+	--color-q-warning-tint: #fffbeb;
+	--color-q-danger: #dc2626;
+	--color-q-danger-text: #b91c1c;
+	--color-q-danger-tint: #fef2f2;
+	--color-q-info: #2563eb;
+	--color-q-info-text: #1d4ed8;
+	--color-q-info-tint: #eff6ff;
+
 	/* Type stacks — previously written out in four places. */
 	--font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 	--font-display: Didot, 'Bodoni 72', 'Bodoni MT', 'Times New Roman', serif;

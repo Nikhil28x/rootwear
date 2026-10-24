@@ -11,17 +11,19 @@
  * says Trone has "NO ACCESS TO ORDERS, CUSTOMER RECORDS OR PAYOUTS" and these
  * types describe exactly that data.
  */
+import type { PermissionKey } from '$lib/admin/permissions';
 import type { Size } from '$lib/drop/sizes';
 import type { DropState } from '$lib/domain/drop-state';
 import type { Paise } from '$lib/money';
 
-/** §12 — two people, two roles. Mirrors app.staff.role exactly. */
-export type StaffRole = 'owner' | 'layout';
-
 export type AdminActor = {
 	readonly userId: string;
 	readonly email: string;
-	readonly role: StaffRole;
+	readonly name: string | null;
+	/** Owners hold every permission, including ones added after they were. */
+	readonly isOwner: boolean;
+	/** app.staff.permissions. Empty for owners, who need none listed. */
+	readonly permissions: readonly PermissionKey[];
 	/**
 	 * True when Supabase is absent and submissions are stored in this server
 	 * process only. Surfaced in the chrome so the storage limit is explicit.
