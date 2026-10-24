@@ -21,12 +21,16 @@ export const load: PageServerLoad = async (event) => {
 	const channel = params.get('channel') ?? '';
 	const search = params.get('q') ?? '';
 	const page = Math.max(1, Number(params.get('page')) || 1);
+	// "broadcast:<id>", "order:<id>": the messages about one record.
+	const [contextType, contextId] = (params.get('context') ?? '').split(':');
 
 	const result = await listOutbox(
 		{
 			status: STATUSES.includes(status) ? (status as OutboxStatus | 'problem') : undefined,
 			channel: channel === 'email' || channel === 'whatsapp' ? channel : undefined,
-			search: search || undefined
+			search: search || undefined,
+			contextType: contextType && contextId ? contextType : undefined,
+			contextId: contextType && contextId ? contextId : undefined
 		},
 		page
 	);
@@ -35,7 +39,7 @@ export const load: PageServerLoad = async (event) => {
 		...result,
 		page,
 		pageSize: OUTBOX_PAGE_SIZE,
-		filters: { status, channel, search },
+		filters: { status, channel, search, context: params.get('context') ?? '' },
 		canResend: actor.isOwner || actor.permissions.includes('messages.edit')
 	};
 };

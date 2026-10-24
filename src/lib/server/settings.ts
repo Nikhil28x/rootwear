@@ -72,14 +72,23 @@ export const DEFAULT_CARTS: CartSettings = {
 	channels: ['email']
 };
 
+export type AlertSettings = {
+	/** A size with this many or fewer left to sell counts as low. */
+	readonly lowStock: number;
+};
+
+export const DEFAULT_ALERTS: AlertSettings = { lowStock: 2 };
+
 type Defaults = {
 	business: BusinessSettings;
 	carts: CartSettings;
+	alerts: AlertSettings;
 };
 
 const DEFAULTS: Defaults = {
 	business: DEFAULT_BUSINESS,
-	carts: DEFAULT_CARTS
+	carts: DEFAULT_CARTS,
+	alerts: DEFAULT_ALERTS
 };
 
 export async function getSetting<K extends keyof Defaults>(key: K): Promise<Defaults[K]> {

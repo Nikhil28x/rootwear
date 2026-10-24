@@ -1,173 +1,58 @@
 <script lang="ts">
-	import SectionHead from '$lib/components/admin/SectionHead.svelte';
-	import StatePill from '$lib/components/admin/StatePill.svelte';
-	import TableShell from '$lib/components/admin/TableShell.svelte';
-	import Notice from '$lib/components/admin/Notice.svelte';
-	import { dropTone, humanise, shortDateTime } from '$lib/components/admin/tone';
+	import { ExternalLink, FileText, Plus } from '@lucide/svelte';
+	import Chip from '$lib/components/admin/ui/Chip.svelte';
+	import PageHeader from '$lib/components/admin/ui/PageHeader.svelte';
+	import Section from '$lib/components/admin/ui/Section.svelte';
+	import { dropNumber, dropState } from '$lib/components/admin/drop-labels';
+	import { shortDate, shortDateTime } from '$lib/components/admin/tone';
 
 	let { data } = $props();
-
-	/**
-	 * The site map, split by who owns each surface (§12). This is the honest
-	 * boundary: layout owns how a page looks and what sits on it; the catalogue
-	 * and everything downstream of money stays with the owner.
-	 */
-	const SURFACES = [
-		{
-			href: '/',
-			title: 'Home',
-			owner: 'layout' as const,
-			blurb: 'Hero, wordmark treatment, campaign slot, the impact band and the roots section.'
-		},
-		{
-			href: '/know-your-roots',
-			title: 'Know your roots',
-			owner: 'layout' as const,
-			blurb: 'Hemp, why Rootwear, the making. One page, story and craft together.'
-		},
-		{
-			href: '/drops',
-			title: 'Drop archive',
-			owner: 'layout' as const,
-			blurb: 'Layout and cover art. The drops themselves, and their stock, are owner-owned.'
-		},
-		{
-			href: '/policies',
-			title: 'Information pages',
-			owner: 'layout' as const,
-			blurb: 'Shipping, returns, privacy, terms, FAQ, size guide, care, track order — one template, unlimited pages.'
-		},
-		{
-			href: '/contact',
-			title: 'Contact page',
-			owner: 'layout' as const,
-			blurb: 'The page itself. Submissions sent through it are customer records and are owner-only.'
-		},
-		{
-			href: '/drops',
-			title: 'Products and stock',
-			owner: 'owner' as const,
-			blurb: 'Product listings, per-size stock, reservation caps, launch instants, drop state.'
-		},
-		{
-			href: '/admin/orders',
-			title: 'Orders and payouts',
-			owner: 'owner' as const,
-			blurb: 'Orders, reservations, payments, refunds and every customer record.'
-		}
-	];
-
-	let layoutSurfaces = $derived(SURFACES.filter((s) => s.owner === 'layout'));
-	let ownerSurfaces = $derived(SURFACES.filter((s) => s.owner === 'owner'));
 </script>
 
-<svelte:head>
-	<title>Layout — Rootwear operations</title>
-	<meta name="robots" content="noindex, nofollow" />
-</svelte:head>
+<svelte:head><title>Layout · Rootwear admin</title></svelte:head>
 
-<SectionHead
-	level={1}
-	eyebrow="Site"
-	title="Layout"
-	note="Page layouts, hero and banner design, campaign slots, site copy outside product listings, new pages and navigation."
-/>
+<div class="flex flex-col gap-10">
+	<PageHeader title="Layout" description="Site copy outside the product pages, and which drop sits where.">
+		{#snippet actions()}<a class="q-btn q-btn-primary" href="/admin/layout/pages/new"><Plus /> New page</a>{/snippet}
+	</PageHeader>
 
-{#if !data.isOwner}
-	<div class="mt-8">
-		<Notice kind="info">
-			This account has layout access only. Orders, customer records and payouts need other permissions — those
-			screens are not linked here and will refuse the request if reached directly.
-		</Notice>
-	</div>
-{/if}
-
-<!-- CAMPAIGN SLOTS -------------------------------------------------------- -->
-<section class="mt-16 flex flex-col gap-6">
-	<SectionHead
-		eyebrow="Campaign"
-		title="Slots"
-		note="Which drop occupies which surface. A drop that is not published is invisible to the public whatever the layout says, so check this column before designing around one."
-	/>
-
-	<TableShell caption="Campaign slots" captionVisible={false}>
-		<thead>
-			<tr class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Drop</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">State</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Visible publicly</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Launch (IST)</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-right">Page</th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each data.slots as slot (slot.id)}
-				<tr class="text-stone-200">
-					<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal text-paper">
-						Drop {String(slot.number).padStart(2, '0')} — {slot.name}
-					</th>
-					<td class="border-b border-white/5 px-4 py-3">
-						<StatePill label={humanise(slot.state)} tone={dropTone(slot.state)} />
-					</td>
-					<td class="border-b border-white/5 px-4 py-3">
-						<StatePill
-							label={slot.published ? 'Published' : 'Hidden'}
-							tone={slot.published ? 'outline' : 'quiet'}
-						/>
-					</td>
-					<td class="border-b border-white/5 px-4 py-3 text-[13px] whitespace-nowrap tabular-nums">
-						{shortDateTime(slot.launchInstant)}
-					</td>
-					<td class="border-b border-white/5 px-4 py-3 text-right">
-						<a
-							class="text-[13px] tracking-[0.16em] text-stone-300 uppercase underline underline-offset-4 hover:text-paper font-medium"
-							href="/drops/{slot.slug}"
-						>
-							Open
-						</a>
-					</td>
-				</tr>
-			{:else}
-				<tr>
-					<td colspan="5" class="px-4 py-10 text-[15px] text-stone-400">No drops to place yet.</td>
-				</tr>
+	<Section title="Pages" description="Shipping, returns, privacy and the rest. Edits go live when published; the original can always be restored.">
+		<ul class="q-card q-divide">
+			{#each data.pages as page (page.slug)}
+				<li class="flex items-center justify-between gap-3 p-3 pl-4">
+					<div class="flex min-w-0 items-center gap-3">
+						<FileText size={20} strokeWidth={1.5} class="flex-none text-q-tertiary" />
+						<div class="min-w-0">
+							<a href="/admin/layout/pages/{page.slug}" class="text-[14px] font-medium text-q-text hover:underline">{page.title}</a>
+							<p class="text-[13px] text-q-secondary">/policies/{page.slug}{page.showInFooter ? ' · in the footer' : ''}</p>
+						</div>
+					</div>
+					<div class="flex flex-none items-center gap-2">
+						{#if !page.published}<Chip label="Draft" tone="warning" />{:else if page.edited}<Chip label="Edited {shortDate(page.updatedAt)}" tone="accent" />{:else}<Chip label="Original" dot={false} />{/if}
+						{#if page.published}<a class="q-btn q-btn-ghost q-btn-sm q-btn-icon" href="/policies/{page.slug}" target="_blank" rel="noopener" aria-label="View {page.title}"><ExternalLink /></a>{/if}
+					</div>
+				</li>
 			{/each}
-		</tbody>
-	</TableShell>
-</section>
+		</ul>
+	</Section>
 
-<!-- SURFACES --------------------------------------------------------------- -->
-<section class="mt-16 flex flex-col gap-8 border-t border-white/10 pt-10">
-	<SectionHead eyebrow="Ownership" title="What layout owns" />
-
-	<ul class="grid gap-px bg-white/10 sm:grid-cols-2">
-		{#each layoutSurfaces as surface (surface.title)}
-			<li class="flex flex-col gap-3 bg-forest/40 px-5 py-6">
-				<a
-					class="text-[15px] text-paper underline decoration-white/25 underline-offset-4 hover:decoration-paper"
-					href={surface.href}
-				>
-					{surface.title}
-				</a>
-				<p class="text-[13px] leading-relaxed text-stone-400">{surface.blurb}</p>
-			</li>
-		{/each}
-	</ul>
-
-	<SectionHead eyebrow="Ownership" title="What stays with the owner" />
-
-	<ul class="grid gap-px bg-white/10 sm:grid-cols-2">
-		{#each ownerSurfaces as surface (surface.title)}
-			<li class="flex flex-col gap-3 bg-forest/20 px-5 py-6">
-				<p class="text-[15px] text-stone-300">{surface.title}</p>
-				<p class="text-[13px] leading-relaxed text-stone-400">{surface.blurb}</p>
-			</li>
-		{/each}
-	</ul>
-
-	<p class="max-w-[52rem] text-[13px] leading-relaxed text-stone-400">
-		The split is enforced in three places, not one: the row-level policies in the database, the
-		guard on this area, and again on every screen inside it. Hiding a link has never been access
-		control.
-	</p>
-</section>
+	<Section title="Campaign slots" description="A drop that is not published is invisible to the public whatever the layout says, so check before designing around one.">
+		<div class="q-table-wrap">
+			<table class="q-table">
+				<thead><tr><th scope="col">Drop</th><th scope="col">State</th><th scope="col">On the site</th><th scope="col">Launch (IST)</th><th scope="col"><span class="sr-only">View</span></th></tr></thead>
+				<tbody>
+					{#each data.slots as slot (slot.id)}
+						{@const st = dropState(slot.state)}
+						<tr>
+							<td class="font-medium text-q-text">Drop {dropNumber(slot.number)} — {slot.name}</td>
+							<td><Chip label={st.label} tone={st.tone} /></td>
+							<td>{#if slot.published}<Chip label="Published" tone="success" />{:else}<Chip label="Hidden" />{/if}</td>
+							<td class="text-q-secondary">{shortDateTime(slot.launchInstant)}</td>
+							<td class="text-right"><a class="q-link text-[13px]" href="/drops/{slot.slug}">Open</a></td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	</Section>
+</div>

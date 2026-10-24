@@ -1,32 +1,24 @@
-import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { adminRepo } from '$lib/server/admin';
 import { requireSection } from '$lib/server/admin/roles';
-import { resolveAdminAuth } from '$lib/server/admin/session';
+import { staffActor } from '$lib/server/admin/session';
+import { listPolicies } from '$lib/server/content/admin';
 
 /**
- * RW-164 — The layout role's own screen.
+ * RW-164 — Site layout and copy: the policy pages, and which drop sits on
+ * which surface.
  *
- * §12: "TRONE OWNS LAYOUT, BANNERS AND NEW PAGES … NO ACCESS TO ORDERS,
- * CUSTOMER RECORDS OR PAYOUTS."
- *
- * So this load is deliberately NARROW. It reads the drop list for the campaign
- * slots — which drop is on the hero, which are in the archive — and PROJECTS
- * AWAY everything else before it returns. Stock counts, reservation caps and
- * reserved figures never reach this page, because stock is owner-owned and a
- * page that merely does not render a field has still shipped it to the
- * browser in the data payload.
+ * Deliberately NARROW: the drop list is projected down to identity and
+ * visibility before it leaves the server, so stock, caps and money never
+ * reach a layout-only account's browser.
  */
 export const load: PageServerLoad = async (event) => {
-	const auth = await resolveAdminAuth(event);
-	if (auth.status !== 'staff') error(403, 'Staff access required.');
-	requireSection(auth.actor, 'layout');
-
-	const rows = await adminRepo.listDropRows();
-
+	const actor = await staffActor(event);
+	requireSection(actor, 'layout');
+	const [rows, pages] = await Promise.all([adminRepo.listDropRows(), listPolicies()]);
 	return {
-		isOwner: auth.actor.isOwner,
-		// Identity and visibility only. No stock, no caps, no money.
+		isOwner: actor.isOwner,
+		pages: pages.map((p) => ({ slug: p.slug, title: p.title, edited: p.edited, published: p.published, showInFooter: p.showInFooter, updatedAt: p.updatedAt })),
 		slots: rows.map((row) => ({
 			id: row.id,
 			slug: row.slug,

@@ -4,6 +4,7 @@
 		Clock,
 		FileText,
 		History,
+		House,
 		Inbox,
 		LayoutTemplate,
 		Megaphone,
@@ -44,7 +45,8 @@
 		message: MessageSquare,
 		settings: Settings,
 		shield: Shield,
-		history: History
+		history: History,
+		home: House
 	} as const;
 
 	const Icon = $derived(ICONS[name]);

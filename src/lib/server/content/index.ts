@@ -10,10 +10,54 @@
  * the footer link list the root layout loads on EVERY route — runs with no
  * database configured. No route or component changes between the two.
  */
-import type { PolicyRepository } from './types';
+import type { Policy, PolicyRepository } from './types';
 import { mockPolicyRepository } from './mock-repository';
 import { supabasePolicyRepository } from './supabase-repository';
 import { catalogueSource, isSupabaseConfigured } from '$lib/server/env';
+import { POLICIES } from '$lib/content/policies';
+import { blocksToText, headingsOf, scorePolicy } from './text';
+
+/**
+ * With a database, a page edited in admin (a published public.policies row)
+ * replaces the code version of the same slug; every page nobody has edited
+ * is still served from $lib/content/policies. Without this, connecting the
+ * database would have emptied /policies, because the table starts empty.
+ */
+async function merged(): Promise<Policy[]> {
+	const edited = await supabasePolicyRepository.listAll();
+	const bySlug = new Map<string, Policy>(POLICIES.map((p) => [p.slug, p]));
+	for (const policy of edited) bySlug.set(policy.slug, policy);
+	return [...bySlug.values()].sort((a, b) => a.navOrder - b.navOrder || a.title.localeCompare(b.title));
+}
+
+const mergedPolicyRepository: PolicyRepository = {
+	async listFooterLinks() {
+		return (await merged()).filter((p) => p.showInFooter).map(({ slug, title }) => ({ slug, title }));
+	},
+	async findBySlug(slug) {
+		return (await supabasePolicyRepository.findBySlug(slug)) ?? POLICIES.find((p) => p.slug === slug) ?? null;
+	},
+	async listAll() {
+		return merged();
+	},
+	async search(query) {
+		const trimmed = query.trim();
+		if (!trimmed) return [];
+		return (await merged())
+			.map((policy) => ({
+				policy,
+				score: scorePolicy(trimmed, {
+					title: policy.title,
+					summary: policy.summary,
+					headings: headingsOf(policy.body),
+					body: blocksToText(policy.body)
+				})
+			}))
+			.filter((hit) => hit.score > 0)
+			.sort((a, b) => b.score - a.score || a.policy.navOrder - b.policy.navOrder)
+			.map(({ policy }) => ({ slug: policy.slug, title: policy.title, summary: policy.summary }));
+	}
+};
 
 function selectRepository(): PolicyRepository {
 	if (catalogueSource() === 'supabase') {
@@ -23,7 +67,7 @@ function selectRepository(): PolicyRepository {
 					'PUBLIC_SUPABASE_ANON_KEY are not set. See .env.example.'
 			);
 		}
-		return supabasePolicyRepository;
+		return mergedPolicyRepository;
 	}
 	return mockPolicyRepository;
 }

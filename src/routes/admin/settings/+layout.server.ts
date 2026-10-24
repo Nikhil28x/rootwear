@@ -9,7 +9,7 @@ export const load: LayoutServerLoad = async (event) => {
 	if (canAccess(actor, 'settings')) {
 		tabs.push({ href: '/admin/settings/business', label: 'Business & GST' });
 		tabs.push({ href: '/admin/settings/shipping', label: 'Shipping' });
-		tabs.push({ href: '/admin/settings/policies', label: 'Policies' });
+		tabs.push({ href: '/admin/settings/alerts', label: 'Alerts & digest' });
 		tabs.push({ href: '/admin/settings/channels', label: 'Email & WhatsApp' });
 	}
 	if (canAccess(actor, 'staff')) tabs.push({ href: '/admin/settings/staff', label: 'Staff' });
@@ -17,4 +17,10 @@ export const load: LayoutServerLoad = async (event) => {
 };
 
 /** Tabs whose screens exist; the rest appear as they are built. */
-const BUILT_TABS = new Set(['/admin/settings/business', '/admin/settings/channels', '/admin/settings/staff']);
+const BUILT_TABS = new Set([
+	'/admin/settings/business',
+	'/admin/settings/shipping',
+	'/admin/settings/alerts',
+	'/admin/settings/channels',
+	'/admin/settings/staff'
+]);

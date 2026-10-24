@@ -15,7 +15,7 @@
 
 	let openId = $state<string | null>(null);
 	let open = $derived(data.messages.find((m) => m.id === openId) ?? null);
-	let filtered = $derived(Boolean(data.filters.search || data.filters.channel));
+	let filtered = $derived(Boolean(data.filters.search || data.filters.channel || data.filters.context));
 </script>
 
 <svelte:head><title>Messages · Rootwear admin</title></svelte:head>
@@ -23,6 +23,7 @@
 <div class="flex flex-col gap-4">
 	<form method="GET" class="flex flex-wrap items-end gap-2" data-sveltekit-keepfocus>
 		{#if data.filters.status}<input type="hidden" name="status" value={data.filters.status} />{/if}
+		{#if data.filters.context}<input type="hidden" name="context" value={data.filters.context} />{/if}
 		<div class="relative min-w-[240px] flex-1 sm:max-w-[360px]">
 			<Search size={16} strokeWidth={1.5} class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-q-tertiary" />
 			<label for="msg-search" class="sr-only">Search messages</label>

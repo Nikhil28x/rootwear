@@ -219,6 +219,11 @@ Q -c "insert into app.leads (email, source, external_id) values ('x@e.com','webs
 DUPL=$(Q -c "insert into app.leads (email, source, external_id) values ('x@e.com','website','RW-1');" 2>&1 | grep -c 'duplicate key' || true)
 check "a redelivered lead is refused by its external id" "$DUPL" "1"
 
+# --- growth (0028) -------------------------------------------------------------
+check "a customer can carry tags and consent" "$(Q -c "update app.customers set tags='{vip}', marketing_email=true where email='a@e.com' returning array_to_string(tags,',')||marketing_email;")" "viptrue"
+DUPH=$(Q -c "insert into app.influencers (name, handle) values ('A','same'),('B','same');" 2>&1 | grep -c 'duplicate key' || true)
+check "one creator per handle" "$DUPH" "1"
+
 # --- RLS --------------------------------------------------------------------
 Q -c "grant usage on schema public to anon, authenticated;
       grant select on all tables in schema public to anon, authenticated;" >/dev/null

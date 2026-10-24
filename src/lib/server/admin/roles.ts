@@ -115,7 +115,8 @@ export type AdminNavIcon =
 	| 'message'
 	| 'settings'
 	| 'shield'
-	| 'history';
+	| 'history'
+	| 'home';
 
 export type AdminNavItem = {
 	readonly section: AdminSection;
@@ -133,7 +134,10 @@ export type AdminNavGroup = {
 const NAV: readonly AdminNavGroup[] = [
 	{
 		label: null,
-		items: [{ section: 'dashboard', href: '/admin', label: 'Overview', icon: 'chart' }]
+		items: [
+			{ section: 'dashboard', href: '/admin', label: 'Overview', icon: 'home' },
+			{ section: 'dashboard', href: '/admin/reports', label: 'Reports', icon: 'chart' }
+		]
 	},
 	{
 		label: 'Sell',
@@ -188,7 +192,11 @@ const BUILT = new Set<AdminSection>([
 	'invoices',
 	'carts',
 	'leads',
+	'customers',
 	'contact',
+	'coupons',
+	'broadcasts',
+	'influencers',
 	'layout',
 	'messages',
 	'settings',

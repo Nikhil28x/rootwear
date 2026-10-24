@@ -17,9 +17,13 @@
 <svelte:head><title>Invoices · Rootwear admin</title></svelte:head>
 
 <div class="flex flex-col gap-6">
-	<PageHeader title="Invoices" description="Every invoice and credit note, numbered per financial year. Pick dates to see one month or quarter.">
+	<PageHeader title="Invoices" description="Every invoice and credit note, numbered per financial year. Pick a month’s dates, then download the three files your accountant needs for GST filing.">
 		{#snippet actions()}
-			<a class="q-btn q-btn-secondary" href="/admin/invoices/export{data.query}"><Download /> Sales register CSV</a>
+			<div class="flex flex-wrap gap-2" role="group" aria-label="Accountant pack">
+				<a class="q-btn q-btn-secondary" href="/admin/invoices/export{data.query}"><Download /> Sales register</a>
+				<a class="q-btn q-btn-secondary" href="/admin/invoices/export{data.query ? `${data.query}&` : '?'}type=hsn"><Download /> HSN summary</a>
+				<a class="q-btn q-btn-secondary" href="/admin/invoices/export{data.query ? `${data.query}&` : '?'}type=states"><Download /> By state</a>
+			</div>
 		{/snippet}
 	</PageHeader>
 
