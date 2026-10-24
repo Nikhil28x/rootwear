@@ -17,6 +17,7 @@ import { messagesFor, type OutboxMessage } from '$lib/server/messaging/outbox';
 import { paise, type Paise } from '$lib/money';
 import { issueCreditNote, documentsForOrder, issueInvoice, type InvoiceDocument } from './invoices';
 import { notifyOrder } from './notify';
+import { attributeRecovery } from '$lib/server/carts/admin';
 
 export class OrderError extends Error {}
 
@@ -1023,6 +1024,7 @@ export async function exchangeOptions(order: OrderDetail): Promise<{ id: string;
 /** Called once payment is captured: the invoice and the confirmation. */
 export async function onOrderPaid(orderId: string): Promise<void> {
 	await issueInvoice(orderId).catch((error) => console.error('[orders] invoice failed', error));
+	await attributeRecovery(orderId).catch((error) => console.error('[orders] attribution failed', error));
 	await notifyOrder(orderId, 'confirmed').catch((error) => console.error('[orders] confirmation failed', error));
 }
 

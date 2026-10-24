@@ -12,6 +12,7 @@
 	 * the hold runs out.
 	 */
 	import { invalidateAll } from '$app/navigation';
+	import { page } from '$app/state';
 	import '$lib/components/checkout/checkout.css';
 	import CheckoutSteps from '$lib/components/checkout/CheckoutSteps.svelte';
 	import CartLine from '$lib/components/cart/CartLine.svelte';
@@ -23,6 +24,8 @@
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
+	/** Arrived from a cart reminder (/cart/recover/...). */
+	let restored = $derived(page.url.searchParams.get('restored'));
 
 	let cart = $derived(data.cart);
 	let empty = $derived(cart.lines.length === 0);
@@ -75,8 +78,15 @@
 				<CheckoutSteps current="cart" />
 			</header>
 			<div class="co-main">
-				{#if problem || holdLapsed}
+				{#if problem || holdLapsed || restored}
 					<div class="cart-notices">
+						{#if restored}
+							<p role="status" class="co-note">
+								{restored === 'partial'
+									? 'Welcome back. Some of what you chose has sold since, so your cart holds what is still available.'
+									: 'Welcome back. Your pieces are in your cart and held for you again.'}
+							</p>
+						{/if}
 						{#if problem}
 							<!-- Announced, not merely coloured. -->
 							<p role="alert" class="co-alert">{problem}</p>

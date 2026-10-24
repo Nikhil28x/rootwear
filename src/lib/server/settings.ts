@@ -54,12 +54,32 @@ export const DEFAULT_BUSINESS: BusinessSettings = {
 	signatory: ''
 };
 
+export type CartSettings = {
+	/**
+	 * Send the reminder without anyone clicking. Off by default: a WhatsApp
+	 * reminder is a marketing message to Meta, which needs the shopper's
+	 * opt-in, so switch this on once checkout asks for it.
+	 */
+	readonly autoRecover: boolean;
+	/** Minutes after the checkout was abandoned before the reminder goes. */
+	readonly delayMinutes: number;
+	readonly channels: readonly ('email' | 'whatsapp')[];
+};
+
+export const DEFAULT_CARTS: CartSettings = {
+	autoRecover: false,
+	delayMinutes: 60,
+	channels: ['email']
+};
+
 type Defaults = {
 	business: BusinessSettings;
+	carts: CartSettings;
 };
 
 const DEFAULTS: Defaults = {
-	business: DEFAULT_BUSINESS
+	business: DEFAULT_BUSINESS,
+	carts: DEFAULT_CARTS
 };
 
 export async function getSetting<K extends keyof Defaults>(key: K): Promise<Defaults[K]> {

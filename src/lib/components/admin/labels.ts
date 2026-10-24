@@ -43,3 +43,13 @@ export const REFUND_STATE: Record<string, Label> = {
 	processed: { label: 'Refunded', tone: 'success' },
 	failed: { label: 'Refund failed', tone: 'danger' }
 };
+
+export const CHECKOUT_STATUS: Record<string, Label> = {
+	in_checkout: { label: 'In checkout', tone: 'info' },
+	abandoned: { label: 'Abandoned', tone: 'warning' },
+	reminded: { label: 'Reminded', tone: 'accent' },
+	clicked: { label: 'Opened the link', tone: 'accent' },
+	recovered: { label: 'Recovered', tone: 'success' },
+	bought_later: { label: 'Bought later', tone: 'success' },
+	dismissed: { label: 'Dismissed', tone: 'neutral' }
+};
