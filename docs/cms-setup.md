@@ -1,92 +1,124 @@
 # Rootwear admin — going live
 
 Everything the `cms` branch needs before it runs on the real site, in order.
-Nothing here has been applied to the live Supabase project yet.
+The site is hosted on Cloudflare Workers and the database is Supabase.
 
 ## 1. Apply the database migrations
 
-Seven new migrations, applied in order after `0021`:
+Every file in `supabase/migrations` (0001 to 0029), in order, on a new
+Supabase project. Pick the Mumbai region (`ap-south-1`).
 
-| File | What it adds |
-|---|---|
-| `0022_staff_permissions.sql` | Per-person permissions, owner guard, settings table |
-| `0023_messaging.sql` | Message templates and the send queue (outbox) |
-| `0024_catalogue_cms.sql` | Editable sizes, colourways, draft products, stock history, tax fields, the `catalogue` image bucket |
-| `0025_orders_cms.sql` | Order notes, invoices and credit notes, returns |
-| `0026_cart_recovery.sql` | Abandoned-checkout reminders |
-| `0027_leads.sql` | Leads and their history; turns every past form into a lead |
-| `0028_growth.sql` | Customer tags and consent, broadcasts, influencer seeding, digest |
+1. Supabase → your project → **Connect** → **Session pooler**. Copy that
+   connection string and put the database password in it. Don't use the
+   direct one: it is IPv6 only and fails from most networks.
+2. Run, with the PostgreSQL client (`psql`) installed:
 
-Run them with the Supabase CLI (`supabase db push`) or paste each file into the
-SQL editor in order. Take a backup first (Database → Backups).
+   ```sh
+   DATABASE_URL='postgresql://…' npm run db:migrate -- --dry-run   # lists what will run
+   DATABASE_URL='postgresql://…' npm run db:migrate
+   ```
 
-`0024` changes the size column from a fixed list to text. Drop 01 keeps its
-sizes, SKUs and stock exactly as they are.
+   Each file runs in its own transaction and is recorded in Supabase's
+   migration history, so running it again only applies new files.
+
+The CMS migrations, for reference:
+
+| File                         | What it adds                                                                                        |
+| ---------------------------- | --------------------------------------------------------------------------------------------------- |
+| `0022_staff_permissions.sql` | Per-person permissions, owner guard, settings table                                                 |
+| `0023_messaging.sql`         | Message templates and the send queue (outbox)                                                       |
+| `0024_catalogue_cms.sql`     | Editable sizes, colourways, draft products, stock history, tax fields, the `catalogue` image bucket |
+| `0025_orders_cms.sql`        | Order notes, invoices and credit notes, returns                                                     |
+| `0026_cart_recovery.sql`     | Abandoned-checkout reminders                                                                        |
+| `0027_leads.sql`             | Leads and their history; turns every past form into a lead                                          |
+| `0028_growth.sql`            | Customer tags and consent, broadcasts, influencer seeding, digest                                   |
+| `0029_money_guards.sql`      | Refund cap and gap-free invoice numbers                                                             |
 
 The database tests run every migration on a throwaway local Postgres:
 
 ```sh
-PGBIN=/usr/sbin ./supabase/tests/run.sh   # 67 checks
+PGBIN=/usr/sbin ./supabase/tests/run.sh
 ```
 
 ## 2. Environment variables
 
-Add these to the server environment (Vercel → Settings → Environment
-Variables, or `.env` locally). `.env.example` lists them all with notes.
+The site runs on Cloudflare Workers. Add each secret with
+`npx wrangler secret put NAME` (it asks for the value), or in the dashboard:
+Workers & Pages → rootwear → Settings → Variables and Secrets. Locally they
+go in `.env`. `.env.example` lists them all with notes.
 
 **Required for the admin to work at all**
 
-| Variable | Where it comes from |
-|---|---|
-| `PUBLIC_SUPABASE_ANON_KEY` | Supabase → Project Settings → API |
-| `SUPABASE_SERVICE_ROLE_KEY` | Same page. Server only; never in a `PUBLIC_` variable |
-| `PUBLIC_SITE_URL` | `https://rootwear.in` — used in links inside messages |
-| `CRON_SECRET` | Any long random string |
+| Variable                    | Where it comes from                                         |
+| --------------------------- | ----------------------------------------------------------- |
+| `PUBLIC_SUPABASE_URL`       | Supabase → Project Settings → API (`https://….supabase.co`) |
+| `PUBLIC_SUPABASE_ANON_KEY`  | Same page                                                   |
+| `SUPABASE_SERVICE_ROLE_KEY` | Same page. Server only; never in a `PUBLIC_` variable       |
+| `PUBLIC_SITE_URL`           | Already set in `wrangler.jsonc` to `https://rootwear.in`    |
+| `CRON_SECRET`               | Any long random string                                      |
 
 > Until both Supabase keys are set the site runs on built-in sample data and
 > admin is only the form inbox. Also fixed on this branch: the app previously
 > could never see `PUBLIC_SUPABASE_URL`, so it would have stayed on sample
 > data even with the keys set.
 
-**Email** — ZeptoMail if its token is set, otherwise your mailbox over SMTP.
+**Email**: ZeptoMail. The SMTP fallback needs a Node server, and Cloudflare
+Workers can't open mail connections, so on Cloudflare email needs ZeptoMail.
 
-| Variable | Notes |
-|---|---|
-| `ZEPTOMAIL_TOKEN` | ZeptoMail → Mail Agents → SMTP/API → Send Mail token |
-| `ZEPTOMAIL_API_URL` | `https://api.zeptomail.in/v1.1/email` for an India account |
-| `EMAIL_FROM`, `EMAIL_FROM_NAME` | A sender verified in ZeptoMail, e.g. `hi@rootwear.in` |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Only if not using ZeptoMail |
+| Variable                                           | Notes                                                      |
+| -------------------------------------------------- | ---------------------------------------------------------- |
+| `ZEPTOMAIL_TOKEN`                                  | ZeptoMail → Mail Agents → SMTP/API → Send Mail token       |
+| `ZEPTOMAIL_API_URL`                                | `https://api.zeptomail.in/v1.1/email` for an India account |
+| `EMAIL_FROM`, `EMAIL_FROM_NAME`                    | A sender verified in ZeptoMail, e.g. `hi@rootwear.in`      |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Only when running on a Node server, not on Cloudflare      |
 
 For ZeptoMail, add the domain verification and the SPF/DKIM records it shows
 to the `rootwear.in` DNS, and wait for them to verify.
 
 **WhatsApp and Meta**
 
-| Variable | Notes |
-|---|---|
-| `WHATSAPP_PHONE_NUMBER_ID` | Meta app → WhatsApp → API Setup |
-| `WHATSAPP_ACCESS_TOKEN` | A permanent System User token (see below) |
-| `META_APP_SECRET` | Meta app → Settings → Basic → App secret |
-| `META_VERIFY_TOKEN` | Any long random string |
-| `META_PAGE_ACCESS_TOKEN` | Only for lead ads: a Page token with `leads_retrieval` |
+| Variable                   | Notes                                                  |
+| -------------------------- | ------------------------------------------------------ |
+| `WHATSAPP_PHONE_NUMBER_ID` | Meta app → WhatsApp → API Setup                        |
+| `WHATSAPP_ACCESS_TOKEN`    | A permanent System User token (see below)              |
+| `META_APP_SECRET`          | Meta app → Settings → Basic → App secret               |
+| `META_VERIFY_TOKEN`        | Any long random string                                 |
+| `META_PAGE_ACCESS_TOKEN`   | Only for lead ads: a Page token with `leads_retrieval` |
 
 Settings → Email & WhatsApp in admin shows what is connected and can send a
 test of each.
 
-## 3. Scheduled jobs
+## 3. Deploy to Cloudflare
 
-All four take `Authorization: Bearer <CRON_SECRET>`.
+```sh
+npx wrangler login
+npm run deploy          # builds and deploys the site as the "rootwear" Worker
+```
 
-| Endpoint | How often | What it does |
-|---|---|---|
-| `/api/cron/expire-orders` | every 5 min | Already existed: frees stock from unpaid orders |
-| `/api/cron/outbox` | every 2 min | Retries messages a provider was down for |
-| `/api/cron/carts` | every 15 min | Automatic cart reminders, if switched on |
-| `/api/cron/digest` | daily, 02:30 UTC | The 08:00 IST morning email |
+Then Workers & Pages → rootwear → Settings → Domains & Routes → Add →
+Custom domain → `rootwear.in` (and `www.rootwear.in`). The domain's DNS has
+to be on the same Cloudflare account.
 
-On Vercel, add them to `vercel.json` under `crons`.
+## 4. Scheduled jobs
 
-## 4. Meta setup (WhatsApp and lead ads)
+A second small Worker, `rootwear-cron` (`workers/cron`), calls these on a
+schedule. Each takes `Authorization: Bearer <CRON_SECRET>`.
+
+| Endpoint                  | How often        | What it does                             |
+| ------------------------- | ---------------- | ---------------------------------------- |
+| `/api/cron/expire-orders` | every 2 min      | Frees stock from unpaid orders           |
+| `/api/cron/outbox`        | every 2 min      | Retries messages a provider was down for |
+| `/api/cron/carts`         | every 15 min     | Automatic cart reminders, if switched on |
+| `/api/cron/digest`        | daily, 02:30 UTC | The 08:00 IST morning email              |
+
+```sh
+npx wrangler secret put CRON_SECRET -c workers/cron/wrangler.jsonc   # same value as the site's
+npm run deploy:cron
+```
+
+Its logs (Workers & Pages → rootwear-cron → Logs) show any job that failed.
+
+## 5. Meta setup (WhatsApp and lead ads)
 
 Meta reviews parts of this, so start early.
 
@@ -107,21 +139,21 @@ Meta reviews parts of this, so start early.
    (`en`) and the order of `{{1}}, {{2}}…` must match admin → Messages →
    Templates:
 
-| Template name | Category | Variables in order |
-|---|---|---|
-| `order_confirmed` | Utility | name, order number, total, order link |
-| `order_dispatched` | Utility | name, order number, courier, tracking, order link |
-| `balance_due` | Utility | name, drop name, balance, due date, pay link |
-| `cart_reminder` | Marketing | name, items, cart link |
-| `drop_live` | Marketing | name, drop name, drop link |
-| `broadcast` | Marketing | name, message |
+| Template name      | Category  | Variables in order                                |
+| ------------------ | --------- | ------------------------------------------------- |
+| `order_confirmed`  | Utility   | name, order number, total, order link             |
+| `order_dispatched` | Utility   | name, order number, courier, tracking, order link |
+| `balance_due`      | Utility   | name, drop name, balance, due date, pay link      |
+| `cart_reminder`    | Marketing | name, items, cart link                            |
+| `drop_live`        | Marketing | name, drop name, drop link                        |
+| `broadcast`        | Marketing | name, message                                     |
 
 Marketing templates need the customer's opt-in. Checkout now has two
 unticked boxes (email, WhatsApp); a tick is saved on the customer with a
 dated note, and broadcasts only reach people who ticked, signed up through
 a drop form, or were marked as agreeing by staff.
 
-## 5. First sign-in
+## 6. First sign-in
 
 1. Create the owner: `ADMIN_EMAIL=… ADMIN_PASSWORD=… ADMIN_ROLE=owner node scripts/create-admin.mjs`
    (Trone's existing `layout` account becomes a person with the "Edit site
@@ -133,9 +165,9 @@ a drop form, or were marked as agreeing by staff.
    Support, Accountant, Layout) are starting points; tick and untick freely.
 4. Settings → Alerts & digest: choose who gets the morning email.
 
-## 6. Check before launch
+## 7. Check before launch
 
-- **Drop 01 is published.** The homepage now shows the newest *published*
+- **Drop 01 is published.** The homepage now shows the newest _published_
   live drop, so a drop being prepared can never take it over. If Drop 01
   were unpublished it would still show, as long as no other live drop is
   published. Publish it from Drops to be sure.

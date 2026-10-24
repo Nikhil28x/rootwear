@@ -1,0 +1,17 @@
+// The website. Deploy with `npm run deploy`; secrets with `npx wrangler secret put NAME`.
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "rootwear",
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"compatibility_date": "2026-09-01",
+	"compatibility_flags": ["nodejs_compat"],
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare"
+	},
+	"observability": { "enabled": true },
+	// Non-secret settings. Keys and tokens go in as secrets, never here.
+	"vars": {
+		"PUBLIC_SITE_URL": "https://rootwear.in"
+	}
+}

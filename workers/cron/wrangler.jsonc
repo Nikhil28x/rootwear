@@ -1,0 +1,16 @@
+// Calls the website's scheduled jobs. Deploy with `npm run deploy:cron`.
+// Needs the same CRON_SECRET as the website: `npx wrangler secret put CRON_SECRET -c workers/cron/wrangler.jsonc`.
+{
+	"$schema": "../../node_modules/wrangler/config-schema.json",
+	"name": "rootwear-cron",
+	"main": "index.js",
+	"compatibility_date": "2026-09-01",
+	"vars": {
+		"SITE_URL": "https://rootwear.in"
+	},
+	"triggers": {
+		// Times are UTC. 02:30 UTC is 08:00 IST.
+		"crons": ["*/2 * * * *", "*/15 * * * *", "30 2 * * *"]
+	},
+	"observability": { "enabled": true }
+}
