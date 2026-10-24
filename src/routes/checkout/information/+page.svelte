@@ -273,6 +273,22 @@
 				</fieldset>
 
 				<fieldset>
+					<legend>Stay in touch</legend>
+					<!-- §13: opt-in, never pre-ticked. Order updates go regardless. -->
+					<label class="optin">
+						<input type="checkbox" name="optinEmail" />
+						<span>Email me when a new drop is coming.</span>
+					</label>
+					<label class="optin">
+						<input type="checkbox" name="optinWhatsapp" />
+						<span>WhatsApp me about new drops on the number above.</span>
+					</label>
+					<p class="co-fine">
+						Optional. Order updates come either way, and you can ask us to stop any time.
+					</p>
+				</fieldset>
+
+				<fieldset>
 					<legend>Payment</legend>
 					{#if data.payment.configured}
 						<p class="co-copy">
@@ -426,5 +442,22 @@
 		margin: 0;
 		font-weight: 400;
 		color: var(--ink);
+	}
+	.optin {
+		display: flex;
+		align-items: flex-start;
+		gap: 12px;
+		padding: 6px 0;
+		font-size: 14px;
+		line-height: 1.5;
+		cursor: pointer;
+	}
+	.optin input {
+		margin-top: 3px;
+		width: 16px;
+		height: 16px;
+		flex: none;
+		accent-color: var(--color-forest);
+		color-scheme: light;
 	}
 </style>

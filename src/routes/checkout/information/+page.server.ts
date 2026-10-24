@@ -3,6 +3,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { cartRepository, loadCart, readCartToken } from '$lib/server/cart';
 import { readShipValues, toShipTo, writeShipTo } from '$lib/server/cart/ship-session';
 import { placeOrder } from '$lib/server/checkout/place';
+import { rememberOptIn } from '$lib/server/customers/consent';
 import { expireUnpaidOrders } from '$lib/server/checkout/expiry';
 import {
 	EMPTY_ADDRESS,
@@ -128,6 +129,7 @@ export const actions: Actions = {
 		// An empty cart is NOT short-circuited here: placeOrder lets
 		// app.commit_order() decide, which is what turns a double-submit into a
 		// replay of the order just placed rather than an empty basket.
+		rememberOptIn(cookies, data.get('optinEmail') === 'on', data.get('optinWhatsapp') === 'on');
 		const failure = await placeOrder({ cookies, now: locals.now, ship: toShipTo(values) });
 		return fail(failure.status, { ...failure.data, values, errors: {} as AddressErrors });
 	}

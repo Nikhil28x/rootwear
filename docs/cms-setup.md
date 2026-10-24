@@ -116,9 +116,10 @@ Meta reviews parts of this, so start early.
 | `drop_live` | Marketing | name, drop name, drop link |
 | `broadcast` | Marketing | name, message |
 
-Marketing templates need the customer's opt-in. Checkout does not ask for
-WhatsApp consent yet; add a consent line there before switching on WhatsApp
-cart reminders or broadcasts.
+Marketing templates need the customer's opt-in. Checkout now has two
+unticked boxes (email, WhatsApp); a tick is saved on the customer with a
+dated note, and broadcasts only reach people who ticked, signed up through
+a drop form, or were marked as agreeing by staff.
 
 ## 5. First sign-in
 
