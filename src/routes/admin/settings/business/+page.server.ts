@@ -41,19 +41,25 @@ export const actions: Actions = {
 
 		const errors: Record<string, string> = {};
 		if (!value.legalName) errors.legalName = 'Enter the registered business name.';
-		if (!value.address) errors.address = 'Enter the registered address; it is printed on every invoice.';
+		if (!value.address)
+			errors.address = 'Enter the registered address; it is printed on every invoice.';
 		if (!state) errors.state = 'Pick the state the business is registered in.';
-		if (!/^[A-Z0-9]{1,6}$/.test(value.invoicePrefix)) errors.invoicePrefix = 'Use 1–6 letters or digits, e.g. RW.';
+		if (!/^[A-Z0-9]{1,6}$/.test(value.invoicePrefix))
+			errors.invoicePrefix = 'Use 1–6 letters or digits, e.g. RW.';
 		if (value.gstRegistered) {
-			if (!GSTIN.test(value.gstin)) errors.gstin = 'A GSTIN is 15 characters, like 29ABCDE1234F1Z5.';
+			if (!GSTIN.test(value.gstin))
+				errors.gstin = 'A GSTIN is 15 characters, like 29ABCDE1234F1Z5.';
 			else if (state && value.gstin.slice(0, 2) !== state.code) {
 				errors.gstin = `This GSTIN is for state code ${value.gstin.slice(0, 2)}, not ${state.name} (${state.code}).`;
 			}
 		}
 		if (value.pan && !PAN.test(value.pan)) errors.pan = 'A PAN is 10 characters, like ABCDE1234F.';
 
-		if (Object.keys(errors).length) return fail(400, { errors, error: 'Check the highlighted fields.' });
+		if (Object.keys(errors).length)
+			return fail(400, { errors, error: 'Check the highlighted fields.' });
 		await saveSetting('business', value, actorLabel(actor));
-		return { message: value.gstRegistered ? 'Saved. New invoices are GST tax invoices.' : 'Saved.' };
+		return {
+			message: value.gstRegistered ? 'Saved. New invoices are GST tax invoices.' : 'Saved.'
+		};
 	}
 };

@@ -43,8 +43,12 @@
 	<div class="flex flex-col gap-4 p-6">
 		<div class="flex items-start justify-between gap-4">
 			<div class="flex flex-col gap-1">
-				<h2 id="modal-title" class="text-[18px] leading-[26px] font-semibold text-q-text">{title}</h2>
-				{#if description}<p class="text-[14px] leading-[20px] text-q-secondary">{description}</p>{/if}
+				<h2 id="modal-title" class="text-[18px] leading-[26px] font-semibold text-q-text">
+					{title}
+				</h2>
+				{#if description}<p class="text-[14px] leading-[20px] text-q-secondary">
+						{description}
+					</p>{/if}
 			</div>
 			<button
 				type="button"

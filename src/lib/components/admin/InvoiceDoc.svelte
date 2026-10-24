@@ -15,18 +15,68 @@
 		gstRegistered: boolean;
 		intraState: boolean;
 		against: string | null;
-		seller: { legalName: string; tradeName: string; address: string; state: string | null; stateCode: string | null; gstin: string | null; email: string | null; phone: string | null; footer: string; signatory: string; pan: string };
-		buyer: { name: string; address: string; state: string | null; stateCode: string | null; email: string | null; phone: string | null };
-		lines: readonly { description: string; detail: string | null; sku: string | null; hsn: string | null; quantity: number; unitPrice: number; gross: number; taxRate: number; taxable: number; cgst: number; sgst: number; igst: number }[];
-		totals: { subtotal: number; shipping: number; discount: number; taxable: number; cgst: number; sgst: number; igst: number; total: number };
+		seller: {
+			legalName: string;
+			tradeName: string;
+			address: string;
+			state: string | null;
+			stateCode: string | null;
+			gstin: string | null;
+			email: string | null;
+			phone: string | null;
+			footer: string;
+			signatory: string;
+			pan: string;
+		};
+		buyer: {
+			name: string;
+			address: string;
+			state: string | null;
+			stateCode: string | null;
+			email: string | null;
+			phone: string | null;
+		};
+		lines: readonly {
+			description: string;
+			detail: string | null;
+			sku: string | null;
+			hsn: string | null;
+			quantity: number;
+			unitPrice: number;
+			gross: number;
+			taxRate: number;
+			taxable: number;
+			cgst: number;
+			sgst: number;
+			igst: number;
+		}[];
+		totals: {
+			subtotal: number;
+			shipping: number;
+			discount: number;
+			taxable: number;
+			cgst: number;
+			sgst: number;
+			igst: number;
+			total: number;
+		};
 	};
 
 	let { doc, words }: { doc: Doc; words: string } = $props();
 
 	const inr = (paise: number) =>
-		(paise / 100).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 });
+		(paise / 100).toLocaleString('en-IN', {
+			style: 'currency',
+			currency: 'INR',
+			minimumFractionDigits: 2
+		});
 	const date = (ms: number) =>
-		new Intl.DateTimeFormat('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }).format(ms);
+		new Intl.DateTimeFormat('en-IN', {
+			day: '2-digit',
+			month: 'short',
+			year: 'numeric',
+			timeZone: 'Asia/Kolkata'
+		}).format(ms);
 
 	let title = $derived(
 		doc.kind === 'credit_note' ? 'Credit note' : doc.gstRegistered ? 'Tax invoice' : 'Invoice'
@@ -41,16 +91,23 @@
 			<p class="doc__muted">{doc.seller.legalName}</p>
 			<p class="doc__muted">{doc.seller.address}</p>
 			{#if doc.seller.gstin}<p><strong>GSTIN</strong> {doc.seller.gstin}</p>{/if}
-			{#if doc.seller.email || doc.seller.phone}<p class="doc__muted">{[doc.seller.email, doc.seller.phone].filter(Boolean).join(' · ')}</p>{/if}
+			{#if doc.seller.email || doc.seller.phone}<p class="doc__muted">
+					{[doc.seller.email, doc.seller.phone].filter(Boolean).join(' · ')}
+				</p>{/if}
 		</div>
 		<div class="doc__meta">
 			<h1>{title}</h1>
 			<dl>
-				<dt>Number</dt><dd>{doc.number}</dd>
-				<dt>Date</dt><dd>{date(doc.issuedAt)}</dd>
-				<dt>Order</dt><dd>{doc.orderNumber}</dd>
-				{#if doc.against}<dt>Against</dt><dd>{doc.against}</dd>{/if}
-				{#if tax && doc.buyer.state}<dt>Place of supply</dt><dd>{doc.buyer.state}{doc.buyer.stateCode ? ` (${doc.buyer.stateCode})` : ''}</dd>{/if}
+				<dt>Number</dt>
+				<dd>{doc.number}</dd>
+				<dt>Date</dt>
+				<dd>{date(doc.issuedAt)}</dd>
+				<dt>Order</dt>
+				<dd>{doc.orderNumber}</dd>
+				{#if doc.against}<dt>Against</dt>
+					<dd>{doc.against}</dd>{/if}
+				{#if tax && doc.buyer.state}<dt>Place of supply</dt>
+					<dd>{doc.buyer.state}{doc.buyer.stateCode ? ` (${doc.buyer.stateCode})` : ''}</dd>{/if}
 			</dl>
 		</div>
 	</header>
@@ -72,7 +129,9 @@
 				<th class="num">Rate</th>
 				{#if tax}
 					<th class="num">Taxable</th>
-					{#if doc.intraState}<th class="num">CGST</th><th class="num">SGST</th>{:else}<th class="num">IGST</th>{/if}
+					{#if doc.intraState}<th class="num">CGST</th><th class="num">SGST</th>{:else}<th
+							class="num">IGST</th
+						>{/if}
 				{/if}
 				<th class="num">Amount</th>
 			</tr>
@@ -83,7 +142,9 @@
 					<td>{i + 1}</td>
 					<td>
 						{line.description}
-						{#if line.detail || line.sku}<span class="doc__muted doc__small">{[line.detail, line.sku].filter(Boolean).join(' · ')}</span>{/if}
+						{#if line.detail || line.sku}<span class="doc__muted doc__small"
+								>{[line.detail, line.sku].filter(Boolean).join(' · ')}</span
+							>{/if}
 					</td>
 					{#if tax}<td>{line.hsn ?? ''}</td>{/if}
 					<td class="num">{line.quantity}</td>
@@ -91,10 +152,16 @@
 					{#if tax}
 						<td class="num">{inr(line.taxable)}</td>
 						{#if doc.intraState}
-							<td class="num">{inr(line.cgst)}<span class="doc__small doc__muted">{line.taxRate / 2}%</span></td>
-							<td class="num">{inr(line.sgst)}<span class="doc__small doc__muted">{line.taxRate / 2}%</span></td>
+							<td class="num"
+								>{inr(line.cgst)}<span class="doc__small doc__muted">{line.taxRate / 2}%</span></td
+							>
+							<td class="num"
+								>{inr(line.sgst)}<span class="doc__small doc__muted">{line.taxRate / 2}%</span></td
+							>
 						{:else}
-							<td class="num">{inr(line.igst)}<span class="doc__small doc__muted">{line.taxRate}%</span></td>
+							<td class="num"
+								>{inr(line.igst)}<span class="doc__small doc__muted">{line.taxRate}%</span></td
+							>
 						{/if}
 					{/if}
 					<td class="num">{inr(line.gross)}</td>
@@ -106,14 +173,19 @@
 	<section class="doc__totals">
 		<p class="doc__words"><span class="doc__label">Amount in words</span>{words}</p>
 		<dl>
-			{#if doc.totals.discount}<dt>Discount</dt><dd>−{inr(doc.totals.discount)}</dd>{/if}
+			{#if doc.totals.discount}<dt>Discount</dt>
+				<dd>−{inr(doc.totals.discount)}</dd>{/if}
 			{#if tax}
-				<dt>Taxable value</dt><dd>{inr(doc.totals.taxable)}</dd>
+				<dt>Taxable value</dt>
+				<dd>{inr(doc.totals.taxable)}</dd>
 				{#if doc.intraState}
-					<dt>CGST</dt><dd>{inr(doc.totals.cgst)}</dd>
-					<dt>SGST</dt><dd>{inr(doc.totals.sgst)}</dd>
+					<dt>CGST</dt>
+					<dd>{inr(doc.totals.cgst)}</dd>
+					<dt>SGST</dt>
+					<dd>{inr(doc.totals.sgst)}</dd>
 				{:else}
-					<dt>IGST</dt><dd>{inr(doc.totals.igst)}</dd>
+					<dt>IGST</dt>
+					<dd>{inr(doc.totals.igst)}</dd>
 				{/if}
 			{/if}
 			<dt class="doc__grand">{doc.kind === 'credit_note' ? 'Credited' : 'Total'}</dt>
@@ -122,7 +194,11 @@
 	</section>
 
 	<footer class="doc__foot">
-		{#if !tax}<p class="doc__muted">The seller is not registered under GST; no GST is charged on this invoice.</p>{:else}<p class="doc__muted">Prices include GST. Tax payable on reverse charge: No.</p>{/if}
+		{#if !tax}<p class="doc__muted">
+				The seller is not registered under GST; no GST is charged on this invoice.
+			</p>{:else}<p class="doc__muted">
+				Prices include GST. Tax payable on reverse charge: No.
+			</p>{/if}
 		{#if doc.seller.footer}<p>{doc.seller.footer}</p>{/if}
 		<div class="doc__sign">
 			<p>For {doc.seller.legalName}</p>

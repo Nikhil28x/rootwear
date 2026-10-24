@@ -1,73 +1,65 @@
-import { error, fail } from '@sveltejs/kit';
-import type { Actions, PageServerLoad, RequestEvent } from './$types';
+import { fail } from '@sveltejs/kit';
+import type { Actions, PageServerLoad } from './$types';
 import { adminRepo } from '$lib/server/admin';
 import { CONTACT_STATUSES, type ContactStatus } from '$lib/server/admin/types';
-import { requireSection } from '$lib/server/admin/roles';
-import { actorLabel, resolveAdminAuth } from '$lib/server/admin/session';
+import { can, requirePermission, requireSection } from '$lib/server/admin/roles';
+import { actorLabel, staffActor } from '$lib/server/admin/session';
+import { enqueue } from '$lib/server/messaging/outbox';
 
-/**
- * RW-163 — Contact submissions.
- *
- * §11 names email and Instagram DM as the support channels; the form is the
- * third, and its submissions are stored so nothing is lost in an inbox. Three
- * statuses, no more: new, in progress, closed.
- *
- * §12 puts this behind the owner role — a submission carries a name, an email
- * and whatever the sender chose to write, which is a customer record.
- *
- * Suspected spam is kept, never deleted, and shown in its own section rather
- * than mixed in: a false positive that silently disappears is a lost customer.
- */
-async function requireStaff(event: RequestEvent) {
-	const auth = await resolveAdminAuth(event);
-	if (auth.status !== 'staff') error(403, 'Staff access required.');
-	requireSection(auth.actor, 'contact');
-	return auth.actor;
-}
-
+/** Messages from the contact form: read, reply, and mark where each one stands. */
 export const load: PageServerLoad = async (event) => {
-	await requireStaff(event);
-
+	const actor = await staffActor(event);
+	requireSection(actor, 'contact');
 	const statusParam = event.url.searchParams.get('status');
 	const status = (CONTACT_STATUSES as readonly string[]).includes(statusParam ?? '')
 		? (statusParam as ContactStatus)
 		: undefined;
-
 	const all = await adminRepo.listContact({ status });
-
 	return {
 		now: event.locals.now,
 		submissions: all.filter((row) => !row.isSpam),
-		spam: all.filter((row) => row.isSpam),
-		statuses: CONTACT_STATUSES,
-		filter: { status: status ?? '' }
+		spam: all.filter((row) => row.isSpam).length,
+		canEdit: can(actor, 'leads.edit')
 	};
 };
 
 export const actions: Actions = {
 	setStatus: async (event) => {
-		const actor = await requireStaff(event);
+		const actor = await staffActor(event);
+		requirePermission(actor, 'leads.edit');
 		const form = await event.request.formData();
-
 		const id = String(form.get('id') ?? '');
-		const statusValue = String(form.get('status') ?? '');
-		if (!id || !(CONTACT_STATUSES as readonly string[]).includes(statusValue)) {
-			return fail(400, { ok: false, message: 'Unknown submission or status.' });
-		}
+		const status = String(form.get('status') ?? '');
+		if (!id || !(CONTACT_STATUSES as readonly string[]).includes(status))
+			return fail(400, { error: 'Unknown message or status.' });
+		await adminRepo.setContactStatus({
+			id,
+			status: status as ContactStatus,
+			actor: actorLabel(actor)
+		});
+		return { message: status === 'closed' ? 'Closed.' : 'Status saved.' };
+	},
 
-		try {
-			await adminRepo.setContactStatus({
-				id,
-				status: statusValue as ContactStatus,
-				actor: actorLabel(actor)
-			});
-		} catch (cause) {
-			return fail(409, {
-				ok: false,
-				message: cause instanceof Error ? cause.message : 'Status write failed.'
-			});
-		}
-
-		return { ok: true, message: `Marked ${statusValue.replace(/_/g, ' ')}.` };
+	reply: async (event) => {
+		const actor = await staffActor(event);
+		requirePermission(actor, 'leads.edit');
+		const form = await event.request.formData();
+		const id = String(form.get('id') ?? '');
+		const message = String(form.get('message') ?? '').trim();
+		if (!message) return fail(400, { error: 'Write the reply first.' });
+		const row = (await adminRepo.listContact({})).find((r) => r.id === id);
+		if (!row) return fail(404, { error: 'That message no longer exists.' });
+		const sent = await enqueue({
+			template: 'direct_email',
+			to: row.email,
+			toName: row.name,
+			variables: { subject: `Re: ${row.subject} (${row.trackingId})`, message },
+			context: { type: 'contact', id },
+			createdBy: actorLabel(actor)
+		});
+		if (sent.status !== 'sent' && sent.status !== 'queued')
+			return fail(400, { error: `Not sent: ${sent.lastError ?? sent.status}` });
+		await adminRepo.setContactStatus({ id, status: 'in_progress', actor: actorLabel(actor) });
+		return { message: 'Reply sent.' };
 	}
 };

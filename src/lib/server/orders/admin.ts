@@ -22,7 +22,8 @@ import { markWonByOrder } from '$lib/server/leads/admin';
 
 export class OrderError extends Error {}
 
-export type OrderState = 'pending_payment' | 'paid' | 'packed' | 'dispatched' | 'delivered' | 'cancelled' | 'refunded';
+export type OrderState =
+	'pending_payment' | 'paid' | 'packed' | 'dispatched' | 'delivered' | 'cancelled' | 'refunded';
 
 export const ORDER_STATES: readonly OrderState[] = [
 	'pending_payment',
@@ -66,7 +67,8 @@ type OrderRow = {
 };
 
 const ms = (value: string | null | undefined) => (value ? Date.parse(value) : null);
-const money = (value: number | string | null | undefined): Paise => paise(Math.round(Number(value ?? 0)));
+const money = (value: number | string | null | undefined): Paise =>
+	paise(Math.round(Number(value ?? 0)));
 
 export type ShipTo = {
 	readonly name: string;
@@ -139,25 +141,41 @@ async function searchIds(term: string): Promise<string[] | null> {
 	const ids = new Set(((byOrder.data ?? []) as { id: string }[]).map((r) => r.id));
 	const customers = ((byCustomer.data ?? []) as { id: string }[]).map((r) => r.id);
 	if (customers.length) {
-		const { data } = await client.from('orders').select('id').in('customer_id', customers).limit(500);
+		const { data } = await client
+			.from('orders')
+			.select('id')
+			.in('customer_id', customers)
+			.limit(500);
 		for (const r of (data ?? []) as { id: string }[]) ids.add(r.id);
 	}
 	return [...ids];
 }
 
 async function dropOrderIds(dropId: string): Promise<string[]> {
-	const { data: products } = await getCatalogueClient().from('products').select('id').eq('drop_id', dropId);
+	const { data: products } = await getCatalogueClient()
+		.from('products')
+		.select('id')
+		.eq('drop_id', dropId);
 	const productIds = ((products ?? []) as { id: string }[]).map((p) => p.id);
 	if (!productIds.length) return [];
-	const { data: variants } = await getCatalogueClient().from('variants').select('id').in('product_id', productIds);
+	const { data: variants } = await getCatalogueClient()
+		.from('variants')
+		.select('id')
+		.in('product_id', productIds);
 	const variantIds = ((variants ?? []) as { id: string }[]).map((v) => v.id);
 	if (!variantIds.length) return [];
-	const { data } = await getServiceClient().from('order_lines').select('order_id').in('variant_id', variantIds);
+	const { data } = await getServiceClient()
+		.from('order_lines')
+		.select('order_id')
+		.in('variant_id', variantIds);
 	return [...new Set(((data ?? []) as { order_id: string }[]).map((l) => l.order_id))];
 }
 
 async function openReturnOrderIds(): Promise<string[]> {
-	const { data } = await getServiceClient().from('returns').select('order_id').in('status', ['requested', 'received']);
+	const { data } = await getServiceClient()
+		.from('returns')
+		.select('order_id')
+		.in('status', ['requested', 'received']);
 	return [...new Set(((data ?? []) as { order_id: string }[]).map((r) => r.order_id))];
 }
 
@@ -167,7 +185,10 @@ export async function listOrders(
 	options: { all?: boolean } = {}
 ): Promise<{ orders: OrderListItem[]; total: number }> {
 	const client = getServiceClient();
-	let query = client.from('orders').select('*', { count: 'exact' }).order('created_at', { ascending: false });
+	let query = client
+		.from('orders')
+		.select('*', { count: 'exact' })
+		.order('created_at', { ascending: false });
 
 	if (filter.state === 'to_ship') query = query.in('state', ['paid', 'packed']);
 	else if (filter.state === 'returns') {
@@ -200,11 +221,24 @@ export async function listOrders(
 	const ids = rows.map((r) => r.id);
 	const [lines, customers, returns] = await Promise.all([
 		client.from('order_lines').select('order_id, quantity, reservation_id').in('order_id', ids),
-		client.from('customers').select('id, email').in('id', [...new Set(rows.map((r) => r.customer_id))]),
-		client.from('returns').select('order_id').in('order_id', ids).in('status', ['requested', 'received'])
+		client
+			.from('customers')
+			.select('id, email')
+			.in('id', [...new Set(rows.map((r) => r.customer_id))]),
+		client
+			.from('returns')
+			.select('order_id')
+			.in('order_id', ids)
+			.in('status', ['requested', 'received'])
 	]);
-	const lineRows = (lines.data ?? []) as { order_id: string; quantity: number; reservation_id: string | null }[];
-	const emails = new Map(((customers.data ?? []) as { id: string; email: string }[]).map((c) => [c.id, c.email]));
+	const lineRows = (lines.data ?? []) as {
+		order_id: string;
+		quantity: number;
+		reservation_id: string | null;
+	}[];
+	const emails = new Map(
+		((customers.data ?? []) as { id: string; email: string }[]).map((c) => [c.id, c.email])
+	);
 	const open = new Set(((returns.data ?? []) as { order_id: string }[]).map((r) => r.order_id));
 
 	return {
@@ -289,7 +323,12 @@ export type OrderRefund = {
 	readonly createdAt: number;
 };
 
-export type OrderNote = { readonly id: string; readonly body: string; readonly author: string; readonly at: number };
+export type OrderNote = {
+	readonly id: string;
+	readonly body: string;
+	readonly author: string;
+	readonly at: number;
+};
 
 export type ReturnLine = { readonly orderLineId: string; readonly quantity: number };
 
@@ -348,24 +387,43 @@ export type OrderDetail = {
 };
 
 async function variantInfo(variantIds: string[]) {
-	if (!variantIds.length) return new Map<string, { productId: string; image: string | null; dropSlug: string | null; label: string }>();
+	if (!variantIds.length)
+		return new Map<
+			string,
+			{ productId: string; image: string | null; dropSlug: string | null; label: string }
+		>();
 	const catalogue = getCatalogueClient();
 	const { data: variants } = await catalogue
 		.from('variants')
 		.select('id, product_id, size, colourway_id')
 		.in('id', variantIds);
-	const vs = (variants ?? []) as { id: string; product_id: string; size: string; colourway_id: string | null }[];
+	const vs = (variants ?? []) as {
+		id: string;
+		product_id: string;
+		size: string;
+		colourway_id: string | null;
+	}[];
 	const productIds = [...new Set(vs.map((v) => v.product_id))];
 	const [{ data: images }, { data: products }, { data: colours }] = await Promise.all([
-		catalogue.from('product_images').select('product_id, url, position').in('product_id', productIds).order('position'),
+		catalogue
+			.from('product_images')
+			.select('product_id, url, position')
+			.in('product_id', productIds)
+			.order('position'),
 		catalogue.from('products').select('id, drop_id').in('id', productIds),
 		catalogue.from('colourways').select('id, name').in('product_id', productIds)
 	]);
 	const dropIds = [...new Set(((products ?? []) as { drop_id: string }[]).map((p) => p.drop_id))];
 	const { data: drops } = await catalogue.from('drops').select('id, slug').in('id', dropIds);
-	const slugOf = new Map(((drops ?? []) as { id: string; slug: string }[]).map((d) => [d.id, d.slug]));
-	const dropOf = new Map(((products ?? []) as { id: string; drop_id: string }[]).map((p) => [p.id, p.drop_id]));
-	const colourName = new Map(((colours ?? []) as { id: string; name: string }[]).map((c) => [c.id, c.name]));
+	const slugOf = new Map(
+		((drops ?? []) as { id: string; slug: string }[]).map((d) => [d.id, d.slug])
+	);
+	const dropOf = new Map(
+		((products ?? []) as { id: string; drop_id: string }[]).map((p) => [p.id, p.drop_id])
+	);
+	const colourName = new Map(
+		((colours ?? []) as { id: string; name: string }[]).map((c) => [c.id, c.name])
+	);
 	const firstImage = new Map<string, string>();
 	for (const img of (images ?? []) as { product_id: string; url: string }[]) {
 		if (!firstImage.has(img.product_id)) firstImage.set(img.product_id, img.url);
@@ -377,7 +435,9 @@ async function variantInfo(variantIds: string[]) {
 				productId: v.product_id,
 				image: firstImage.get(v.product_id) ?? null,
 				dropSlug: slugOf.get(dropOf.get(v.product_id) ?? '') ?? null,
-				label: [v.colourway_id ? colourName.get(v.colourway_id) : null, v.size].filter(Boolean).join(' / ')
+				label: [v.colourway_id ? colourName.get(v.colourway_id) : null, v.size]
+					.filter(Boolean)
+					.join(' / ')
 			}
 		])
 	);
@@ -390,20 +450,29 @@ export async function getOrder(id: string): Promise<OrderDetail | null> {
 	if (!data) return null;
 	const row = data as OrderRow;
 
-	const [linesRes, customerRes, notesRes, returnsRes, documents, messages, otherRes] = await Promise.all([
-		client.from('order_lines').select('*').eq('order_id', id),
-		client.from('customers').select('email, phone').eq('id', row.customer_id).maybeSingle(),
-		client.from('order_notes').select('*').eq('order_id', id).order('created_at', { ascending: false }),
-		client.from('returns').select('*').eq('order_id', id).order('created_at', { ascending: false }),
-		documentsForOrder(id),
-		messagesFor('order', id),
-		client
-			.from('orders')
-			.select('id', { count: 'exact', head: true })
-			.eq('customer_id', row.customer_id)
-			.neq('id', id)
-			.neq('state', 'pending_payment')
-	]);
+	const [linesRes, customerRes, notesRes, returnsRes, documents, messages, otherRes] =
+		await Promise.all([
+			client.from('order_lines').select('*').eq('order_id', id),
+			client.from('customers').select('email, phone').eq('id', row.customer_id).maybeSingle(),
+			client
+				.from('order_notes')
+				.select('*')
+				.eq('order_id', id)
+				.order('created_at', { ascending: false }),
+			client
+				.from('returns')
+				.select('*')
+				.eq('order_id', id)
+				.order('created_at', { ascending: false }),
+			documentsForOrder(id),
+			messagesFor('order', id),
+			client
+				.from('orders')
+				.select('id', { count: 'exact', head: true })
+				.eq('customer_id', row.customer_id)
+				.neq('id', id)
+				.neq('state', 'pending_payment')
+		]);
 
 	const lineRows = (linesRes.data ?? []) as {
 		id: string;
@@ -417,7 +486,9 @@ export async function getOrder(id: string): Promise<OrderDetail | null> {
 		variant_snapshot: string | null;
 	}[];
 	const info = await variantInfo([...new Set(lineRows.map((l) => l.variant_id))]);
-	const reservationIds = lineRows.map((l) => l.reservation_id).filter((r): r is string => r !== null);
+	const reservationIds = lineRows
+		.map((l) => l.reservation_id)
+		.filter((r): r is string => r !== null);
 
 	const { data: paymentRows } = await client
 		.from('payments')
@@ -428,14 +499,16 @@ export async function getOrder(id: string): Promise<OrderDetail | null> {
 				: `order_id.eq.${id}`
 		)
 		.order('created_at');
-	const payments = ((paymentRows ?? []) as {
-		id: string;
-		kind: OrderPayment['kind'];
-		state: string;
-		amount_paise: number;
-		gateway_payment_id: string | null;
-		created_at: string;
-	}[]).map((p) => ({
+	const payments = (
+		(paymentRows ?? []) as {
+			id: string;
+			kind: OrderPayment['kind'];
+			state: string;
+			amount_paise: number;
+			gateway_payment_id: string | null;
+			created_at: string;
+		}[]
+	).map((p) => ({
 		id: p.id,
 		kind: p.kind,
 		state: p.state,
@@ -445,18 +518,27 @@ export async function getOrder(id: string): Promise<OrderDetail | null> {
 	}));
 
 	const { data: refundRows } = payments.length
-		? await client.from('refunds').select('*').in('payment_id', payments.map((p) => p.id)).order('created_at')
+		? await client
+				.from('refunds')
+				.select('*')
+				.in(
+					'payment_id',
+					payments.map((p) => p.id)
+				)
+				.order('created_at')
 		: { data: [] };
-	const refunds = ((refundRows ?? []) as {
-		id: string;
-		payment_id: string;
-		amount_paise: number;
-		reason: string;
-		state: OrderRefund['state'];
-		note: string | null;
-		created_by: string | null;
-		created_at: string;
-	}[]).map((r) => ({
+	const refunds = (
+		(refundRows ?? []) as {
+			id: string;
+			payment_id: string;
+			amount_paise: number;
+			reason: string;
+			state: OrderRefund['state'];
+			note: string | null;
+			created_by: string | null;
+			created_at: string;
+		}[]
+	).map((r) => ({
 		id: r.id,
 		paymentId: r.payment_id,
 		amount: money(r.amount_paise),
@@ -467,8 +549,12 @@ export async function getOrder(id: string): Promise<OrderDetail | null> {
 		createdAt: Date.parse(r.created_at)
 	}));
 
-	const captured = payments.filter((p) => p.state === 'captured' || p.state === 'refunded').reduce((n, p) => n + Number(p.amount), 0);
-	const refunded = refunds.filter((r) => r.state !== 'failed').reduce((n, r) => n + Number(r.amount), 0);
+	const captured = payments
+		.filter((p) => p.state === 'captured' || p.state === 'refunded')
+		.reduce((n, p) => n + Number(p.amount), 0);
+	const refunded = refunds
+		.filter((r) => r.state !== 'failed')
+		.reduce((n, r) => n + Number(r.amount), 0);
 
 	const returnRows = (returnsRes.data ?? []) as {
 		id: string;
@@ -490,7 +576,10 @@ export async function getOrder(id: string): Promise<OrderDetail | null> {
 		returnRows.map((r) => r.exchange_variant_id).filter((v): v is string => v !== null)
 	);
 
-	const customer = (customerRes.data ?? { email: '', phone: null }) as { email: string; phone: string | null };
+	const customer = (customerRes.data ?? { email: '', phone: null }) as {
+		email: string;
+		phone: string | null;
+	};
 
 	return {
 		id: row.id,
@@ -534,7 +623,9 @@ export async function getOrder(id: string): Promise<OrderDetail | null> {
 		}),
 		payments,
 		refunds,
-		notes: ((notesRes.data ?? []) as { id: string; body: string; author: string; created_at: string }[]).map((n) => ({
+		notes: (
+			(notesRes.data ?? []) as { id: string; body: string; author: string; created_at: string }[]
+		).map((n) => ({
 			id: n.id,
 			body: n.body,
 			author: n.author,
@@ -548,7 +639,9 @@ export async function getOrder(id: string): Promise<OrderDetail | null> {
 			outcome: r.outcome,
 			status: r.status,
 			exchangeVariantId: r.exchange_variant_id,
-			exchangeLabel: r.exchange_variant_id ? (exchangeInfo.get(r.exchange_variant_id)?.label ?? null) : null,
+			exchangeLabel: r.exchange_variant_id
+				? (exchangeInfo.get(r.exchange_variant_id)?.label ?? null)
+				: null,
 			refundId: r.refund_id,
 			restocked: r.restocked,
 			courierName: r.courier_name,
@@ -576,7 +669,11 @@ export async function orderHistory(id: string) {
 /* ------------------------------------------------------------------------ */
 
 async function stateOf(id: string): Promise<OrderState> {
-	const { data, error } = await getServiceClient().from('orders').select('state').eq('id', id).single();
+	const { data, error } = await getServiceClient()
+		.from('orders')
+		.select('state')
+		.eq('id', id)
+		.single();
 	if (error || !data) throw new OrderError('That order no longer exists.');
 	return (data as { state: OrderState }).state;
 }
@@ -605,7 +702,8 @@ export async function markDispatched(input: {
 }): Promise<void> {
 	const courier = input.courierName.trim();
 	const tracking = input.trackingRef.trim();
-	if (!courier || !tracking) throw new OrderError('Enter the courier and the tracking number before marking it dispatched.');
+	if (!courier || !tracking)
+		throw new OrderError('Enter the courier and the tracking number before marking it dispatched.');
 	const state = await stateOf(input.orderId);
 	if (!['paid', 'packed', 'dispatched'].includes(state)) {
 		throw new OrderError(`An order that is ${state.replace('_', ' ')} cannot be dispatched.`);
@@ -630,19 +728,34 @@ export async function markDispatched(input: {
 		.select('reservation_id')
 		.eq('order_id', input.orderId)
 		.not('reservation_id', 'is', null);
-	const reservationIds = ((lines ?? []) as { reservation_id: string }[]).map((l) => l.reservation_id);
-	if (reservationIds.length) await client.from('reservations').update({ state: 'dispatched' }).in('id', reservationIds);
+	const reservationIds = ((lines ?? []) as { reservation_id: string }[]).map(
+		(l) => l.reservation_id
+	);
+	if (reservationIds.length)
+		await client.from('reservations').update({ state: 'dispatched' }).in('id', reservationIds);
 
-	await writeAudit(input.actor, state === 'dispatched' ? 'tracking changed' : 'dispatched', 'order', input.orderId, {
-		courier,
-		tracking
-	});
-	if (input.notify) await notifyOrder(input.orderId, 'dispatched', { actor: input.actor, once: false });
+	await writeAudit(
+		input.actor,
+		state === 'dispatched' ? 'tracking changed' : 'dispatched',
+		'order',
+		input.orderId,
+		{
+			courier,
+			tracking
+		}
+	);
+	if (input.notify)
+		await notifyOrder(input.orderId, 'dispatched', { actor: input.actor, once: false });
 }
 
-export async function markDelivered(input: { orderId: string; notify: boolean; actor: string }): Promise<void> {
+export async function markDelivered(input: {
+	orderId: string;
+	notify: boolean;
+	actor: string;
+}): Promise<void> {
 	const state = await stateOf(input.orderId);
-	if (state !== 'dispatched') throw new OrderError('Only a dispatched order can be marked delivered.');
+	if (state !== 'dispatched')
+		throw new OrderError('Only a dispatched order can be marked delivered.');
 	const { error } = await getServiceClient()
 		.from('orders')
 		.update({ state: 'delivered', delivered_at: new Date().toISOString() })
@@ -653,7 +766,10 @@ export async function markDelivered(input: { orderId: string; notify: boolean; a
 }
 
 /** Steps back one fulfilment state, for a mis-click. Never past paid. */
-export async function undoFulfilment(input: { orderId: string; actor: string }): Promise<OrderState> {
+export async function undoFulfilment(input: {
+	orderId: string;
+	actor: string;
+}): Promise<OrderState> {
 	const state = await stateOf(input.orderId);
 	const back: Partial<Record<OrderState, { state: OrderState; clear: Record<string, null> }>> = {
 		packed: { state: 'paid', clear: { packed_at: null } },
@@ -672,13 +788,23 @@ export async function undoFulfilment(input: { orderId: string; actor: string }):
 	return step.state;
 }
 
-export async function updateAddress(input: { orderId: string; to: ShipTo; actor: string }): Promise<void> {
+export async function updateAddress(input: {
+	orderId: string;
+	to: ShipTo;
+	actor: string;
+}): Promise<void> {
 	const state = await stateOf(input.orderId);
 	if (['dispatched', 'delivered', 'cancelled', 'refunded'].includes(state)) {
 		throw new OrderError('The address can only change before the order is dispatched.');
 	}
-	if (!/^[1-9][0-9]{5}$/.test(input.to.pincode)) throw new OrderError('Enter a 6-digit Indian pincode.');
-	if (!input.to.name.trim() || !input.to.line1.trim() || !input.to.city.trim() || !input.to.state.trim()) {
+	if (!/^[1-9][0-9]{5}$/.test(input.to.pincode))
+		throw new OrderError('Enter a 6-digit Indian pincode.');
+	if (
+		!input.to.name.trim() ||
+		!input.to.line1.trim() ||
+		!input.to.city.trim() ||
+		!input.to.state.trim()
+	) {
 		throw new OrderError('Name, first address line, city and state are all needed.');
 	}
 	const { error } = await getServiceClient()
@@ -697,15 +823,25 @@ export async function updateAddress(input: { orderId: string; to: ShipTo; actor:
 	await writeAudit(input.actor, 'address changed', 'order', input.orderId, { to: input.to });
 }
 
-export async function addNote(input: { orderId: string; body: string; actor: string }): Promise<void> {
+export async function addNote(input: {
+	orderId: string;
+	body: string;
+	actor: string;
+}): Promise<void> {
 	const body = input.body.trim();
 	if (!body) throw new OrderError('Write the note first.');
-	const { error } = await getServiceClient().from('order_notes').insert({ order_id: input.orderId, body, author: input.actor });
+	const { error } = await getServiceClient()
+		.from('order_notes')
+		.insert({ order_id: input.orderId, body, author: input.actor });
 	if (error) throw new Error(`note failed: ${error.message}`);
 }
 
 export async function deleteNote(input: { noteId: string; actor: string }): Promise<void> {
-	await getServiceClient().from('order_notes').delete().eq('id', input.noteId).eq('author', input.actor);
+	await getServiceClient()
+		.from('order_notes')
+		.delete()
+		.eq('id', input.noteId)
+		.eq('author', input.actor);
 }
 
 /* ------------------------------------------------------------------------ */
@@ -729,11 +865,14 @@ export async function refund(input: {
 	actor: string;
 }): Promise<string[]> {
 	if (!REFUND_REASONS.includes(input.reason)) throw new OrderError('Pick a reason for the refund.');
-	if (!Number.isInteger(input.amount) || input.amount <= 0) throw new OrderError('Enter an amount to refund.');
+	if (!Number.isInteger(input.amount) || input.amount <= 0)
+		throw new OrderError('Enter an amount to refund.');
 	const order = await getOrder(input.orderId);
 	if (!order) throw new OrderError('That order no longer exists.');
 	if (input.amount > Number(order.refundable)) {
-		throw new OrderError(`At most ₹${(Number(order.refundable) / 100).toLocaleString('en-IN')} can be refunded on this order.`);
+		throw new OrderError(
+			`At most ₹${(Number(order.refundable) / 100).toLocaleString('en-IN')} can be refunded on this order.`
+		);
 	}
 
 	const client = getServiceClient();
@@ -747,7 +886,9 @@ export async function refund(input: {
 			...p,
 			available:
 				Number(p.amount) -
-				order.refunds.filter((r) => r.paymentId === p.id && r.state !== 'failed').reduce((n, r) => n + Number(r.amount), 0)
+				order.refunds
+					.filter((r) => r.paymentId === p.id && r.state !== 'failed')
+					.reduce((n, r) => n + Number(r.amount), 0)
 		}))
 		.filter((p) => p.available > 0)
 		.reverse();
@@ -755,30 +896,56 @@ export async function refund(input: {
 	for (const payment of payable) {
 		if (left <= 0) break;
 		const amount = Math.min(left, payment.available);
-		// The gateway first: a refund is only recorded once the gateway took it.
-		const result = await provider.refund({
-			gatewayPaymentId: payment.gatewayPaymentId!,
-			amount: paise(amount),
-			reason: input.reason === 'return' || input.reason === 'goodwill' ? 'admin' : input.reason
-		});
+		// The refund is recorded BEFORE the gateway call, as 'initiated'. The
+		// database refuses it if it would exceed the payment (0029, which also
+		// serialises two refunds racing for the same money). Only then does
+		// the gateway move money, and the row takes the gateway's answer.
 		const { data, error } = await client
 			.from('refunds')
 			.insert({
 				payment_id: payment.id,
 				amount_paise: amount,
 				reason: input.reason,
-				gateway_refund_id: result.gatewayRefundId,
-				state: result.state,
+				state: 'initiated',
 				note: input.note,
 				created_by: input.actor
 			})
 			.select('id')
 			.single();
-		if (error || !data) throw new Error(`refund record failed (the gateway refund ${result.gatewayRefundId} DID go through): ${error?.message}`);
+		if (error || !data) {
+			if (error?.code === 'P0001')
+				throw new OrderError(
+					'Someone else refunded this order a moment ago. Refresh to see what is left.'
+				);
+			throw new Error(`refund record failed: ${error?.message}`);
+		}
+		const refundId = (data as { id: string }).id;
+		try {
+			const result = await provider.refund({
+				gatewayPaymentId: payment.gatewayPaymentId!,
+				amount: paise(amount),
+				reason: input.reason === 'return' || input.reason === 'goodwill' ? 'admin' : input.reason
+			});
+			await client
+				.from('refunds')
+				.update({ gateway_refund_id: result.gatewayRefundId, state: result.state })
+				.eq('id', refundId);
+		} catch (cause) {
+			await client
+				.from('refunds')
+				.update({ state: 'failed', note: `${input.note ?? ''} — gateway refused`.trim() })
+				.eq('id', refundId);
+			throw new OrderError(
+				`The payment gateway refused the refund: ${cause instanceof Error ? cause.message : cause}`
+			);
+		}
 		ids.push((data as { id: string }).id);
 		left -= amount;
 	}
-	if (left > 0) throw new OrderError('Part of that refund could not be matched to a payment. Check the payments below.');
+	if (left > 0)
+		throw new OrderError(
+			'Part of that refund could not be matched to a payment. Check the payments below.'
+		);
 
 	const fullyRefunded = Number(order.refunded) + input.amount >= Number(order.captured);
 	if (fullyRefunded && ['paid', 'packed', 'cancelled'].includes(order.state)) {
@@ -786,11 +953,17 @@ export async function refund(input: {
 	}
 	for (const id of ids) await issueCreditNote(id, input.orderId, input.actor);
 
-	await writeAudit(input.actor, `refunded ₹${(input.amount / 100).toLocaleString('en-IN')}`, 'order', input.orderId, {
-		reason: input.reason,
-		note: input.note,
-		refunds: ids
-	});
+	await writeAudit(
+		input.actor,
+		`refunded ₹${(input.amount / 100).toLocaleString('en-IN')}`,
+		'order',
+		input.orderId,
+		{
+			reason: input.reason,
+			note: input.note,
+			refunds: ids
+		}
+	);
 	if (input.notify) {
 		await notifyOrder(input.orderId, 'refunded', {
 			actor: input.actor,
@@ -815,23 +988,54 @@ export async function cancelOrder(input: {
 	const order = await getOrder(input.orderId);
 	if (!order) throw new OrderError('That order no longer exists.');
 	if (!['pending_payment', 'paid', 'packed'].includes(order.state)) {
-		throw new OrderError('Only an order that has not been dispatched can be cancelled. Record a return instead.');
+		throw new OrderError(
+			'Only an order that has not been dispatched can be cancelled. Record a return instead.'
+		);
 	}
 	if (order.isPreOrder) {
-		throw new OrderError('This order fulfils a pre-order. Cancel it from its reservation on the Pre-orders screen.');
+		throw new OrderError(
+			'This order fulfils a pre-order. Cancel it from its reservation on the Pre-orders screen.'
+		);
 	}
 	if (!input.reason.trim()) throw new OrderError('Say why it is being cancelled.');
 
 	const client = getServiceClient();
-	const { error } = await client
-		.from('orders')
-		.update({ state: 'cancelled', cancelled_at: new Date().toISOString(), cancel_reason: input.reason.trim() })
-		.eq('id', input.orderId)
-		.eq('state', order.state);
-	if (error) throw new Error(`cancel failed: ${error.message}`);
 
-	// The pieces never left, so they go back on sale.
-	if (order.state !== 'pending_payment') {
+	if (order.state === 'pending_payment') {
+		// The existing expiry path: puts stock, the coupon use and the
+		// idempotency key back, and skips an order a capture just paid.
+		const { data, error } = await client.rpc('cancel_unpaid_orders', {
+			p_order_ids: [input.orderId]
+		});
+		if (error) throw new Error(`cancel failed: ${error.message}`);
+		if (!data)
+			throw new OrderError(
+				'It was paid a moment ago, so it was not cancelled. Refresh and look again.'
+			);
+		await client
+			.from('orders')
+			.update({ cancelled_at: new Date().toISOString(), cancel_reason: input.reason.trim() })
+			.eq('id', input.orderId);
+	} else {
+		// Claimed by a conditional update: a second submit finds nothing to
+		// claim, so the stock below goes back exactly once.
+		const { data: claimed, error } = await client
+			.from('orders')
+			.update({
+				state: 'cancelled',
+				cancelled_at: new Date().toISOString(),
+				cancel_reason: input.reason.trim()
+			})
+			.eq('id', input.orderId)
+			.eq('state', order.state)
+			.select('id');
+		if (error) throw new Error(`cancel failed: ${error.message}`);
+		if (!claimed?.length)
+			throw new OrderError(
+				'This order changed while you were looking at it. Refresh and try again.'
+			);
+
+		// The pieces never left, so they go back on sale.
 		for (const line of order.lines) {
 			await client.rpc('adjust_stock', {
 				p_variant_id: line.variantId,
@@ -884,12 +1088,28 @@ export async function createReturn(input: {
 	}
 	const lines = input.lines.filter((l) => l.quantity > 0);
 	if (!lines.length) throw new OrderError('Pick at least one piece coming back.');
+	// Pieces already on another open or completed return cannot come back twice.
+	const alreadyBack = new Map<string, number>();
+	for (const ret of order.returns.filter((r) => r.status !== 'rejected')) {
+		for (const l of ret.lines)
+			alreadyBack.set(l.orderLineId, (alreadyBack.get(l.orderLineId) ?? 0) + l.quantity);
+	}
 	for (const line of lines) {
 		const original = order.lines.find((l) => l.id === line.orderLineId);
-		if (!original || line.quantity > original.quantity) throw new OrderError('One of those pieces is not on this order.');
+		if (!original) throw new OrderError('One of those pieces is not on this order.');
+		const left = original.quantity - (alreadyBack.get(line.orderLineId) ?? 0);
+		if (line.quantity > left) {
+			throw new OrderError(
+				left > 0
+					? `Only ${left} of ${original.name} can still come back.`
+					: `${original.name} is already on a return.`
+			);
+		}
 	}
-	if (!RETURN_REASONS.some((r) => r.value === input.reason)) throw new OrderError('Pick why it is coming back.');
-	if (input.outcome === 'exchange' && !input.exchangeVariantId) throw new OrderError('Pick the size or colour to send instead.');
+	if (!RETURN_REASONS.some((r) => r.value === input.reason))
+		throw new OrderError('Pick why it is coming back.');
+	if (input.outcome === 'exchange' && !input.exchangeVariantId)
+		throw new OrderError('Pick the size or colour to send instead.');
 
 	const { data, error } = await getServiceClient()
 		.from('returns')
@@ -906,24 +1126,52 @@ export async function createReturn(input: {
 		.single();
 	if (error || !data) throw new Error(`return failed: ${error?.message}`);
 	const id = (data as { id: string }).id;
-	await writeAudit(input.actor, 'return opened', 'order', input.orderId, { returnId: id, reason: input.reason, outcome: input.outcome });
+	await writeAudit(input.actor, 'return opened', 'order', input.orderId, {
+		returnId: id,
+		reason: input.reason,
+		outcome: input.outcome
+	});
 	return id;
 }
 
 /** The parcel is back. Restocks the pieces when they can be sold again. */
-export async function receiveReturn(input: { returnId: string; restock: boolean; actor: string }): Promise<void> {
+export async function receiveReturn(input: {
+	returnId: string;
+	restock: boolean;
+	actor: string;
+}): Promise<void> {
 	const client = getServiceClient();
-	const { data, error } = await client.from('returns').select('*').eq('id', input.returnId).single();
+	const { data, error } = await client
+		.from('returns')
+		.select('*')
+		.eq('id', input.returnId)
+		.single();
 	if (error || !data) throw new OrderError('That return no longer exists.');
-	const ret = data as { order_id: string; status: string; lines: { order_line_id: string; quantity: number }[] };
-	if (ret.status !== 'requested') throw new OrderError('This return has already been received.');
+	const ret = data as {
+		order_id: string;
+		status: string;
+		lines: { order_line_id: string; quantity: number }[];
+	};
+	// Claimed first, so a double submit restocks once.
+	const { data: claimed } = await client
+		.from('returns')
+		.update({ status: 'received', restocked: input.restock })
+		.eq('id', input.returnId)
+		.eq('status', 'requested')
+		.select('id');
+	if (!claimed?.length) throw new OrderError('This return has already been received.');
 
 	if (input.restock) {
 		const { data: lines } = await client
 			.from('order_lines')
 			.select('id, variant_id')
-			.in('id', ret.lines.map((l) => l.order_line_id));
-		const variantOf = new Map(((lines ?? []) as { id: string; variant_id: string }[]).map((l) => [l.id, l.variant_id]));
+			.in(
+				'id',
+				ret.lines.map((l) => l.order_line_id)
+			);
+		const variantOf = new Map(
+			((lines ?? []) as { id: string; variant_id: string }[]).map((l) => [l.id, l.variant_id])
+		);
 		for (const line of ret.lines) {
 			const variant = variantOf.get(line.order_line_id);
 			if (variant) {
@@ -937,10 +1185,15 @@ export async function receiveReturn(input: { returnId: string; restock: boolean;
 			}
 		}
 	}
-	await client.from('returns').update({ status: 'received', restocked: input.restock }).eq('id', input.returnId);
-	await writeAudit(input.actor, input.restock ? 'return received, restocked' : 'return received', 'order', ret.order_id, {
-		returnId: input.returnId
-	});
+	await writeAudit(
+		input.actor,
+		input.restock ? 'return received, restocked' : 'return received',
+		'order',
+		ret.order_id,
+		{
+			returnId: input.returnId
+		}
+	);
 }
 
 /**
@@ -956,68 +1209,130 @@ export async function completeReturn(input: {
 	actor: string;
 }): Promise<void> {
 	const client = getServiceClient();
-	const { data, error } = await client.from('returns').select('*').eq('id', input.returnId).single();
+	const { data, error } = await client
+		.from('returns')
+		.select('*')
+		.eq('id', input.returnId)
+		.single();
 	if (error || !data) throw new OrderError('That return no longer exists.');
 	const ret = data as {
 		order_id: string;
 		status: string;
 		outcome: OrderReturn['outcome'];
 		exchange_variant_id: string | null;
+		lines: { order_line_id: string; quantity: number }[];
 	};
-	if (ret.status === 'completed' || ret.status === 'rejected') throw new OrderError('This return is already closed.');
+	if (ret.status === 'requested')
+		throw new OrderError('Mark the parcel received before closing the return.');
+	if (ret.status !== 'received') throw new OrderError('This return is already closed.');
+	// Claimed before money or stock moves; put back if what follows fails.
+	const { data: claimed } = await client
+		.from('returns')
+		.update({ status: 'completed' })
+		.eq('id', input.returnId)
+		.eq('status', 'received')
+		.select('id');
+	if (!claimed?.length) throw new OrderError('This return is already closed.');
+	const release = () =>
+		client.from('returns').update({ status: 'received' }).eq('id', input.returnId);
 
-	const patch: Record<string, unknown> = { status: 'completed' };
-	if (ret.outcome === 'refund') {
-		if (!input.refundAmount) throw new OrderError('Enter the amount to refund.');
-		const [refundId] = await refund({
-			orderId: ret.order_id,
-			amount: input.refundAmount,
-			reason: 'return',
-			note: 'Return',
-			notify: input.notify,
-			actor: input.actor
-		});
-		patch.refund_id = refundId;
-	} else if (ret.outcome === 'exchange') {
-		if (!input.courierName?.trim() || !input.trackingRef?.trim()) {
-			throw new OrderError('Enter the courier and tracking number for the replacement.');
+	const patch: Record<string, unknown> = {};
+	try {
+		if (ret.outcome === 'refund') {
+			if (!input.refundAmount) throw new OrderError('Enter the amount to refund.');
+			const [refundId] = await refund({
+				orderId: ret.order_id,
+				amount: input.refundAmount,
+				reason: 'return',
+				note: 'Return',
+				notify: input.notify,
+				actor: input.actor
+			});
+			patch.refund_id = refundId;
+		} else if (ret.outcome === 'exchange') {
+			if (!input.courierName?.trim() || !input.trackingRef?.trim()) {
+				throw new OrderError('Enter the courier and tracking number for the replacement.');
+			}
+			const { error: stockError } = await client.rpc('adjust_stock', {
+				p_variant_id: ret.exchange_variant_id,
+				// One replacement per piece that came back.
+				p_delta: -ret.lines.reduce((n, l) => n + l.quantity, 0),
+				p_reason: 'correction',
+				p_note: 'Sent as an exchange',
+				p_actor: input.actor
+			});
+			if (stockError) throw new OrderError(stockError.message.replace(/^ERROR:\s*/, ''));
+			patch.courier_name = input.courierName.trim();
+			patch.tracking_ref = input.trackingRef.trim();
 		}
-		const { error: stockError } = await client.rpc('adjust_stock', {
-			p_variant_id: ret.exchange_variant_id,
-			p_delta: -1,
-			p_reason: 'correction',
-			p_note: 'Sent as an exchange',
-			p_actor: input.actor
-		});
-		if (stockError) throw new OrderError(stockError.message.replace(/^ERROR:\s*/, ''));
-		patch.courier_name = input.courierName.trim();
-		patch.tracking_ref = input.trackingRef.trim();
+	} catch (error) {
+		await release();
+		throw error;
 	}
-	await client.from('returns').update(patch).eq('id', input.returnId);
-	await writeAudit(input.actor, `return completed (${ret.outcome})`, 'order', ret.order_id, { returnId: input.returnId });
+	if (Object.keys(patch).length)
+		await client.from('returns').update(patch).eq('id', input.returnId);
+	await writeAudit(input.actor, `return completed (${ret.outcome})`, 'order', ret.order_id, {
+		returnId: input.returnId
+	});
 }
 
 export async function rejectReturn(input: { returnId: string; actor: string }): Promise<void> {
-	const { data } = await getServiceClient().from('returns').update({ status: 'rejected' }).eq('id', input.returnId).select('order_id').single();
-	if (data) await writeAudit(input.actor, 'return rejected', 'order', (data as { order_id: string }).order_id, { returnId: input.returnId });
+	const { data } = await getServiceClient()
+		.from('returns')
+		.update({ status: 'rejected' })
+		.eq('id', input.returnId)
+		.in('status', ['requested', 'received'])
+		.select('order_id')
+		.maybeSingle();
+	if (!data) throw new OrderError('Only an open return can be rejected.');
+	if (data)
+		await writeAudit(
+			input.actor,
+			'return rejected',
+			'order',
+			(data as { order_id: string }).order_id,
+			{ returnId: input.returnId }
+		);
 }
 
 /** Sizes and colours of the same product, for an exchange. */
-export async function exchangeOptions(order: OrderDetail): Promise<{ id: string; label: string; product: string; available: number }[]> {
-	const productIds = [...new Set(order.lines.map((l) => l.productId).filter((p): p is string => p !== null))];
+export async function exchangeOptions(
+	order: OrderDetail
+): Promise<{ id: string; label: string; product: string; available: number }[]> {
+	const productIds = [
+		...new Set(order.lines.map((l) => l.productId).filter((p): p is string => p !== null))
+	];
 	if (!productIds.length) return [];
 	const catalogue = getCatalogueClient();
 	const [{ data: variants }, { data: colours }, { data: products }] = await Promise.all([
-		catalogue.from('variants').select('id, product_id, size, colourway_id, stock_count, reserved_count').in('product_id', productIds),
+		catalogue
+			.from('variants')
+			.select('id, product_id, size, colourway_id, stock_count, reserved_count')
+			.in('product_id', productIds),
 		catalogue.from('colourways').select('id, name').in('product_id', productIds),
 		catalogue.from('products').select('id, name').in('id', productIds)
 	]);
-	const colourName = new Map(((colours ?? []) as { id: string; name: string }[]).map((c) => [c.id, c.name]));
-	const productName = new Map(((products ?? []) as { id: string; name: string }[]).map((p) => [p.id, p.name]));
-	return ((variants ?? []) as { id: string; product_id: string; size: string; colourway_id: string | null; stock_count: number; reserved_count: number }[]).map((v) => ({
+	const colourName = new Map(
+		((colours ?? []) as { id: string; name: string }[]).map((c) => [c.id, c.name])
+	);
+	const productName = new Map(
+		((products ?? []) as { id: string; name: string }[]).map((p) => [p.id, p.name])
+	);
+	return (
+		(variants ?? []) as {
+			id: string;
+			product_id: string;
+			size: string;
+			colourway_id: string | null;
+			stock_count: number;
+			reserved_count: number;
+		}[]
+	).map((v) => ({
 		id: v.id,
 		product: productName.get(v.product_id) ?? '',
-		label: [v.colourway_id ? colourName.get(v.colourway_id) : null, v.size].filter(Boolean).join(' / '),
+		label: [v.colourway_id ? colourName.get(v.colourway_id) : null, v.size]
+			.filter(Boolean)
+			.join(' / '),
 		available: Math.max(0, v.stock_count - v.reserved_count)
 	}));
 }
@@ -1025,13 +1340,21 @@ export async function exchangeOptions(order: OrderDetail): Promise<{ id: string;
 /** Called once payment is captured: the invoice and the confirmation. */
 export async function onOrderPaid(orderId: string): Promise<void> {
 	await issueInvoice(orderId).catch((error) => console.error('[orders] invoice failed', error));
-	await attributeRecovery(orderId).catch((error) => console.error('[orders] attribution failed', error));
+	await attributeRecovery(orderId).catch((error) =>
+		console.error('[orders] attribution failed', error)
+	);
 	await markWonByOrder(orderId).catch((error) => console.error('[orders] lead win failed', error));
-	await notifyOrder(orderId, 'confirmed').catch((error) => console.error('[orders] confirmation failed', error));
+	await notifyOrder(orderId, 'confirmed').catch((error) =>
+		console.error('[orders] confirmation failed', error)
+	);
 }
 
 /** The webhook knows the order by its public token. Both calls are idempotent. */
 export async function onOrderPaidByToken(publicToken: string): Promise<void> {
-	const { data } = await getServiceClient().from('orders').select('id').eq('public_token', publicToken).maybeSingle();
+	const { data } = await getServiceClient()
+		.from('orders')
+		.select('id')
+		.eq('public_token', publicToken)
+		.maybeSingle();
 	if (data) await onOrderPaid((data as { id: string }).id);
 }

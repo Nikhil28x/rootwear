@@ -35,7 +35,10 @@
 		}
 		return [...byDrop.values()].map((board) => ({
 			...board,
-			rows: [...board.rows].sort((a, b) => compareSizes(a.size, b.size))
+			rows: [...board.rows].sort(
+				(a, b) =>
+					(a.colourway ?? '').localeCompare(b.colourway ?? '') || compareSizes(a.size, b.size)
+			)
 		}));
 	});
 
@@ -100,78 +103,28 @@
 </div>
 
 <!-- Filter / sort. A GET form, so it works with no JavaScript. -->
-<form method="GET" class="mt-12 flex flex-wrap items-end gap-6 border-y border-white/10 py-6">
-	<div class="flex min-w-[12rem] flex-col gap-2">
-		<label for="f-drop" class="text-[11px] font-medium tracking-[0.2em] text-stone-400 uppercase"
-			>Drop</label
-		>
-		<select
-			id="f-drop"
-			name="drop"
-			value={data.filter.dropId}
-			class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-[15px] text-stone-100 outline-none focus:border-white"
-		>
-			<option value="">Every drop</option>
-			{#each data.drops as drop (drop.id)}
-				<option value={drop.id}>{drop.label}</option>
-			{/each}
-		</select>
-	</div>
-
-	<div class="flex min-w-[10rem] flex-col gap-2">
-		<label for="f-kind" class="text-[11px] font-medium tracking-[0.2em] text-stone-400 uppercase"
-			>Kind</label
-		>
-		<select
-			id="f-kind"
-			name="kind"
-			value={data.filter.kind}
-			class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-[15px] text-stone-100 outline-none focus:border-white"
-		>
-			<option value="">All four</option>
-			<option value="request">Drop requests</option>
-			<option value="notify_me">Notify-me</option>
-			<option value="preorder">Pre-orders</option>
-			<option value="waitlist">Waitlist</option>
-		</select>
-	</div>
-
-	<div class="flex min-w-[10rem] flex-col gap-2">
-		<label for="f-sort" class="text-[11px] font-medium tracking-[0.2em] text-stone-400 uppercase"
-			>Sort</label
-		>
-		<select
-			id="f-sort"
-			name="sort"
-			value={data.filter.sort}
-			class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-[15px] text-stone-100 outline-none focus:border-white"
-		>
-			{#each SORTS as option (option.value)}
-				<option value={option.value}>{option.label}</option>
-			{/each}
-		</select>
-	</div>
-
-	<button
-		type="submit"
-		class="border border-white/35 px-7 py-3 text-[11px] font-medium tracking-[0.2em] text-stone-100 uppercase transition hover:bg-white hover:text-black"
-	>
-		Apply
-	</button>
-
-	<a
-		href={exportHref}
-		class="border border-gold px-7 py-3 text-[11px] font-medium tracking-[0.2em] text-gold uppercase transition hover:bg-gold hover:text-forest-black"
-		data-sveltekit-reload
-	>
-		Export CSV
-	</a>
-	<a
-		href="/admin/demand"
-		class="text-[11px] font-medium tracking-[0.2em] text-stone-400 uppercase underline underline-offset-4 hover:text-stone-200"
-	>
-		Clear
-	</a>
+<form method="GET" class="mt-8 flex flex-wrap items-end gap-2">
+	<label for="f-drop" class="sr-only">Drop</label>
+	<select id="f-drop" name="drop" value={data.filter.dropId} class="q-select w-auto">
+		<option value="">Every drop</option>
+		{#each data.drops as drop (drop.id)}<option value={drop.id}>{drop.label}</option>{/each}
+	</select>
+	<label for="f-kind" class="sr-only">Kind</label>
+	<select id="f-kind" name="kind" value={data.filter.kind} class="q-select w-auto">
+		<option value="">All kinds</option>
+		<option value="request">Drop requests</option>
+		<option value="notify_me">Notify-me</option>
+		<option value="preorder">Pre-orders</option>
+		<option value="waitlist">Waitlist</option>
+	</select>
+	<label for="f-sort" class="sr-only">Sort</label>
+	<select id="f-sort" name="sort" value={data.filter.sort} class="q-select w-auto">
+		{#each SORTS as option (option.value)}<option value={option.value}>{option.label}</option
+			>{/each}
+	</select>
+	<button type="submit" class="q-btn q-btn-secondary">Filter</button>
+	<a href={exportHref} class="q-btn q-btn-secondary" data-sveltekit-reload>Export CSV</a>
+	<a href="/admin/demand" class="q-btn q-btn-ghost">Clear</a>
 </form>
 
 <!-- Counts by size, per drop. -->
@@ -203,7 +156,7 @@
 								scope="row"
 								class="border-b border-white/5 px-4 py-3 text-left font-normal text-paper"
 							>
-								{row.size}
+								{row.colourway ? `${row.colourway} / ${row.size}` : row.size}
 							</th>
 							<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums"
 								>{row.requests}</td

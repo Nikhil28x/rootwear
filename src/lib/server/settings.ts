@@ -98,7 +98,9 @@ export async function getSetting<K extends keyof Defaults>(key: K): Promise<Defa
 		.eq('key', key)
 		.maybeSingle();
 	if (error) throw new Error(`settings read failed: ${error.message}`);
-	const stored = ((data as { value: Partial<Defaults[K]> } | null)?.value ?? {}) as Partial<Defaults[K]>;
+	const stored = ((data as { value: Partial<Defaults[K]> } | null)?.value ?? {}) as Partial<
+		Defaults[K]
+	>;
 	return { ...DEFAULTS[key], ...stored };
 }
 
@@ -110,10 +112,15 @@ export async function saveSetting<K extends keyof Defaults>(
 	const before = await getSetting(key);
 	const { error } = await getServiceClient()
 		.from('settings')
-		.upsert({ key, value, updated_by: actor, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+		.upsert(
+			{ key, value, updated_by: actor, updated_at: new Date().toISOString() },
+			{ onConflict: 'key' }
+		);
 	if (error) throw new Error(`settings write failed: ${error.message}`);
 	const changed = Object.keys(value).filter(
-		(field) => JSON.stringify((value as Record<string, unknown>)[field]) !== JSON.stringify((before as Record<string, unknown>)[field])
+		(field) =>
+			JSON.stringify((value as Record<string, unknown>)[field]) !==
+			JSON.stringify((before as Record<string, unknown>)[field])
 	);
 	await writeAudit(actor, 'settings changed', 'settings', key, { fields: changed });
 }
@@ -162,11 +169,35 @@ export const GST_STATES: readonly { name: string; code: string }[] = [
 export function gstStateOf(value: string): { name: string; code: string } | null {
 	const text = value.trim().toLowerCase();
 	const ABBR: Record<string, string> = {
-		ka: 'Karnataka', mh: 'Maharashtra', dl: 'Delhi', tn: 'Tamil Nadu', ts: 'Telangana', tg: 'Telangana',
-		ap: 'Andhra Pradesh', kl: 'Kerala', gj: 'Gujarat', rj: 'Rajasthan', up: 'Uttar Pradesh', wb: 'West Bengal',
-		mp: 'Madhya Pradesh', hr: 'Haryana', pb: 'Punjab', ga: 'Goa', or: 'Odisha', od: 'Odisha', br: 'Bihar',
-		as: 'Assam', jh: 'Jharkhand', cg: 'Chhattisgarh', ct: 'Chhattisgarh', uk: 'Uttarakhand', ut: 'Uttarakhand',
-		hp: 'Himachal Pradesh', jk: 'Jammu and Kashmir', ch: 'Chandigarh', py: 'Puducherry'
+		ka: 'Karnataka',
+		mh: 'Maharashtra',
+		dl: 'Delhi',
+		tn: 'Tamil Nadu',
+		ts: 'Telangana',
+		tg: 'Telangana',
+		ap: 'Andhra Pradesh',
+		kl: 'Kerala',
+		gj: 'Gujarat',
+		rj: 'Rajasthan',
+		up: 'Uttar Pradesh',
+		wb: 'West Bengal',
+		mp: 'Madhya Pradesh',
+		hr: 'Haryana',
+		pb: 'Punjab',
+		ga: 'Goa',
+		or: 'Odisha',
+		od: 'Odisha',
+		br: 'Bihar',
+		as: 'Assam',
+		jh: 'Jharkhand',
+		cg: 'Chhattisgarh',
+		ct: 'Chhattisgarh',
+		uk: 'Uttarakhand',
+		ut: 'Uttarakhand',
+		hp: 'Himachal Pradesh',
+		jk: 'Jammu and Kashmir',
+		ch: 'Chandigarh',
+		py: 'Puducherry'
 	};
 	const name = ABBR[text] ?? text;
 	return GST_STATES.find((s) => s.name.toLowerCase() === name.toLowerCase()) ?? null;

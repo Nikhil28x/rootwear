@@ -38,7 +38,9 @@ export async function notifyOrder(
 	const client = getServiceClient();
 	const { data } = await client
 		.from('orders')
-		.select('order_number, total_paise, ship_name, ship_phone, public_token, courier_name, tracking_ref, customer_id')
+		.select(
+			'order_number, total_paise, ship_name, ship_phone, public_token, courier_name, tracking_ref, customer_id'
+		)
 		.eq('id', orderId)
 		.maybeSingle();
 	if (!data) return;
@@ -52,7 +54,11 @@ export async function notifyOrder(
 		tracking_ref: string | null;
 		customer_id: string;
 	};
-	const { data: customer } = await client.from('customers').select('email').eq('id', order.customer_id).maybeSingle();
+	const { data: customer } = await client
+		.from('customers')
+		.select('email')
+		.eq('id', order.customer_id)
+		.maybeSingle();
 	const email = (customer as { email: string } | null)?.email;
 
 	const variables = {

@@ -106,7 +106,11 @@ export async function auditFacets(): Promise<{ actors: string[]; entities: strin
 }
 
 /** The history of one record, for the timeline on its detail screen. */
-export async function auditFor(entity: string, entityId: string, limit = 50): Promise<AuditEntry[]> {
+export async function auditFor(
+	entity: string,
+	entityId: string,
+	limit = 50
+): Promise<AuditEntry[]> {
 	const { data, error } = await getServiceClient()
 		.from('admin_audit_log')
 		.select('id, actor_email, action, entity, entity_id, detail, occurred_at')

@@ -2,7 +2,14 @@ import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { requireSection } from '$lib/server/admin/roles';
 import { actorLabel, staffActor } from '$lib/server/admin/session';
-import { addExclusion, deleteRate, listShipping, removeExclusion, saveRate, ShippingError } from '$lib/server/settings-shipping';
+import {
+	addExclusion,
+	deleteRate,
+	listShipping,
+	removeExclusion,
+	saveRate,
+	ShippingError
+} from '$lib/server/settings-shipping';
 import { rupeesToPaise } from '$lib/server/catalogue/forms';
 
 export const load: PageServerLoad = async (event) => {
@@ -11,7 +18,10 @@ export const load: PageServerLoad = async (event) => {
 	return listShipping();
 };
 
-async function run(event: Parameters<Actions[string]>[0], work: (form: FormData, actor: string) => Promise<string>) {
+async function run(
+	event: Parameters<Actions[string]>[0],
+	work: (form: FormData, actor: string) => Promise<string>
+) {
 	const actor = await staffActor(event);
 	requireSection(actor, 'settings');
 	const form = await event.request.formData();

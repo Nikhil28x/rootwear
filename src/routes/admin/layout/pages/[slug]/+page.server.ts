@@ -10,7 +10,22 @@ export const load: PageServerLoad = async (event) => {
 	const actor = await staffActor(event);
 	requireSection(actor, 'layout');
 	if (event.params.slug === 'new') {
-		return { isNew: true, page: { slug: '', title: '', summary: '', markup: '', navOrder: 100, showInFooter: false, edited: false, published: false, hasOriginal: false, carriesReturnsWording: false }, returnsWording: RETURNS_WORDING };
+		return {
+			isNew: true,
+			page: {
+				slug: '',
+				title: '',
+				summary: '',
+				markup: '',
+				navOrder: 100,
+				showInFooter: false,
+				edited: false,
+				published: false,
+				hasOriginal: false,
+				carriesReturnsWording: false
+			},
+			returnsWording: RETURNS_WORDING
+		};
 	}
 	const page = await findPolicy(event.params.slug);
 	if (!page) error(404, 'No such page.');
@@ -37,7 +52,12 @@ export const actions: Actions = {
 		const actor = await staffActor(event);
 		requireSection(actor, 'layout');
 		const form = await event.request.formData();
-		const slug = event.params.slug === 'new' ? String(form.get('slug') ?? '').trim().toLowerCase() : event.params.slug;
+		const slug =
+			event.params.slug === 'new'
+				? String(form.get('slug') ?? '')
+						.trim()
+						.toLowerCase()
+				: event.params.slug;
 		try {
 			await savePolicy({
 				slug,
@@ -54,7 +74,12 @@ export const actions: Actions = {
 			throw err;
 		}
 		if (event.params.slug === 'new') redirect(303, `/admin/layout/pages/${slug}`);
-		return { message: form.get('intent') === 'publish' ? 'Published. It is live on the site.' : 'Saved as a draft. The site still shows the last published version.' };
+		return {
+			message:
+				form.get('intent') === 'publish'
+					? 'Published. It is live on the site.'
+					: 'Saved as a draft. The site still shows the last published version.'
+		};
 	},
 	revert: async (event) => {
 		const actor = await staffActor(event);

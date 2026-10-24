@@ -18,12 +18,19 @@
 	let barW = $derived(Math.max(4, step - 6));
 	let active = $state<number | null>(null);
 	const label = (day: string) =>
-		new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${day}T00:00:00Z`));
+		new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(
+			new Date(`${day}T00:00:00Z`)
+		);
 	const y = (v: number) => PAD_T + (1 - v / max) * (H - PAD_T - PAD_B);
 </script>
 
 <figure class="relative m-0">
-	<svg viewBox="0 0 {W} {H}" class="w-full overflow-visible" role="img" aria-label="Revenue per day for the last {days.length} days">
+	<svg
+		viewBox="0 0 {W} {H}"
+		class="w-full overflow-visible"
+		role="img"
+		aria-label="Revenue per day for the last {days.length} days"
+	>
 		{#each [0, 0.5, 1] as f (f)}
 			<line x1="0" x2={W} y1={y(max * f)} y2={y(max * f)} class="grid" />
 		{/each}
@@ -44,13 +51,18 @@
 					<path
 						class="bar"
 						class:dim={active !== null && active !== i}
-						d="M{x},{H - PAD_B} v{-Math.max(0, h - 4)} q0,-4 4,-4 h{barW - 8} q4,0 4,4 v{Math.max(0, h - 4)} z"
+						d="M{x},{H - PAD_B} v{-Math.max(0, h - 4)} q0,-4 4,-4 h{barW - 8} q4,0 4,4 v{Math.max(
+							0,
+							h - 4
+						)} z"
 					/>
 				{:else}
 					<line x1={x} x2={x + barW} y1={H - PAD_B - 0.5} y2={H - PAD_B - 0.5} class="zero" />
 				{/if}
 				{#if i % 2 === days.length % 2 || days.length <= 8}
-					<text x={i * step + step / 2} y={H - 6} text-anchor="middle" class="tick">{label(d.day)}</text>
+					<text x={i * step + step / 2} y={H - 6} text-anchor="middle" class="tick"
+						>{label(d.day)}</text
+					>
 				{/if}
 			</g>
 		{/each}
@@ -59,7 +71,8 @@
 		{@const d = days[active]}
 		<div
 			class="tip pointer-events-none absolute top-0 rounded-[10px] bg-q-inverse px-3 py-2 text-[13px] text-q-on-inverse"
-			style="left: clamp(0px, calc({((active + 0.5) / days.length) * 100}% - 70px), calc(100% - 140px))"
+			style="left: clamp(0px, calc({((active + 0.5) / days.length) *
+				100}% - 70px), calc(100% - 140px))"
 		>
 			<p class="font-medium">{formatInr(paise(d.revenue))}</p>
 			<p class="opacity-80">{d.orders} order{d.orders === 1 ? '' : 's'} · {label(d.day)}</p>
@@ -68,7 +81,11 @@
 	<table class="sr-only">
 		<caption>Revenue per day</caption>
 		<thead><tr><th>Day</th><th>Revenue</th><th>Orders</th></tr></thead>
-		<tbody>{#each days as d (d.day)}<tr><td>{label(d.day)}</td><td>{formatInr(paise(d.revenue))}</td><td>{d.orders}</td></tr>{/each}</tbody>
+		<tbody
+			>{#each days as d (d.day)}<tr
+					><td>{label(d.day)}</td><td>{formatInr(paise(d.revenue))}</td><td>{d.orders}</td></tr
+				>{/each}</tbody
+		>
 	</table>
 </figure>
 

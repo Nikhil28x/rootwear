@@ -25,7 +25,9 @@ export const actions: Actions = {
 		requireSection(actor, 'staff');
 
 		const form = await event.request.formData();
-		const email = String(form.get('email') ?? '').trim().toLowerCase();
+		const email = String(form.get('email') ?? '')
+			.trim()
+			.toLowerCase();
 		const name = String(form.get('name') ?? '').trim() || null;
 		const isOwner = form.get('owner') === 'on';
 		const permissions = form.getAll('permissions').map(String);

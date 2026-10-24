@@ -18,7 +18,14 @@ export const load: PageServerLoad = async (event) => {
 	const [rows, pages] = await Promise.all([adminRepo.listDropRows(), listPolicies()]);
 	return {
 		isOwner: actor.isOwner,
-		pages: pages.map((p) => ({ slug: p.slug, title: p.title, edited: p.edited, published: p.published, showInFooter: p.showInFooter, updatedAt: p.updatedAt })),
+		pages: pages.map((p) => ({
+			slug: p.slug,
+			title: p.title,
+			edited: p.edited,
+			published: p.published,
+			showInFooter: p.showInFooter,
+			updatedAt: p.updatedAt
+		})),
 		slots: rows.map((row) => ({
 			id: row.id,
 			slug: row.slug,

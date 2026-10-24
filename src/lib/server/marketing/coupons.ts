@@ -56,15 +56,34 @@ function status(row: Row, now: number): Coupon['status'] {
 
 export async function listCoupons(now: number): Promise<Coupon[]> {
 	const client = getServiceClient();
-	const { data, error } = await client.from('coupons').select('*').order('created_at', { ascending: false });
+	const { data, error } = await client
+		.from('coupons')
+		.select('*')
+		.order('created_at', { ascending: false });
 	if (error) throw new Error(`coupons read failed: ${error.message}`);
 	const rows = (data ?? []) as Row[];
 	const { data: redemptions } = rows.length
-		? await client.from('coupon_redemptions').select('coupon_id, order_id, amount_paise').in('coupon_id', rows.map((r) => r.id))
+		? await client
+				.from('coupon_redemptions')
+				.select('coupon_id, order_id, amount_paise')
+				.in(
+					'coupon_id',
+					rows.map((r) => r.id)
+				)
 		: { data: [] };
-	const red = (redemptions ?? []) as { coupon_id: string; order_id: string; amount_paise: number }[];
+	const red = (redemptions ?? []) as {
+		coupon_id: string;
+		order_id: string;
+		amount_paise: number;
+	}[];
 	const { data: orders } = red.length
-		? await client.from('orders').select('id, total_paise, state').in('id', red.map((r) => r.order_id))
+		? await client
+				.from('orders')
+				.select('id, total_paise, state')
+				.in(
+					'id',
+					red.map((r) => r.order_id)
+				)
 		: { data: [] };
 	const paid = new Map(
 		((orders ?? []) as { id: string; total_paise: number; state: string }[])
@@ -107,13 +126,20 @@ export type CouponInput = {
 };
 
 function validate(input: CouponInput): void {
-	if (!/^[A-Z0-9-]{3,32}$/.test(input.code)) throw new CouponError('A code is 3–32 capital letters, digits or dashes, e.g. ROOTS10.');
-	if (input.kind === 'percent' && !(Number.isInteger(input.value) && input.value >= 1 && input.value <= 100)) {
+	if (!/^[A-Z0-9-]{3,32}$/.test(input.code))
+		throw new CouponError('A code is 3–32 capital letters, digits or dashes, e.g. ROOTS10.');
+	if (
+		input.kind === 'percent' &&
+		!(Number.isInteger(input.value) && input.value >= 1 && input.value <= 100)
+	) {
 		throw new CouponError('A percentage is a whole number from 1 to 100.');
 	}
-	if (input.kind === 'fixed' && !(Number.isInteger(input.value) && input.value > 0)) throw new CouponError('Enter the amount off in rupees.');
-	if (input.validUntil && input.validFrom && input.validUntil <= input.validFrom) throw new CouponError('The end must be after the start.');
-	if (input.maxUses !== null && !(Number.isInteger(input.maxUses) && input.maxUses > 0)) throw new CouponError('Uses must be a whole number, 1 or more.');
+	if (input.kind === 'fixed' && !(Number.isInteger(input.value) && input.value > 0))
+		throw new CouponError('Enter the amount off in rupees.');
+	if (input.validUntil && input.validFrom && input.validUntil <= input.validFrom)
+		throw new CouponError('The end must be after the start.');
+	if (input.maxUses !== null && !(Number.isInteger(input.maxUses) && input.maxUses > 0))
+		throw new CouponError('Uses must be a whole number, 1 or more.');
 }
 
 function row(input: CouponInput) {
@@ -123,7 +149,9 @@ function row(input: CouponInput) {
 		value: input.value,
 		min_subtotal_paise: input.minSubtotal,
 		max_discount_paise: input.maxDiscount,
-		valid_from: input.validFrom ? new Date(input.validFrom).toISOString() : new Date().toISOString(),
+		valid_from: input.validFrom
+			? new Date(input.validFrom).toISOString()
+			: new Date().toISOString(),
 		valid_until: input.validUntil ? new Date(input.validUntil).toISOString() : null,
 		max_uses: input.maxUses,
 		description: input.description
@@ -138,20 +166,31 @@ export async function createCoupon(input: CouponInput, actor: string): Promise<s
 		.select('id')
 		.single();
 	if (error) {
-		if (error.code === '23505') throw new CouponError(`${input.code} already exists. Pick another code.`);
+		if (error.code === '23505')
+			throw new CouponError(`${input.code} already exists. Pick another code.`);
 		throw new Error(`coupon create failed: ${error.message}`);
 	}
 	const id = (data as { id: string }).id;
-	await writeAudit(actor, 'coupon created', 'coupon', id, { code: input.code, kind: input.kind, value: input.value });
+	await writeAudit(actor, 'coupon created', 'coupon', id, {
+		code: input.code,
+		kind: input.kind,
+		value: input.value
+	});
 	return id;
 }
 
 export async function updateCoupon(id: string, input: CouponInput, actor: string): Promise<void> {
 	validate(input);
-	const { data: used } = await getServiceClient().from('coupons').select('used_count, code').eq('id', id).single();
+	const { data: used } = await getServiceClient()
+		.from('coupons')
+		.select('used_count, code')
+		.eq('id', id)
+		.single();
 	const current = used as { used_count: number; code: string } | null;
 	if (current && current.used_count > 0 && current.code !== input.code) {
-		throw new CouponError('This code has been used, so it cannot be renamed. Make a new coupon instead.');
+		throw new CouponError(
+			'This code has been used, so it cannot be renamed. Make a new coupon instead.'
+		);
 	}
 	if (current && input.maxUses !== null && input.maxUses < current.used_count) {
 		throw new CouponError(`It has been used ${current.used_count} times already.`);

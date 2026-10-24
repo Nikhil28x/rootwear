@@ -75,12 +75,23 @@
 	{/if}
 
 	<div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-		<form method="POST" action="?/save" class="flex flex-col gap-5" use:enhance={submitter(toaster)}>
+		<form
+			method="POST"
+			action="?/save"
+			class="flex flex-col gap-5"
+			use:enhance={submitter(toaster)}
+		>
 			<fieldset disabled={!data.canEdit} class="flex flex-col gap-5">
 				{#if template.channel === 'email'}
 					<Field label="Subject" id="tpl-subject">
 						{#snippet children({ describedBy })}
-							<input id="tpl-subject" name="subject" class="q-input" bind:value={subject} aria-describedby={describedBy} />
+							<input
+								id="tpl-subject"
+								name="subject"
+								class="q-input"
+								bind:value={subject}
+								aria-describedby={describedBy}
+							/>
 						{/snippet}
 					</Field>
 				{/if}
@@ -99,8 +110,7 @@
 							class="q-textarea min-h-[220px]"
 							bind:value={body}
 							bind:this={bodyField}
-							aria-describedby={describedBy}
-						></textarea>
+							aria-describedby={describedBy}></textarea>
 					{/snippet}
 				</Field>
 
@@ -109,7 +119,11 @@
 						<p class="q-help">Insert a value:</p>
 						<div class="flex flex-wrap gap-1.5">
 							{#each available as name (name)}
-								<button type="button" class="q-btn q-btn-secondary q-btn-sm q-mono" onclick={() => insert(name)}>
+								<button
+									type="button"
+									class="q-btn q-btn-secondary q-btn-sm q-mono"
+									onclick={() => insert(name)}
+								>
 									{name}
 								</button>
 							{/each}
@@ -119,7 +133,11 @@
 
 				{#if template.channel === 'whatsapp'}
 					<div class="grid gap-5 sm:grid-cols-[1fr_120px]">
-						<Field label="Approved template name" id="tpl-wa-name" help="Exactly as it appears in Meta’s template manager.">
+						<Field
+							label="Approved template name"
+							id="tpl-wa-name"
+							help="Exactly as it appears in Meta’s template manager."
+						>
 							{#snippet children({ describedBy })}
 								<input
 									id="tpl-wa-name"
@@ -132,7 +150,13 @@
 						</Field>
 						<Field label="Language" id="tpl-wa-lang">
 							{#snippet children({ describedBy })}
-								<input id="tpl-wa-lang" name="waLanguage" class="q-input q-mono" value={template.waLanguage} aria-describedby={describedBy} />
+								<input
+									id="tpl-wa-lang"
+									name="waLanguage"
+									class="q-input q-mono"
+									value={template.waLanguage}
+									aria-describedby={describedBy}
+								/>
 							{/snippet}
 						</Field>
 					</div>
@@ -142,7 +166,13 @@
 						help={'Which value fills {{1}}, {{2}} and so on in Meta’s copy, separated by commas.'}
 					>
 						{#snippet children({ describedBy })}
-							<input id="tpl-wa-params" name="waParams" class="q-input q-mono" bind:value={params} aria-describedby={describedBy} />
+							<input
+								id="tpl-wa-params"
+								name="waParams"
+								class="q-input q-mono"
+								bind:value={params}
+								aria-describedby={describedBy}
+							/>
 						{/snippet}
 					</Field>
 				{/if}
@@ -161,15 +191,23 @@
 			{#if data.canEdit}
 				<div class="flex items-center gap-3">
 					<button type="submit" class="q-btn q-btn-primary">Save template</button>
-					<p class="q-help">Edited {timeAgo(template.updatedAt)}{template.updatedBy ? ` by ${template.updatedBy}` : ''}</p>
+					<p class="q-help">
+						Edited {timeAgo(template.updatedAt)}{template.updatedBy
+							? ` by ${template.updatedBy}`
+							: ''}
+					</p>
 				</div>
 			{/if}
 		</form>
 
-		<Section title="Preview" description="With sample values. Real messages use the customer’s details.">
+		<Section
+			title="Preview"
+			description="With sample values. Real messages use the customer’s details."
+		>
 			{#if unknown.length}
 				<Notice kind="warning">
-					No value is known for {unknown.map((n) => `{{${n}}}`).join(', ')}. It will be blank when sent.
+					No value is known for {unknown.map((n) => `{{${n}}}`).join(', ')}. It will be blank when
+					sent.
 				</Notice>
 			{/if}
 			{#if template.channel === 'email'}
@@ -178,11 +216,15 @@
 						<p class="text-[12px] text-q-tertiary">Subject</p>
 						<p class="text-[14px] font-medium text-q-text">{fill(subject)}</p>
 					</div>
-					<div class="px-4 py-4 text-[14px] leading-[22px] whitespace-pre-wrap text-q-body">{fill(body)}</div>
+					<div class="px-4 py-4 text-[14px] leading-[22px] whitespace-pre-wrap text-q-body">
+						{fill(body)}
+					</div>
 				</div>
 			{:else}
 				<div class="rounded-[14px] bg-q-muted p-4">
-					<div class="max-w-[320px] rounded-[14px] rounded-tl-[4px] bg-q-surface px-3 py-2 text-[14px] leading-[20px] whitespace-pre-wrap text-q-body shadow-[var(--q-shadow-active)]">
+					<div
+						class="max-w-[320px] rounded-[14px] rounded-tl-[4px] bg-q-surface px-3 py-2 text-[14px] leading-[20px] whitespace-pre-wrap text-q-body shadow-[var(--q-shadow-active)]"
+					>
 						{fill(body)}
 					</div>
 				</div>

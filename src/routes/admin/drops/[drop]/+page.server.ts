@@ -78,7 +78,9 @@ export const load: PageServerLoad = async (event) => {
 				totals: p.totals
 			}))
 		},
-		previewUrl: drop.previewToken ? `${siteUrl()}/drops/${drop.slug}?preview=${drop.previewToken}` : null,
+		previewUrl: drop.previewToken
+			? `${siteUrl()}/drops/${drop.slug}?preview=${drop.previewToken}`
+			: null,
 		othersLive: othersLive.map((row) => `Drop ${String(row.number).padStart(2, '0')} ${row.name}`),
 		/**
 		 * §07 — the tease run is derived from the launch instant, not stored
@@ -98,7 +100,12 @@ export const load: PageServerLoad = async (event) => {
 			})),
 			...audit
 				.filter((a) => !a.action.startsWith('state '))
-				.map((a) => ({ at: a.occurredAt, title: a.action.charAt(0).toUpperCase() + a.action.slice(1), detail: null, actor: a.actor }))
+				.map((a) => ({
+					at: a.occurredAt,
+					title: a.action.charAt(0).toUpperCase() + a.action.slice(1),
+					detail: null,
+					actor: a.actor
+				}))
 		].sort((a, b) => b.at - a.at)
 	};
 };
@@ -112,7 +119,12 @@ export const actions: Actions = {
 		if (!canTransition(drop.state, to)) {
 			return fail(400, { error: `A drop in ${drop.state} cannot move to ${to}.` });
 		}
-		await adminRepo.setDropState({ dropId: drop.id, from: drop.state, to, actor: actorLabel(actor) });
+		await adminRepo.setDropState({
+			dropId: drop.id,
+			from: drop.state,
+			to,
+			actor: actorLabel(actor)
+		});
 		return { message: `Moved to ${to}.` };
 	},
 
@@ -131,7 +143,11 @@ export const actions: Actions = {
 	preorderMode: async (event) => {
 		const { actor, drop } = await editor(event);
 		const preorderMode = (await event.request.formData()).get('preorderMode') === 'true';
-		await adminRepo.setDropPreorderMode({ dropId: drop.id, preorderMode, actor: actorLabel(actor) });
+		await adminRepo.setDropPreorderMode({
+			dropId: drop.id,
+			preorderMode,
+			actor: actorLabel(actor)
+		});
 		return {
 			message: preorderMode
 				? 'Pre-order mode on: the product page shows Pre-order.'
@@ -145,9 +161,15 @@ export const actions: Actions = {
 	 */
 	launchInstant: async (event) => {
 		const { actor, drop } = await editor(event);
-		const launchInstant = parseIstInput(String((await event.request.formData()).get('launchInstant') ?? ''));
+		const launchInstant = parseIstInput(
+			String((await event.request.formData()).get('launchInstant') ?? '')
+		);
 		if (launchInstant === null) return fail(400, { error: 'Pick the launch date and time.' });
-		await adminRepo.setDropLaunchInstant({ dropId: drop.id, launchInstant, actor: actorLabel(actor) });
+		await adminRepo.setDropLaunchInstant({
+			dropId: drop.id,
+			launchInstant,
+			actor: actorLabel(actor)
+		});
 		return { message: 'Launch saved. The countdown and tease schedule moved with it.' };
 	},
 
@@ -173,7 +195,9 @@ export const actions: Actions = {
 		const { actor, drop } = await editor(event);
 		await rotatePreviewToken(drop.id, actorLabel(actor));
 		return {
-			message: drop.previewToken ? 'New preview link made. The old one no longer works.' : 'Preview link ready.'
+			message: drop.previewToken
+				? 'New preview link made. The old one no longer works.'
+				: 'Preview link ready.'
 		};
 	},
 

@@ -1,32 +1,40 @@
-import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { adminRepo } from '$lib/server/admin';
 import { requireSection } from '$lib/server/admin/roles';
-import { resolveAdminAuth } from '$lib/server/admin/session';
-import { EDITION_SIZE } from '$lib/config/commerce';
+import { staffActor } from '$lib/server/admin/session';
+import { getOrder, listOrders } from '$lib/server/orders/admin';
 
 /**
- * RW-160 — §11 "A printable packing list and address label view for 25 orders
- * — no label integration."
- *
- * Twenty-five is the whole edition, so the default limit is the edition size:
- * this list is meant to be printed once, on the morning everything ships.
- * Guarded as 'fulfilment' rather than 'orders' so the §12 split can give
- * packing access to someone who should not read the order ledger, without
- * rewriting this route.
+ * §11: Aaron ships the pieces himself. Everything waiting to go out, oldest
+ * first, with the pieces to pick, and one click to print the whole batch.
  */
 export const load: PageServerLoad = async (event) => {
-	const auth = await resolveAdminAuth(event);
-	if (auth.status !== 'staff') error(403, 'Staff access required.');
-	requireSection(auth.actor, 'fulfilment');
-
-	const requested = Number(event.url.searchParams.get('limit'));
-	const limit =
-		Number.isInteger(requested) && requested > 0 && requested <= 200 ? requested : EDITION_SIZE;
-
+	const actor = await staffActor(event);
+	requireSection(actor, 'fulfilment');
+	const { orders } = await listOrders({ state: 'to_ship' }, 1, { all: true });
+	const details = await Promise.all(
+		[...orders]
+			.reverse()
+			.slice(0, 100)
+			.map((o) => getOrder(o.id))
+	);
 	return {
-		now: event.locals.now,
-		limit,
-		entries: await adminRepo.packingList(limit)
+		orders: details
+			.filter((o) => o !== null)
+			.map((o) => ({
+				id: o.id,
+				number: o.number,
+				state: o.state,
+				name: o.shipTo.name,
+				city: `${o.shipTo.city} ${o.shipTo.pincode}`,
+				createdAt: o.createdAt,
+				note: o.customerNote,
+				isPreOrder: o.isPreOrder,
+				lines: o.lines.map((l) => ({
+					name: l.name,
+					variant: l.variant,
+					quantity: l.quantity,
+					pieceNumber: l.pieceNumber
+				}))
+			}))
 	};
 };

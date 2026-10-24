@@ -28,7 +28,10 @@ export const load: PageServerLoad = async (event) => {
 		page,
 		pageSize: ORDER_PAGE_SIZE,
 		filters: raw,
-		drops: drops.map((d) => ({ id: d.id, label: `Drop ${String(d.number).padStart(2, '0')} — ${d.name}` })),
+		drops: drops.map((d) => ({
+			id: d.id,
+			label: `Drop ${String(d.number).padStart(2, '0')} — ${d.name}`
+		})),
 		canEdit: can(actor, 'orders.edit'),
 		query: event.url.search
 	};

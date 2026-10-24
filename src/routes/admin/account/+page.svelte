@@ -19,10 +19,21 @@
 	{#if form?.error}<Notice kind="error">{form.error}</Notice>{/if}
 
 	<Section title="Name">
-		<form method="POST" action="?/name" class="flex items-end gap-2" use:enhance={submitter(toaster)}>
+		<form
+			method="POST"
+			action="?/name"
+			class="flex items-end gap-2"
+			use:enhance={submitter(toaster)}
+		>
 			<Field label="Name shown to the team" id="me-name" class="flex-1">
 				{#snippet children({ describedBy })}
-					<input id="me-name" name="name" class="q-input" value={data.me.name ?? ''} aria-describedby={describedBy} />
+					<input
+						id="me-name"
+						name="name"
+						class="q-input"
+						value={data.me.name ?? ''}
+						aria-describedby={describedBy}
+					/>
 				{/snippet}
 			</Field>
 			<button type="submit" class="q-btn q-btn-secondary">Save name</button>
@@ -30,27 +41,62 @@
 	</Section>
 
 	<Section title="Password">
-		<form method="POST" action="?/password" class="flex flex-col gap-4" use:enhance={submitter(toaster, { reset: true })}>
+		<form
+			method="POST"
+			action="?/password"
+			class="flex flex-col gap-4"
+			use:enhance={submitter(toaster, { reset: true })}
+		>
 			<Field label="Current password" id="pw-current">
 				{#snippet children({ describedBy })}
-					<input id="pw-current" name="current" type="password" class="q-input" autocomplete="current-password" required aria-describedby={describedBy} />
+					<input
+						id="pw-current"
+						name="current"
+						type="password"
+						class="q-input"
+						autocomplete="current-password"
+						required
+						aria-describedby={describedBy}
+					/>
 				{/snippet}
 			</Field>
 			<Field label="New password" id="pw-next" help="At least 12 characters.">
 				{#snippet children({ describedBy })}
-					<input id="pw-next" name="next" type="password" class="q-input" autocomplete="new-password" minlength="12" required aria-describedby={describedBy} />
+					<input
+						id="pw-next"
+						name="next"
+						type="password"
+						class="q-input"
+						autocomplete="new-password"
+						minlength="12"
+						required
+						aria-describedby={describedBy}
+					/>
 				{/snippet}
 			</Field>
 			<Field label="New password again" id="pw-confirm">
 				{#snippet children({ describedBy })}
-					<input id="pw-confirm" name="confirm" type="password" class="q-input" autocomplete="new-password" required aria-describedby={describedBy} />
+					<input
+						id="pw-confirm"
+						name="confirm"
+						type="password"
+						class="q-input"
+						autocomplete="new-password"
+						required
+						aria-describedby={describedBy}
+					/>
 				{/snippet}
 			</Field>
 			<div><button type="submit" class="q-btn q-btn-primary">Change password</button></div>
 		</form>
 	</Section>
 
-	<Section title="What you can do" description={data.me.isOwner ? 'You are an owner: full access.' : 'Ask an owner if you need more.'}>
+	<Section
+		title="What you can do"
+		description={data.me.isOwner
+			? 'You are an owner: full access.'
+			: 'Ask an owner if you need more.'}
+	>
 		{#if !data.me.isOwner}
 			<ul class="flex flex-col gap-1 text-[14px] text-q-body">
 				{#each data.granted as item (item)}<li>· {item}</li>{/each}

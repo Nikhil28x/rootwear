@@ -15,7 +15,19 @@ export type Size = string;
 export const SIZES = ['XS', 'S', 'M', 'L', 'XL'] as const;
 
 /** Every size code the catalogue knows, in display order. Mirrors public.sizes. */
-export const SIZE_ORDER = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', '5XL', 'OS'] as const;
+export const SIZE_ORDER = [
+	'XXS',
+	'XS',
+	'S',
+	'M',
+	'L',
+	'XL',
+	'XXL',
+	'3XL',
+	'4XL',
+	'5XL',
+	'OS'
+] as const;
 
 const SIZE_CODE = /^[A-Z0-9]{1,5}$/;
 
@@ -50,8 +62,7 @@ export const SIZE_RANGE_LABEL = sizeRangeLabel(SIZES);
  * guide. Fit mistakes are the single biggest returns driver in this category
  * and returns here are defects-only, so a bad fit becomes a support problem.
  */
-export const FIT_DISCLAIMER =
-	'The fit is oversized. Women may want to size down.';
+export const FIT_DISCLAIMER = 'The fit is oversized. Women may want to size down.';
 
 /**
  * §09 — the size guide must carry REAL measurements in cm, chest and length,
@@ -72,7 +83,11 @@ export const SIZE_CHART: Record<string, SizeMeasurement> = {
 export const SIZE_CHART_IS_PROVISIONAL = true;
 
 /** One row of a product's size guide. */
-export type SizeChartRow = { readonly size: Size; readonly chestCm: number; readonly lengthCm: number };
+export type SizeChartRow = {
+	readonly size: Size;
+	readonly chestCm: number;
+	readonly lengthCm: number;
+};
 
 /**
  * The size guide for a product: its own chart where it has one, otherwise

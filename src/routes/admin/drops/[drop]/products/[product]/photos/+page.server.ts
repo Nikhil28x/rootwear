@@ -15,7 +15,9 @@ import {
 
 const ROLES = ['lead', 'detail', 'fabric', 'worn'] as const;
 const role = (value: FormDataEntryValue | null): AdminImage['role'] =>
-	(ROLES as readonly string[]).includes(String(value)) ? (String(value) as AdminImage['role']) : 'detail';
+	(ROLES as readonly string[]).includes(String(value))
+		? (String(value) as AdminImage['role'])
+		: 'detail';
 
 async function editor(event: RequestEvent) {
 	const actor = await staffActor(event);
@@ -42,7 +44,11 @@ export const actions: Actions = {
 					productId: product.id,
 					file,
 					// One description for one photo; numbered when several share it.
-					alt: alt ? (files.length > 1 ? `${alt} (${i + 1})` : alt) : `${product.name}, ${imageRole} photo ${product.images.length + i + 1}`,
+					alt: alt
+						? files.length > 1
+							? `${alt} (${i + 1})`
+							: alt
+						: `${product.name}, ${imageRole} photo ${product.images.length + i + 1}`,
 					role: imageRole,
 					colourwayId,
 					actor
@@ -90,7 +96,10 @@ export const actions: Actions = {
 
 	remove: async (event) => {
 		const { actor } = await editor(event);
-		const removed = await deleteImage({ imageId: String((await event.request.formData()).get('imageId') ?? ''), actor });
+		const removed = await deleteImage({
+			imageId: String((await event.request.formData()).get('imageId') ?? ''),
+			actor
+		});
 		return { removed };
 	},
 

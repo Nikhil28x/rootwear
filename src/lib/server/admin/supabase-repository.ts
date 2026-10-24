@@ -27,7 +27,7 @@
 import { assertTransition, legalTransitionsFrom } from '$lib/domain/drop-state';
 import type { DropState } from '$lib/domain/drop-state';
 import { addPaise, paise, ZERO, type Paise } from '$lib/money';
-import type { Size } from '$lib/drop/sizes';
+import { compareSizes, type Size } from '$lib/drop/sizes';
 import { getCatalogueClient, getServiceClient } from '$lib/server/db/clients';
 import { writeAudit } from './audit';
 import type { AdminRepository } from './repository';
@@ -282,9 +282,11 @@ export const supabaseAdminRepository: AdminRepository = {
 		}>;
 
 		return catalogue.drops.map((drop) => {
-			const dropVariants = catalogue.variants.filter(
-				(v) => catalogue.variantDrop.get(v.id) === drop.id
-			);
+			// Colour first (the SKU's stem), then size in display order.
+			const stem = (sku: string) => sku.slice(0, sku.lastIndexOf('-'));
+			const dropVariants = catalogue.variants
+				.filter((v) => catalogue.variantDrop.get(v.id) === drop.id)
+				.sort((a, b) => stem(a.sku).localeCompare(stem(b.sku)) || compareSizes(a.size, b.size));
 			const claimEvents: number[] = [];
 
 			const bySize: SizePerformance[] = dropVariants.map((variant) => {
@@ -470,7 +472,7 @@ export const supabaseAdminRepository: AdminRepository = {
 		const { data, error } = await getServiceClient()
 			.from('demand_board')
 			.select(
-				'drop_id, drop_slug, drop_name, drop_state, variant_id, size, requests, notify_me, waitlist'
+				'drop_id, drop_slug, drop_name, drop_state, variant_id, size, colourway, requests, notify_me, waitlist'
 			);
 		if (error) throw new Error(`demand_board read failed: ${error.message}`);
 
@@ -482,6 +484,7 @@ export const supabaseAdminRepository: AdminRepository = {
 				drop_state: DropState;
 				variant_id: string;
 				size: Size;
+				colourway: string | null;
 				requests: number;
 				notify_me: number;
 				waitlist: number;
@@ -493,6 +496,7 @@ export const supabaseAdminRepository: AdminRepository = {
 			dropState: row.drop_state,
 			variantId: row.variant_id,
 			size: row.size,
+			colourway: row.colourway ?? null,
 			requests: Number(row.requests ?? 0),
 			notifyMe: Number(row.notify_me ?? 0),
 			waitlist: Number(row.waitlist ?? 0)
@@ -763,7 +767,12 @@ export const supabaseAdminRepository: AdminRepository = {
 			.update({ preorder_mode: preorderMode })
 			.eq('id', dropId);
 		if (error) throw new Error(`pre-order mode write failed: ${error.message}`);
-		await writeAudit(actor, preorderMode ? 'pre-order mode on' : 'pre-order mode off', 'drop', dropId);
+		await writeAudit(
+			actor,
+			preorderMode ? 'pre-order mode on' : 'pre-order mode off',
+			'drop',
+			dropId
+		);
 	},
 
 	async setDropLaunchInstant({ dropId, launchInstant, actor }) {

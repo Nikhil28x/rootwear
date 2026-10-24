@@ -28,7 +28,9 @@ export const actions: Actions = {
 	password: async (event) => {
 		const actor = await staffActor(event);
 		if (actor.preview) {
-			return fail(400, { error: 'This sign-in comes from the server settings and cannot be changed here.' });
+			return fail(400, {
+				error: 'This sign-in comes from the server settings and cannot be changed here.'
+			});
 		}
 		const form = await event.request.formData();
 		const current = String(form.get('current') ?? '');
@@ -44,7 +46,10 @@ export const actions: Actions = {
 		// on a shared machine cannot be used to lock its owner out.
 		const supabase = event.locals.supabase;
 		if (!supabase) return fail(503, { error: 'Sign-in is not configured on this server.' });
-		const { error } = await supabase.auth.signInWithPassword({ email: actor.email, password: current });
+		const { error } = await supabase.auth.signInWithPassword({
+			email: actor.email,
+			password: current
+		});
 		if (error) return fail(400, { error: 'Your current password is not right.' });
 
 		await setOwnPassword(actor.userId, next);

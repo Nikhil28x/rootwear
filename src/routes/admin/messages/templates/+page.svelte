@@ -30,7 +30,9 @@
 					<a
 						href="/admin/messages/templates/{template.key}"
 						class="q-btn q-btn-secondary q-btn-sm"
-						title="Edited {timeAgo(template.updatedAt)}{template.updatedBy ? ` by ${template.updatedBy}` : ''}"
+						title="Edited {timeAgo(template.updatedAt)}{template.updatedBy
+							? ` by ${template.updatedBy}`
+							: ''}"
 					>
 						{#if template.channel === 'email'}<Mail /> Email{:else}<MessageCircle /> WhatsApp{/if}
 						{#if !template.active}<Chip label="Off" dot={false} />{/if}

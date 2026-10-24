@@ -28,9 +28,20 @@
 
 	<form method="GET" class="flex flex-wrap items-end gap-2">
 		<div class="relative min-w-[220px] flex-1 sm:max-w-[300px]">
-			<Search size={16} strokeWidth={1.5} class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-q-tertiary" />
+			<Search
+				size={16}
+				strokeWidth={1.5}
+				class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-q-tertiary"
+			/>
 			<label for="audit-q" class="sr-only">Search</label>
-			<input id="audit-q" name="q" type="search" class="q-input pl-9" placeholder="Search action or record" value={data.filters.search} />
+			<input
+				id="audit-q"
+				name="q"
+				type="search"
+				class="q-input pl-9"
+				placeholder="Search action or record"
+				value={data.filters.search}
+			/>
 		</div>
 		<div class="flex flex-col gap-1">
 			<label for="audit-actor" class="sr-only">Person</label>
@@ -46,12 +57,20 @@
 			<select id="audit-entity" name="entity" class="q-select w-auto">
 				<option value="">All records</option>
 				{#each data.facets.entities as entity (entity)}
-					<option value={entity} selected={data.filters.entity === entity}>{entity.replace(/_/g, ' ')}</option>
+					<option value={entity} selected={data.filters.entity === entity}
+						>{entity.replace(/_/g, ' ')}</option
+					>
 				{/each}
 			</select>
 		</div>
 		<label for="audit-from" class="sr-only">From</label>
-		<input id="audit-from" name="from" type="date" class="q-input w-auto" value={data.filters.from} />
+		<input
+			id="audit-from"
+			name="from"
+			type="date"
+			class="q-input w-auto"
+			value={data.filters.from}
+		/>
 		<label for="audit-to" class="sr-only">To</label>
 		<input id="audit-to" name="to" type="date" class="q-input w-auto" value={data.filters.to} />
 		<button type="submit" class="q-btn q-btn-secondary">Filter</button>
@@ -63,7 +82,9 @@
 			<EmptyState
 				icon={filtered ? Search : History}
 				title={filtered ? 'No changes match' : 'No changes yet'}
-				body={filtered ? 'Widen the dates or clear a filter.' : 'Changes to drops, orders, staff and templates are recorded here.'}
+				body={filtered
+					? 'Widen the dates or clear a filter.'
+					: 'Changes to drops, orders, staff and templates are recorded here.'}
 				compact
 			/>
 		</div>
@@ -95,13 +116,20 @@
 										{expanded === entry.id ? 'Hide details' : 'Details'}
 									</button>
 									{#if expanded === entry.id}
-										<pre class="q-mono mt-2 max-w-[560px] overflow-x-auto rounded-[10px] bg-q-muted p-3 text-[12px] leading-[18px] text-q-body">{JSON.stringify(entry.detail, null, 2)}</pre>
+										<pre
+											class="q-mono mt-2 max-w-[560px] overflow-x-auto rounded-[10px] bg-q-muted p-3 text-[12px] leading-[18px] text-q-body">{JSON.stringify(
+												entry.detail,
+												null,
+												2
+											)}</pre>
 									{/if}
 								{/if}
 							</td>
 							<td class="text-q-secondary">
 								{entry.entity.replace(/_/g, ' ')}
-								{#if entry.entityId}<span class="q-mono block text-[12px] text-q-tertiary">{entry.entityId}</span>{/if}
+								{#if entry.entityId}<span class="q-mono block text-[12px] text-q-tertiary"
+										>{entry.entityId}</span
+									>{/if}
 							</td>
 						</tr>
 					{/each}

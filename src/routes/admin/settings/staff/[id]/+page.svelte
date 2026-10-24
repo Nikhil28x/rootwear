@@ -40,7 +40,9 @@
 
 <div class="flex flex-col gap-8">
 	<div class="flex flex-col gap-3">
-		<a href="/admin/settings/staff" class="w-fit text-[13px] text-q-secondary hover:text-q-text">← Staff</a>
+		<a href="/admin/settings/staff" class="w-fit text-[13px] text-q-secondary hover:text-q-text"
+			>← Staff</a
+		>
 		<div class="flex flex-wrap items-center gap-3">
 			<h2 class="text-[20px] leading-[28px] font-semibold tracking-[-0.005em] text-q-text">
 				{person.name ?? person.email}
@@ -50,14 +52,21 @@
 			{#if data.isMe}<Chip label="You" dot={false} />{/if}
 		</div>
 		<p class="text-[13px] text-q-secondary">
-			{person.email} · Added {timeAgo(person.createdAt)}{person.invitedBy ? ` by ${person.invitedBy}` : ''}
-			· {person.lastSeenAt ? `Last signed in ${timeAgo(person.lastSeenAt)}` : 'Has not signed in yet'}
+			{person.email} · Added {timeAgo(person.createdAt)}{person.invitedBy
+				? ` by ${person.invitedBy}`
+				: ''}
+			· {person.lastSeenAt
+				? `Last signed in ${timeAgo(person.lastSeenAt)}`
+				: 'Has not signed in yet'}
 		</p>
 	</div>
 
 	{#if form?.error}<Notice kind="error">{form.error}</Notice>{/if}
 	{#if !data.canEdit}
-		<Notice kind="info">Only an owner can change an owner’s access.</Notice>
+		<Notice kind="info"
+			>Only an owner can change the access of an owner, or of someone with permissions you do not
+			have.</Notice
+		>
 	{/if}
 
 	<div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -108,8 +117,14 @@
 								<KeyRound /> Reset password
 							</button>
 						</form>
-						<p class="q-help">Creates a new temporary password for you to pass on. Their old one stops working.</p>
-						<button type="button" class="q-btn q-btn-danger-ghost w-full" onclick={() => (confirmRemove = true)}>
+						<p class="q-help">
+							Creates a new temporary password for you to pass on. Their old one stops working.
+						</p>
+						<button
+							type="button"
+							class="q-btn q-btn-danger-ghost w-full"
+							onclick={() => (confirmRemove = true)}
+						>
 							<Trash2 /> Remove from team
 						</button>
 					</div>
@@ -149,7 +164,8 @@
 		</button>
 	</div>
 	{#snippet footer()}
-		<button type="button" class="q-btn q-btn-primary" onclick={() => (password = null)}>Done</button>
+		<button type="button" class="q-btn q-btn-primary" onclick={() => (password = null)}>Done</button
+		>
 	{/snippet}
 </Modal>
 
@@ -159,7 +175,9 @@
 	description="They will no longer be able to sign in to admin. Their history in the audit log stays. You can add them again later."
 >
 	{#snippet footer()}
-		<button type="button" class="q-btn q-btn-secondary" onclick={() => (confirmRemove = false)}>Keep</button>
+		<button type="button" class="q-btn q-btn-secondary" onclick={() => (confirmRemove = false)}
+			>Keep</button
+		>
 		<form method="POST" action="?/remove" use:enhance={submitter(toaster)}>
 			<button type="submit" class="q-btn q-btn-danger">Remove from team</button>
 		</form>

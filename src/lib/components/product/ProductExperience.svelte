@@ -101,7 +101,8 @@
 			: (chart[Math.floor(chart.length / 2)]?.size ?? 'M');
 	});
 	let guide = $derived(
-		chart.find((row) => row.size === guideSize) ?? chart[0] ?? { size: guideSize, chestCm: 0, lengthCm: 0 }
+		chart.find((row) => row.size === guideSize) ??
+			chart[0] ?? { size: guideSize, chestCm: 0, lengthCm: 0 }
 	);
 	/** The tee drawing grows with the chest, relative to the middle size. */
 	let teeScale = $derived(
@@ -213,7 +214,9 @@
 					loading="lazy"
 					decoding="async"
 				/>
-				<figcaption>Model is {product.modelHeightCm} cm, wearing size {product.modelWornSize}.</figcaption>
+				<figcaption>
+					Model is {product.modelHeightCm} cm, wearing size {product.modelWornSize}.
+				</figcaption>
 			</figure>
 		{/if}
 		{#if byRole.detail}
@@ -468,8 +471,7 @@
 		grid-template-rows: 1fr auto auto;
 		padding: calc(120px + env(safe-area-inset-top, 0px)) var(--gutter) 28px;
 		background:
-			radial-gradient(80% 60% at 50% 55%, rgb(194 155 106 / 0.16), transparent 70%),
-			var(--night);
+			radial-gradient(80% 60% at 50% 55%, rgb(194 155 106 / 0.16), transparent 70%), var(--night);
 		color: #f3efe6;
 		overflow: hidden;
 	}
@@ -675,8 +677,7 @@
 		background:
 			repeating-linear-gradient(0deg, rgb(70 45 15 / 0.07) 0 1px, transparent 1px 7px),
 			repeating-linear-gradient(90deg, rgb(70 45 15 / 0.07) 0 1px, transparent 1px 7px),
-			radial-gradient(120% 90% at 20% 0%, rgb(255 250 240 / 0.18), transparent 60%),
-			var(--cloth);
+			radial-gradient(120% 90% at 20% 0%, rgb(255 250 240 / 0.18), transparent 60%), var(--cloth);
 	}
 	.cloth__head {
 		display: flex;

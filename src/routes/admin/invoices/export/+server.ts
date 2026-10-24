@@ -22,16 +22,38 @@ export const GET: RequestHandler = async (event) => {
 	// GSTR-1 needs net figures per HSN code and per state of supply. Credit
 	// notes count negative, so each row is the period's net.
 	if (type === 'hsn' || type === 'states') {
-		const groups = new Map<string, { key: string[]; qty: number; taxable: number; cgst: number; sgst: number; igst: number; total: number }>();
+		const groups = new Map<
+			string,
+			{
+				key: string[];
+				qty: number;
+				taxable: number;
+				cgst: number;
+				sgst: number;
+				igst: number;
+				total: number;
+			}
+		>();
 		for (const d of documents) {
 			const sign = d.kind === 'credit_note' ? -1 : 1;
 			const parts =
 				type === 'hsn'
 					? d.lines.map((l) => ({ key: [l.hsn ?? '', String(l.taxRate)], line: l }))
-					: d.lines.map((l) => ({ key: [d.buyer.state ?? '', d.buyer.stateCode ?? '', String(l.taxRate)], line: l }));
+					: d.lines.map((l) => ({
+							key: [d.buyer.state ?? '', d.buyer.stateCode ?? '', String(l.taxRate)],
+							line: l
+						}));
 			for (const { key, line } of parts) {
 				const id = key.join('|');
-				const g = groups.get(id) ?? { key, qty: 0, taxable: 0, cgst: 0, sgst: 0, igst: 0, total: 0 };
+				const g = groups.get(id) ?? {
+					key,
+					qty: 0,
+					taxable: 0,
+					cgst: 0,
+					sgst: 0,
+					igst: 0,
+					total: 0
+				};
 				g.qty += sign * line.quantity;
 				g.taxable += sign * line.taxable;
 				g.cgst += sign * line.cgst;
@@ -42,7 +64,10 @@ export const GET: RequestHandler = async (event) => {
 			}
 		}
 		const rows = [...groups.values()].sort((a, b) => a.key.join().localeCompare(b.key.join()));
-		const head = type === 'hsn' ? ['HSN/SAC', 'GST rate %', 'Quantity'] : ['State', 'State code', 'GST rate %'];
+		const head =
+			type === 'hsn'
+				? ['HSN/SAC', 'GST rate %', 'Quantity']
+				: ['State', 'State code', 'GST rate %'];
 		return csvResponse(
 			`rootwear-${type === 'hsn' ? 'hsn-summary' : 'state-summary'}-${stamp}.csv`,
 			toCsv(
@@ -61,7 +86,22 @@ export const GET: RequestHandler = async (event) => {
 	const date = (ms: number) =>
 		new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(ms);
 	const body = toCsv(
-		['Date', 'Type', 'Number', 'Against', 'Order', 'Customer', 'State', 'State code', 'GST registered', 'Taxable (₹)', 'CGST (₹)', 'SGST (₹)', 'IGST (₹)', 'Total (₹)'],
+		[
+			'Date',
+			'Type',
+			'Number',
+			'Against',
+			'Order',
+			'Customer',
+			'State',
+			'State code',
+			'GST registered',
+			'Taxable (₹)',
+			'CGST (₹)',
+			'SGST (₹)',
+			'IGST (₹)',
+			'Total (₹)'
+		],
 		[...documents]
 			.sort((a, b) => a.issuedAt - b.issuedAt)
 			.map((d) => {

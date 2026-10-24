@@ -2,7 +2,12 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { requirePermission } from '$lib/server/admin/roles';
 import { actorLabel, staffActor } from '$lib/server/admin/session';
-import { CatalogueError, createProduct, findDrop, listSizeOptions } from '$lib/server/catalogue/admin';
+import {
+	CatalogueError,
+	createProduct,
+	findDrop,
+	listSizeOptions
+} from '$lib/server/catalogue/admin';
 import { readProductForm } from '$lib/server/catalogue/forms';
 
 export const load: PageServerLoad = async (event) => {
@@ -30,20 +35,34 @@ export const actions: Actions = {
 			.getAll('colourName')
 			.map((name, i) => ({
 				name: String(name).trim(),
-				code: String(form.getAll('colourCode')[i] ?? '').trim().toUpperCase(),
+				code: String(form.getAll('colourCode')[i] ?? '')
+					.trim()
+					.toUpperCase(),
 				swatch: String(form.getAll('colourSwatch')[i] ?? '') || null
 			}))
 			.filter((c) => c.name);
 
 		if (Number.isNaN(input.launchPrice)) {
-			return fail(400, { values, sizes, colourways, error: 'Enter the launch price in rupees, e.g. 4100.' });
+			return fail(400, {
+				values,
+				sizes,
+				colourways,
+				error: 'Enter the launch price in rupees, e.g. 4100.'
+			});
 		}
 
 		let id: string;
 		try {
-			id = await createProduct({ dropId: drop.id, product: input, sizes, colourways, actor: actorLabel(actor) });
+			id = await createProduct({
+				dropId: drop.id,
+				product: input,
+				sizes,
+				colourways,
+				actor: actorLabel(actor)
+			});
 		} catch (err) {
-			if (err instanceof CatalogueError) return fail(400, { values, sizes, colourways, error: err.message });
+			if (err instanceof CatalogueError)
+				return fail(400, { values, sizes, colourways, error: err.message });
 			throw err;
 		}
 		redirect(303, `/admin/drops/${drop.slug}/products/${id}?created=1`);

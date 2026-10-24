@@ -15,7 +15,9 @@
 
 	let openId = $state<string | null>(null);
 	let open = $derived(data.messages.find((m) => m.id === openId) ?? null);
-	let filtered = $derived(Boolean(data.filters.search || data.filters.channel || data.filters.context));
+	let filtered = $derived(
+		Boolean(data.filters.search || data.filters.channel || data.filters.context)
+	);
 </script>
 
 <svelte:head><title>Messages · Rootwear admin</title></svelte:head>
@@ -23,9 +25,17 @@
 <div class="flex flex-col gap-4">
 	<form method="GET" class="flex flex-wrap items-end gap-2" data-sveltekit-keepfocus>
 		{#if data.filters.status}<input type="hidden" name="status" value={data.filters.status} />{/if}
-		{#if data.filters.context}<input type="hidden" name="context" value={data.filters.context} />{/if}
+		{#if data.filters.context}<input
+				type="hidden"
+				name="context"
+				value={data.filters.context}
+			/>{/if}
 		<div class="relative min-w-[240px] flex-1 sm:max-w-[360px]">
-			<Search size={16} strokeWidth={1.5} class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-q-tertiary" />
+			<Search
+				size={16}
+				strokeWidth={1.5}
+				class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-q-tertiary"
+			/>
 			<label for="msg-search" class="sr-only">Search messages</label>
 			<input
 				id="msg-search"
@@ -49,7 +59,10 @@
 		</select>
 		<button type="submit" class="q-btn q-btn-secondary">Search</button>
 		{#if filtered}
-			<a class="q-btn q-btn-ghost" href="/admin/messages{data.filters.status ? `?status=${data.filters.status}` : ''}">
+			<a
+				class="q-btn q-btn-ghost"
+				href="/admin/messages{data.filters.status ? `?status=${data.filters.status}` : ''}"
+			>
 				<X /> Clear
 			</a>
 		{/if}
@@ -58,9 +71,19 @@
 	{#if data.messages.length === 0}
 		<div class="q-card">
 			{#if filtered}
-				<EmptyState icon={Search} title="No messages match" body="Try a different name, email or number." compact />
+				<EmptyState
+					icon={Search}
+					title="No messages match"
+					body="Try a different name, email or number."
+					compact
+				/>
 			{:else if data.filters.status === 'problem'}
-				<EmptyState icon={Send} title="Nothing is stuck" body="Every message went out. Failed or skipped messages would appear here." compact />
+				<EmptyState
+					icon={Send}
+					title="Nothing is stuck"
+					body="Every message went out. Failed or skipped messages would appear here."
+					compact
+				/>
 			{:else}
 				<EmptyState
 					icon={Send}
@@ -92,15 +115,17 @@
 									onclick={() => (openId = message.id)}
 								>
 									<span class="text-q-tertiary">
-										{#if message.channel === 'email'}<Mail size={16} strokeWidth={1.5} />{:else}<MessageCircle
+										{#if message.channel === 'email'}<Mail
 												size={16}
 												strokeWidth={1.5}
-											/>{/if}
+											/>{:else}<MessageCircle size={16} strokeWidth={1.5} />{/if}
 									</span>
 									<span class="flex flex-col">
 										<span>{message.recipientName ?? message.recipient}</span>
 										{#if message.recipientName}
-											<span class="text-[13px] font-normal text-q-secondary">{message.recipient}</span>
+											<span class="text-[13px] font-normal text-q-secondary"
+												>{message.recipient}</span
+											>
 										{/if}
 									</span>
 								</button>
@@ -128,7 +153,9 @@
 	open={open !== null}
 	onclose={() => (openId = null)}
 	title={open?.subject ?? (open?.channel === 'whatsapp' ? 'WhatsApp message' : 'Message')}
-	description={open ? `To ${open.recipientName ? `${open.recipientName} · ` : ''}${open.recipient}` : ''}
+	description={open
+		? `To ${open.recipientName ? `${open.recipientName} · ` : ''}${open.recipient}`
+		: ''}
 >
 	{#if open}
 		{@const status = label(MESSAGE_STATUS, open.status)}
@@ -152,21 +179,31 @@
 			<dl class="grid grid-cols-[140px_1fr] gap-x-4 gap-y-2 text-[14px]">
 				<dt class="text-q-secondary">Created</dt>
 				<dd>{shortDateTime(open.createdAt)} by {open.createdBy ?? 'system'}</dd>
-				{#if open.sentAt}<dt class="text-q-secondary">Sent</dt><dd>{shortDateTime(open.sentAt)}</dd>{/if}
-				{#if open.deliveredAt}<dt class="text-q-secondary">Delivered</dt><dd>{shortDateTime(open.deliveredAt)}</dd>{/if}
-				{#if open.readAt}<dt class="text-q-secondary">Read</dt><dd>{shortDateTime(open.readAt)}</dd>{/if}
+				{#if open.sentAt}<dt class="text-q-secondary">Sent</dt>
+					<dd>{shortDateTime(open.sentAt)}</dd>{/if}
+				{#if open.deliveredAt}<dt class="text-q-secondary">Delivered</dt>
+					<dd>{shortDateTime(open.deliveredAt)}</dd>{/if}
+				{#if open.readAt}<dt class="text-q-secondary">Read</dt>
+					<dd>{shortDateTime(open.readAt)}</dd>{/if}
 				<dt class="text-q-secondary">Attempts</dt>
 				<dd>{open.attempts} of {open.maxAttempts}</dd>
-				{#if open.templateKey}<dt class="text-q-secondary">Template</dt><dd class="q-mono">{open.templateKey}</dd>{/if}
-				{#if open.provider}<dt class="text-q-secondary">Provider</dt><dd>{open.provider}</dd>{/if}
-				{#if open.contextType}<dt class="text-q-secondary">About</dt><dd>{open.contextType} {open.contextId}</dd>{/if}
+				{#if open.templateKey}<dt class="text-q-secondary">Template</dt>
+					<dd class="q-mono">{open.templateKey}</dd>{/if}
+				{#if open.provider}<dt class="text-q-secondary">Provider</dt>
+					<dd>{open.provider}</dd>{/if}
+				{#if open.contextType}<dt class="text-q-secondary">About</dt>
+					<dd>{open.contextType} {open.contextId}</dd>{/if}
 			</dl>
 		</div>
 	{/if}
 	{#snippet footer()}
 		{#if open && data.canResend}
 			{#if open.status === 'queued'}
-				<form method="POST" action="?/cancel" use:enhance={submitter(toaster, { onSuccess: () => (openId = null) })}>
+				<form
+					method="POST"
+					action="?/cancel"
+					use:enhance={submitter(toaster, { onSuccess: () => (openId = null) })}
+				>
 					<input type="hidden" name="id" value={open.id} />
 					<button type="submit" class="q-btn q-btn-secondary">Cancel message</button>
 				</form>

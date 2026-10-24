@@ -1,7 +1,13 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 import { previewAvailable, resolveAdminAuth } from '$lib/server/admin/session';
-import { canAccess, homeFor, navFor, requireSection, sectionForRoute } from '$lib/server/admin/roles';
+import {
+	canAccess,
+	homeFor,
+	navFor,
+	requireSection,
+	sectionForRoute
+} from '$lib/server/admin/roles';
 import { catalogueSource } from '$lib/server/env';
 import { readTheme } from '$lib/server/admin/theme';
 

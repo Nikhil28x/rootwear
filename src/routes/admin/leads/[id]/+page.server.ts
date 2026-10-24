@@ -30,13 +30,19 @@ export const load: PageServerLoad = async (event) => {
 		now: event.locals.now,
 		me: actor.email,
 		added: event.url.searchParams.has('added'),
-		channels: Object.fromEntries(channelStatus().map((c) => [c.channel, c.configured])) as Record<'email' | 'whatsapp', boolean>,
+		channels: Object.fromEntries(channelStatus().map((c) => [c.channel, c.configured])) as Record<
+			'email' | 'whatsapp',
+			boolean
+		>,
 		canEdit: can(actor, 'leads.edit'),
 		canOrders: can(actor, 'orders.view')
 	};
 };
 
-async function run(event: RequestEvent, work: (form: FormData, actor: string) => Promise<string | void>) {
+async function run(
+	event: RequestEvent,
+	work: (form: FormData, actor: string) => Promise<string | void>
+) {
 	const actor = await staffActor(event);
 	requirePermission(actor, 'leads.edit');
 	const form = await event.request.formData();
@@ -56,7 +62,12 @@ export const actions: Actions = {
 		run(event, async (form, actor) => {
 			const stage = text(form, 'stage') as LeadStage;
 			if (!LEAD_STAGES.includes(stage)) throw new LeadError('Unknown stage.');
-			await setStage({ id: event.params.id, stage, lostReason: text(form, 'lostReason') || null, actor });
+			await setStage({
+				id: event.params.id,
+				stage,
+				lostReason: text(form, 'lostReason') || null,
+				actor
+			});
 			return `Moved to ${stage}.`;
 		}),
 
@@ -98,7 +109,12 @@ export const actions: Actions = {
 
 	whatsapp: (event) =>
 		run(event, async (form, actor) => {
-			await replyWhatsApp({ id: event.params.id, text: text(form, 'message'), actor, now: event.locals.now });
+			await replyWhatsApp({
+				id: event.params.id,
+				text: text(form, 'message'),
+				actor,
+				now: event.locals.now
+			});
 			return 'Sent on WhatsApp.';
 		}),
 

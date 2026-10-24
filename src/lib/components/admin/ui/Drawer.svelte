@@ -51,8 +51,12 @@
 	<div class="flex h-full flex-col">
 		<div class="flex items-start justify-between gap-4 border-b border-q-border px-6 py-4">
 			<div class="flex flex-col gap-1">
-				<h2 id="drawer-title" class="text-[18px] leading-[26px] font-semibold text-q-text">{title}</h2>
-				{#if description}<p class="text-[13px] leading-[18px] text-q-secondary">{description}</p>{/if}
+				<h2 id="drawer-title" class="text-[18px] leading-[26px] font-semibold text-q-text">
+					{title}
+				</h2>
+				{#if description}<p class="text-[13px] leading-[18px] text-q-secondary">
+						{description}
+					</p>{/if}
 			</div>
 			<button
 				type="button"

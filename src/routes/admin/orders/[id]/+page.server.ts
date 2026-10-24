@@ -88,7 +88,9 @@ export const actions: Actions = {
 				notify: form.get('notify') === 'on',
 				actor
 			});
-			return form.get('notify') === 'on' ? 'Dispatched. The customer has been told.' : 'Dispatched.';
+			return form.get('notify') === 'on'
+				? 'Dispatched. The customer has been told.'
+				: 'Dispatched.';
 		}),
 
 	deliver: (event) =>
@@ -141,7 +143,9 @@ export const actions: Actions = {
 				notify: form.get('notify') === 'on',
 				actor
 			});
-			return form.get('refund') === 'on' ? 'Cancelled and refunded. Stock is back on sale.' : 'Cancelled. Stock is back on sale.';
+			return form.get('refund') === 'on'
+				? 'Cancelled and refunded. Stock is back on sale.'
+				: 'Cancelled. Stock is back on sale.';
 		}),
 
 	refund: (event) =>
@@ -180,7 +184,11 @@ export const actions: Actions = {
 
 	receiveReturn: (event) =>
 		run(event, 'orders.edit', async (form, actor) => {
-			await receiveReturn({ returnId: text(form, 'returnId'), restock: form.get('restock') === 'on', actor });
+			await receiveReturn({
+				returnId: text(form, 'returnId'),
+				restock: form.get('restock') === 'on',
+				actor
+			});
 			return form.get('restock') === 'on' ? 'Received. The pieces are back in stock.' : 'Received.';
 		}),
 
@@ -190,7 +198,8 @@ export const actions: Actions = {
 		const permission: PermissionKey = form.get('refundAmount') ? 'orders.refund' : 'orders.edit';
 		return run(event, permission, async (f, actor) => {
 			const amount = text(f, 'refundAmount') ? rupeesToPaise(text(f, 'refundAmount')) : null;
-			if (amount !== null && Number.isNaN(amount)) throw new OrderError('Enter the refund in rupees.');
+			if (amount !== null && Number.isNaN(amount))
+				throw new OrderError('Enter the refund in rupees.');
 			await completeReturn({
 				returnId: text(f, 'returnId'),
 				refundAmount: amount,
@@ -212,13 +221,14 @@ export const actions: Actions = {
 	resend: (event) =>
 		run(event, 'orders.edit', async (form, actor) => {
 			const kind = text(form, 'event') as OrderEvent;
-			if (!['confirmed', 'dispatched', 'delivered'].includes(kind)) throw new OrderError('Pick a message to send.');
+			if (!['confirmed', 'dispatched', 'delivered'].includes(kind))
+				throw new OrderError('Pick a message to send.');
 			await notifyOrder(event.params.id, kind, { actor, once: false });
 			return 'Sent again. It is in the messages below.';
 		}),
 
 	invoice: (event) =>
-		run(event, 'orders.view', async (_, actor) => {
+		run(event, 'orders.edit', async (_, actor) => {
 			const invoice = await issueInvoice(event.params.id, actor);
 			if (!invoice) throw new OrderError('An invoice is issued once the order is paid.');
 			return `Invoice ${invoice.number} issued.`;

@@ -38,18 +38,34 @@ export function blocksToMarkup(blocks: readonly PolicyBlock[]): string {
 export function markupToBlocks(text: string): PolicyBlock[] {
 	const blocks: PolicyBlock[] = [];
 	for (const chunk of text.replace(/\r\n/g, '\n').split(/\n{2,}/)) {
-		const lines = chunk.split('\n').map((l) => l.trimEnd()).filter((l) => l.trim());
+		const lines = chunk
+			.split('\n')
+			.map((l) => l.trimEnd())
+			.filter((l) => l.trim());
 		if (!lines.length) continue;
 		const first = lines[0].trimStart();
 		if (first.startsWith('## ')) {
 			blocks.push({ type: 'heading', text: first.slice(3).trim() });
-			if (lines.length > 1) blocks.push({ type: 'paragraph', text: lines.slice(1).join(' ').trim() });
+			if (lines.length > 1)
+				blocks.push({ type: 'paragraph', text: lines.slice(1).join(' ').trim() });
 		} else if (lines.every((l) => l.trimStart().startsWith('- '))) {
 			blocks.push({ type: 'list', items: lines.map((l) => l.trimStart().slice(2).trim()) });
 		} else if (first.startsWith('> ')) {
-			blocks.push({ type: 'callout', text: lines.map((l) => l.replace(/^\s*>\s?/, '')).join(' ').trim() });
+			blocks.push({
+				type: 'callout',
+				text: lines
+					.map((l) => l.replace(/^\s*>\s?/, ''))
+					.join(' ')
+					.trim()
+			});
 		} else if (first.startsWith('! ')) {
-			blocks.push({ type: 'contact', text: lines.map((l) => l.replace(/^\s*!\s?/, '')).join(' ').trim() });
+			blocks.push({
+				type: 'contact',
+				text: lines
+					.map((l) => l.replace(/^\s*!\s?/, ''))
+					.join(' ')
+					.trim()
+			});
 		} else if (lines.every((l) => l.trim().startsWith('|'))) {
 			const rows = lines.map((l) =>
 				l

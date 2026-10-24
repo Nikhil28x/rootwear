@@ -17,7 +17,9 @@
 	let adding = $state(false);
 	let selected = $state<string[]>([]);
 	let isOwner = $state(false);
-	let invited = $state<{ email: string; name: string | null; password: string | null } | null>(null);
+	let invited = $state<{ email: string; name: string | null; password: string | null } | null>(
+		null
+	);
 	let copied = $state(false);
 
 	// A no-JavaScript submit lands back here with the result in `form`.
@@ -101,7 +103,12 @@
 	</div>
 </div>
 
-<Drawer bind:open={adding} title="Add person" description="They sign in with their email and a temporary password." width={520}>
+<Drawer
+	bind:open={adding}
+	title="Add person"
+	description="They sign in with their email and a temporary password."
+	width={520}
+>
 	<form
 		id="invite-form"
 		method="POST"
@@ -134,7 +141,12 @@
 				/>
 			{/snippet}
 		</Field>
-		<Field label="Name" id="invite-name" optional help="Shown in the audit log and on their account.">
+		<Field
+			label="Name"
+			id="invite-name"
+			optional
+			help="Shown in the audit log and on their account."
+		>
 			{#snippet children({ describedBy })}
 				<input
 					id="invite-name"
@@ -149,7 +161,9 @@
 		<PermissionPicker bind:selected bind:isOwner canMakeOwners={data.canMakeOwners} />
 	</form>
 	{#snippet footer()}
-		<button type="button" class="q-btn q-btn-secondary" onclick={() => (adding = false)}>Cancel</button>
+		<button type="button" class="q-btn q-btn-secondary" onclick={() => (adding = false)}
+			>Cancel</button
+		>
 		<button type="submit" form="invite-form" class="q-btn q-btn-primary">Add person</button>
 	{/snippet}
 </Drawer>
@@ -165,7 +179,11 @@
 	{#if invited?.password}
 		<div class="flex items-center gap-2 rounded-[10px] bg-q-muted p-3">
 			<code class="q-mono flex-1 text-[15px] text-q-text">{invited.password}</code>
-			<button type="button" class="q-btn q-btn-secondary q-btn-sm" onclick={() => copy(invited!.password!)}>
+			<button
+				type="button"
+				class="q-btn q-btn-secondary q-btn-sm"
+				onclick={() => copy(invited!.password!)}
+			>
 				{#if copied}<Check /> Copied{:else}<Copy /> Copy{/if}
 			</button>
 		</div>

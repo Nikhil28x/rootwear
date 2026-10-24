@@ -15,7 +15,10 @@ export function rupeesToPaise(value: string): number {
 	return Math.round(Number(cleaned) * 100);
 }
 
-export function readProductForm(form: FormData): { input: ProductInput; values: Record<string, string> } {
+export function readProductForm(form: FormData): {
+	input: ProductInput;
+	values: Record<string, string>;
+} {
 	const values = Object.fromEntries(
 		[
 			'name',

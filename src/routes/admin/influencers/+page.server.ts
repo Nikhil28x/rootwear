@@ -2,7 +2,14 @@ import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { requireSection } from '$lib/server/admin/roles';
 import { actorLabel, staffActor } from '$lib/server/admin/session';
-import { addInfluencer, listInfluencers, markPosted, markSent, planSeeding, SeedingError } from '$lib/server/marketing/seeding';
+import {
+	addInfluencer,
+	listInfluencers,
+	markPosted,
+	markSent,
+	planSeeding,
+	SeedingError
+} from '$lib/server/marketing/seeding';
 import { CouponError } from '$lib/server/marketing/coupons';
 import { listDrops } from '$lib/server/catalogue/admin';
 
@@ -24,14 +31,18 @@ export const load: PageServerLoad = async (event) => {
 	};
 };
 
-async function guarded(event: Parameters<Actions[string]>[0], work: (form: FormData, actor: string) => Promise<string>) {
+async function guarded(
+	event: Parameters<Actions[string]>[0],
+	work: (form: FormData, actor: string) => Promise<string>
+) {
 	const actor = await staffActor(event);
 	requireSection(actor, 'influencers');
 	const form = await event.request.formData();
 	try {
 		return { message: await work(form, actorLabel(actor)) };
 	} catch (err) {
-		if (err instanceof SeedingError || err instanceof CouponError) return fail(400, { error: err.message });
+		if (err instanceof SeedingError || err instanceof CouponError)
+			return fail(400, { error: err.message });
 		throw err;
 	}
 }
@@ -45,7 +56,9 @@ export const actions: Actions = {
 				name: text(form, 'name'),
 				handle: text(form, 'handle'),
 				platform: text(form, 'platform'),
-				followers: text(form, 'followers') ? Number(text(form, 'followers').replace(/[^\d]/g, '')) : null,
+				followers: text(form, 'followers')
+					? Number(text(form, 'followers').replace(/[^\d]/g, ''))
+					: null,
 				email: text(form, 'email') || null,
 				phone: text(form, 'phone') || null,
 				address: text(form, 'address') || null,
@@ -69,7 +82,12 @@ export const actions: Actions = {
 		}),
 	sent: (event) =>
 		guarded(event, async (form, actor) => {
-			await markSent({ id: text(form, 'id'), courier: text(form, 'courier'), tracking: text(form, 'tracking'), actor });
+			await markSent({
+				id: text(form, 'id'),
+				courier: text(form, 'courier'),
+				tracking: text(form, 'tracking'),
+				actor
+			});
 			return 'Marked sent. The piece is out of stock as gifted.';
 		}),
 	posted: (event) =>

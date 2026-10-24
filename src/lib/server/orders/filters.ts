@@ -4,7 +4,10 @@ import { ORDER_STATES, type OrderFilter, type OrderState } from './admin';
 
 const VIEWS = ['to_ship', 'returns', ...ORDER_STATES] as const;
 
-export function readOrderFilter(params: URLSearchParams): { filter: OrderFilter; raw: Record<string, string> } {
+export function readOrderFilter(params: URLSearchParams): {
+	filter: OrderFilter;
+	raw: Record<string, string>;
+} {
 	const raw = {
 		view: params.get('view') ?? '',
 		q: params.get('q') ?? '',

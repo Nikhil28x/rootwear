@@ -10,13 +10,29 @@ export const GET: RequestHandler = async (event) => {
 	requireSection(actor, 'customers');
 	const p = event.url.searchParams;
 	const { customers } = await listCustomers(
-		{ search: p.get('q') || undefined, segment: (p.get('segment') || undefined) as 'buyers' | undefined, tag: p.get('tag') || undefined },
+		{
+			search: p.get('q') || undefined,
+			segment: (p.get('segment') || undefined) as 'buyers' | undefined,
+			tag: p.get('tag') || undefined
+		},
 		1,
 		Date.now(),
 		{ all: true }
 	);
 	const body = toCsv(
-		['Name', 'Email', 'Phone', 'City', 'Orders', 'Spent (₹)', 'First order', 'Last order', 'Email OK', 'WhatsApp OK', 'Tags'],
+		[
+			'Name',
+			'Email',
+			'Phone',
+			'City',
+			'Orders',
+			'Spent (₹)',
+			'First order',
+			'Last order',
+			'Email OK',
+			'WhatsApp OK',
+			'Tags'
+		],
 		customers.map((c) => [
 			c.name ?? '',
 			c.email,

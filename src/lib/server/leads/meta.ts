@@ -51,7 +51,9 @@ onMetaChange(async (change) => {
 			name: contact?.profile?.name ?? null,
 			phone: message.from,
 			source: fromAd ? 'meta_ads' : 'whatsapp',
-			sourceDetail: fromAd ? (message.referral?.headline ?? 'Click-to-WhatsApp ad') : 'WhatsApp message',
+			sourceDetail: fromAd
+				? (message.referral?.headline ?? 'Click-to-WhatsApp ad')
+				: 'WhatsApp message',
 			// Their first words are the best summary of what they want.
 			interest: textOf(message).slice(0, 140),
 			externalId: `wa:${message.id}`,
@@ -60,7 +62,11 @@ onMetaChange(async (change) => {
 			activity: {
 				kind: 'message_in',
 				body: textOf(message),
-				meta: { channel: 'whatsapp', external_id: `wa:${message.id}`, ...(message.referral ? { referral: message.referral } : {}) }
+				meta: {
+					channel: 'whatsapp',
+					external_id: `wa:${message.id}`,
+					...(message.referral ? { referral: message.referral } : {})
+				}
 			}
 		});
 	}
@@ -79,14 +85,16 @@ type GraphLead = {
 /** Reads one lead's answers. Throws if the token is missing or Meta refuses. */
 async function fetchLead(id: string): Promise<GraphLead> {
 	const token = env.META_PAGE_ACCESS_TOKEN;
-	if (!token) throw new Error('META_PAGE_ACCESS_TOKEN is not set, so lead ad answers cannot be read.');
+	if (!token)
+		throw new Error('META_PAGE_ACCESS_TOKEN is not set, so lead ad answers cannot be read.');
 	const version = env.WHATSAPP_API_VERSION || 'v21.0';
 	const response = await fetch(
 		`https://graph.facebook.com/${version}/${encodeURIComponent(id)}?fields=id,created_time,ad_name,form_id,field_data&access_token=${encodeURIComponent(token)}`,
 		{ signal: AbortSignal.timeout(15_000) }
 	);
 	const body = (await response.json()) as GraphLead & { error?: { message?: string } };
-	if (!response.ok) throw new Error(`Meta lead ${id}: ${body.error?.message ?? response.statusText}`);
+	if (!response.ok)
+		throw new Error(`Meta lead ${id}: ${body.error?.message ?? response.statusText}`);
 	return body;
 }
 
@@ -108,7 +116,8 @@ onMetaChange(async (change) => {
 		.filter((f) => !known.has(f.name.toLowerCase()))
 		.map((f) => `${f.name.replace(/_/g, ' ')}: ${f.values.join(', ')}`);
 	const name =
-		field(lead, 'full_name') ?? ([field(lead, 'first_name'), field(lead, 'last_name')].filter(Boolean).join(' ') || null);
+		field(lead, 'full_name') ??
+		([field(lead, 'first_name'), field(lead, 'last_name')].filter(Boolean).join(' ') || null);
 
 	await captureLead({
 		name,
@@ -121,7 +130,11 @@ onMetaChange(async (change) => {
 		activity: {
 			kind: 'form',
 			body: [`Lead ad${lead.ad_name ? `: ${lead.ad_name}` : ''}`, ...answers].join('\n'),
-			meta: { external_id: `leadgen:${value.leadgen_id}`, ad_id: value.ad_id, form_id: value.form_id }
+			meta: {
+				external_id: `leadgen:${value.leadgen_id}`,
+				ad_id: value.ad_id,
+				form_id: value.form_id
+			}
 		},
 		inbound: true
 	});

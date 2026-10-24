@@ -51,7 +51,9 @@
 			? 'border-forest/15 text-forest/45 hover:border-forest/40 peer-checked:border-forest peer-checked:text-forest'
 			: 'border-white/10 text-stone-500 hover:border-white/40 peer-checked:border-white peer-checked:text-stone-100'
 	);
-	let ring = $derived(light ? 'peer-focus-visible:outline-forest' : 'peer-focus-visible:outline-white');
+	let ring = $derived(
+		light ? 'peer-focus-visible:outline-forest' : 'peer-focus-visible:outline-white'
+	);
 	let invalidRing = $derived(invalid ? (light ? 'border-alert' : 'border-alert-light') : '');
 </script>
 
@@ -88,7 +90,10 @@
 		{/each}
 	</div>
 {:else}
-	<ul class="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(3.25rem,1fr))] gap-2 p-0" aria-label="Sizes">
+	<ul
+		class="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(3.25rem,1fr))] gap-2 p-0"
+		aria-label="Sizes"
+	>
 		{#each offers as offer (offer.variantId)}
 			<li
 				class="flex h-12 items-center justify-center border text-[13px] font-medium tracking-[0.14em] uppercase {offer.soldOut

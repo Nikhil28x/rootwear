@@ -57,7 +57,8 @@ const auth: Handle = async ({ event, resolve }) => {
 
 	return resolve(event, {
 		// Supabase sets these on the auth response; they must reach the browser.
-		filterSerializedResponseHeaders: (name) => name === 'content-range' || name === 'x-supabase-api-version'
+		filterSerializedResponseHeaders: (name) =>
+			name === 'content-range' || name === 'x-supabase-api-version'
 	});
 };
 

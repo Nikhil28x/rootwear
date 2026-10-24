@@ -17,12 +17,21 @@ export const load: PageServerLoad = async (event) => {
 	const result = await listCustomers(
 		{
 			search: filters.q || undefined,
-			segment: ['buyers', 'repeat', 'lapsed', 'never'].includes(filters.segment) ? (filters.segment as 'buyers') : undefined,
+			segment: ['buyers', 'repeat', 'lapsed', 'never'].includes(filters.segment)
+				? (filters.segment as 'buyers')
+				: undefined,
 			tag: filters.tag || undefined,
 			sort: filters.sort === 'spent' || filters.sort === 'orders' ? filters.sort : 'recent'
 		},
 		page,
 		event.locals.now
 	);
-	return { ...result, filters, page, pageSize: CUSTOMER_PAGE_SIZE, now: event.locals.now, query: event.url.search };
+	return {
+		...result,
+		filters,
+		page,
+		pageSize: CUSTOMER_PAGE_SIZE,
+		now: event.locals.now,
+		query: event.url.search
+	};
 };

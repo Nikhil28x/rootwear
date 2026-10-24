@@ -19,7 +19,9 @@
 	function current(tab: { href: string; exact?: boolean }): boolean {
 		const path = page.url.pathname;
 		if (tab.href.includes('?')) return matchesFilter(tab.href);
-		const filterActive = tabs.some((t) => t.href.startsWith(tab.href + '?') && matchesFilter(t.href));
+		const filterActive = tabs.some(
+			(t) => t.href.startsWith(tab.href + '?') && matchesFilter(t.href)
+		);
 		if (tab.exact) return path === tab.href && !filterActive;
 		return (path === tab.href || path.startsWith(tab.href + '/')) && !filterActive;
 	}
@@ -28,7 +30,9 @@
 	function matchesFilter(href: string): boolean {
 		const target = new URL(href, page.url.origin);
 		if (target.pathname !== page.url.pathname) return false;
-		return [...target.searchParams].every(([key, value]) => page.url.searchParams.get(key) === value);
+		return [...target.searchParams].every(
+			([key, value]) => page.url.searchParams.get(key) === value
+		);
 	}
 </script>
 

@@ -25,9 +25,13 @@ export const GET: RequestHandler = async ({ params, cookies, locals }) => {
 	const order = data as { id: string; state: string } | null;
 	// A paid order has nothing to recover; its page is the right place.
 	if (!order) redirect(303, '/cart');
-	if (!['pending_payment', 'cancelled'].includes(order.state)) redirect(303, `/order/${params.token}`);
+	if (!['pending_payment', 'cancelled'].includes(order.state))
+		redirect(303, `/order/${params.token}`);
 
-	const { data: lines } = await client.from('order_lines').select('variant_id, quantity').eq('order_id', order.id);
+	const { data: lines } = await client
+		.from('order_lines')
+		.select('variant_id, quantity')
+		.eq('order_id', order.id);
 	const cart = await openCart(cookies, locals.now);
 	const index = await catalogueIndex();
 
@@ -42,7 +46,8 @@ export const GET: RequestHandler = async ({ params, cookies, locals }) => {
 		const available = await availableUnits(entry.variant, locals.now, cart.id);
 		const quantity = Math.min(line.quantity, available);
 		if (quantity < line.quantity) short = true;
-		if (quantity > 0) restore.push({ variantId: line.variant_id, quantity, heldUntilMs: holdUntil(locals.now) });
+		if (quantity > 0)
+			restore.push({ variantId: line.variant_id, quantity, heldUntilMs: holdUntil(locals.now) });
 	}
 	await cartRepository.restoreLines(cart.id, restore, holdUntil(locals.now));
 	await recordClick(order.id);

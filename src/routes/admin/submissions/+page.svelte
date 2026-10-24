@@ -1,191 +1,149 @@
 <script lang="ts">
-	import SectionHead from '$lib/components/admin/SectionHead.svelte';
-	import StatePill from '$lib/components/admin/StatePill.svelte';
+	import { Inbox, Search, X } from '@lucide/svelte';
+	import Chip from '$lib/components/admin/ui/Chip.svelte';
+	import EmptyState from '$lib/components/admin/ui/EmptyState.svelte';
+	import PageHeader from '$lib/components/admin/ui/PageHeader.svelte';
+	import Tabs from '$lib/components/admin/ui/Tabs.svelte';
 	import StatTile from '$lib/components/admin/StatTile.svelte';
-	import TableShell from '$lib/components/admin/TableShell.svelte';
-	import { contactTone, humanise, shortDateTime } from '$lib/components/admin/tone';
+	import { shortDateTime, timeAgo } from '$lib/components/admin/tone';
 
+	/**
+	 * Every customer form, newest first, with its tracking ID — the number the
+	 * customer was shown on screen, so a message quoting it can be found here.
+	 * Leads holds the same people as a pipeline; this is the raw record.
+	 */
 	let { data } = $props();
 
-	const KIND_LABEL: Record<string, string> = {
-		contact: 'Contact',
-		drop_request: 'Drop request',
+	const KIND: Record<string, string> = {
+		contact: 'Contact form',
+		drop_request: 'Request this drop',
 		notify_me: 'Notify me',
-		preorder: 'Pre-order'
+		preorder: 'Pre-order signup'
 	};
-
-	function destination(kind: string): string {
-		return kind === 'contact' ? '/admin/contact' : '/admin/demand';
-	}
+	let filtered = $derived(Boolean(data.filter.query || data.filter.status));
 </script>
 
-<svelte:head>
-	<title>Submissions — Rootwear operations</title>
-	<meta name="robots" content="noindex, nofollow" />
-</svelte:head>
+<svelte:head><title>Form inbox · Rootwear admin</title></svelte:head>
 
-<SectionHead
-	level={1}
-	eyebrow="Customer records"
-	title="Form submissions"
-	note="One chronological inbox for contact messages, drop requests, notify-me requests and pre-order signups. Every record has an immutable reference shared with the customer."
-/>
+<div class="flex flex-col gap-6">
+	<PageHeader
+		title="Form inbox"
+		description="Every form a customer sent, with the tracking ID they were shown. Each one is also a lead."
+	>
+		{#snippet actions()}<a class="q-btn q-btn-secondary" href="/admin/leads">Open leads</a
+			>{/snippet}
+	</PageHeader>
 
-<div class="mt-10 grid gap-px bg-white/10 sm:grid-cols-3">
-	<StatTile
-		label="All records"
-		value={String(data.counts.total)}
-		note="Across every customer lead form."
-	/>
-	<StatTile
-		label="Open"
-		value={String(data.counts.open)}
-		note="New contact messages and unconverted requests."
-		severity={data.counts.open > 0 ? 'act' : 'none'}
-	/>
-	<StatTile label="Today" value={String(data.counts.today)} note="Recorded since midnight IST." />
-</div>
-
-<form
-	method="GET"
-	class="mt-12 grid gap-6 border-y border-white/10 py-6 lg:grid-cols-[1fr_12rem_12rem_auto_auto] lg:items-end"
->
-	<div class="flex flex-col gap-2">
-		<label
-			for="submission-search"
-			class="text-[11px] font-medium tracking-[0.2em] text-stone-400 uppercase"
-		>
-			Search
-		</label>
-		<input
-			id="submission-search"
-			name="q"
-			value={data.filter.query}
-			placeholder="Reference, name, email or phone"
-			class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-[15px] text-stone-100 outline-none placeholder:text-stone-400 focus:border-white"
-		/>
+	<div class="grid gap-4 sm:grid-cols-3">
+		<StatTile label="All forms" value={String(data.counts.total)} />
+		<StatTile label="Open" value={String(data.counts.open)} note="Not yet answered or fulfilled" />
+		<StatTile label="Today" value={String(data.counts.today)} />
 	</div>
 
-	<div class="flex flex-col gap-2">
-		<label
-			for="submission-kind"
-			class="text-[11px] font-medium tracking-[0.2em] text-stone-400 uppercase">Kind</label
-		>
-		<select
-			id="submission-kind"
-			name="kind"
-			value={data.filter.kind}
-			class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-[15px] text-stone-100 outline-none focus:border-white"
-		>
-			<option value="">Every form</option>
-			{#each data.kinds as kind (kind)}
-				<option value={kind}>{KIND_LABEL[kind]}</option>
-			{/each}
-		</select>
-	</div>
+	<Tabs
+		label="Form type"
+		tabs={[
+			{ href: '/admin/submissions', label: 'All', exact: true },
+			...data.kinds.map((kind) => ({
+				href: `/admin/submissions?kind=${kind}`,
+				label: KIND[kind] ?? kind
+			}))
+		]}
+	/>
 
-	<div class="flex flex-col gap-2">
-		<label
-			for="submission-status"
-			class="text-[11px] font-medium tracking-[0.2em] text-stone-400 uppercase">Status</label
-		>
+	<form method="GET" class="flex flex-wrap items-end gap-2" data-sveltekit-keepfocus>
+		{#if data.filter.kind}<input type="hidden" name="kind" value={data.filter.kind} />{/if}
+		<div class="relative min-w-[240px] flex-1 sm:max-w-[360px]">
+			<Search
+				size={16}
+				strokeWidth={1.5}
+				class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-q-tertiary"
+			/>
+			<label for="s-q" class="sr-only">Search forms</label>
+			<input
+				id="s-q"
+				name="q"
+				type="search"
+				class="q-input pl-9"
+				placeholder="Tracking ID, name, email, words"
+				value={data.filter.query}
+			/>
+		</div>
+		<label for="s-status" class="sr-only">Status</label>
 		<select
-			id="submission-status"
+			id="s-status"
 			name="status"
-			value={data.filter.status}
-			class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-[15px] text-stone-100 outline-none focus:border-white"
+			class="q-select w-auto"
+			onchange={(e) => e.currentTarget.form?.requestSubmit()}
 		>
-			<option value="">Every status</option>
-			{#each data.statuses as status (status)}
-				<option value={status}>{humanise(status)}</option>
-			{/each}
+			<option value="">Any status</option>
+			{#each data.statuses as s (s)}<option value={s} selected={data.filter.status === s}
+					>{s.replace('_', ' ')}</option
+				>{/each}
 		</select>
-	</div>
+		{#if filtered}<a
+				href="/admin/submissions{data.filter.kind ? `?kind=${data.filter.kind}` : ''}"
+				class="q-btn q-btn-ghost"><X /> Clear</a
+			>{/if}
+	</form>
 
-	<button
-		type="submit"
-		class="border border-white/35 px-7 py-3 text-[11px] font-medium tracking-[0.2em] text-stone-100 uppercase transition hover:bg-white hover:text-black"
-	>
-		Apply
-	</button>
-	<a
-		href="/admin/submissions"
-		class="pb-3 text-[11px] font-medium tracking-[0.2em] text-stone-400 uppercase underline underline-offset-4 hover:text-stone-200"
-	>
-		Clear
-	</a>
-</form>
-
-<section class="mt-12">
-	<TableShell
-		caption="Customer form submissions"
-		note="{data.submissions.length} record{data.submissions.length === 1 ? '' : 's'}"
-	>
-		<thead>
-			<tr class="text-[11px] font-medium tracking-[0.2em] text-stone-400 uppercase">
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Reference</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Form</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Customer</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Details</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Status</th>
-				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Recorded</th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each data.submissions as row (`${row.trackingId}:${row.sourceId}`)}
-				<tr class="align-top text-stone-200">
-					<th
-						scope="row"
-						class="border-b border-white/5 px-4 py-4 text-left text-[12px] font-medium whitespace-nowrap text-gold tabular-nums"
-					>
-						{row.trackingId}
-					</th>
-					<td class="border-b border-white/5 px-4 py-4">
-						<a
-							class="text-[13px] underline decoration-white/25 underline-offset-4 hover:text-paper"
-							href={destination(row.kind)}
-						>
-							{KIND_LABEL[row.kind]}
-						</a>
-					</td>
-					<td class="min-w-[12rem] border-b border-white/5 px-4 py-4 text-[14px]">
-						{#if row.name}<span class="block text-paper">{row.name}</span>{/if}
-						<a
-							class="block break-words underline decoration-white/20 underline-offset-4 hover:text-paper"
-							href="mailto:{row.email}">{row.email}</a
-						>
-						{#if row.phone}<span class="mt-1 block text-stone-400">{row.phone}</span>{/if}
-					</td>
-					<td
-						class="min-w-[18rem] border-b border-white/5 px-4 py-4 text-[13px] leading-relaxed text-stone-400"
-					>
-						{#if row.subject}<span class="block text-stone-200">{row.subject}</span>{/if}
-						{#if row.detail}<span class="mt-1 block max-w-[28rem]">{row.detail}</span>{/if}
-						{#if row.dropId || row.variantId}
-							<span class="mt-2 block text-[11px] tracking-[0.08em] uppercase">
-								{row.dropId ?? ''}{row.variantId ? ` · ${row.variantId}` : ''}
-							</span>
-						{/if}
-					</td>
-					<td class="border-b border-white/5 px-4 py-4">
-						<StatePill label={humanise(row.status)} tone={contactTone(row.status)} />
-						{#if row.isSpam}<span class="mt-2 block text-[11px] text-alert-light uppercase"
-								>Spam signal</span
-							>{/if}
-					</td>
-					<td
-						class="border-b border-white/5 px-4 py-4 text-[13px] whitespace-nowrap text-stone-400 tabular-nums"
-					>
-						{shortDateTime(row.createdAt)}
-					</td>
-				</tr>
-			{:else}
-				<tr>
-					<td colspan="6" class="px-4 py-12 text-[15px] text-stone-400">
-						No submissions match this filter.
-					</td>
-				</tr>
-			{/each}
-		</tbody>
-	</TableShell>
-</section>
+	{#if data.submissions.length === 0}
+		<div class="q-card">
+			<EmptyState
+				icon={filtered ? Search : Inbox}
+				title={filtered ? 'Nothing matches' : 'No forms yet'}
+				body={filtered
+					? 'Try the tracking ID the customer quoted.'
+					: 'Contact messages, drop requests, notify-me and pre-order signups arrive here.'}
+				compact
+			/>
+		</div>
+	{:else}
+		<div class="q-table-wrap">
+			<table class="q-table">
+				<thead
+					><tr
+						><th scope="col">Tracking ID</th><th scope="col">Form</th><th scope="col">From</th><th
+							scope="col">What they sent</th
+						><th scope="col">Status</th><th scope="col" class="num">When</th></tr
+					></thead
+				>
+				<tbody>
+					{#each data.submissions as row (`${row.kind}-${row.sourceId}-${row.trackingId}`)}
+						<tr>
+							<td class="q-mono text-q-text">{row.trackingId}</td>
+							<td>{KIND[row.kind] ?? row.kind}</td>
+							<td>
+								<p class="text-q-text">{row.name ?? row.email}</p>
+								<p class="text-[13px] text-q-secondary">
+									{row.name ? row.email : ''}{row.phone ? ` · ${row.phone}` : ''}
+								</p>
+							</td>
+							<td class="max-w-[360px]">
+								{#if row.subject}<p class="text-q-text">{row.subject}</p>{/if}
+								{#if row.detail}<p class="line-clamp-2 text-[13px] text-q-secondary">
+										{row.detail}
+									</p>{/if}
+								{#if row.dropId || row.variantId}<p class="q-mono text-[12px] text-q-tertiary">
+										{row.variantId ?? row.dropId}
+									</p>{/if}
+							</td>
+							<td>
+								<div class="flex flex-wrap gap-1.5">
+									<Chip
+										label={row.status.replace('_', ' ')}
+										tone={row.status === 'open' || row.status === 'new' ? 'warning' : 'neutral'}
+									/>
+									{#if row.isSpam}<Chip label="Spam" tone="danger" />{/if}
+								</div>
+							</td>
+							<td class="num text-q-secondary" title={shortDateTime(row.createdAt)}
+								>{timeAgo(row.createdAt, data.now)}</td
+							>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	{/if}
+</div>

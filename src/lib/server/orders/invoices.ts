@@ -62,7 +62,13 @@ export type InvoiceDocument = {
 	readonly issuedAt: number;
 	readonly gstRegistered: boolean;
 	readonly intraState: boolean;
-	readonly seller: InvoiceParty & { legalName: string; tradeName: string; footer: string; signatory: string; pan: string };
+	readonly seller: InvoiceParty & {
+		legalName: string;
+		tradeName: string;
+		footer: string;
+		signatory: string;
+		pan: string;
+	};
 	readonly buyer: InvoiceParty;
 	readonly lines: readonly InvoiceLine[];
 	readonly totals: InvoiceTotals;
@@ -110,27 +116,30 @@ export function computeLines(
 	const goods = raw.map((line, index) => {
 		const value = line.unitPrice * line.quantity;
 		const share =
-			index === raw.length - 1 ? discountLeft : Math.round((discount * value) / Math.max(subtotal, 1));
+			index === raw.length - 1
+				? discountLeft
+				: Math.round((discount * value) / Math.max(subtotal, 1));
 		discountLeft -= share;
 		return { ...line, gross: value - share };
 	});
 
 	const principalRate = Math.max(0, ...raw.map((l) => l.taxRate));
-	const all = shipping > 0
-		? [
-				...goods,
-				{
-					description: 'Shipping',
-					detail: null,
-					sku: null,
-					hsn: '996812',
-					quantity: 1,
-					unitPrice: shipping,
-					taxRate: principalRate,
-					gross: shipping
-				}
-			]
-		: goods;
+	const all =
+		shipping > 0
+			? [
+					...goods,
+					{
+						description: 'Shipping',
+						detail: null,
+						sku: null,
+						hsn: '996812',
+						quantity: 1,
+						unitPrice: shipping,
+						taxRate: principalRate,
+						gross: shipping
+					}
+				]
+			: goods;
 
 	const lines: InvoiceLine[] = all.map((line) => {
 		const rate = gstRegistered ? line.taxRate : 0;
@@ -176,7 +185,28 @@ export function financialYear(ms: number): string {
 	return `${String(start).slice(2)}-${String(start + 1).slice(2)}`;
 }
 
-const ONES = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+const ONES = [
+	'',
+	'One',
+	'Two',
+	'Three',
+	'Four',
+	'Five',
+	'Six',
+	'Seven',
+	'Eight',
+	'Nine',
+	'Ten',
+	'Eleven',
+	'Twelve',
+	'Thirteen',
+	'Fourteen',
+	'Fifteen',
+	'Sixteen',
+	'Seventeen',
+	'Eighteen',
+	'Nineteen'
+];
 const TENS = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
 
 function twoDigits(n: number): string {
@@ -186,7 +216,9 @@ function twoDigits(n: number): string {
 function threeDigits(n: number): string {
 	const hundred = Math.floor(n / 100);
 	const rest = n % 100;
-	return [hundred ? `${ONES[hundred]} Hundred` : '', rest ? twoDigits(rest) : ''].filter(Boolean).join(' ');
+	return [hundred ? `${ONES[hundred]} Hundred` : '', rest ? twoDigits(rest) : '']
+		.filter(Boolean)
+		.join(' ');
 }
 
 /** 410050 paise → "Rupees Four Thousand One Hundred and Paise Fifty Only" (Indian grouping). */
@@ -260,7 +292,11 @@ function sellerOf(business: BusinessSettings) {
 
 async function loadOrder(orderId: string) {
 	const client = getServiceClient();
-	const { data: order, error } = await client.from('orders').select('*').eq('id', orderId).maybeSingle();
+	const { data: order, error } = await client
+		.from('orders')
+		.select('*')
+		.eq('id', orderId)
+		.maybeSingle();
 	if (error) throw new Error(`order read failed: ${error.message}`);
 	if (!order) return null;
 	const o = order as OrderForInvoice;
@@ -271,15 +307,26 @@ async function loadOrder(orderId: string) {
 	return {
 		order: o,
 		lines: (lines ?? []) as LineForInvoice[],
-		customer: (customer ?? { email: null, phone: null }) as { email: string | null; phone: string | null }
+		customer: (customer ?? { email: null, phone: null }) as {
+			email: string | null;
+			phone: string | null;
+		}
 	};
 }
 
-function buyerOf(order: OrderForInvoice, customer: { email: string | null; phone: string | null }): InvoiceParty {
+function buyerOf(
+	order: OrderForInvoice,
+	customer: { email: string | null; phone: string | null }
+): InvoiceParty {
 	const state = gstStateOf(order.ship_state);
 	return {
 		name: order.ship_name,
-		address: [order.ship_line1, order.ship_line2, `${order.ship_city} ${order.ship_pincode}`, order.ship_state]
+		address: [
+			order.ship_line1,
+			order.ship_line2,
+			`${order.ship_city} ${order.ship_pincode}`,
+			order.ship_state
+		]
 			.filter(Boolean)
 			.join(', '),
 		state: state?.name ?? order.ship_state,
@@ -293,12 +340,18 @@ function buyerOf(order: OrderForInvoice, customer: { email: string | null; phone
 function rawLines(lines: LineForInvoice[], fallbackRate: number): RawLine[] {
 	return lines.map((line) => ({
 		description: line.name_snapshot,
-		detail: [line.variant_snapshot, line.piece_number ? `No. ${line.piece_number}` : null].filter(Boolean).join(' · ') || null,
+		detail:
+			[line.variant_snapshot, line.piece_number ? `No. ${line.piece_number}` : null]
+				.filter(Boolean)
+				.join(' · ') || null,
 		sku: line.sku_snapshot,
 		hsn: line.hsn_snapshot ?? '6109',
 		quantity: line.quantity,
 		unitPrice: Number(line.unit_price_paise),
-		taxRate: line.gst_rate_snapshot === null || line.gst_rate_snapshot === undefined ? fallbackRate : Number(line.gst_rate_snapshot)
+		taxRate:
+			line.gst_rate_snapshot === null || line.gst_rate_snapshot === undefined
+				? fallbackRate
+				: Number(line.gst_rate_snapshot)
 	}));
 }
 
@@ -340,7 +393,10 @@ const INVOICEABLE = ['paid', 'packed', 'dispatched', 'delivered', 'refunded'];
  * Issues the invoice for an order, once. Safe to call repeatedly: the second
  * call returns the invoice the first one issued.
  */
-export async function issueInvoice(orderId: string, actor = 'system'): Promise<InvoiceDocument | null> {
+export async function issueInvoice(
+	orderId: string,
+	actor = 'system'
+): Promise<InvoiceDocument | null> {
 	const existing = await invoiceForOrder(orderId);
 	if (existing) return existing;
 
@@ -359,46 +415,71 @@ export async function issueInvoice(orderId: string, actor = 'system'): Promise<I
 		intraState
 	);
 
-	const client = getServiceClient();
-	const issuedAt = Date.now();
-	const fy = financialYear(issuedAt);
-	const { data: next, error: seqError } = await client.rpc('next_document_number', {
-		p_series: `invoice:${business.invoicePrefix}:${fy}`
-	});
-	if (seqError) throw new Error(`invoice number failed: ${seqError.message}`);
-	const number = `${business.invoicePrefix}/${fy}/${String(next).padStart(4, '0')}`;
-
-	const { data, error } = await client
-		.from('invoices')
-		.insert({
-			order_id: orderId,
-			kind: 'invoice',
-			number,
-			issued_at: new Date(issuedAt).toISOString(),
+	const fy = financialYear(Date.now());
+	return issue(
+		orderId,
+		'invoice',
+		null,
+		`invoice:${business.invoicePrefix}:${fy}`,
+		`${business.invoicePrefix}/${fy}/`,
+		{
 			gst_registered: business.gstRegistered,
 			seller: sellerOf(business),
 			buyer,
 			lines: computed.lines,
-			totals: { ...computed.totals, intra_state: intraState, order_number: order.order_number },
-			created_by: actor
-		})
-		.select('*')
-		.single();
-	if (error) {
-		// Two callers raced; the other one won. Theirs is the invoice.
-		if (error.code === '23505') return invoiceForOrder(orderId);
-		throw new Error(`invoice write failed: ${error.message}`);
-	}
-	return toDocument(data as InvoiceRow);
+			totals: { ...computed.totals, intra_state: intraState, order_number: order.order_number }
+		},
+		actor
+	);
+}
+
+/**
+ * Numbering and writing happen in one database transaction
+ * (app.issue_document, 0029), serialised on the order: a race returns the
+ * document already issued, and no number is taken without a document.
+ */
+async function issue(
+	orderId: string,
+	kind: 'invoice' | 'credit_note',
+	refundId: string | null,
+	series: string,
+	prefix: string,
+	document: Record<string, unknown>,
+	actor: string
+): Promise<InvoiceDocument> {
+	const { data, error } = await getServiceClient().rpc('issue_document', {
+		p_order_id: orderId,
+		p_kind: kind,
+		p_refund_id: refundId,
+		p_series: series,
+		p_prefix: prefix,
+		p_document: document,
+		p_actor: actor
+	});
+	if (error || !data)
+		throw new Error(
+			`${kind === 'invoice' ? 'invoice' : 'credit note'} write failed: ${error?.message}`
+		);
+	const doc = await findDocument(data as string);
+	if (!doc) throw new Error('issued document could not be read back');
+	return doc;
 }
 
 /**
  * A credit note for a refund: the refunded amount, split across the
  * invoice's lines in proportion, with tax reversed at the same rates.
  */
-export async function issueCreditNote(refundId: string, orderId: string, actor = 'system'): Promise<InvoiceDocument | null> {
+export async function issueCreditNote(
+	refundId: string,
+	orderId: string,
+	actor = 'system'
+): Promise<InvoiceDocument | null> {
 	const client = getServiceClient();
-	const { data: existing } = await client.from('invoices').select('*').eq('refund_id', refundId).maybeSingle();
+	const { data: existing } = await client
+		.from('invoices')
+		.select('*')
+		.eq('refund_id', refundId)
+		.maybeSingle();
 	if (existing) return toDocument(existing as InvoiceRow);
 
 	const invoice = await issueInvoice(orderId, actor);
@@ -436,22 +517,14 @@ export async function issueCreditNote(refundId: string, orderId: string, actor =
 	);
 
 	const business = await getSetting('business');
-	const issuedAt = Date.now();
-	const fy = financialYear(issuedAt);
-	const { data: next, error: seqError } = await client.rpc('next_document_number', {
-		p_series: `credit:${business.invoicePrefix}:${fy}`
-	});
-	if (seqError) throw new Error(`credit note number failed: ${seqError.message}`);
-	const number = `${business.invoicePrefix}/CN/${fy}/${String(next).padStart(4, '0')}`;
-
-	const { data, error } = await client
-		.from('invoices')
-		.insert({
-			order_id: orderId,
-			kind: 'credit_note',
-			number,
-			refund_id: refundId,
-			issued_at: new Date(issuedAt).toISOString(),
+	const fy = financialYear(Date.now());
+	return issue(
+		orderId,
+		'credit_note',
+		refundId,
+		`credit:${business.invoicePrefix}:${fy}`,
+		`${business.invoicePrefix}/CN/${fy}/`,
+		{
 			gst_registered: invoice.gstRegistered,
 			seller: invoice.seller,
 			buyer: invoice.buyer,
@@ -461,13 +534,10 @@ export async function issueCreditNote(refundId: string, orderId: string, actor =
 				intra_state: invoice.intraState,
 				against: invoice.number,
 				order_number: invoice.orderNumber
-			},
-			created_by: actor
-		})
-		.select('*')
-		.single();
-	if (error) throw new Error(`credit note write failed: ${error.message}`);
-	return toDocument(data as InvoiceRow);
+			}
+		},
+		actor
+	);
 }
 
 export async function invoiceForOrder(orderId: string): Promise<InvoiceDocument | null> {
@@ -492,7 +562,11 @@ export async function documentsForOrder(orderId: string): Promise<InvoiceDocumen
 }
 
 export async function findDocument(id: string): Promise<InvoiceDocument | null> {
-	const { data, error } = await getServiceClient().from('invoices').select('*').eq('id', id).maybeSingle();
+	const { data, error } = await getServiceClient()
+		.from('invoices')
+		.select('*')
+		.eq('id', id)
+		.maybeSingle();
 	if (error) throw new Error(`invoice read failed: ${error.message}`);
 	return data ? toDocument(data as InvoiceRow) : null;
 }

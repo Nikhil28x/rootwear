@@ -28,14 +28,17 @@ export const actions: Actions = {
 		const errors: Record<string, string> = {};
 
 		const number = Number(values.number);
-		if (!Number.isInteger(number) || number < 1 || number > 99) errors.number = 'Use a number from 1 to 99.';
+		if (!Number.isInteger(number) || number < 1 || number > 99)
+			errors.number = 'Use a number from 1 to 99.';
 		if (!values.name) errors.name = 'Give the drop a name, e.g. Pineapple Haze.';
 		const launchInstant = parseIstInput(values.launch);
 		if (launchInstant === null) errors.launch = 'Pick the launch date and time.';
 		const editionSize = Number(values.editionSize);
-		if (!Number.isInteger(editionSize) || editionSize < 1) errors.editionSize = 'How many pieces in the edition? A whole number, 1 or more.';
+		if (!Number.isInteger(editionSize) || editionSize < 1)
+			errors.editionSize = 'How many pieces in the edition? A whole number, 1 or more.';
 
-		if (Object.keys(errors).length) return fail(400, { values, errors, error: 'Check the highlighted fields.' });
+		if (Object.keys(errors).length)
+			return fail(400, { values, errors, error: 'Check the highlighted fields.' });
 
 		let slug: string;
 		try {
@@ -49,7 +52,8 @@ export const actions: Actions = {
 				actor: actorLabel(actor)
 			}));
 		} catch (err) {
-			if (err instanceof CatalogueError) return fail(400, { values, errors: {}, error: err.message });
+			if (err instanceof CatalogueError)
+				return fail(400, { values, errors: {}, error: err.message });
 			throw err;
 		}
 		redirect(303, `/admin/drops/${slug}?created=1`);

@@ -135,6 +135,8 @@ export type DemandRow = {
 	readonly dropState: DropState;
 	readonly variantId: string;
 	readonly size: Size;
+	/** Null for a product without colourways. */
+	readonly colourway: string | null;
 	readonly requests: number;
 	readonly notifyMe: number;
 	readonly waitlist: number;

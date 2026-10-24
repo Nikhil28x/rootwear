@@ -10,7 +10,15 @@
 import type { Cookies } from '@sveltejs/kit';
 
 export const TOUCH_COOKIE = 'rw_touch';
-const KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'fbclid', 'gclid'] as const;
+const KEYS = [
+	'utm_source',
+	'utm_medium',
+	'utm_campaign',
+	'utm_content',
+	'utm_term',
+	'fbclid',
+	'gclid'
+] as const;
 
 export type Touch = {
 	readonly source?: string;
@@ -46,7 +54,11 @@ export function touchFrom(url: URL, referrer: string | null, now: number): Touch
 		campaign: clean(url.searchParams.get('utm_campaign')),
 		content: clean(url.searchParams.get('utm_content')),
 		term: clean(url.searchParams.get('utm_term')),
-		click: url.searchParams.has('fbclid') ? 'meta' : url.searchParams.has('gclid') ? 'google' : undefined,
+		click: url.searchParams.has('fbclid')
+			? 'meta'
+			: url.searchParams.has('gclid')
+				? 'google'
+				: undefined,
 		landing: url.pathname,
 		referrer: ref && ref !== url.hostname ? ref : undefined,
 		at: now
@@ -78,7 +90,16 @@ export function recordTouch(cookies: Cookies, touch: Touch): void {
 /** "instagram / story / drop02" — the campaign as one line, for tables. */
 export function describeTouch(touch: Touch | undefined): string {
 	if (!touch) return 'Direct';
-	const parts = [touch.source ?? (touch.click === 'meta' ? 'meta ads' : touch.click === 'google' ? 'google ads' : touch.referrer), touch.medium, touch.campaign].filter(Boolean);
+	const parts = [
+		touch.source ??
+			(touch.click === 'meta'
+				? 'meta ads'
+				: touch.click === 'google'
+					? 'google ads'
+					: touch.referrer),
+		touch.medium,
+		touch.campaign
+	].filter(Boolean);
 	return parts.length ? parts.join(' / ') : 'Direct';
 }
 

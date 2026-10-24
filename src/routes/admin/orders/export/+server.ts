@@ -12,7 +12,19 @@ export const GET: RequestHandler = async (event) => {
 	const { filter } = readOrderFilter(event.url.searchParams);
 	const { orders } = await listOrders(filter, 1, { all: true });
 	const body = toCsv(
-		['Order', 'Placed', 'State', 'Customer', 'Email', 'City', 'Pieces', 'Total (₹)', 'Pre-order', 'Courier', 'Tracking'],
+		[
+			'Order',
+			'Placed',
+			'State',
+			'Customer',
+			'Email',
+			'City',
+			'Pieces',
+			'Total (₹)',
+			'Pre-order',
+			'Courier',
+			'Tracking'
+		],
 		orders.map((o) => [
 			o.number,
 			csvDate(o.createdAt),

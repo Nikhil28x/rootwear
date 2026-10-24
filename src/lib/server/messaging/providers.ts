@@ -52,7 +52,10 @@ export async function sendEmail(provider: EmailProvider, message: EmailMessage):
 			const detail =
 				payload.error?.details?.[0]?.message ?? payload.error?.message ?? response.statusText;
 			// 4xx other than rate limiting is a problem with the message itself.
-			throw new SendError(`ZeptoMail ${response.status}: ${detail}`, response.status >= 500 || response.status === 429);
+			throw new SendError(
+				`ZeptoMail ${response.status}: ${detail}`,
+				response.status >= 500 || response.status === 429
+			);
 		}
 		return payload.data?.[0]?.message_id ?? payload.request_id ?? 'zeptomail';
 	}
@@ -96,7 +99,10 @@ export type WhatsAppMessage =
 			readonly text: string;
 	  };
 
-export async function sendWhatsApp(provider: WhatsAppProvider, message: WhatsAppMessage): Promise<string> {
+export async function sendWhatsApp(
+	provider: WhatsAppProvider,
+	message: WhatsAppMessage
+): Promise<string> {
 	const body =
 		message.kind === 'template'
 			? {
@@ -116,7 +122,12 @@ export async function sendWhatsApp(provider: WhatsAppProvider, message: WhatsApp
 							: []
 					}
 				}
-			: { messaging_product: 'whatsapp', to: message.to, type: 'text', text: { body: message.text } };
+			: {
+					messaging_product: 'whatsapp',
+					to: message.to,
+					type: 'text',
+					text: { body: message.text }
+				};
 
 	const response = await fetch(
 		`https://graph.facebook.com/${provider.apiVersion}/${provider.phoneNumberId}/messages`,
@@ -132,7 +143,8 @@ export async function sendWhatsApp(provider: WhatsAppProvider, message: WhatsApp
 		error?: { message?: string; code?: number; error_data?: { details?: string } };
 	};
 	if (!response.ok || !payload.messages?.[0]?.id) {
-		const detail = payload.error?.error_data?.details ?? payload.error?.message ?? response.statusText;
+		const detail =
+			payload.error?.error_data?.details ?? payload.error?.message ?? response.statusText;
 		// 131026 undeliverable, 132001 template missing, 131047 outside the 24h window.
 		const permanent = [131026, 132000, 132001, 132005, 132007, 131047, 131051].includes(
 			payload.error?.code ?? 0

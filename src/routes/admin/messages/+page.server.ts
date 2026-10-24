@@ -10,7 +10,17 @@ import {
 	type OutboxStatus
 } from '$lib/server/messaging/outbox';
 
-const STATUSES = ['queued', 'sending', 'sent', 'delivered', 'read', 'failed', 'cancelled', 'skipped', 'problem'];
+const STATUSES = [
+	'queued',
+	'sending',
+	'sent',
+	'delivered',
+	'read',
+	'failed',
+	'cancelled',
+	'skipped',
+	'problem'
+];
 
 export const load: PageServerLoad = async (event) => {
 	const actor = await staffActor(event);

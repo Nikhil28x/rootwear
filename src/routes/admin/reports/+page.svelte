@@ -120,7 +120,7 @@
 					note="cut = remaining + reserved + sold"
 				>
 					<thead>
-						<tr class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
+						<tr class="text-[11px] font-medium tracking-[0.2em] text-stone-400 uppercase">
 							<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Size</th>
 							<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">SKU</th>
 							<th scope="col" class="border-b border-white/10 px-4 py-3 text-right">Cut</th>
@@ -140,12 +140,15 @@
 								>
 									{row.size}
 								</th>
-								<td class="border-b border-white/5 px-4 py-3 text-[13px] text-stone-400">{row.sku}</td>
+								<td class="border-b border-white/5 px-4 py-3 text-[13px] text-stone-400"
+									>{row.sku}</td
+								>
 								<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">{row.cut}</td>
 								<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">
 									{row.reserved}
 								</td>
-								<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">{row.sold}</td>
+								<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">{row.sold}</td
+								>
 								<td
 									class="border-b border-white/5 px-4 py-3 text-right tabular-nums {row.remaining ===
 									0
@@ -156,7 +159,9 @@
 											— sold out</span
 										>{/if}
 								</td>
-								<td class="border-b border-white/5 px-4 py-3 text-right text-stone-400 tabular-nums">
+								<td
+									class="border-b border-white/5 px-4 py-3 text-right text-stone-400 tabular-nums"
+								>
 									{row.reserveCap}
 								</td>
 								<td class="w-40 border-b border-white/5 px-4 py-3">
@@ -172,7 +177,10 @@
 					</tbody>
 					<tfoot>
 						<tr class="text-paper">
-							<th scope="row" class="px-4 py-3 text-left text-[11px] tracking-[0.2em] uppercase font-medium">
+							<th
+								scope="row"
+								class="px-4 py-3 text-left text-[11px] font-medium tracking-[0.2em] uppercase"
+							>
 								Total
 							</th>
 							<td></td>
@@ -188,7 +196,9 @@
 
 				<div class="border border-white/10">
 					<div class="border-b border-white/10 px-5 py-4">
-						<p class="text-[11px] tracking-[0.28em] text-stone-300 uppercase font-medium">Sell-out curve</p>
+						<p class="text-[11px] font-medium tracking-[0.28em] text-stone-300 uppercase">
+							Sell-out curve
+						</p>
 					</div>
 					<ClaimCurve
 						points={[...drop.curve]}
@@ -209,13 +219,18 @@
 				<span class="flex items-center gap-2"
 					><span class="inline-block h-2 w-4 bg-white/15"></span> Remaining</span
 				>
-				<a class="underline underline-offset-4 hover:text-stone-200" href="/admin/drops/{drop.slug}">
+				<a
+					class="underline underline-offset-4 hover:text-stone-200"
+					href="/admin/drops/{drop.slug}"
+				>
 					Edit stock and state →
 				</a>
 			</p>
 		</article>
 	{:else}
-		<Notice kind="info">No drops exist yet. Create one before there is anything to report on.</Notice>
+		<Notice kind="info"
+			>No drops exist yet. Create one before there is anything to report on.</Notice
+		>
 	{/each}
 </section>
 
@@ -253,7 +268,8 @@
 		<StatTile
 			label="Refunds issued"
 			value={formatInr(data.ledger.refundsIssued)}
-			note="{data.ledger.refundCount} processed, including automatic refunds to anyone who lost the cap race."
+			note="{data.ledger
+				.refundCount} processed, including automatic refunds to anyone who lost the cap race."
 		/>
 	</div>
 
@@ -280,7 +296,7 @@
 		note="{demandTotal} signal{demandTotal === 1 ? '' : 's'} recorded · heaviest first"
 	>
 		<thead>
-			<tr class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
+			<tr class="text-[11px] font-medium tracking-[0.2em] text-stone-400 uppercase">
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Drop</th>
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Size</th>
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-right">Requests</th>
@@ -298,7 +314,10 @@
 							href="/admin/demand?drop={row.dropId}">{row.dropName}</a
 						>
 					</td>
-					<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal text-paper">
+					<th
+						scope="row"
+						class="border-b border-white/5 px-4 py-3 text-left font-normal text-paper"
+					>
 						{row.size}
 					</th>
 					<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">{row.requests}</td>
@@ -311,8 +330,8 @@
 			{:else}
 				<tr>
 					<td colspan="6" class="px-4 py-8 text-[15px] text-stone-400">
-						Nobody has asked for anything yet. Requests appear here the moment a drop is finished and
-						someone asks for it back.
+						Nobody has asked for anything yet. Requests appear here the moment a drop is finished
+						and someone asks for it back.
 					</td>
 				</tr>
 			{/each}
@@ -336,7 +355,7 @@
 
 	<TableShell caption="Captured revenue by drop" note="Total {formatInr(revenueTotal)}">
 		<thead>
-			<tr class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
+			<tr class="text-[11px] font-medium tracking-[0.2em] text-stone-400 uppercase">
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-left">Drop</th>
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-right">Deposits</th>
 				<th scope="col" class="border-b border-white/10 px-4 py-3 text-right">Balances</th>
@@ -347,7 +366,10 @@
 		<tbody>
 			{#each data.revenue as row (row.dropId)}
 				<tr class="text-stone-200">
-					<th scope="row" class="border-b border-white/5 px-4 py-3 text-left font-normal text-paper">
+					<th
+						scope="row"
+						class="border-b border-white/5 px-4 py-3 text-left font-normal text-paper"
+					>
 						{row.dropName}
 					</th>
 					<td class="border-b border-white/5 px-4 py-3 text-right tabular-nums">

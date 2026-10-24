@@ -145,7 +145,12 @@ const NAV: readonly AdminNavGroup[] = [
 			{ section: 'drops', href: '/admin/drops', label: 'Drops', icon: 'package' },
 			{ section: 'orders', href: '/admin/orders', label: 'Orders', icon: 'receipt' },
 			{ section: 'reservations', href: '/admin/reservations', label: 'Pre-orders', icon: 'clock' },
-			{ section: 'fulfilment', href: '/admin/orders/packing-list', label: 'Packing list', icon: 'truck' },
+			{
+				section: 'fulfilment',
+				href: '/admin/orders/packing-list',
+				label: 'Packing list',
+				icon: 'truck'
+			},
 			{ section: 'carts', href: '/admin/carts', label: 'Carts', icon: 'cart' },
 			{ section: 'invoices', href: '/admin/invoices', label: 'Invoices', icon: 'file' }
 		]
@@ -155,7 +160,8 @@ const NAV: readonly AdminNavGroup[] = [
 		items: [
 			{ section: 'leads', href: '/admin/leads', label: 'Leads', icon: 'inbox' },
 			{ section: 'customers', href: '/admin/customers', label: 'Customers', icon: 'users' },
-			{ section: 'submissions', href: '/admin/submissions', label: 'Form inbox', icon: 'message' },
+			{ section: 'contact', href: '/admin/contact', label: 'Contact', icon: 'message' },
+			{ section: 'submissions', href: '/admin/submissions', label: 'Form inbox', icon: 'file' },
 			{ section: 'demand', href: '/admin/demand', label: 'Demand', icon: 'trending' }
 		]
 	},

@@ -21,26 +21,57 @@ import { formatInr, paise, type Paise } from '$lib/money';
 
 export class CartError extends Error {}
 
-type VariantInfo = { name: string; label: string; image: string | null; price: number; dropName: string };
+type VariantInfo = {
+	name: string;
+	label: string;
+	image: string | null;
+	price: number;
+	dropName: string;
+};
 
 async function variantInfo(ids: string[]): Promise<Map<string, VariantInfo>> {
 	if (!ids.length) return new Map();
 	const catalogue = getCatalogueClient();
-	const { data: variants } = await catalogue.from('variants').select('id, product_id, size, colourway_id').in('id', ids);
-	const vs = (variants ?? []) as { id: string; product_id: string; size: string; colourway_id: string | null }[];
+	const { data: variants } = await catalogue
+		.from('variants')
+		.select('id, product_id, size, colourway_id')
+		.in('id', ids);
+	const vs = (variants ?? []) as {
+		id: string;
+		product_id: string;
+		size: string;
+		colourway_id: string | null;
+	}[];
 	const productIds = [...new Set(vs.map((v) => v.product_id))];
 	const [{ data: products }, { data: images }, { data: colours }] = await Promise.all([
 		catalogue.from('products').select('id, name, drop_id, launch_price_paise').in('id', productIds),
-		catalogue.from('product_images').select('product_id, url, position').in('product_id', productIds).order('position'),
+		catalogue
+			.from('product_images')
+			.select('product_id, url, position')
+			.in('product_id', productIds)
+			.order('position'),
 		catalogue.from('colourways').select('id, name').in('product_id', productIds)
 	]);
-	const ps = (products ?? []) as { id: string; name: string; drop_id: string; launch_price_paise: number }[];
-	const { data: drops } = await catalogue.from('drops').select('id, name').in('id', [...new Set(ps.map((p) => p.drop_id))]);
-	const dropName = new Map(((drops ?? []) as { id: string; name: string }[]).map((d) => [d.id, d.name]));
+	const ps = (products ?? []) as {
+		id: string;
+		name: string;
+		drop_id: string;
+		launch_price_paise: number;
+	}[];
+	const { data: drops } = await catalogue
+		.from('drops')
+		.select('id, name')
+		.in('id', [...new Set(ps.map((p) => p.drop_id))]);
+	const dropName = new Map(
+		((drops ?? []) as { id: string; name: string }[]).map((d) => [d.id, d.name])
+	);
 	const product = new Map(ps.map((p) => [p.id, p]));
-	const colour = new Map(((colours ?? []) as { id: string; name: string }[]).map((c) => [c.id, c.name]));
+	const colour = new Map(
+		((colours ?? []) as { id: string; name: string }[]).map((c) => [c.id, c.name])
+	);
 	const image = new Map<string, string>();
-	for (const i of (images ?? []) as { product_id: string; url: string }[]) if (!image.has(i.product_id)) image.set(i.product_id, i.url);
+	for (const i of (images ?? []) as { product_id: string; url: string }[])
+		if (!image.has(i.product_id)) image.set(i.product_id, i.url);
 	return new Map(
 		vs.map((v) => {
 			const p = product.get(v.product_id);
@@ -48,7 +79,9 @@ async function variantInfo(ids: string[]): Promise<Map<string, VariantInfo>> {
 				v.id,
 				{
 					name: p?.name ?? 'Item',
-					label: [v.colourway_id ? colour.get(v.colourway_id) : null, v.size].filter(Boolean).join(' / '),
+					label: [v.colourway_id ? colour.get(v.colourway_id) : null, v.size]
+						.filter(Boolean)
+						.join(' / '),
 					image: image.get(v.product_id) ?? null,
 					price: Number(p?.launch_price_paise ?? 0),
 					dropName: dropName.get(p?.drop_id ?? '') ?? ''
@@ -62,7 +95,12 @@ async function variantInfo(ids: string[]): Promise<Map<string, VariantInfo>> {
 /* Live carts                                                                */
 /* ------------------------------------------------------------------------ */
 
-export type CartItem = { readonly name: string; readonly label: string; readonly quantity: number; readonly image: string | null };
+export type CartItem = {
+	readonly name: string;
+	readonly label: string;
+	readonly quantity: number;
+	readonly image: string | null;
+};
 
 export type LiveCart = {
 	readonly id: string;
@@ -86,7 +124,13 @@ export async function liveCarts(now: number, hours = 48): Promise<LiveCart[]> {
 		.order('created_at', { ascending: false })
 		.limit(1000);
 	if (error) throw new Error(`cart lines read failed: ${error.message}`);
-	const rows = (lines ?? []) as { cart_id: string; variant_id: string; quantity: number; held_until: string; created_at: string }[];
+	const rows = (lines ?? []) as {
+		cart_id: string;
+		variant_id: string;
+		quantity: number;
+		held_until: string;
+		created_at: string;
+	}[];
 	if (!rows.length) return [];
 
 	const cartIds = [...new Set(rows.map((r) => r.cart_id))];
@@ -94,12 +138,19 @@ export async function liveCarts(now: number, hours = 48): Promise<LiveCart[]> {
 		client.from('carts').select('id, customer_id, created_at, updated_at').in('id', cartIds),
 		variantInfo([...new Set(rows.map((r) => r.variant_id))])
 	]);
-	const cartRows = (carts ?? []) as { id: string; customer_id: string | null; created_at: string; updated_at: string }[];
+	const cartRows = (carts ?? []) as {
+		id: string;
+		customer_id: string | null;
+		created_at: string;
+		updated_at: string;
+	}[];
 	const customerIds = cartRows.map((c) => c.customer_id).filter((c): c is string => c !== null);
 	const { data: customers } = customerIds.length
 		? await client.from('customers').select('id, email').in('id', customerIds)
 		: { data: [] };
-	const email = new Map(((customers ?? []) as { id: string; email: string }[]).map((c) => [c.id, c.email]));
+	const email = new Map(
+		((customers ?? []) as { id: string; email: string }[]).map((c) => [c.id, c.email])
+	);
 
 	return cartRows
 		.map((cart) => {
@@ -110,12 +161,22 @@ export async function liveCarts(now: number, hours = 48): Promise<LiveCart[]> {
 				email: cart.customer_id ? (email.get(cart.customer_id) ?? null) : null,
 				items: mine.map((r) => {
 					const v = info.get(r.variant_id);
-					return { name: v?.name ?? 'Item', label: v?.label ?? '', quantity: r.quantity, image: v?.image ?? null };
+					return {
+						name: v?.name ?? 'Item',
+						label: v?.label ?? '',
+						quantity: r.quantity,
+						image: v?.image ?? null
+					};
 				}),
 				pieces: mine.reduce((n, r) => n + r.quantity, 0),
-				value: paise(mine.reduce((n, r) => n + (info.get(r.variant_id)?.price ?? 0) * r.quantity, 0)),
+				value: paise(
+					mine.reduce((n, r) => n + (info.get(r.variant_id)?.price ?? 0) * r.quantity, 0)
+				),
 				heldUntil: holds.length ? Math.max(...holds) : null,
-				updatedAt: Math.max(...mine.map((r) => Date.parse(r.created_at)), Date.parse(cart.updated_at)),
+				updatedAt: Math.max(
+					...mine.map((r) => Date.parse(r.created_at)),
+					Date.parse(cart.updated_at)
+				),
 				createdAt: Date.parse(cart.created_at)
 			};
 		})
@@ -126,7 +187,8 @@ export async function liveCarts(now: number, hours = 48): Promise<LiveCart[]> {
 /* Checkouts                                                                 */
 /* ------------------------------------------------------------------------ */
 
-export type CheckoutStatus = 'in_checkout' | 'abandoned' | 'reminded' | 'clicked' | 'recovered' | 'bought_later' | 'dismissed';
+export type CheckoutStatus =
+	'in_checkout' | 'abandoned' | 'reminded' | 'clicked' | 'recovered' | 'bought_later' | 'dismissed';
 
 export type Checkout = {
 	readonly orderId: string;
@@ -171,7 +233,9 @@ export async function checkouts(now: number, days = 30): Promise<Checkout[]> {
 	const since = new Date(now - days * 86_400_000).toISOString();
 	const { data, error } = await client
 		.from('orders')
-		.select('id, order_number, public_token, customer_id, state, ship_name, ship_phone, ship_city, total_paise, created_at, cancelled_at')
+		.select(
+			'id, order_number, public_token, customer_id, state, ship_name, ship_phone, ship_city, total_paise, created_at, cancelled_at'
+		)
 		.in('state', ['pending_payment', 'cancelled'])
 		.is('cancelled_at', null)
 		.gte('created_at', since)
@@ -194,21 +258,36 @@ export async function checkouts(now: number, days = 30): Promise<Checkout[]> {
 			.in('state', ['paid', 'packed', 'dispatched', 'delivered']),
 		client.from('payments').select('order_id').in('order_id', ids).eq('state', 'captured')
 	]);
-	const lineRows = (lines.data ?? []) as { order_id: string; variant_id: string; quantity: number }[];
+	const lineRows = (lines.data ?? []) as {
+		order_id: string;
+		variant_id: string;
+		quantity: number;
+	}[];
 	const info = await variantInfo([...new Set(lineRows.map((l) => l.variant_id))]);
-	const customer = new Map(((customers.data ?? []) as { id: string; email: string; phone: string | null }[]).map((c) => [c.id, c]));
-	const rec = new Map(
-		((recovery.data ?? []) as {
-			order_id: string;
-			sent_at: string | null;
-			sent_by: string | null;
-			channels: string[];
-			clicked_at: string | null;
-			recovered_order_id: string | null;
-			dismissed_at: string | null;
-		}[]).map((r) => [r.order_id, r])
+	const customer = new Map(
+		((customers.data ?? []) as { id: string; email: string; phone: string | null }[]).map((c) => [
+			c.id,
+			c
+		])
 	);
-	const paidLater = (laterPaid.data ?? []) as { id: string; customer_id: string; created_at: string }[];
+	const rec = new Map(
+		(
+			(recovery.data ?? []) as {
+				order_id: string;
+				sent_at: string | null;
+				sent_by: string | null;
+				channels: string[];
+				clicked_at: string | null;
+				recovered_order_id: string | null;
+				dismissed_at: string | null;
+			}[]
+		).map((r) => [r.order_id, r])
+	);
+	const paidLater = (laterPaid.data ?? []) as {
+		id: string;
+		customer_id: string;
+		created_at: string;
+	}[];
 	const wasPaid = new Set(((captured.data ?? []) as { order_id: string }[]).map((p) => p.order_id));
 	const windowOpen = (o: OrderRow) => o.state === 'pending_payment';
 
@@ -216,17 +295,29 @@ export async function checkouts(now: number, days = 30): Promise<Checkout[]> {
 		.filter((o) => !wasPaid.has(o.id))
 		.map((o) => {
 			const r = rec.get(o.id);
-			const later = paidLater.find((p) => p.customer_id === o.customer_id && Date.parse(p.created_at) > Date.parse(o.created_at));
+			const later = paidLater.find(
+				(p) =>
+					p.customer_id === o.customer_id && Date.parse(p.created_at) > Date.parse(o.created_at)
+			);
 			const items = lineRows
 				.filter((l) => l.order_id === o.id)
 				.map((l) => {
 					const v = info.get(l.variant_id);
-					return { name: v?.name ?? 'Item', label: v?.label ?? '', quantity: l.quantity, image: v?.image ?? null };
+					return {
+						name: v?.name ?? 'Item',
+						label: v?.label ?? '',
+						quantity: l.quantity,
+						image: v?.image ?? null
+					};
 				});
 			const firstVariant = lineRows.find((l) => l.order_id === o.id)?.variant_id;
 			let status: CheckoutStatus = windowOpen(o) ? 'in_checkout' : 'abandoned';
 			if (r?.dismissed_at) status = 'dismissed';
-			else if (later) status = r?.sent_at && Date.parse(later.created_at) > Date.parse(r.sent_at) ? 'recovered' : 'bought_later';
+			else if (later)
+				status =
+					r?.sent_at && Date.parse(later.created_at) > Date.parse(r.sent_at)
+						? 'recovered'
+						: 'bought_later';
 			else if (r?.clicked_at) status = 'clicked';
 			else if (r?.sent_at) status = 'reminded';
 			return {
@@ -274,9 +365,15 @@ export async function funnel(now: number, days: number): Promise<Funnel> {
 			.select('id', { count: 'exact', head: true })
 			.gte('created_at', since)
 			.in('state', ['paid', 'packed', 'dispatched', 'delivered', 'refunded']),
-		client.from('checkout_recovery').select('recovered_order_id').gte('sent_at', since).not('recovered_order_id', 'is', null)
+		client
+			.from('checkout_recovery')
+			.select('recovered_order_id')
+			.gte('sent_at', since)
+			.not('recovered_order_id', 'is', null)
 	]);
-	const recoveredIds = ((recovered.data ?? []) as { recovered_order_id: string }[]).map((r) => r.recovered_order_id);
+	const recoveredIds = ((recovered.data ?? []) as { recovered_order_id: string }[]).map(
+		(r) => r.recovered_order_id
+	);
 	const { data: recoveredOrders } = recoveredIds.length
 		? await client.from('orders').select('total_paise').in('id', recoveredIds)
 		: { data: [] };
@@ -285,7 +382,12 @@ export async function funnel(now: number, days: number): Promise<Funnel> {
 		checkouts: orders.count ?? 0,
 		paid: paidRows.count ?? 0,
 		recovered: recoveredIds.length,
-		recoveredValue: paise(((recoveredOrders ?? []) as { total_paise: number }[]).reduce((n, o) => n + Number(o.total_paise), 0))
+		recoveredValue: paise(
+			((recoveredOrders ?? []) as { total_paise: number }[]).reduce(
+				(n, o) => n + Number(o.total_paise),
+				0
+			)
+		)
 	};
 }
 
@@ -307,9 +409,12 @@ export async function sendReminder(input: {
 	const list = await checkouts(input.now, 60);
 	const checkout = list.find((c) => c.orderId === input.orderId);
 	if (!checkout) throw new CartError('That checkout is not waiting for a reminder.');
-	if (['recovered', 'bought_later'].includes(checkout.status)) throw new CartError('They have bought since. No reminder needed.');
+	if (['recovered', 'bought_later'].includes(checkout.status))
+		throw new CartError('They have bought since. No reminder needed.');
 	if (checkout.sentAt && input.now - checkout.sentAt < 86_400_000) {
-		throw new CartError(`A reminder went ${Math.round((input.now - checkout.sentAt) / 3_600_000)} h ago. Give it a day.`);
+		throw new CartError(
+			`A reminder went ${Math.round((input.now - checkout.sentAt) / 3_600_000)} h ago. Give it a day.`
+		);
 	}
 	if (!input.channels.length) throw new CartError('Pick email, WhatsApp or both.');
 
@@ -355,14 +460,21 @@ export async function sendReminder(input: {
 		},
 		{ onConflict: 'order_id' }
 	);
-	await writeAudit(input.actor, 'cart reminder sent', 'order', checkout.orderId, { channels: input.channels, sent, skipped });
+	await writeAudit(input.actor, 'cart reminder sent', 'order', checkout.orderId, {
+		channels: input.channels,
+		sent,
+		skipped
+	});
 	return { sent, skipped };
 }
 
 export async function dismiss(orderId: string, actor: string): Promise<void> {
 	await getServiceClient()
 		.from('checkout_recovery')
-		.upsert({ order_id: orderId, dismissed_at: new Date().toISOString() }, { onConflict: 'order_id' });
+		.upsert(
+			{ order_id: orderId, dismissed_at: new Date().toISOString() },
+			{ onConflict: 'order_id' }
+		);
 	await writeAudit(actor, 'checkout dismissed', 'order', orderId);
 }
 
@@ -376,7 +488,12 @@ export async function autoRemind(now: number): Promise<number> {
 	let count = 0;
 	for (const checkout of due) {
 		try {
-			await sendReminder({ orderId: checkout.orderId, channels: settings.channels, actor: 'automatic', now });
+			await sendReminder({
+				orderId: checkout.orderId,
+				channels: settings.channels,
+				actor: 'automatic',
+				now
+			});
 			count++;
 		} catch (error) {
 			if (!(error instanceof CartError)) console.error('[carts] reminder failed', error);
@@ -401,9 +518,16 @@ export async function recordClick(orderId: string): Promise<void> {
  */
 export async function attributeRecovery(paidOrderId: string): Promise<void> {
 	const client = getServiceClient();
-	const { data: order } = await client.from('orders').select('customer_id, created_at').eq('id', paidOrderId).maybeSingle();
+	const { data: order } = await client
+		.from('orders')
+		.select('customer_id, created_at')
+		.eq('id', paidOrderId)
+		.maybeSingle();
 	if (!order) return;
-	const { customer_id: customerId, created_at: createdAt } = order as { customer_id: string; created_at: string };
+	const { customer_id: customerId, created_at: createdAt } = order as {
+		customer_id: string;
+		created_at: string;
+	};
 	const { data: earlier } = await client
 		.from('orders')
 		.select('id')
@@ -419,4 +543,3 @@ export async function attributeRecovery(paidOrderId: string): Promise<void> {
 		.not('sent_at', 'is', null)
 		.is('recovered_order_id', null);
 }
-

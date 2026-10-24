@@ -80,3 +80,14 @@ export function formatPhone(phone: string | null | undefined): string {
 	if (/^[6-9]\d{9}$/.test(digits)) return `+91 ${digits.slice(0, 5)} ${digits.slice(5)}`;
 	return phone;
 }
+
+export const RESERVATION_STATE: Record<string, Label> = {
+	pending_payment: { label: 'Deposit unpaid', tone: 'neutral' },
+	reserved: { label: 'Reserved', tone: 'accent' },
+	refunded_cap_race: { label: 'Refunded (sold out)', tone: 'neutral' },
+	cancelled: { label: 'Cancelled', tone: 'neutral' },
+	balance_due: { label: 'Balance due', tone: 'warning' },
+	balance_paid: { label: 'Balance paid', tone: 'success' },
+	dispatched: { label: 'Dispatched', tone: 'success' },
+	released_to_waitlist: { label: 'Released to waitlist', tone: 'neutral' }
+};

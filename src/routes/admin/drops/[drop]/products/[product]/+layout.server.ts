@@ -11,7 +11,13 @@ export const load: LayoutServerLoad = async (event) => {
 	if (!found) error(404, 'That product is not in this drop.');
 	return {
 		canEdit: can(actor, 'catalogue.edit'),
-		drop: { id: found.drop.id, slug: found.drop.slug, name: found.drop.name, number: found.drop.number, published: found.drop.published },
+		drop: {
+			id: found.drop.id,
+			slug: found.drop.slug,
+			name: found.drop.name,
+			number: found.drop.number,
+			published: found.drop.published
+		},
 		product: found.product,
 		sizeOptions: await listSizeOptions()
 	};

@@ -16,7 +16,10 @@ export const load: PageServerLoad = async ({ parent }) => {
 	const { product } = await parent();
 	return {
 		reasons: STOCK_REASONS.map((r) => ({ value: r.value, label: r.label })),
-		movements: await stockMovements(product.variants.map((v) => v.id), 60)
+		movements: await stockMovements(
+			product.variants.map((v) => v.id),
+			60
+		)
 	};
 };
 
@@ -34,7 +37,8 @@ export const actions: Actions = {
 
 		const form = await event.request.formData();
 		const reason = String(form.get('reason') ?? 'correction') as StockReason;
-		if (!STOCK_REASONS.some((r) => r.value === reason)) return fail(400, { error: 'Pick a reason for the change.' });
+		if (!STOCK_REASONS.some((r) => r.value === reason))
+			return fail(400, { error: 'Pick a reason for the change.' });
 		const note = String(form.get('note') ?? '').trim() || null;
 
 		const problems: string[] = [];
@@ -48,7 +52,13 @@ export const actions: Actions = {
 			const label = `${variant.sku}`;
 			try {
 				if (stock !== variant.stock) {
-					await setStock({ variantId: variant.id, count: stock, reason, note, actor: actorLabel(actor) });
+					await setStock({
+						variantId: variant.id,
+						count: stock,
+						reason,
+						note,
+						actor: actorLabel(actor)
+					});
 					changed++;
 				}
 				if (capRaw !== null && cap !== variant.reserveCap) {
@@ -62,7 +72,9 @@ export const actions: Actions = {
 		}
 
 		if (problems.length) {
-			return fail(400, { error: `${changed ? `${changed} saved. ` : ''}Not saved — ${problems.join(' ')}` });
+			return fail(400, {
+				error: `${changed ? `${changed} saved. ` : ''}Not saved — ${problems.join(' ')}`
+			});
 		}
 		return { message: changed ? 'Stock saved.' : 'Nothing had changed.' };
 	}

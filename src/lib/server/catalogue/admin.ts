@@ -62,7 +62,11 @@ export type AdminImage = {
 	readonly colourwayId: string | null;
 };
 
-export type SizeChartEntry = { readonly size: string; readonly chestCm: number; readonly lengthCm: number };
+export type SizeChartEntry = {
+	readonly size: string;
+	readonly chestCm: number;
+	readonly lengthCm: number;
+};
 
 export type AdminProduct = {
 	readonly id: string;
@@ -111,7 +115,11 @@ export type AdminDrop = {
 	readonly totals: { readonly stock: number; readonly reserved: number; readonly sold: number };
 };
 
-export type SizeOption = { readonly code: string; readonly label: string; readonly sortOrder: number };
+export type SizeOption = {
+	readonly code: string;
+	readonly label: string;
+	readonly sortOrder: number;
+};
 
 /* ------------------------------------------------------------------------ */
 /* Row shapes                                                                */
@@ -212,20 +220,29 @@ function friendly(error: { message: string; code?: string }): never {
 /* Reads                                                                     */
 /* ------------------------------------------------------------------------ */
 
-async function usage(variantIds: string[]): Promise<{ sold: Map<string, number>; used: Set<string> }> {
+async function usage(
+	variantIds: string[]
+): Promise<{ sold: Map<string, number>; used: Set<string> }> {
 	const sold = new Map<string, number>();
 	const used = new Set<string>();
 	if (variantIds.length === 0) return { sold, used };
 	const client = getServiceClient();
 
 	const [lines, reservations, carts] = await Promise.all([
-		client.from('order_lines').select('variant_id, quantity, order_id').in('variant_id', variantIds),
+		client
+			.from('order_lines')
+			.select('variant_id, quantity, order_id')
+			.in('variant_id', variantIds),
 		client.from('reservations').select('variant_id').in('variant_id', variantIds),
 		client.from('cart_lines').select('variant_id').in('variant_id', variantIds)
 	]);
 	if (lines.error) fail('order lines read failed', lines.error);
 
-	const lineRows = (lines.data ?? []) as { variant_id: string; quantity: number; order_id: string }[];
+	const lineRows = (lines.data ?? []) as {
+		variant_id: string;
+		quantity: number;
+		order_id: string;
+	}[];
 	const orderIds = [...new Set(lineRows.map((l) => l.order_id))];
 	const states = new Map<string, string>();
 	if (orderIds.length) {
@@ -263,8 +280,8 @@ function toProduct(
 		.filter((v) => v.product_id === row.id)
 		.sort(
 			(a, b) =>
-				(colourIndex.get(a.colourway_id ?? '') ?? -1) - (colourIndex.get(b.colourway_id ?? '') ?? -1) ||
-				compareSizes(a.size, b.size)
+				(colourIndex.get(a.colourway_id ?? '') ?? -1) -
+					(colourIndex.get(b.colourway_id ?? '') ?? -1) || compareSizes(a.size, b.size)
 		)
 		.map((v) => ({
 			id: v.id,
@@ -354,9 +371,14 @@ async function loadDrops(filter: { slug?: string; id?: string }): Promise<AdminD
 		? await Promise.all([
 				catalogue
 					.from('variants')
-					.select('id, product_id, sku, size, colourway_id, stock_count, reserve_cap, reserved_count')
+					.select(
+						'id, product_id, sku, size, colourway_id, stock_count, reserve_cap, reserved_count'
+					)
 					.in('product_id', productIds),
-				catalogue.from('colourways').select('id, product_id, name, code, swatch, position').in('product_id', productIds),
+				catalogue
+					.from('colourways')
+					.select('id, product_id, name, code, swatch, position')
+					.in('product_id', productIds),
 				catalogue.from('product_images').select('*').in('product_id', productIds)
 			])
 		: [{ data: [] }, { data: [] }, { data: [] }];
@@ -423,7 +445,10 @@ export async function findProduct(
 }
 
 export async function listSizeOptions(): Promise<SizeOption[]> {
-	const { data, error } = await getCatalogueClient().from('sizes').select('code, label, sort_order').order('sort_order');
+	const { data, error } = await getCatalogueClient()
+		.from('sizes')
+		.select('code, label, sort_order')
+		.order('sort_order');
 	if (error) fail('sizes read failed', error);
 	return ((data ?? []) as { code: string; label: string; sort_order: number }[]).map((s) => ({
 		code: s.code,
@@ -432,7 +457,11 @@ export async function listSizeOptions(): Promise<SizeOption[]> {
 	}));
 }
 
-export type PricePoint = { readonly price: Paise; readonly kind: 'prelaunch' | 'launch'; readonly at: number };
+export type PricePoint = {
+	readonly price: Paise;
+	readonly kind: 'prelaunch' | 'launch';
+	readonly at: number;
+};
 
 export async function priceHistory(productId: string): Promise<PricePoint[]> {
 	const { data, error } = await getCatalogueClient()
@@ -442,9 +471,13 @@ export async function priceHistory(productId: string): Promise<PricePoint[]> {
 		.order('effective_from', { ascending: false })
 		.limit(20);
 	if (error) fail('price history read failed', error);
-	return ((data ?? []) as { price_paise: number; kind: 'prelaunch' | 'launch'; effective_from: string }[]).map(
-		(r) => ({ price: paise(Number(r.price_paise)), kind: r.kind, at: Date.parse(r.effective_from) })
-	);
+	return (
+		(data ?? []) as { price_paise: number; kind: 'prelaunch' | 'launch'; effective_from: string }[]
+	).map((r) => ({
+		price: paise(Number(r.price_paise)),
+		kind: r.kind,
+		at: Date.parse(r.effective_from)
+	}));
 }
 
 export type StockMovement = {
@@ -458,7 +491,10 @@ export type StockMovement = {
 	readonly at: number;
 };
 
-export async function stockMovements(variantIds: readonly string[], limit = 50): Promise<StockMovement[]> {
+export async function stockMovements(
+	variantIds: readonly string[],
+	limit = 50
+): Promise<StockMovement[]> {
 	if (variantIds.length === 0) return [];
 	const { data, error } = await getServiceClient()
 		.from('stock_movements')
@@ -529,22 +565,28 @@ export async function createDrop(input: {
 	const id = `drop-${String(input.number).padStart(2, '0')}`;
 	const slug = `${String(input.number).padStart(2, '0')}-${slugify(input.name)}`;
 
-	const { error } = await getCatalogueClient().from('drops').insert({
-		id,
-		slug,
-		number: input.number,
-		name: input.name,
-		story: input.story,
-		state: 'TEASE',
-		launch_instant: new Date(input.launchInstant).toISOString(),
-		edition_size: input.editionSize,
-		preorder_mode: input.preorderMode
-	});
+	const { error } = await getCatalogueClient()
+		.from('drops')
+		.insert({
+			id,
+			slug,
+			number: input.number,
+			name: input.name,
+			story: input.story,
+			state: 'TEASE',
+			launch_instant: new Date(input.launchInstant).toISOString(),
+			edition_size: input.editionSize,
+			preorder_mode: input.preorderMode
+		});
 	if (error) {
-		if (error.code === '23505') throw new CatalogueError(`Drop ${input.number} already exists. Pick the next number.`);
+		if (error.code === '23505')
+			throw new CatalogueError(`Drop ${input.number} already exists. Pick the next number.`);
 		fail('drop create failed', error);
 	}
-	await writeAudit(input.actor, 'drop created', 'drop', id, { number: input.number, name: input.name });
+	await writeAudit(input.actor, 'drop created', 'drop', id, {
+		number: input.number,
+		name: input.name
+	});
 	return { id, slug };
 }
 
@@ -582,7 +624,10 @@ export async function updateDropDetails(input: {
 export async function rotatePreviewToken(dropId: string, actor: string): Promise<string> {
 	const bytes = crypto.getRandomValues(new Uint8Array(18));
 	const token = [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
-	const { error } = await getCatalogueClient().from('drops').update({ preview_token: token }).eq('id', dropId);
+	const { error } = await getCatalogueClient()
+		.from('drops')
+		.update({ preview_token: token })
+		.eq('id', dropId);
 	if (error) fail('preview token write failed', error);
 	await writeAudit(actor, 'preview link created', 'drop', dropId);
 	return token;
@@ -611,23 +656,32 @@ export type ProductInput = {
 
 function validateProduct(input: ProductInput): void {
 	if (!input.name.trim()) throw new CatalogueError('Give the product a name.');
-	if (!input.fabric.trim()) throw new CatalogueError('Say what the fabric is, e.g. 30% hemp / 70% cotton.');
-	if (!Number.isInteger(input.gsm) || input.gsm <= 0) throw new CatalogueError('GSM must be a whole number above 0.');
+	if (!input.fabric.trim())
+		throw new CatalogueError('Say what the fabric is, e.g. 30% hemp / 70% cotton.');
+	if (!Number.isInteger(input.gsm) || input.gsm <= 0)
+		throw new CatalogueError('GSM must be a whole number above 0.');
 	if (!/^[A-Z]{2,5}$/.test(input.styleCode)) {
-		throw new CatalogueError('The style code is 2–5 capital letters, like TEE or HOOD. It goes in the SKU.');
+		throw new CatalogueError(
+			'The style code is 2–5 capital letters, like TEE or HOOD. It goes in the SKU.'
+		);
 	}
 	if (!Number.isInteger(input.launchPrice) || input.launchPrice <= 0) {
 		throw new CatalogueError('Enter the launch price in rupees.');
 	}
 	if (!Number.isInteger(input.prelaunchPrice) || input.prelaunchPrice <= 0) {
-		throw new CatalogueError('Enter the pre-launch price in rupees. Use the launch price if there is no discount.');
+		throw new CatalogueError(
+			'Enter the pre-launch price in rupees. Use the launch price if there is no discount.'
+		);
 	}
 	if (input.prelaunchPrice > input.launchPrice) {
 		throw new CatalogueError('The pre-launch price cannot be higher than the launch price.');
 	}
-	if (!/^\d{4,8}$/.test(input.hsnCode)) throw new CatalogueError('The HSN code is 4 to 8 digits, e.g. 6109.');
-	if (!(input.gstRate >= 0 && input.gstRate <= 28)) throw new CatalogueError('GST rate must be between 0 and 28%.');
-	if (input.modelWornSize && !isSize(input.modelWornSize)) throw new CatalogueError('Pick the size the model wears.');
+	if (!/^\d{4,8}$/.test(input.hsnCode))
+		throw new CatalogueError('The HSN code is 4 to 8 digits, e.g. 6109.');
+	if (!(input.gstRate >= 0 && input.gstRate <= 28))
+		throw new CatalogueError('GST rate must be between 0 and 28%.');
+	if (input.modelWornSize && !isSize(input.modelWornSize))
+		throw new CatalogueError('Pick the size the model wears.');
 }
 
 function productRow(input: ProductInput) {
@@ -684,7 +738,8 @@ export async function createProduct(input: {
 		position: drop.products.length
 	});
 	if (error) {
-		if (error.code === '23505') throw new CatalogueError('A product with that name already exists in this drop.');
+		if (error.code === '23505')
+			throw new CatalogueError('A product with that name already exists in this drop.');
 		fail('product create failed', error);
 	}
 
@@ -694,7 +749,13 @@ export async function createProduct(input: {
 	]);
 
 	for (const [index, colour] of input.colourways.entries()) {
-		await addColourway({ productId: id, ...colour, position: index, actor: input.actor, audit: false });
+		await addColourway({
+			productId: id,
+			...colour,
+			position: index,
+			actor: input.actor,
+			audit: false
+		});
 	}
 	await setSizes({ productId: id, sizes: input.sizes, actor: input.actor, audit: false });
 
@@ -721,26 +782,45 @@ async function productById(productId: string): Promise<AdminProduct> {
 }
 
 async function dropNumberOf(dropId: string): Promise<number> {
-	const { data, error } = await getCatalogueClient().from('drops').select('number').eq('id', dropId).single();
+	const { data, error } = await getCatalogueClient()
+		.from('drops')
+		.select('number')
+		.eq('id', dropId)
+		.single();
 	if (error || !data) fail('drop read failed', error);
 	return (data as { number: number }).number;
 }
 
-export async function updateProduct(input: { productId: string; product: ProductInput; actor: string }): Promise<void> {
+export async function updateProduct(input: {
+	productId: string;
+	product: ProductInput;
+	actor: string;
+}): Promise<void> {
 	validateProduct(input.product);
 	const before = await productById(input.productId);
 
 	const catalogue = getCatalogueClient();
-	const { error } = await catalogue.from('products').update(productRow(input.product)).eq('id', input.productId);
+	const { error } = await catalogue
+		.from('products')
+		.update(productRow(input.product))
+		.eq('id', input.productId);
 	if (error) fail('product update failed', error);
 
 	// §10: prices are history, not just a current value.
 	const changes: { product_id: string; price_paise: number; kind: string }[] = [];
 	if (input.product.launchPrice !== Number(before.launchPrice)) {
-		changes.push({ product_id: input.productId, price_paise: input.product.launchPrice, kind: 'launch' });
+		changes.push({
+			product_id: input.productId,
+			price_paise: input.product.launchPrice,
+			kind: 'launch'
+		});
 	}
 	if (input.product.prelaunchPrice !== Number(before.prelaunchPrice)) {
-		changes.push({ product_id: input.productId, price_paise: input.product.prelaunchPrice, kind: 'prelaunch' });
+		changes.push({
+			product_id: input.productId,
+			price_paise: input.product.prelaunchPrice,
+			kind: 'prelaunch'
+		});
 	}
 	if (changes.length) await catalogue.from('price_history').insert(changes);
 
@@ -769,18 +849,29 @@ export async function setProductStatus(input: {
 }): Promise<void> {
 	const product = await productById(input.productId);
 	if (input.status === 'active') {
-		if (product.variants.length === 0) throw new CatalogueError('Add at least one size before making it live.');
-		if (product.images.length === 0) throw new CatalogueError('Add at least one photo before making it live.');
+		if (product.variants.length === 0)
+			throw new CatalogueError('Add at least one size before making it live.');
+		if (product.images.length === 0)
+			throw new CatalogueError('Add at least one photo before making it live.');
 	}
 	const { error } = await getCatalogueClient()
 		.from('products')
 		.update({ status: input.status })
 		.eq('id', input.productId);
 	if (error) fail('product status failed', error);
-	await writeAudit(input.actor, `product ${input.status === 'active' ? 'made live' : input.status === 'draft' ? 'moved to draft' : 'archived'}`, 'product', input.productId);
+	await writeAudit(
+		input.actor,
+		`product ${input.status === 'active' ? 'made live' : input.status === 'draft' ? 'moved to draft' : 'archived'}`,
+		'product',
+		input.productId
+	);
 }
 
-export async function moveProduct(input: { productId: string; direction: -1 | 1; actor: string }): Promise<void> {
+export async function moveProduct(input: {
+	productId: string;
+	direction: -1 | 1;
+	actor: string;
+}): Promise<void> {
 	const product = await productById(input.productId);
 	const drop = await findDropById(product.dropId);
 	if (!drop) return;
@@ -790,7 +881,9 @@ export async function moveProduct(input: { productId: string; direction: -1 | 1;
 	if (target < 0 || target >= order.length) return;
 	[order[index], order[target]] = [order[target], order[index]];
 	const catalogue = getCatalogueClient();
-	await Promise.all(order.map((p, i) => catalogue.from('products').update({ position: i }).eq('id', p.id)));
+	await Promise.all(
+		order.map((p, i) => catalogue.from('products').update({ position: i }).eq('id', p.id))
+	);
 }
 
 /* ------------------------------------------------------------------------ */
@@ -821,11 +914,14 @@ export async function addColourway(input: {
 	const name = input.name.trim();
 	const code = input.code.trim().toUpperCase();
 	if (!name) throw new CatalogueError('Name the colour, e.g. Forest.');
-	if (!/^[A-Z]{2,4}$/.test(code)) throw new CatalogueError('The colour code is 2–4 letters, e.g. FOR. It goes in the SKU.');
-	if (input.swatch && !/^#[0-9a-fA-F]{6}$/.test(input.swatch)) throw new CatalogueError('Pick a swatch colour.');
+	if (!/^[A-Z]{2,4}$/.test(code))
+		throw new CatalogueError('The colour code is 2–4 letters, e.g. FOR. It goes in the SKU.');
+	if (input.swatch && !/^#[0-9a-fA-F]{6}$/.test(input.swatch))
+		throw new CatalogueError('Pick a swatch colour.');
 
 	const product = await productById(input.productId);
-	if (product.colourways.some((c) => c.code === code)) throw new CatalogueError(`${code} is already used by another colour.`);
+	if (product.colourways.some((c) => c.code === code))
+		throw new CatalogueError(`${code} is already used by another colour.`);
 
 	const catalogue = getCatalogueClient();
 	const id = `colour-${idPart(product.id.replace(/^product-/, ''))}-${code.toLowerCase()}`;
@@ -842,7 +938,11 @@ export async function addColourway(input: {
 	// The first colour adopts the existing colourless variants, so a product
 	// that gains colours keeps its stock rather than starting again at zero.
 	if (product.colourways.length === 0 && product.variants.some((v) => v.colourwayId === null)) {
-		await catalogue.from('variants').update({ colourway_id: id }).eq('product_id', input.productId).is('colourway_id', null);
+		await catalogue
+			.from('variants')
+			.update({ colourway_id: id })
+			.eq('product_id', input.productId)
+			.is('colourway_id', null);
 		await recutSkus(input.productId);
 	} else if (product.sizes.length) {
 		await createVariants(input.productId, [id], product.sizes);
@@ -860,18 +960,28 @@ export async function updateColourway(input: {
 	actor: string;
 }): Promise<void> {
 	if (!input.name.trim()) throw new CatalogueError('Name the colour.');
-	if (input.swatch && !/^#[0-9a-fA-F]{6}$/.test(input.swatch)) throw new CatalogueError('Pick a swatch colour.');
+	if (input.swatch && !/^#[0-9a-fA-F]{6}$/.test(input.swatch))
+		throw new CatalogueError('Pick a swatch colour.');
 	const { error } = await getCatalogueClient()
 		.from('colourways')
 		.update({ name: input.name.trim(), swatch: input.swatch })
 		.eq('id', input.colourwayId);
 	if (error) fail('colour update failed', error);
-	await writeAudit(input.actor, 'colour edited', 'colourway', input.colourwayId, { name: input.name });
+	await writeAudit(input.actor, 'colour edited', 'colourway', input.colourwayId, {
+		name: input.name
+	});
 }
 
-export async function removeColourway(input: { colourwayId: string; actor: string }): Promise<void> {
+export async function removeColourway(input: {
+	colourwayId: string;
+	actor: string;
+}): Promise<void> {
 	const catalogue = getCatalogueClient();
-	const { data } = await catalogue.from('colourways').select('product_id, name').eq('id', input.colourwayId).maybeSingle();
+	const { data } = await catalogue
+		.from('colourways')
+		.select('product_id, name')
+		.eq('id', input.colourwayId)
+		.maybeSingle();
 	if (!data) return;
 	const { product_id: productId, name } = data as { product_id: string; name: string };
 	const product = await productById(productId);
@@ -882,7 +992,13 @@ export async function removeColourway(input: { colourwayId: string; actor: strin
 		);
 	}
 	if (variants.length) {
-		const { error } = await catalogue.from('variants').delete().in('id', variants.map((v) => v.id));
+		const { error } = await catalogue
+			.from('variants')
+			.delete()
+			.in(
+				'id',
+				variants.map((v) => v.id)
+			);
 		if (error) fail('variant delete failed', error);
 	}
 	await catalogue.from('colourways').delete().eq('id', input.colourwayId);
@@ -916,7 +1032,10 @@ async function createVariants(
 	if (rows.length === 0) return;
 	const { error } = await getCatalogueClient().from('variants').insert(rows);
 	if (error) {
-		if (error.code === '23505') throw new CatalogueError('One of those SKUs already exists. Check the style and colour codes.');
+		if (error.code === '23505')
+			throw new CatalogueError(
+				'One of those SKUs already exists. Check the style and colour codes.'
+			);
 		fail('variant create failed', error);
 	}
 }
@@ -936,14 +1055,22 @@ export async function setSizes(input: {
 	if (sizes.length === 0) throw new CatalogueError('Pick at least one size.');
 
 	const product = await productById(input.productId);
-	const colourIds: (string | null)[] = product.colourways.length ? product.colourways.map((c) => c.id) : [null];
+	const colourIds: (string | null)[] = product.colourways.length
+		? product.colourways.map((c) => c.id)
+		: [null];
 	await createVariants(input.productId, colourIds, sizes);
 
 	const dropped = product.variants.filter((v) => !sizes.includes(v.size));
 	const removable = dropped.filter((v) => !v.inUse);
 	const kept = [...new Set(dropped.filter((v) => v.inUse).map((v) => v.size))];
 	if (removable.length) {
-		const { error } = await getCatalogueClient().from('variants').delete().in('id', removable.map((v) => v.id));
+		const { error } = await getCatalogueClient()
+			.from('variants')
+			.delete()
+			.in(
+				'id',
+				removable.map((v) => v.id)
+			);
 		if (error) fail('variant delete failed', error);
 	}
 
@@ -970,21 +1097,34 @@ export async function setSizeChart(input: {
 	const { error } = await getCatalogueClient()
 		.from('products')
 		.update({
-			size_chart: input.rows.map((r) => ({ size: r.size, chest_cm: r.chestCm, length_cm: r.lengthCm }))
+			size_chart: input.rows.map((r) => ({
+				size: r.size,
+				chest_cm: r.chestCm,
+				length_cm: r.lengthCm
+			}))
 		})
 		.eq('id', input.productId);
 	if (error) fail('size chart write failed', error);
 	await writeAudit(input.actor, 'size chart edited', 'product', input.productId);
 }
 
-export async function addSizeOption(input: { code: string; label: string; actor: string }): Promise<string> {
+export async function addSizeOption(input: {
+	code: string;
+	label: string;
+	actor: string;
+}): Promise<string> {
 	const code = input.code.trim().toUpperCase();
-	if (!isSize(code)) throw new CatalogueError('A size code is 1–5 capital letters or digits, e.g. 6XL or 32.');
+	if (!isSize(code))
+		throw new CatalogueError('A size code is 1–5 capital letters or digits, e.g. 6XL or 32.');
 	const sizes = await listSizeOptions();
 	if (sizes.some((s) => s.code === code)) return code;
 	const { error } = await getCatalogueClient()
 		.from('sizes')
-		.insert({ code, label: input.label.trim() || code, sort_order: (sizes.at(-1)?.sortOrder ?? 0) + 10 });
+		.insert({
+			code,
+			label: input.label.trim() || code,
+			sort_order: (sizes.at(-1)?.sortOrder ?? 0) + 10
+		});
 	if (error) fail('size create failed', error);
 	await writeAudit(input.actor, 'size added', 'size', code);
 	return code;
@@ -1018,7 +1158,8 @@ export async function setStock(input: {
 	note: string | null;
 	actor: string;
 }): Promise<void> {
-	if (!Number.isInteger(input.count) || input.count < 0) throw new CatalogueError('Stock is a whole number, 0 or more.');
+	if (!Number.isInteger(input.count) || input.count < 0)
+		throw new CatalogueError('Stock is a whole number, 0 or more.');
 	const { data, error } = await getCatalogueClient()
 		.from('variants')
 		.select('stock_count')
@@ -1036,15 +1177,26 @@ export async function setStock(input: {
 		p_actor: input.actor
 	});
 	if (rpcError) friendly(rpcError);
-	await writeAudit(input.actor, `stock ${delta > 0 ? '+' : ''}${delta} (${input.reason})`, 'variant', input.variantId, {
-		count: input.count,
-		note: input.note
-	});
+	await writeAudit(
+		input.actor,
+		`stock ${delta > 0 ? '+' : ''}${delta} (${input.reason})`,
+		'variant',
+		input.variantId,
+		{
+			count: input.count,
+			note: input.note
+		}
+	);
 }
 
 /** §08: the cap on tease reservations for one size. Never below what is already reserved. */
-export async function setReserveCap(input: { variantId: string; cap: number; actor: string }): Promise<void> {
-	if (!Number.isInteger(input.cap) || input.cap < 0) throw new CatalogueError('The reservation cap is a whole number, 0 or more.');
+export async function setReserveCap(input: {
+	variantId: string;
+	cap: number;
+	actor: string;
+}): Promise<void> {
+	if (!Number.isInteger(input.cap) || input.cap < 0)
+		throw new CatalogueError('The reservation cap is a whole number, 0 or more.');
 	const { data, error } = await getCatalogueClient()
 		.from('variants')
 		.select('stock_count, reserved_count, reserve_cap')
@@ -1054,7 +1206,9 @@ export async function setReserveCap(input: { variantId: string; cap: number; act
 	const v = data as { stock_count: number; reserved_count: number; reserve_cap: number };
 	if (input.cap === v.reserve_cap) return;
 	if (input.cap < v.reserved_count) {
-		throw new CatalogueError(`${v.reserved_count} are already reserved, so the cap cannot be lower than that.`);
+		throw new CatalogueError(
+			`${v.reserved_count} are already reserved, so the cap cannot be lower than that.`
+		);
 	}
 	if (input.cap > v.stock_count) {
 		throw new CatalogueError(`The cap cannot be more than the ${v.stock_count} in stock.`);
@@ -1097,7 +1251,13 @@ export function imageSize(bytes: Uint8Array): { width: number; height: number } 
 			if (bytes[offset] !== 0xff) return null;
 			const marker = bytes[offset + 1];
 			const length = view.getUint16(offset + 2);
-			if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) {
+			if (
+				marker >= 0xc0 &&
+				marker <= 0xcf &&
+				marker !== 0xc4 &&
+				marker !== 0xc8 &&
+				marker !== 0xcc
+			) {
 				return { height: view.getUint16(offset + 5), width: view.getUint16(offset + 7) };
 			}
 			offset += 2 + length;
@@ -1112,7 +1272,11 @@ export function imageSize(bytes: Uint8Array): { width: number; height: number } 
 			const h = 1 + (bytes[27] | (bytes[28] << 8) | (bytes[29] << 16));
 			return { width: w, height: h };
 		}
-		if (chunk === 'VP8 ') return { width: view.getUint16(26, true) & 0x3fff, height: view.getUint16(28, true) & 0x3fff };
+		if (chunk === 'VP8 ')
+			return {
+				width: view.getUint16(26, true) & 0x3fff,
+				height: view.getUint16(28, true) & 0x3fff
+			};
 		if (chunk === 'VP8L') {
 			const b = bytes.slice(21, 25);
 			return {
@@ -1134,8 +1298,12 @@ export async function uploadImage(input: {
 }): Promise<void> {
 	const extension = IMAGE_TYPES[input.file.type];
 	if (!extension) throw new CatalogueError('Upload a JPG, PNG, WebP or AVIF photo.');
-	if (input.file.size > MAX_IMAGE_BYTES) throw new CatalogueError('That photo is over 10 MB. Export it smaller and try again.');
-	if (!input.alt.trim()) throw new CatalogueError('Describe the photo for people who cannot see it, e.g. “Back of the tee, worn”.');
+	if (input.file.size > MAX_IMAGE_BYTES)
+		throw new CatalogueError('That photo is over 10 MB. Export it smaller and try again.');
+	if (!input.alt.trim())
+		throw new CatalogueError(
+			'Describe the photo for people who cannot see it, e.g. “Back of the tee, worn”.'
+		);
 
 	const product = await productById(input.productId);
 	const bytes = new Uint8Array(await input.file.arrayBuffer());
@@ -1143,24 +1311,30 @@ export async function uploadImage(input: {
 	const path = `${product.dropId}/${product.id}/${crypto.randomUUID()}.${extension}`;
 
 	const storage = getCatalogueClient().storage;
-	let upload = await storage.from(BUCKET).upload(path, bytes, { contentType: input.file.type, upsert: false });
+	let upload = await storage
+		.from(BUCKET)
+		.upload(path, bytes, { contentType: input.file.type, upsert: false });
 	if (upload.error && /bucket not found/i.test(upload.error.message)) {
 		await storage.createBucket(BUCKET, { public: true });
-		upload = await storage.from(BUCKET).upload(path, bytes, { contentType: input.file.type, upsert: false });
+		upload = await storage
+			.from(BUCKET)
+			.upload(path, bytes, { contentType: input.file.type, upsert: false });
 	}
 	if (upload.error) throw new Error(`upload failed: ${upload.error.message}`);
 	const url = storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
 
-	const { error } = await getCatalogueClient().from('product_images').insert({
-		product_id: input.productId,
-		url,
-		alt: input.alt.trim(),
-		role: input.role,
-		position: product.images.length,
-		width: size?.width ?? null,
-		height: size?.height ?? null,
-		colourway_id: input.colourwayId
-	});
+	const { error } = await getCatalogueClient()
+		.from('product_images')
+		.insert({
+			product_id: input.productId,
+			url,
+			alt: input.alt.trim(),
+			role: input.role,
+			position: product.images.length,
+			width: size?.width ?? null,
+			height: size?.height ?? null,
+			colourway_id: input.colourwayId
+		});
 	if (error) fail('image record failed', error);
 	await writeAudit(input.actor, 'photo added', 'product', input.productId, { role: input.role });
 }
@@ -1173,7 +1347,8 @@ export async function updateImage(input: {
 	colourwayId: string | null;
 	actor: string;
 }): Promise<void> {
-	if (!input.alt.trim()) throw new CatalogueError('Describe the photo for people who cannot see it.');
+	if (!input.alt.trim())
+		throw new CatalogueError('Describe the photo for people who cannot see it.');
 	const { error } = await getCatalogueClient()
 		.from('product_images')
 		.update({
@@ -1186,7 +1361,11 @@ export async function updateImage(input: {
 	if (error) fail('image update failed', error);
 }
 
-export async function moveImage(input: { productId: string; imageId: string; direction: -1 | 1 }): Promise<void> {
+export async function moveImage(input: {
+	productId: string;
+	imageId: string;
+	direction: -1 | 1;
+}): Promise<void> {
 	const product = await productById(input.productId);
 	const order = [...product.images];
 	const index = order.findIndex((i) => i.id === input.imageId);
@@ -1194,12 +1373,23 @@ export async function moveImage(input: { productId: string; imageId: string; dir
 	if (index < 0 || target < 0 || target >= order.length) return;
 	[order[index], order[target]] = [order[target], order[index]];
 	const catalogue = getCatalogueClient();
-	await Promise.all(order.map((image, i) => catalogue.from('product_images').update({ position: i }).eq('id', image.id)));
+	await Promise.all(
+		order.map((image, i) =>
+			catalogue.from('product_images').update({ position: i }).eq('id', image.id)
+		)
+	);
 }
 
-export async function deleteImage(input: { imageId: string; actor: string }): Promise<AdminImage | null> {
+export async function deleteImage(input: {
+	imageId: string;
+	actor: string;
+}): Promise<AdminImage | null> {
 	const catalogue = getCatalogueClient();
-	const { data } = await catalogue.from('product_images').select('*').eq('id', input.imageId).maybeSingle();
+	const { data } = await catalogue
+		.from('product_images')
+		.select('*')
+		.eq('id', input.imageId)
+		.maybeSingle();
 	if (!data) return null;
 	const row = data as ImageRow;
 	await catalogue.from('product_images').delete().eq('id', input.imageId);
@@ -1219,7 +1409,11 @@ export async function deleteImage(input: { imageId: string; actor: string }): Pr
 }
 
 /** Undo for deleteImage: the file was never removed, so the record goes back as it was. */
-export async function restoreImage(input: { productId: string; image: Omit<AdminImage, 'id'>; actor: string }): Promise<void> {
+export async function restoreImage(input: {
+	productId: string;
+	image: Omit<AdminImage, 'id'>;
+	actor: string;
+}): Promise<void> {
 	const { error } = await getCatalogueClient().from('product_images').insert({
 		product_id: input.productId,
 		url: input.image.url,
@@ -1264,5 +1458,11 @@ export async function dropStateEvents(dropId: string): Promise<StateEvent[]> {
 			actor: string | null;
 			occurred_at: string;
 		}[]
-	).map((r) => ({ from: r.from_state, to: r.to_state, trigger: r.trigger, actor: r.actor, at: Date.parse(r.occurred_at) }));
+	).map((r) => ({
+		from: r.from_state,
+		to: r.to_state,
+		trigger: r.trigger,
+		actor: r.actor,
+		at: Date.parse(r.occurred_at)
+	}));
 }

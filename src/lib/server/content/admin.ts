@@ -43,7 +43,9 @@ export async function listPolicies(): Promise<AdminPolicy[]> {
 		.map((slug) => {
 			const row = rows.get(slug);
 			const original = POLICIES.find((p) => p.slug === slug);
-			const carries = original ? blocksToText(original.body).includes(RETURNS_WORDING) : Boolean(row?.carries_returns_wording);
+			const carries = original
+				? blocksToText(original.body).includes(RETURNS_WORDING)
+				: Boolean(row?.carries_returns_wording);
 			if (row) {
 				return {
 					slug,
@@ -59,7 +61,13 @@ export async function listPolicies(): Promise<AdminPolicy[]> {
 					carriesReturnsWording: carries
 				};
 			}
-			return { ...original!, edited: false, published: true, hasOriginal: true, carriesReturnsWording: carries };
+			return {
+				...original!,
+				edited: false,
+				published: true,
+				hasOriginal: true,
+				carriesReturnsWording: carries
+			};
 		})
 		.sort((a, b) => a.navOrder - b.navOrder || a.title.localeCompare(b.title));
 }
@@ -78,13 +86,16 @@ export async function savePolicy(input: {
 	publish: boolean;
 	actor: string;
 }): Promise<void> {
-	if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(input.slug)) throw new PolicyError('The address is lower-case words joined by dashes, e.g. care-guide.');
+	if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(input.slug))
+		throw new PolicyError('The address is lower-case words joined by dashes, e.g. care-guide.');
 	if (!input.title.trim()) throw new PolicyError('Give the page a title.');
 	if (!input.body.length) throw new PolicyError('The page is empty.');
 	const original = POLICIES.find((p) => p.slug === input.slug);
 	const carries = original ? blocksToText(original.body).includes(RETURNS_WORDING) : false;
 	if (carries && !blocksToText(input.body).includes(RETURNS_WORDING)) {
-		throw new PolicyError('This page must keep the returns wording exactly as it is (it appears word for word in four places). Put it back, then save.');
+		throw new PolicyError(
+			'This page must keep the returns wording exactly as it is (it appears word for word in four places). Put it back, then save.'
+		);
 	}
 	const { error } = await getCatalogueClient()
 		.from('policies')
@@ -102,11 +113,17 @@ export async function savePolicy(input: {
 			{ onConflict: 'slug' }
 		);
 	if (error) throw new Error(`policy save failed: ${error.message}`);
-	await writeAudit(input.actor, input.publish ? 'page published' : 'page saved as draft', 'policy', input.slug);
+	await writeAudit(
+		input.actor,
+		input.publish ? 'page published' : 'page saved as draft',
+		'policy',
+		input.slug
+	);
 }
 
 export async function revertPolicy(slug: string, actor: string): Promise<void> {
-	if (!POLICIES.some((p) => p.slug === slug)) throw new PolicyError('This page has no original to go back to. Unpublish it instead.');
+	if (!POLICIES.some((p) => p.slug === slug))
+		throw new PolicyError('This page has no original to go back to. Unpublish it instead.');
 	await getCatalogueClient().from('policies').delete().eq('slug', slug);
 	await writeAudit(actor, 'page reverted to original', 'policy', slug);
 }

@@ -6,6 +6,7 @@
  * come from their most recent order, which is the freshest the shop has.
  */
 import { getServiceClient } from '$lib/server/db/clients';
+import { eq } from '$lib/server/db/filters';
 import { writeAudit } from '$lib/server/admin/audit';
 import { messagesFor, type OutboxMessage } from '$lib/server/messaging/outbox';
 import { describeTouch, type Attribution } from '$lib/server/attribution/touch';
@@ -58,7 +59,9 @@ export type CustomerSummary = {
 };
 
 function summarise(customer: CustomerRow, orders: OrderRow[]): CustomerSummary {
-	const mine = orders.filter((o) => o.customer_id === customer.id).sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
+	const mine = orders
+		.filter((o) => o.customer_id === customer.id)
+		.sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
 	const paid = mine.filter((o) => PAID.includes(o.state));
 	const latest = mine[0];
 	return {
@@ -93,7 +96,12 @@ export const CUSTOMER_PAGE_SIZE = 50;
  * is two queries; a materialised view can replace it when that stops being
  * true.
  */
-export async function listCustomers(filter: CustomerFilter, page: number, now: number, options: { all?: boolean } = {}) {
+export async function listCustomers(
+	filter: CustomerFilter,
+	page: number,
+	now: number,
+	options: { all?: boolean } = {}
+) {
 	const client = getServiceClient();
 	let query = client.from('customers').select('*').limit(5000);
 	if (filter.tag) query = query.contains('tags', [filter.tag]);
@@ -103,7 +111,9 @@ export async function listCustomers(filter: CustomerFilter, page: number, now: n
 
 	const { data: orderData } = await client
 		.from('orders')
-		.select('id, order_number, customer_id, state, total_paise, ship_name, ship_phone, ship_city, ship_state, created_at, attribution')
+		.select(
+			'id, order_number, customer_id, state, total_paise, ship_name, ship_phone, ship_city, ship_state, created_at, attribution'
+		)
 		.neq('state', 'pending_payment')
 		.limit(20000);
 	const orders = (orderData ?? []) as OrderRow[];
@@ -123,7 +133,8 @@ export async function listCustomers(filter: CustomerFilter, page: number, now: n
 	const LAPSED = 120 * 86_400_000;
 	if (filter.segment === 'buyers') rows = rows.filter((r) => r.orders > 0);
 	if (filter.segment === 'repeat') rows = rows.filter((r) => r.orders > 1);
-	if (filter.segment === 'lapsed') rows = rows.filter((r) => r.lastOrderAt !== null && now - r.lastOrderAt > LAPSED);
+	if (filter.segment === 'lapsed')
+		rows = rows.filter((r) => r.lastOrderAt !== null && now - r.lastOrderAt > LAPSED);
 	if (filter.segment === 'never') rows = rows.filter((r) => r.orders === 0);
 
 	rows.sort((a, b) =>
@@ -143,16 +154,32 @@ export async function listCustomers(filter: CustomerFilter, page: number, now: n
 			buyers: buyers.length,
 			repeat: buyers.filter((r) => r.orders > 1).length,
 			averageOrder: paise(
-				buyers.length ? Math.round(buyers.reduce((n, r) => n + Number(r.spent), 0) / buyers.reduce((n, r) => n + r.orders, 0)) : 0
+				buyers.length
+					? Math.round(
+							buyers.reduce((n, r) => n + Number(r.spent), 0) /
+								buyers.reduce((n, r) => n + r.orders, 0)
+						)
+					: 0
 			),
-			lifetime: paise(buyers.length ? Math.round(buyers.reduce((n, r) => n + Number(r.spent), 0) / buyers.length) : 0)
+			lifetime: paise(
+				buyers.length
+					? Math.round(buyers.reduce((n, r) => n + Number(r.spent), 0) / buyers.length)
+					: 0
+			)
 		},
 		tags: [...new Set(customers.flatMap((c) => c.tags ?? []))].sort()
 	};
 }
 
 export type CustomerDetail = CustomerSummary & {
-	readonly orders_: readonly { id: string; number: string; state: string; total: Paise; at: number; campaign: string }[];
+	readonly orders_: readonly {
+		id: string;
+		number: string;
+		state: string;
+		total: Paise;
+		at: number;
+		campaign: string;
+	}[];
 	readonly sizes: readonly { label: string; count: number }[];
 	readonly notes: readonly { id: string; body: string; author: string; at: number }[];
 	readonly leads: readonly { id: string; stage: string; source: string; at: number }[];
@@ -170,21 +197,38 @@ export async function getCustomer(id: string): Promise<CustomerDetail | null> {
 	const [{ data: orderData }, { data: notes }, { data: leads }] = await Promise.all([
 		client
 			.from('orders')
-			.select('id, order_number, customer_id, state, total_paise, ship_name, ship_phone, ship_city, ship_state, created_at, attribution, ship_line1, ship_pincode')
+			.select(
+				'id, order_number, customer_id, state, total_paise, ship_name, ship_phone, ship_city, ship_state, created_at, attribution, ship_line1, ship_pincode'
+			)
 			.eq('customer_id', id)
 			.neq('state', 'pending_payment')
 			.order('created_at', { ascending: false }),
-		client.from('customer_notes').select('*').eq('customer_id', id).order('created_at', { ascending: false }),
-		client.from('leads').select('id, stage, source, created_at').or(`customer_id.eq.${id},email.eq.${customer.email}`).order('created_at', { ascending: false })
+		client
+			.from('customer_notes')
+			.select('*')
+			.eq('customer_id', id)
+			.order('created_at', { ascending: false }),
+		client
+			.from('leads')
+			.select('id, stage, source, created_at')
+			.or(`${eq('customer_id', id)},${eq('email', customer.email)}`)
+			.order('created_at', { ascending: false })
 	]);
 	const orders = (orderData ?? []) as (OrderRow & { ship_line1: string; ship_pincode: string })[];
 	const paidIds = orders.filter((o) => PAID.includes(o.state)).map((o) => o.id);
 
 	const { data: lines } = paidIds.length
-		? await client.from('order_lines').select('variant_snapshot, name_snapshot, quantity').in('order_id', paidIds)
+		? await client
+				.from('order_lines')
+				.select('variant_snapshot, name_snapshot, quantity')
+				.in('order_id', paidIds)
 		: { data: [] };
 	const sizeCount = new Map<string, number>();
-	for (const line of (lines ?? []) as { variant_snapshot: string | null; name_snapshot: string; quantity: number }[]) {
+	for (const line of (lines ?? []) as {
+		variant_snapshot: string | null;
+		name_snapshot: string;
+		quantity: number;
+	}[]) {
 		const key = line.variant_snapshot ?? line.name_snapshot;
 		sizeCount.set(key, (sizeCount.get(key) ?? 0) + line.quantity);
 	}
@@ -205,21 +249,34 @@ export async function getCustomer(id: string): Promise<CustomerDetail | null> {
 			at: Date.parse(o.created_at),
 			campaign: describeTouch(o.attribution?.first ?? o.attribution?.last)
 		})),
-		sizes: [...sizeCount.entries()].map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count),
-		notes: ((notes ?? []) as { id: string; body: string; author: string; created_at: string }[]).map((n) => ({
+		sizes: [...sizeCount.entries()]
+			.map(([label, count]) => ({ label, count }))
+			.sort((a, b) => b.count - a.count),
+		notes: (
+			(notes ?? []) as { id: string; body: string; author: string; created_at: string }[]
+		).map((n) => ({
 			id: n.id,
 			body: n.body,
 			author: n.author,
 			at: Date.parse(n.created_at)
 		})),
-		leads: ((leads ?? []) as { id: string; stage: string; source: string; created_at: string }[]).map((l) => ({
+		leads: (
+			(leads ?? []) as { id: string; stage: string; source: string; created_at: string }[]
+		).map((l) => ({
 			id: l.id,
 			stage: l.stage,
 			source: l.source,
 			at: Date.parse(l.created_at)
 		})),
-		messages: messageLists.flat().sort((a, b) => b.createdAt - a.createdAt).slice(0, 30),
-		addresses: [...new Set(orders.map((o) => `${o.ship_line1}, ${o.ship_city} ${o.ship_pincode}, ${o.ship_state}`))].map((line) => ({ line })),
+		messages: messageLists
+			.flat()
+			.sort((a, b) => b.createdAt - a.createdAt)
+			.slice(0, 30),
+		addresses: [
+			...new Set(
+				orders.map((o) => `${o.ship_line1}, ${o.ship_city} ${o.ship_pincode}, ${o.ship_state}`)
+			)
+		].map((line) => ({ line })),
 		campaign: describeTouch(firstTouch)
 	};
 }
@@ -227,8 +284,14 @@ export async function getCustomer(id: string): Promise<CustomerDetail | null> {
 function normalisePhone(raw: string | null): string | null {
 	const digits = (raw ?? '').replace(/\D/g, '');
 	if (!digits) return null;
-	const local = digits.length === 12 && digits.startsWith('91') ? digits.slice(2) : digits.length === 11 && digits.startsWith('0') ? digits.slice(1) : digits;
-	if (!/^[6-9]\d{9}$/.test(local)) throw new CustomerError('Enter a 10-digit Indian mobile number, like 98765 43210.');
+	const local =
+		digits.length === 12 && digits.startsWith('91')
+			? digits.slice(2)
+			: digits.length === 11 && digits.startsWith('0')
+				? digits.slice(1)
+				: digits;
+	if (!/^[6-9]\d{9}$/.test(local))
+		throw new CustomerError('Enter a 10-digit Indian mobile number, like 98765 43210.');
 	return local;
 }
 
@@ -240,7 +303,10 @@ export async function updateCustomer(input: {
 	tags: string[];
 	actor: string;
 }): Promise<void> {
-	const tags = [...new Set(input.tags.map((t) => t.trim().toLowerCase()).filter(Boolean))].slice(0, 20);
+	const tags = [...new Set(input.tags.map((t) => t.trim().toLowerCase()).filter(Boolean))].slice(
+		0,
+		20
+	);
 	const { error } = await getServiceClient()
 		.from('customers')
 		.update({
@@ -259,7 +325,11 @@ export async function updateCustomer(input: {
 	});
 }
 
-export async function addCustomerNote(input: { id: string; body: string; actor: string }): Promise<void> {
+export async function addCustomerNote(input: {
+	id: string;
+	body: string;
+	actor: string;
+}): Promise<void> {
 	if (!input.body.trim()) throw new CustomerError('Write the note first.');
 	const { error } = await getServiceClient()
 		.from('customer_notes')

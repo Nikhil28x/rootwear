@@ -102,7 +102,10 @@ export function metaWebhook(): { verifyToken: string | undefined; appSecret: str
 
 /** The public origin used in links inside messages. */
 export function siteUrl(): string {
-	return (value('PUBLIC_SITE_URL') ?? value('SITE_URL') ?? 'https://rootwear.in').replace(/\/$/, '');
+	return (value('PUBLIC_SITE_URL') ?? value('SITE_URL') ?? 'https://rootwear.in').replace(
+		/\/$/,
+		''
+	);
 }
 
 export type ChannelStatus = {

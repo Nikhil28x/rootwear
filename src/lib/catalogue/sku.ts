@@ -12,7 +12,12 @@ const SKU_PATTERN = /^RW-D(\d{2})-([A-Z]{2,5})(?:-([A-Z]{2,4}))?-([A-Z0-9]{1,5})
 
 export type SkuParts = { dropNumber: number; style: string; colour: string | null; size: Size };
 
-export function buildSku(dropNumber: number, style: string, size: Size, colour?: string | null): string {
+export function buildSku(
+	dropNumber: number,
+	style: string,
+	size: Size,
+	colour?: string | null
+): string {
 	if (!Number.isInteger(dropNumber) || dropNumber < 1 || dropNumber > 99) {
 		throw new RangeError(`Drop number must be 1-99, received ${dropNumber}`);
 	}

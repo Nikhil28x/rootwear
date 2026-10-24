@@ -14,7 +14,8 @@ export const load: PageServerLoad = async (event) => {
 	const actor = await staffActor(event);
 	requireSection(actor, 'orders');
 	const requested = event.url.searchParams.get('kind');
-	if (requested !== 'packing' && requested !== 'label' && requested !== 'invoice') error(400, 'Pick what to print.');
+	if (requested !== 'packing' && requested !== 'label' && requested !== 'invoice')
+		error(400, 'Pick what to print.');
 	const kind: 'packing' | 'label' | 'invoice' = requested;
 	const ids = (event.url.searchParams.get('ids') ?? '').split(',').filter(Boolean).slice(0, 100);
 	if (!ids.length) error(400, 'Select orders to print.');
@@ -26,7 +27,11 @@ export const load: PageServerLoad = async (event) => {
 		kind === 'invoice'
 			? (
 					await Promise.all(
-						orders.map((o) => (can(actor, 'finance.view') || can(actor, 'orders.view') ? issueInvoice(o.id, 'print') : null))
+						orders.map((o) =>
+							can(actor, 'finance.view') || can(actor, 'orders.view')
+								? issueInvoice(o.id, 'print')
+								: null
+						)
 					)
 				)
 					.filter((d) => d !== null)
@@ -35,7 +40,12 @@ export const load: PageServerLoad = async (event) => {
 
 	return {
 		kind,
-		from: { name: business.tradeName, address: business.address, phone: business.phone, email: business.email },
+		from: {
+			name: business.tradeName,
+			address: business.address,
+			phone: business.phone,
+			email: business.email
+		},
 		orders: orders.map((o) => ({
 			id: o.id,
 			number: o.number,
@@ -43,7 +53,13 @@ export const load: PageServerLoad = async (event) => {
 			shipTo: o.shipTo,
 			customerNote: o.customerNote,
 			isPreOrder: o.isPreOrder,
-			lines: o.lines.map((l) => ({ name: l.name, variant: l.variant, sku: l.sku, quantity: l.quantity, pieceNumber: l.pieceNumber }))
+			lines: o.lines.map((l) => ({
+				name: l.name,
+				variant: l.variant,
+				sku: l.sku,
+				quantity: l.quantity,
+				pieceNumber: l.pieceNumber
+			}))
 		})),
 		invoices
 	};

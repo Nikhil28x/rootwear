@@ -47,7 +47,13 @@ type Row = {
 		status: 'draft' | 'active' | 'archived';
 		position: number;
 		size_chart: { size: string; chest_cm: number; length_cm: number }[] | null;
-		colourways: Array<{ id: string; name: string; code: string; swatch: string | null; position: number }>;
+		colourways: Array<{
+			id: string;
+			name: string;
+			code: string;
+			swatch: string | null;
+			position: number;
+		}>;
 		product_images: Array<{
 			url: string;
 			alt: string;

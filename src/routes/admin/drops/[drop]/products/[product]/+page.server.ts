@@ -49,7 +49,8 @@ export const actions: Actions = {
 	status: async (event) => {
 		const { actor, product } = await editor(event);
 		const status = String((await event.request.formData()).get('status')) as ProductStatus;
-		if (!['draft', 'active', 'archived'].includes(status)) return fail(400, { error: 'Unknown status.' });
+		if (!['draft', 'active', 'archived'].includes(status))
+			return fail(400, { error: 'Unknown status.' });
 		const refused = await attempt(() => setProductStatus({ productId: product.id, status, actor }));
 		if (refused) return refused;
 		return {
@@ -71,7 +72,9 @@ export const actions: Actions = {
 		input.prelaunchPrice = Number(product.prelaunchPrice);
 		input.hsnCode = product.hsnCode;
 		input.gstRate = product.gstRate;
-		const result = await attempt(() => updateProduct({ productId: product.id, product: input, actor }));
+		const result = await attempt(() =>
+			updateProduct({ productId: product.id, product: input, actor })
+		);
 		return result ?? { message: 'Details saved.' };
 	},
 
@@ -98,8 +101,12 @@ export const actions: Actions = {
 			hsnCode: input.hsnCode,
 			gstRate: input.gstRate
 		};
-		const result = await attempt(() => updateProduct({ productId: product.id, product: merged, actor }));
-		return result ?? { message: 'Price and tax saved. Carts already open re-price on their next view.' };
+		const result = await attempt(() =>
+			updateProduct({ productId: product.id, product: merged, actor })
+		);
+		return (
+			result ?? { message: 'Price and tax saved. Carts already open re-price on their next view.' }
+		);
 	},
 
 	sizes: async (event) => {
@@ -120,9 +127,15 @@ export const actions: Actions = {
 		const { actor } = await editor(event);
 		const form = await event.request.formData();
 		const result = await attempt(() =>
-			addSizeOption({ code: String(form.get('code') ?? ''), label: String(form.get('label') ?? ''), actor })
+			addSizeOption({
+				code: String(form.get('code') ?? ''),
+				label: String(form.get('label') ?? ''),
+				actor
+			})
 		);
-		return typeof result === 'string' ? { message: `${result} is now available to every product.` } : result;
+		return typeof result === 'string'
+			? { message: `${result} is now available to every product.` }
+			: result;
 	},
 
 	addColour: async (event) => {

@@ -23,10 +23,19 @@ export const load: PageServerLoad = async (event) => {
 	requireSection(actor, 'leads');
 	const p = event.url.searchParams;
 	const view = p.get('view') ?? 'open';
-	const filters = { q: p.get('q') ?? '', source: p.get('source') ?? '', owner: p.get('owner') ?? '', layout: p.get('layout') ?? 'board' };
+	const filters = {
+		q: p.get('q') ?? '',
+		source: p.get('source') ?? '',
+		owner: p.get('owner') ?? '',
+		layout: p.get('layout') ?? 'board'
+	};
 	const page = Math.max(1, Number(p.get('page')) || 1);
 	const stage: LeadStage | 'open' | undefined =
-		view === 'open' ? 'open' : (LEAD_STAGES as readonly string[]).includes(view) ? (view as LeadStage) : undefined;
+		view === 'open'
+			? 'open'
+			: (LEAD_STAGES as readonly string[]).includes(view)
+				? (view as LeadStage)
+				: undefined;
 	const now = event.locals.now;
 
 	const [result, counts, owners] = await Promise.all([
@@ -34,7 +43,9 @@ export const load: PageServerLoad = async (event) => {
 			{
 				stage: view === 'due' ? undefined : stage,
 				due: view === 'due',
-				source: (LEAD_SOURCES.some((s) => s.value === filters.source) ? filters.source : undefined) as LeadSource | undefined,
+				source: (LEAD_SOURCES.some((s) => s.value === filters.source)
+					? filters.source
+					: undefined) as LeadSource | undefined,
 				owner: filters.owner === 'me' ? actor.email : filters.owner || undefined,
 				search: filters.q || undefined
 			},
@@ -67,7 +78,8 @@ export const actions: Actions = {
 		const form = await event.request.formData();
 		const text = (n: string) => String(form.get(n) ?? '').trim();
 		const source = text('source') as LeadSource;
-		if (!LEAD_SOURCES.some((s) => s.value === source)) return fail(400, { error: 'Pick where they came from.' });
+		if (!LEAD_SOURCES.some((s) => s.value === source))
+			return fail(400, { error: 'Pick where they came from.' });
 		let id: string;
 		try {
 			const result = await captureLead({
@@ -87,9 +99,13 @@ export const actions: Actions = {
 			id = result.id;
 			const follow = text('followUp') ? parseIstInput(`${text('followUp')}T10:00`) : null;
 			if (follow) await setFollowUp({ id, at: follow, note: null, actor: actorLabel(actor) });
-			if (form.get('assignMe') === 'on') await assign({ id, owner: actor.email, actor: actorLabel(actor) });
+			if (form.get('assignMe') === 'on')
+				await assign({ id, owner: actor.email, actor: actorLabel(actor) });
 			if (!result.created) {
-				return { message: 'They were already a lead, so this was added to their history.', leadId: id };
+				return {
+					message: 'They were already a lead, so this was added to their history.',
+					leadId: id
+				};
 			}
 		} catch (err) {
 			if (err instanceof LeadError) return fail(400, { error: err.message });

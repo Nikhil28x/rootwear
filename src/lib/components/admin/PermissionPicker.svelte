@@ -65,9 +65,7 @@
 					<p class="text-[13px] font-medium text-q-tertiary">{group.label}</p>
 					<div class="flex flex-col gap-1">
 						{#each group.permissions as permission (permission.key)}
-							<label
-								class="flex items-start gap-3 rounded-[10px] px-2 py-2 hover:bg-q-muted"
-							>
+							<label class="flex items-start gap-3 rounded-[10px] px-2 py-2 hover:bg-q-muted">
 								<input
 									type="checkbox"
 									class="q-check mt-0.5"
@@ -77,7 +75,9 @@
 								/>
 								<span class="flex flex-col gap-0.5">
 									<span class="text-[14px] text-q-text">{permission.label}</span>
-									<span class="text-[13px] leading-[18px] text-q-secondary">{permission.detail}</span>
+									<span class="text-[13px] leading-[18px] text-q-secondary"
+										>{permission.detail}</span
+									>
 								</span>
 							</label>
 						{/each}

@@ -1,239 +1,221 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
+	import { Mail, MessageCircle, Send } from '@lucide/svelte';
+	import Chip from '$lib/components/admin/ui/Chip.svelte';
+	import Field from '$lib/components/admin/ui/Field.svelte';
+	import PageHeader from '$lib/components/admin/ui/PageHeader.svelte';
+	import Section from '$lib/components/admin/ui/Section.svelte';
+	import Timeline from '$lib/components/admin/ui/Timeline.svelte';
+	import Notice from '$lib/components/admin/Notice.svelte';
+	import { submitter } from '$lib/components/admin/enhance';
+	import { getToaster } from '$lib/components/admin/toast.svelte';
+	import { MESSAGE_STATUS, RESERVATION_STATE, label } from '$lib/components/admin/labels';
+	import { relativeDays, shortDateTime } from '$lib/components/admin/tone';
 	import { formatInr } from '$lib/money';
 	import { DEPOSIT_PERCENT_CONFIRMED } from '$lib/config/commerce';
-	import SectionHead from '$lib/components/admin/SectionHead.svelte';
-	import StatePill from '$lib/components/admin/StatePill.svelte';
-	import Notice from '$lib/components/admin/Notice.svelte';
-	import {
-		humanise,
-		paymentTone,
-		relativeDays,
-		reservationTone,
-		shortDateTime
-	} from '$lib/components/admin/tone';
 
 	let { data, form } = $props();
+	const toaster = getToaster();
 
 	let r = $derived(data.reservation);
+	let st = $derived(label(RESERVATION_STATE, r.state));
 	let overdue = $derived(
 		r.state === 'balance_due' && r.balanceDueBy !== null && r.balanceDueBy < data.now
 	);
 	let canRequestBalance = $derived(r.state === 'reserved' || r.state === 'balance_due');
-	// Reported by the action, not read off the message text.
-	let failed = $derived(Boolean(form?.message) && !form?.ok);
 </script>
 
-<svelte:head>
-	<title>{r.pieceNumber ? `Piece ${r.pieceNumber}` : 'Reservation'} — Rootwear operations</title>
-	<meta name="robots" content="noindex, nofollow" />
-</svelte:head>
+<svelte:head
+	><title
+		>{r.pieceNumber ? `No. ${r.pieceNumber}` : 'Pre-order'} · Pre-orders · Rootwear admin</title
+	></svelte:head
+>
 
-<p class="text-[11px] tracking-[0.24em] text-stone-400 uppercase font-medium">
-	<a class="underline underline-offset-4 hover:text-stone-200" href="/admin/reservations">
-		Reservations
-	</a>
-	<span aria-hidden="true"> / </span>{r.dropName} · {r.size}
-</p>
+<div class="flex flex-col gap-8">
+	<PageHeader
+		title={r.pieceNumber === null ? 'No piece given yet' : `${r.dropName} — No. ${r.pieceNumber}`}
+		back={{ href: '/admin/reservations', label: 'Pre-orders' }}
+		description="{r.email} · {r.sku} · opened {shortDateTime(r.createdAt)}"
+	>
+		{#snippet meta()}
+			<Chip label={st.label} tone={st.tone} />
+			{#if overdue}<Chip label="Balance overdue" tone="danger" />{/if}
+		{/snippet}
+		{#snippet actions()}
+			{#if r.orderId}<a class="q-btn q-btn-secondary" href="/admin/orders/{r.orderId}"
+					>Order {r.orderNumber}</a
+				>{/if}
+		{/snippet}
+	</PageHeader>
 
-<div class="mt-6">
-	<SectionHead
-		level={1}
-		eyebrow={r.dropName}
-		title={r.pieceNumber === null ? 'No piece allocated' : `Piece ${r.pieceNumber}`}
-		note="Opened {shortDateTime(r.createdAt)} IST by {r.email}. One record: reservation, deposit, balance and order."
-	/>
-</div>
+	{#if form && 'error' in form && form.error}<Notice kind="error">{form.error}</Notice>{/if}
 
-<div class="mt-6 flex flex-wrap items-center gap-4">
-	<StatePill label={humanise(r.state)} tone={reservationTone(r.state)} />
-	{#if overdue}
-		<StatePill label="Balance overdue" tone="solid" />
-	{/if}
-	<p class="text-[13px] text-stone-400">{r.sku} · size {r.size}</p>
-	{#if r.orderId}
-		<a
-			class="text-[13px] tracking-[0.16em] text-stone-300 uppercase underline underline-offset-4 hover:text-paper font-medium"
-			href="/admin/orders/{r.orderId}"
-		>
-			Order {r.orderNumber} →
-		</a>
-	{/if}
-</div>
-
-{#if form?.message}
-	<div class="mt-8"><Notice kind={failed ? 'error' : 'success'}>{form.message}</Notice></div>
-{/if}
-
-<div class="mt-14 grid gap-14 xl:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
-	<div class="flex flex-col gap-14">
-		<!-- MONEY -->
-		<section class="flex flex-col gap-6">
-			<SectionHead
-				eyebrow="Terms"
+	<div class="grid gap-10 xl:grid-cols-[minmax(0,1fr)_360px]">
+		<div class="flex min-w-0 flex-col gap-10">
+			<Section
 				title="What was agreed"
-				note="These are the terms that were in force when the reservation was opened, copied onto the record. A later change to the configuration cannot rewrite them."
-			/>
+				description="Copied onto the record when the reservation was opened; later configuration changes cannot rewrite it."
+			>
+				<dl class="q-card grid grid-cols-[160px_1fr] gap-x-4 gap-y-2 p-4 text-[14px]">
+					<dt class="text-q-secondary">Locked price</dt>
+					<dd class="tabular-nums">{formatInr(r.lockedPrice)}</dd>
+					<dt class="text-q-secondary">Deposit</dt>
+					<dd class="tabular-nums">{formatInr(r.deposit)}</dd>
+					<dt class="text-q-secondary">Balance</dt>
+					<dd class="tabular-nums">{formatInr(r.balance)}</dd>
+					<dt class="text-q-secondary">Balance due</dt>
+					<dd>
+						{r.balanceDueBy
+							? `${shortDateTime(r.balanceDueBy)} (${relativeDays(r.balanceDueBy, data.now)})`
+							: 'Not asked for yet'}
+					</dd>
+					<dt class="text-q-secondary">Cancellation</dt>
+					<dd>{r.cancellationRule}</dd>
+				</dl>
+				{#if !DEPOSIT_PERCENT_CONFIRMED}<p class="q-help">
+						The deposit share is not yet confirmed in writing, so no percentage is shown anywhere a
+						customer can see.
+					</p>{/if}
+			</Section>
 
-			<dl class="grid gap-px bg-white/10 sm:grid-cols-3">
-				<div class="flex flex-col gap-2 bg-forest/40 px-5 py-6">
-					<dt class="text-[11px] tracking-[0.24em] text-stone-400 uppercase font-medium">Locked price</dt>
-					<dd class="text-xl text-paper tabular-nums">{formatInr(r.lockedPrice)}</dd>
-				</div>
-				<div class="flex flex-col gap-2 bg-forest/40 px-5 py-6">
-					<dt class="text-[11px] tracking-[0.24em] text-stone-400 uppercase font-medium">Deposit</dt>
-					<dd class="text-xl text-paper tabular-nums">{formatInr(r.deposit)}</dd>
-				</div>
-				<div class="flex flex-col gap-2 bg-forest/40 px-5 py-6">
-					<dt class="text-[11px] tracking-[0.24em] text-stone-400 uppercase font-medium">Balance</dt>
-					<dd class="text-xl text-paper tabular-nums">{formatInr(r.balance)}</dd>
-				</div>
-			</dl>
-
-			<p class="text-[13px] leading-relaxed text-stone-400">
-				Deposit and balance are derived from the locked price together, never computed
-				independently, so they always sum back to it exactly.
-				{#if !DEPOSIT_PERCENT_CONFIRMED}
-					The deposit share is still unconfirmed in writing, so no percentage is printed here or
-					anywhere the customer can see.
-				{/if}
-			</p>
-		</section>
-
-		<!-- TIMELINE -->
-		<section class="flex flex-col gap-6 border-t border-white/10 pt-10">
-			<SectionHead
-				eyebrow="History"
-				title="The record"
-				note="Reconstructed from the payment ledger and the row's own timestamps, so it cannot drift from what actually happened."
-			/>
-
-			<ol class="flex flex-col border-l border-white/15 pl-6">
-				{#each r.timeline as step, index (index)}
-					<li class="relative pb-8 last:pb-0">
-						<span
-							class="absolute -left-[1.6875rem] top-1.5 block h-2 w-2 bg-gold"
-							aria-hidden="true"
-						></span>
-						<p class="text-[15px] text-paper">{step.label}</p>
-						<p class="mt-1 text-[13px] text-stone-400 tabular-nums">{shortDateTime(step.at)} IST</p>
-						{#if step.detail}
-							<p class="mt-2 max-w-[42rem] text-[15px] leading-relaxed text-stone-400">{step.detail}</p>
-						{/if}
-					</li>
-				{/each}
-			</ol>
-		</section>
-
-		<!-- BALANCE LINK -->
-		<section class="flex flex-col gap-6 border-t border-white/10 pt-10">
-			<SectionHead
-				eyebrow="Action"
-				title="Balance link"
-				note="Records that the balance has been asked for and when it falls due. A balance that lapses releases the piece back to the waitlist, so the date matters."
-			/>
-
-			{#if canRequestBalance}
-				<form method="POST" action="?/balanceLink" class="flex flex-wrap items-end gap-6">
-					<div class="flex w-32 flex-col gap-2">
-						<label for="days" class="text-[11px] tracking-[0.2em] text-stone-400 uppercase font-medium">
-							Days to pay
-						</label>
-						<input
-							id="days"
-							name="days"
-							type="number"
-							min="1"
-							max="60"
-							step="1"
-							value="7"
-							class="w-full border-b border-white/25 bg-transparent px-0 py-2.5 text-[15px] text-stone-100 tabular-nums outline-none focus:border-white"
-						/>
+			<Section title="Payments">
+				{#if r.payments.length === 0 && r.refunds.length === 0}
+					<p class="text-[14px] text-q-secondary">No payments recorded.</p>
+				{:else}
+					<div class="q-table-wrap">
+						<table class="q-table">
+							<thead
+								><tr
+									><th scope="col">Payment</th><th scope="col">State</th><th scope="col" class="num"
+										>Amount</th
+									><th scope="col" class="num">When</th></tr
+								></thead
+							>
+							<tbody>
+								{#each r.payments as p (p.id)}
+									<tr>
+										<td
+											>{p.kind === 'deposit'
+												? 'Deposit'
+												: p.kind === 'balance'
+													? 'Balance'
+													: 'Order'}<span class="q-mono block text-[12px] text-q-tertiary"
+												>{p.gatewayPaymentId ?? '—'}</span
+											></td
+										>
+										<td
+											><Chip
+												label={p.state}
+												tone={p.state === 'captured'
+													? 'success'
+													: p.state === 'failed'
+														? 'danger'
+														: 'neutral'}
+											/></td
+										>
+										<td class="num">{formatInr(p.amount)}</td>
+										<td class="num text-q-secondary">{shortDateTime(p.createdAt)}</td>
+									</tr>
+								{/each}
+								{#each r.refunds as f (f.id)}
+									<tr>
+										<td>Refund · {f.reason.replace('_', ' ')}</td>
+										<td
+											><Chip
+												label={f.state}
+												tone={f.state === 'processed'
+													? 'success'
+													: f.state === 'failed'
+														? 'danger'
+														: 'warning'}
+											/></td
+										>
+										<td class="num">−{formatInr(f.amount)}</td>
+										<td class="num text-q-secondary">{shortDateTime(f.createdAt)}</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
 					</div>
-					<button
-						type="submit"
-						class="border border-white/35 px-7 py-3 text-[11px] tracking-[0.2em] text-stone-100 uppercase transition hover:bg-white hover:text-black font-medium"
+				{/if}
+			</Section>
+
+			<Section
+				title="History"
+				description="Rebuilt from the payment ledger and the record's own timestamps."
+			>
+				<Timeline
+					events={[...r.timeline]
+						.reverse()
+						.map((step) => ({ at: step.at, title: step.label, detail: step.detail }))}
+				/>
+			</Section>
+		</div>
+
+		<aside class="flex flex-col gap-8">
+			<Section
+				title="Balance link"
+				description="Asks for the balance and sets its due date. A balance that lapses releases the piece to the waitlist."
+			>
+				{#if canRequestBalance && data.canEdit}
+					<form
+						method="POST"
+						action="?/balanceLink"
+						class="q-card flex flex-col gap-4 p-4"
+						use:enhance={submitter(toaster)}
 					>
-						Record balance link
-					</button>
-				</form>
-			{:else}
-				<Notice kind="info">
-					A balance link applies only to a confirmed reservation. This one is {humanise(
-						r.state
-					).toLowerCase()}.
-				</Notice>
-			{/if}
-
-			{#if r.balanceDueBy !== null && canRequestBalance}
-				<p class="text-[15px] {overdue ? 'text-paper' : 'text-stone-400'} tabular-nums">
-					Balance due {shortDateTime(r.balanceDueBy)} IST — {relativeDays(r.balanceDueBy, data.now)}{overdue
-						? ', overdue'
-						: ''}.
-				</p>
-			{:else if r.balanceDueBy !== null}
-				<p class="text-[15px] text-stone-400 tabular-nums">
-					The balance was due {shortDateTime(r.balanceDueBy)} IST and is no longer outstanding.
-				</p>
-			{/if}
-		</section>
+						<Field label="Days to pay" id="bl-days">
+							{#snippet children({ describedBy })}<input
+									id="bl-days"
+									name="days"
+									type="number"
+									min="1"
+									max="60"
+									value="7"
+									class="q-input w-24"
+									aria-describedby={describedBy}
+								/>{/snippet}
+						</Field>
+						<button type="submit" class="q-btn q-btn-primary"
+							><Send />
+							{r.state === 'balance_due' ? 'Send the link again' : 'Send balance link'}</button
+						>
+						<p class="q-help">By email, and WhatsApp when their pre-order signup gave a number.</p>
+					</form>
+				{:else}
+					<p class="text-[14px] text-q-secondary">
+						{canRequestBalance
+							? 'You can see this pre-order but not ask for payment.'
+							: 'Not available in this state.'}
+					</p>
+				{/if}
+			</Section>
+			<Section title="Messages">
+				{#if data.messages.length === 0}
+					<p class="text-[14px] text-q-secondary">Nothing sent yet.</p>
+				{:else}
+					<ul class="flex flex-col gap-2 text-[14px]">
+						{#each data.messages as m (m.id)}
+							{@const ms = label(MESSAGE_STATUS, m.status)}
+							<li class="flex items-center justify-between gap-2">
+								<span class="flex min-w-0 items-center gap-2">
+									{#if m.channel === 'email'}<Mail
+											size={16}
+											strokeWidth={1.5}
+											class="flex-none text-q-tertiary"
+										/>{:else}<MessageCircle
+											size={16}
+											strokeWidth={1.5}
+											class="flex-none text-q-tertiary"
+										/>{/if}
+									<span class="truncate">{m.subject ?? m.body}</span>
+								</span>
+								<Chip label={ms.label} tone={ms.tone} />
+							</li>
+						{/each}
+					</ul>
+				{/if}
+			</Section>
+		</aside>
 	</div>
-
-	<aside class="flex flex-col gap-12">
-		<section class="flex flex-col gap-4">
-			<h2 class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">Payments</h2>
-			{#if r.payments.length === 0}
-				<p class="text-[15px] text-stone-400">Nothing captured yet.</p>
-			{:else}
-				<ul class="flex flex-col">
-					{#each r.payments as payment (payment.id)}
-						<li class="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 py-4">
-							<span class="flex items-center gap-3">
-								<StatePill label={humanise(payment.state)} tone={paymentTone(payment.state)} />
-								<span class="text-[15px] text-stone-300">{humanise(payment.kind)}</span>
-							</span>
-							<span class="text-[15px] text-paper tabular-nums">{formatInr(payment.amount)}</span>
-							<span class="w-full text-[13px] text-stone-400 tabular-nums">
-								{shortDateTime(payment.createdAt)} · {payment.gateway}
-							</span>
-						</li>
-					{/each}
-				</ul>
-			{/if}
-		</section>
-
-		{#if r.refunds.length > 0}
-			<section class="flex flex-col gap-4">
-				<h2 class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">Refunds</h2>
-				<ul class="flex flex-col">
-					{#each r.refunds as refund (refund.id)}
-						<li class="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 py-4">
-							<span class="flex items-center gap-3">
-								<StatePill label={humanise(refund.state)} tone="outline" />
-								<span class="text-[15px] text-stone-300">{humanise(refund.reason)}</span>
-							</span>
-							<span class="text-[15px] text-paper tabular-nums">{formatInr(refund.amount)}</span>
-							<span class="w-full text-[13px] text-stone-400 tabular-nums">
-								{shortDateTime(refund.createdAt)}
-							</span>
-						</li>
-					{/each}
-				</ul>
-				<p class="text-[13px] leading-relaxed text-stone-400">
-					A reservation that loses the cap race is refunded automatically and the customer is told
-					immediately — no piece number is ever issued to it.
-				</p>
-			</section>
-		{/if}
-
-		<section class="flex flex-col gap-4 border-t border-white/10 pt-8">
-			<h2 class="text-[11px] tracking-[0.28em] text-stone-400 uppercase font-medium">
-				Cancellation rule as shown
-			</h2>
-			<p class="text-[15px] leading-relaxed text-stone-400">{r.cancellationRule}</p>
-			<p class="text-[13px] text-stone-400">
-				Stored on the record at the moment of reservation. What this customer agreed to is what is
-				printed here, whatever the wording says today.
-			</p>
-		</section>
-	</aside>
 </div>

@@ -2,7 +2,14 @@ import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { can, requirePermission, requireSection } from '$lib/server/admin/roles';
 import { actorLabel, staffActor } from '$lib/server/admin/session';
-import { CartError, checkouts, dismiss, funnel, liveCarts, sendReminder } from '$lib/server/carts/admin';
+import {
+	CartError,
+	checkouts,
+	dismiss,
+	funnel,
+	liveCarts,
+	sendReminder
+} from '$lib/server/carts/admin';
 import { getSetting, saveSetting } from '$lib/server/settings';
 import { channelStatus } from '$lib/server/messaging/config';
 
@@ -49,7 +56,10 @@ export const actions: Actions = {
 		const actor = await staffActor(event);
 		requirePermission(actor, 'carts.recover');
 		const form = await event.request.formData();
-		const channels = form.getAll('channels').map(String).filter((c): c is 'email' | 'whatsapp' => c === 'email' || c === 'whatsapp');
+		const channels = form
+			.getAll('channels')
+			.map(String)
+			.filter((c): c is 'email' | 'whatsapp' => c === 'email' || c === 'whatsapp');
 		try {
 			const result = await sendReminder({
 				orderId: String(form.get('orderId') ?? ''),
@@ -57,7 +67,8 @@ export const actions: Actions = {
 				actor: actorLabel(actor),
 				now: event.locals.now
 			});
-			if (!result.sent.length) return fail(400, { error: `Not sent — ${result.skipped.join('; ')}` });
+			if (!result.sent.length)
+				return fail(400, { error: `Not sent — ${result.skipped.join('; ')}` });
 			return {
 				message: `Reminder sent by ${result.sent.join(' and ')}.${result.skipped.length ? ` Skipped ${result.skipped.join('; ')}.` : ''}`
 			};
@@ -82,13 +93,22 @@ export const actions: Actions = {
 		if (!Number.isInteger(delay) || delay < 15 || delay > 2880) {
 			return fail(400, { error: 'Wait between 15 minutes and 2 days before reminding.' });
 		}
-		const channels = form.getAll('channels').map(String).filter((c): c is 'email' | 'whatsapp' => c === 'email' || c === 'whatsapp');
-		if (form.get('autoRecover') === 'on' && !channels.length) return fail(400, { error: 'Pick at least one channel.' });
+		const channels = form
+			.getAll('channels')
+			.map(String)
+			.filter((c): c is 'email' | 'whatsapp' => c === 'email' || c === 'whatsapp');
+		if (form.get('autoRecover') === 'on' && !channels.length)
+			return fail(400, { error: 'Pick at least one channel.' });
 		await saveSetting(
 			'carts',
 			{ autoRecover: form.get('autoRecover') === 'on', delayMinutes: delay, channels },
 			actorLabel(actor)
 		);
-		return { message: form.get('autoRecover') === 'on' ? 'Automatic reminders are on.' : 'Automatic reminders are off.' };
+		return {
+			message:
+				form.get('autoRecover') === 'on'
+					? 'Automatic reminders are on.'
+					: 'Automatic reminders are off.'
+		};
 	}
 };

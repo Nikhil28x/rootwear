@@ -13,14 +13,23 @@
 		email: [
 			['ZEPTOMAIL_TOKEN', 'Send Mail token from ZeptoMail → Mail Agents → SMTP/API'],
 			['EMAIL_FROM', 'The verified sender, e.g. hi@rootwear.in'],
-			['SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS', 'Only if not using ZeptoMail: your mailbox’s SMTP details']
+			[
+				'SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS',
+				'Only if not using ZeptoMail: your mailbox’s SMTP details'
+			]
 		],
 		whatsapp: [
 			['WHATSAPP_PHONE_NUMBER_ID', 'Meta → WhatsApp → API Setup → Phone number ID'],
 			['WHATSAPP_ACCESS_TOKEN', 'A permanent System User token with whatsapp_business_messaging'],
 			['META_APP_SECRET', 'Meta app → Settings → Basic → App secret (verifies webhooks)'],
-			['META_VERIFY_TOKEN', 'Any long random string; paste the same value into Meta’s webhook form'],
-			['META_PAGE_ACCESS_TOKEN', 'For lead ads: a Page token with leads_retrieval, to read each submission']
+			[
+				'META_VERIFY_TOKEN',
+				'Any long random string; paste the same value into Meta’s webhook form'
+			],
+			[
+				'META_PAGE_ACCESS_TOKEN',
+				'For lead ads: a Page token with leads_retrieval, to read each submission'
+			]
 		]
 	} as const;
 </script>
@@ -46,10 +55,10 @@
 			<div class="q-card q-divide">
 				<div class="flex items-start gap-3 p-4">
 					<span class="mt-0.5 text-q-tertiary">
-						{#if channel.channel === 'email'}<Mail size={20} strokeWidth={1.5} />{:else}<MessageCircle
+						{#if channel.channel === 'email'}<Mail
 								size={20}
 								strokeWidth={1.5}
-							/>{/if}
+							/>{:else}<MessageCircle size={20} strokeWidth={1.5} />{/if}
 					</span>
 					<div class="flex min-w-0 flex-1 flex-col gap-1">
 						{#if channel.configured}
@@ -119,8 +128,9 @@
 				<code class="q-mono break-all text-q-body">{data.webhookUrl}</code>
 			</div>
 			<p class="q-help">
-				In your Meta app, subscribe WhatsApp to <span class="q-mono">messages</span> and the Facebook
-				Page to <span class="q-mono">leadgen</span>, using this URL and your META_VERIFY_TOKEN.
+				In your Meta app, subscribe WhatsApp to <span class="q-mono">messages</span> and the
+				Facebook Page to <span class="q-mono">leadgen</span>, using this URL and your
+				META_VERIFY_TOKEN.
 			</p>
 		</div>
 	</Section>

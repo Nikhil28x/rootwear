@@ -16,18 +16,43 @@
 <div class="flex max-w-[640px] flex-col gap-10">
 	{#if form && 'error' in form && form.error}<Notice kind="error">{form.error}</Notice>{/if}
 	<form method="POST" action="?/save" class="flex flex-col gap-10" use:enhance={submitter(toaster)}>
-		<Section title="Low stock" description="A size counts as low when this many or fewer are left to sell. It shows on the Overview and in the digest.">
+		<Section
+			title="Low stock"
+			description="A size counts as low when this many or fewer are left to sell. It shows on the Overview and in the digest."
+		>
 			<Field label="Low at" id="al-low">
-				{#snippet children({ describedBy })}<input id="al-low" name="lowStock" type="number" min="0" max="50" class="q-input w-24" value={data.alerts.lowStock} aria-describedby={describedBy} />{/snippet}
+				{#snippet children({ describedBy })}<input
+						id="al-low"
+						name="lowStock"
+						type="number"
+						min="0"
+						max="50"
+						class="q-input w-24"
+						value={data.alerts.lowStock}
+						aria-describedby={describedBy}
+					/>{/snippet}
 			</Field>
 		</Section>
-		<Section title="Morning digest" description="One email each morning: yesterday’s sales and everything waiting. Needs the cron at /api/cron/digest once a day.">
+		<Section
+			title="Morning digest"
+			description="One email each morning: yesterday’s sales and everything waiting. Needs the cron at /api/cron/digest once a day."
+		>
 			<fieldset class="q-card q-divide">
 				<legend class="sr-only">Who gets it</legend>
 				{#each data.staff as s (s.user_id)}
 					<label class="flex items-center gap-3 p-3 pl-4 text-[14px]">
-						<input type="checkbox" class="q-check" name="digest" value={s.user_id} checked={s.daily_digest} />
-						<span>{s.display_name ?? s.email}{#if s.display_name}<span class="block text-[13px] text-q-secondary">{s.email}</span>{/if}</span>
+						<input
+							type="checkbox"
+							class="q-check"
+							name="digest"
+							value={s.user_id}
+							checked={s.daily_digest}
+						/>
+						<span
+							>{s.display_name ?? s.email}{#if s.display_name}<span
+									class="block text-[13px] text-q-secondary">{s.email}</span
+								>{/if}</span
+						>
 					</label>
 				{/each}
 			</fieldset>

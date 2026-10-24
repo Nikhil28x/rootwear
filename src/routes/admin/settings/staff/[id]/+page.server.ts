@@ -21,7 +21,7 @@ export const load: PageServerLoad = async (event) => {
 	return {
 		person,
 		isMe: person.userId === actor.userId,
-		canEdit: actor.isOwner || !person.isOwner,
+		canEdit: actor.isOwner || (!person.isOwner && grantRefusal(actor, person.permissions) === null),
 		canMakeOwners: actor.isOwner,
 		history: await auditFor('staff', person.userId, 20)
 	};
@@ -33,6 +33,11 @@ async function target(event: RequestEvent) {
 	const person = await findStaff(event.params.id);
 	if (!person) error(404, 'That person is not on the team.');
 	if (person.isOwner) requireOwner(actor);
+	// A non-owner may only manage people whose access is entirely within their
+	// own. Otherwise a password reset would hand them a stronger account, and
+	// editing or removing would let them act on someone above them.
+	const beyond = grantRefusal(actor, person.permissions);
+	if (beyond) error(403, 'Only an owner can manage someone with access you do not have yourself.');
 	return { actor, person };
 }
 

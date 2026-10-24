@@ -117,9 +117,13 @@
 	let sizeStatus = $derived.by(() => {
 		if (sizeMissing) return { tone: 'alert', text: 'Please select a size.' };
 		if (preorderMode) return { tone: 'muted', text: FIT_DISCLAIMER };
-		if (selectedOffer?.soldOut) return { tone: 'muted', text: `${selectedOffer.size} is sold out.` };
+		if (selectedOffer?.soldOut)
+			return { tone: 'muted', text: `${selectedOffer.size} is sold out.` };
 		if (selectedOffer && onSale && selectedOffer.remaining <= 3)
-			return { tone: 'gold', text: `Only ${selectedOffer.remaining} left in ${selectedOffer.size}.` };
+			return {
+				tone: 'gold',
+				text: `Only ${selectedOffer.remaining} left in ${selectedOffer.size}.`
+			};
 		return { tone: 'muted', text: FIT_DISCLAIMER };
 	});
 
@@ -258,7 +262,11 @@
 										onchange={() => (selected = '')}
 									/>
 									{#if option.swatch}
-										<span class="buybar__swatch" style="background: {option.swatch}" aria-hidden="true"></span>
+										<span
+											class="buybar__swatch"
+											style="background: {option.swatch}"
+											aria-hidden="true"
+										></span>
 									{/if}
 									{option.name}
 								</label>
@@ -266,7 +274,9 @@
 						</div>
 					{/if}
 					<div class="buybar__sizes-head">
-						<span id="buybar-size-label">Size{#if selectedOffer}: {selectedOffer.size}{/if}</span>
+						<span id="buybar-size-label"
+							>Size{#if selectedOffer}: {selectedOffer.size}{/if}</span
+						>
 						<a href="#size-guide" onclick={openSizeGuide}>Size guide</a>
 					</div>
 					<SizeSelector

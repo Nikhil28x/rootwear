@@ -27,15 +27,23 @@ async function merged(): Promise<Policy[]> {
 	const edited = await supabasePolicyRepository.listAll();
 	const bySlug = new Map<string, Policy>(POLICIES.map((p) => [p.slug, p]));
 	for (const policy of edited) bySlug.set(policy.slug, policy);
-	return [...bySlug.values()].sort((a, b) => a.navOrder - b.navOrder || a.title.localeCompare(b.title));
+	return [...bySlug.values()].sort(
+		(a, b) => a.navOrder - b.navOrder || a.title.localeCompare(b.title)
+	);
 }
 
 const mergedPolicyRepository: PolicyRepository = {
 	async listFooterLinks() {
-		return (await merged()).filter((p) => p.showInFooter).map(({ slug, title }) => ({ slug, title }));
+		return (await merged())
+			.filter((p) => p.showInFooter)
+			.map(({ slug, title }) => ({ slug, title }));
 	},
 	async findBySlug(slug) {
-		return (await supabasePolicyRepository.findBySlug(slug)) ?? POLICIES.find((p) => p.slug === slug) ?? null;
+		return (
+			(await supabasePolicyRepository.findBySlug(slug)) ??
+			POLICIES.find((p) => p.slug === slug) ??
+			null
+		);
 	},
 	async listAll() {
 		return merged();

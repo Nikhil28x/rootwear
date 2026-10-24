@@ -7,5 +7,9 @@ import { today } from '$lib/server/alerts';
 export const load: PageServerLoad = async (event) => {
 	const actor = await staffActor(event);
 	requireSection(actor, 'dashboard');
-	return { name: actor.name?.split(' ')[0] ?? null, now: event.locals.now, today: await today(event.locals.now) };
+	return {
+		name: actor.name?.split(' ')[0] ?? null,
+		now: event.locals.now,
+		today: await today(event.locals.now)
+	};
 };

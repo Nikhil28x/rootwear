@@ -2,7 +2,12 @@ import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { can, requirePermission, requireSection } from '$lib/server/admin/roles';
 import { actorLabel, staffActor } from '$lib/server/admin/session';
-import { addCustomerNote, CustomerError, getCustomer, updateCustomer } from '$lib/server/customers/admin';
+import {
+	addCustomerNote,
+	CustomerError,
+	getCustomer,
+	updateCustomer
+} from '$lib/server/customers/admin';
 import { enqueue } from '$lib/server/messaging/outbox';
 
 export const load: PageServerLoad = async (event) => {
@@ -26,12 +31,12 @@ export const actions: Actions = {
 		const form = await event.request.formData();
 		try {
 			await updateCustomer({
-			id: event.params.id,
-			phone: String(form.get('phone') ?? ''),
-			marketingEmail: form.get('marketingEmail') === 'on',
-			marketingWhatsapp: form.get('marketingWhatsapp') === 'on',
-			tags: String(form.get('tags') ?? '').split(','),
-			actor: actorLabel(actor)
+				id: event.params.id,
+				phone: String(form.get('phone') ?? ''),
+				marketingEmail: form.get('marketingEmail') === 'on',
+				marketingWhatsapp: form.get('marketingWhatsapp') === 'on',
+				tags: String(form.get('tags') ?? '').split(','),
+				actor: actorLabel(actor)
 			});
 		} catch (err) {
 			if (err instanceof CustomerError) return fail(400, { error: err.message });
@@ -43,7 +48,11 @@ export const actions: Actions = {
 		const actor = await staffActor(event);
 		requirePermission(actor, 'customers.edit');
 		try {
-			await addCustomerNote({ id: event.params.id, body: String((await event.request.formData()).get('body') ?? ''), actor: actorLabel(actor) });
+			await addCustomerNote({
+				id: event.params.id,
+				body: String((await event.request.formData()).get('body') ?? ''),
+				actor: actorLabel(actor)
+			});
 		} catch (err) {
 			if (err instanceof CustomerError) return fail(400, { error: err.message });
 			throw err;

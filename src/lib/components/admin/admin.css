@@ -511,7 +511,6 @@
 		font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 		font-size: 13px;
 	}
-
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -528,4 +527,22 @@
 		background: #fff;
 		color: #000;
 	}
+}
+
+/*
+ * Screens written before the CMS used the storefront's display serif and
+ * wide-tracked capitals for headings and labels. Inside admin they read as
+ * the plain workspace type instead. New screens use neither class.
+ */
+.admin-theme .display {
+	font-family: var(--font-sans);
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	font-size: 20px;
+	line-height: 28px;
+}
+.admin-theme :where([class*='tracking-[0.1'], [class*='tracking-[0.2']) {
+	text-transform: none;
+	letter-spacing: 0;
+	font-size: 13px;
 }

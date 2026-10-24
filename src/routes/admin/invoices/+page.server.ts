@@ -13,8 +13,10 @@ export const load: PageServerLoad = async (event) => {
 		listDocuments({ ...filter, page }),
 		listDocuments({ ...filter, page: 1, all: true })
 	]);
-	const sum = (kind: 'invoice' | 'credit_note', pick: (t: (typeof all.documents)[number]['totals']) => number) =>
-		all.documents.filter((d) => d.kind === kind).reduce((n, d) => n + pick(d.totals), 0);
+	const sum = (
+		kind: 'invoice' | 'credit_note',
+		pick: (t: (typeof all.documents)[number]['totals']) => number
+	) => all.documents.filter((d) => d.kind === kind).reduce((n, d) => n + pick(d.totals), 0);
 	return {
 		...paged,
 		page,
@@ -24,7 +26,9 @@ export const load: PageServerLoad = async (event) => {
 		summary: {
 			invoiced: sum('invoice', (t) => t.total),
 			credited: sum('credit_note', (t) => t.total),
-			tax: sum('invoice', (t) => t.cgst + t.sgst + t.igst) - sum('credit_note', (t) => t.cgst + t.sgst + t.igst),
+			tax:
+				sum('invoice', (t) => t.cgst + t.sgst + t.igst) -
+				sum('credit_note', (t) => t.cgst + t.sgst + t.igst),
 			count: all.documents.filter((d) => d.kind === 'invoice').length
 		}
 	};

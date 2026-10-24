@@ -13,14 +13,7 @@ import { SendError, sendEmail, sendWhatsApp } from './providers';
 import { getTemplate, type MessageTemplate } from './templates';
 
 export type OutboxStatus =
-	| 'queued'
-	| 'sending'
-	| 'sent'
-	| 'delivered'
-	| 'read'
-	| 'failed'
-	| 'cancelled'
-	| 'skipped';
+	'queued' | 'sending' | 'sent' | 'delivered' | 'read' | 'failed' | 'cancelled' | 'skipped';
 
 export type OutboxMessage = {
 	readonly id: string;
@@ -215,7 +208,10 @@ async function sendOne(row: Row): Promise<OutboxMessage> {
 		if (row.channel === 'email') {
 			const provider = emailProvider();
 			if (!provider) {
-				return finish({ status: 'skipped', last_error: 'No email provider is connected. Add ZeptoMail or SMTP settings.' });
+				return finish({
+					status: 'skipped',
+					last_error: 'No email provider is connected. Add ZeptoMail or SMTP settings.'
+				});
 			}
 			providerName = provider.kind;
 			providerId = await sendEmail(provider, {
@@ -227,7 +223,10 @@ async function sendOne(row: Row): Promise<OutboxMessage> {
 		} else {
 			const provider = whatsAppProvider();
 			if (!provider) {
-				return finish({ status: 'skipped', last_error: 'WhatsApp is not connected yet. Add the Cloud API settings.' });
+				return finish({
+					status: 'skipped',
+					last_error: 'WhatsApp is not connected yet. Add the Cloud API settings.'
+				});
 			}
 			const template = row.template_key ? await getTemplate(row.template_key) : null;
 			providerName = provider.kind;
@@ -241,7 +240,11 @@ async function sendOne(row: Row): Promise<OutboxMessage> {
 				});
 			} else {
 				// No approved template: a free-text reply inside the 24-hour window.
-				providerId = await sendWhatsApp(provider, { kind: 'text', to: row.recipient, text: row.body });
+				providerId = await sendWhatsApp(provider, {
+					kind: 'text',
+					to: row.recipient,
+					text: row.body
+				});
 			}
 		}
 
@@ -328,7 +331,10 @@ export async function listOutbox(
 	if (filter.contextId) query = query.eq('context_id', filter.contextId);
 	if (filter.search) {
 		const term = filter.search.replace(/[%,()]/g, ' ').trim();
-		if (term) query = query.or(`recipient.ilike.*${term}*,subject.ilike.*${term}*,recipient_name.ilike.*${term}*`);
+		if (term)
+			query = query.or(
+				`recipient.ilike.*${term}*,subject.ilike.*${term}*,recipient_name.ilike.*${term}*`
+			);
 	}
 
 	const start = Math.max(0, page - 1) * OUTBOX_PAGE_SIZE;
@@ -338,7 +344,10 @@ export async function listOutbox(
 }
 
 /** Messages about one record, for its timeline. */
-export async function messagesFor(contextType: string, contextId: string): Promise<OutboxMessage[]> {
+export async function messagesFor(
+	contextType: string,
+	contextId: string
+): Promise<OutboxMessage[]> {
 	return (await listOutbox({ contextType, contextId }, 1)).messages;
 }
 
@@ -356,7 +365,12 @@ export async function findMessage(id: string): Promise<OutboxMessage | null> {
 export async function retryMessage(id: string): Promise<OutboxMessage | null> {
 	const { error } = await getServiceClient()
 		.from('message_outbox')
-		.update({ status: 'queued', next_attempt_at: new Date().toISOString(), max_attempts: 5, attempts: 0 })
+		.update({
+			status: 'queued',
+			next_attempt_at: new Date().toISOString(),
+			max_attempts: 5,
+			attempts: 0
+		})
 		.eq('id', id)
 		.in('status', ['failed', 'skipped', 'cancelled']);
 	if (error) throw new Error(`outbox write failed: ${error.message}`);
@@ -376,7 +390,10 @@ export async function cancelMessage(id: string): Promise<void> {
 export async function outboxCounts(): Promise<{ queued: number; problem: number }> {
 	const client = getServiceClient();
 	const [queued, problem] = await Promise.all([
-		client.from('message_outbox').select('id', { count: 'exact', head: true }).eq('status', 'queued'),
+		client
+			.from('message_outbox')
+			.select('id', { count: 'exact', head: true })
+			.eq('status', 'queued'),
 		client
 			.from('message_outbox')
 			.select('id', { count: 'exact', head: true })
@@ -386,12 +403,21 @@ export async function outboxCounts(): Promise<{ queued: number; problem: number 
 }
 
 /** Applies a WhatsApp delivery receipt from the Meta webhook. */
-export async function recordReceipt(providerMessageId: string, status: string, at: number, error?: string): Promise<void> {
+export async function recordReceipt(
+	providerMessageId: string,
+	status: string,
+	at: number,
+	error?: string
+): Promise<void> {
 	const patch: Record<string, unknown> = {};
 	const iso = new Date(at).toISOString();
 	if (status === 'delivered') Object.assign(patch, { status: 'delivered', delivered_at: iso });
 	else if (status === 'read') Object.assign(patch, { status: 'read', read_at: iso });
-	else if (status === 'failed') Object.assign(patch, { status: 'failed', last_error: error ?? 'Failed on delivery.' });
+	else if (status === 'failed')
+		Object.assign(patch, { status: 'failed', last_error: error ?? 'Failed on delivery.' });
 	else return;
-	await getServiceClient().from('message_outbox').update(patch).eq('provider_message_id', providerMessageId);
+	await getServiceClient()
+		.from('message_outbox')
+		.update(patch)
+		.eq('provider_message_id', providerMessageId);
 }

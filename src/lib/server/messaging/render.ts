@@ -6,7 +6,12 @@
  * {{coupon}} where no coupon exists shows up in the preview rather than
  * going out with a hole nobody noticed.
  */
-import { BUSINESS_ADDRESS, BUSINESS_NAME, INSTAGRAM_URL, SUPPORT_EMAIL } from '$lib/content/business';
+import {
+	BUSINESS_ADDRESS,
+	BUSINESS_NAME,
+	INSTAGRAM_URL,
+	SUPPORT_EMAIL
+} from '$lib/content/business';
 
 export type Variables = Record<string, string | number | null | undefined>;
 
@@ -87,7 +92,10 @@ export function whatsAppNumber(raw: string | null | undefined): string | null {
 	let digits = raw.replace(/\D/g, '');
 	if (digits.length === 11 && digits.startsWith('0')) digits = digits.slice(1);
 	if (digits.length === 10) digits = `91${digits}`;
-	if (!/^91[6-9]\d{9}$/.test(digits) && !(digits.length >= 11 && digits.length <= 15 && !digits.startsWith('91'))) {
+	if (
+		!/^91[6-9]\d{9}$/.test(digits) &&
+		!(digits.length >= 11 && digits.length <= 15 && !digits.startsWith('91'))
+	) {
 		return null;
 	}
 	return digits;

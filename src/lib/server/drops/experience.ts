@@ -27,7 +27,8 @@ export async function loadExperience(
 ) {
 	// §10 — the same price authority the cart uses, so page and basket agree.
 	const { unitPrice, isPreOrder } = resolvePrice(drop, product, now);
-	const showPrelaunchPrice = unitPrice === product.prelaunchPrice && unitPrice !== product.launchPrice;
+	const showPrelaunchPrice =
+		unitPrice === product.prelaunchPrice && unitPrice !== product.launchPrice;
 
 	const cartId = await currentCartId(cookies);
 	const offers = await sizeOffers(product, now, cartId);

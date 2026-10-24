@@ -10,7 +10,8 @@ import { amountInWords, issueInvoice } from '$lib/server/orders/invoices';
  * webhook had not got to it yet.
  */
 export const load: PageServerLoad = async ({ params }) => {
-	if (catalogueSource() !== 'supabase') error(404, 'Invoices are available once the order is stored.');
+	if (catalogueSource() !== 'supabase')
+		error(404, 'Invoices are available once the order is stored.');
 	const { data } = await getServiceClient()
 		.from('orders')
 		.select('id, state')

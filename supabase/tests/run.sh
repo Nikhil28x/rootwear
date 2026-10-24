@@ -224,6 +224,19 @@ check "a customer can carry tags and consent" "$(Q -c "update app.customers set 
 DUPH=$(Q -c "insert into app.influencers (name, handle) values ('A','same'),('B','same');" 2>&1 | grep -c 'duplicate key' || true)
 check "one creator per handle" "$DUPH" "1"
 
+# --- money guards (0029) ------------------------------------------------------
+PAY=$(Q -c "select id from app.payments where state='captured' and order_id is not null limit 1;")
+OID=$(Q -c "select order_id from app.payments where id='$PAY';")
+AMT=$(Q -c "select amount_paise from app.payments where id='$PAY';")
+Q -c "insert into app.refunds (payment_id, amount_paise, reason, state) values ('$PAY', $AMT - 100, 'admin', 'processed');" >/dev/null
+OVER=$(Q -c "insert into app.refunds (payment_id, amount_paise, reason, state) values ('$PAY', 101, 'admin', 'initiated');" 2>&1 | grep -c 'would exceed' || true)
+check "a payment cannot be refunded beyond what it captured" "$OVER" "1"
+check "a failed refund does not count against the payment" "$(Q -c "insert into app.refunds (payment_id, amount_paise, reason, state) values ('$PAY', 101, 'admin', 'failed') returning state;")" "failed"
+D1=$(Q -c "select app.issue_document('$OID', 'invoice', null, 'invoice:T:26-27', 'T/26-27/', '{\"gst_registered\":false,\"seller\":{},\"buyer\":{},\"lines\":[],\"totals\":{}}', 't');")
+D2=$(Q -c "select app.issue_document('$OID', 'invoice', null, 'invoice:T:26-27', 'T/26-27/', '{\"gst_registered\":false,\"seller\":{},\"buyer\":{},\"lines\":[],\"totals\":{}}', 't');")
+check "issuing twice returns the same invoice" "$([ "$D1" = "$D2" ] && echo same)" "same"
+check "and takes only one number" "$(Q -c "select last from app.document_sequences where series='invoice:T:26-27';")" "1"
+
 # --- RLS --------------------------------------------------------------------
 Q -c "grant usage on schema public to anon, authenticated;
       grant select on all tables in schema public to anon, authenticated;" >/dev/null

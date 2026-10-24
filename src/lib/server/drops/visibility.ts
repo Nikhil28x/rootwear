@@ -30,7 +30,8 @@ export async function requireVisible(drop: Drop, event: RequestEvent): Promise<v
 
 	const token = await drops.previewToken(drop.slug);
 	if (token) {
-		const presented = event.url.searchParams.get('preview') ?? event.cookies.get(cookieName(drop.slug)) ?? '';
+		const presented =
+			event.url.searchParams.get('preview') ?? event.cookies.get(cookieName(drop.slug)) ?? '';
 		if (presented && constantTimeEqual(presented, token)) {
 			event.cookies.set(cookieName(drop.slug), token, {
 				path: '/',

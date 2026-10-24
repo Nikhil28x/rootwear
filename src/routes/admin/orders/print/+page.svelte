@@ -4,7 +4,11 @@
 	import { shortDate } from '$lib/components/admin/tone';
 
 	let { data } = $props();
-	const TITLES = { packing: 'Packing slips', label: 'Address labels', invoice: 'Invoices' } as const;
+	const TITLES = {
+		packing: 'Packing slips',
+		label: 'Address labels',
+		invoice: 'Invoices'
+	} as const;
 </script>
 
 <svelte:head><title>{TITLES[data.kind]} · Rootwear admin</title></svelte:head>
@@ -12,9 +16,13 @@
 <div class="no-print mb-6 flex flex-wrap items-center justify-between gap-3">
 	<div>
 		<h1 class="text-[20px] leading-[28px] font-semibold text-q-text">{TITLES[data.kind]}</h1>
-		<p class="text-[13px] text-q-secondary">{data.orders.length} order{data.orders.length === 1 ? '' : 's'}. Each starts on a new page.</p>
+		<p class="text-[13px] text-q-secondary">
+			{data.orders.length} order{data.orders.length === 1 ? '' : 's'}. Each starts on a new page.
+		</p>
 	</div>
-	<button type="button" class="q-btn q-btn-primary" onclick={() => window.print()}><Printer /> Print</button>
+	<button type="button" class="q-btn q-btn-primary" onclick={() => window.print()}
+		><Printer /> Print</button
+	>
 </div>
 
 <div class="sheets">
@@ -43,15 +51,26 @@
 					<p>{order.shipTo.phone}</p>
 				</div>
 				<table class="slip__table">
-					<thead><tr><th>✓</th><th>Item</th><th>Size</th><th>SKU</th><th>Piece</th><th>Qty</th></tr></thead>
+					<thead
+						><tr><th>✓</th><th>Item</th><th>Size</th><th>SKU</th><th>Piece</th><th>Qty</th></tr
+						></thead
+					>
 					<tbody>
 						{#each order.lines as line, i (i)}
-							<tr><td><span class="box"></span></td><td>{line.name}</td><td>{line.variant ?? ''}</td><td>{line.sku}</td><td>{line.pieceNumber ? `No. ${line.pieceNumber}` : ''}</td><td>{line.quantity}</td></tr>
+							<tr
+								><td><span class="box"></span></td><td>{line.name}</td><td>{line.variant ?? ''}</td
+								><td>{line.sku}</td><td>{line.pieceNumber ? `No. ${line.pieceNumber}` : ''}</td><td
+									>{line.quantity}</td
+								></tr
+							>
 						{/each}
 					</tbody>
 				</table>
 				{#if order.customerNote}
-					<div class="slip__note"><p class="slip__label">Note from the customer</p><p>{order.customerNote}</p></div>
+					<div class="slip__note">
+						<p class="slip__label">Note from the customer</p>
+						<p>{order.customerNote}</p>
+					</div>
 				{/if}
 				<p class="slip__thanks">Thank you for buying slow. — {data.from.name}</p>
 			</section>

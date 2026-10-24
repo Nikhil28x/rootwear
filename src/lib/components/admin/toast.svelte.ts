@@ -22,7 +22,10 @@ export class Toaster {
 
 	push(message: string, options: { tone?: ToastTone; action?: Toast['action'] } = {}): void {
 		const id = this.#next++;
-		this.items = [...this.items, { id, message, tone: options.tone ?? 'neutral', action: options.action }];
+		this.items = [
+			...this.items,
+			{ id, message, tone: options.tone ?? 'neutral', action: options.action }
+		];
 		// 5s to read; 8s when there is an Undo to reach for.
 		setTimeout(() => this.dismiss(id), options.action ? 8000 : 5000);
 	}

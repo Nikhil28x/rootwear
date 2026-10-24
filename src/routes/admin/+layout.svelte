@@ -112,7 +112,9 @@
 							href={item.href}
 							title={compact ? item.label : undefined}
 							aria-current={current ? 'page' : undefined}
-							class="nav-item {compact ? 'justify-center px-0' : 'px-3'} {current ? 'is-current' : ''}"
+							class="nav-item {compact ? 'justify-center px-0' : 'px-3'} {current
+								? 'is-current'
+								: ''}"
 						>
 							<NavIcon name={item.icon} />
 							{#if !compact}<span>{item.label}</span>{:else}<span class="sr-only">{item.label}</span
@@ -222,7 +224,9 @@
 					</div>
 				</header>
 
-				<main class="admin-main mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+				<main
+					class="admin-main mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8"
+				>
 					{#if data.source === 'mock'}
 						<div
 							class="admin-banner mb-6 rounded-[10px] bg-q-warning-tint px-4 py-3 text-[14px] leading-[20px] text-q-warning-text"
@@ -238,7 +242,12 @@
 
 		<!-- Phone navigation panel -->
 		{#if drawerOpen}
-			<div class="fixed inset-0 z-40 sm:hidden" role="dialog" aria-modal="true" aria-label="Navigation">
+			<div
+				class="fixed inset-0 z-40 sm:hidden"
+				role="dialog"
+				aria-modal="true"
+				aria-label="Navigation"
+			>
 				<button
 					type="button"
 					class="absolute inset-0 bg-black/30"

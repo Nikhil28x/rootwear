@@ -8,6 +8,7 @@
  * card. Once won or lost, a fresh enquiry starts a new lead.
  */
 import { getServiceClient } from '$lib/server/db/clients';
+import { eq, literal } from '$lib/server/db/filters';
 import { writeAudit } from '$lib/server/admin/audit';
 import { enqueue, type OutboxMessage } from '$lib/server/messaging/outbox';
 import { whatsAppNumber } from '$lib/server/messaging/render';
@@ -121,12 +122,24 @@ export function normalisePhone(raw: string | null | undefined): string | null {
 }
 
 function normaliseInstagram(raw: string | null | undefined): string | null {
-	const text = raw?.trim().replace(/^@/, '').replace(/^https?:\/\/(www\.)?instagram\.com\//, '').replace(/\/.*$/, '');
+	const text = raw
+		?.trim()
+		.replace(/^@/, '')
+		.replace(/^https?:\/\/(www\.)?instagram\.com\//, '')
+		.replace(/\/.*$/, '');
 	return text ? text.toLowerCase() : null;
 }
 
-async function activity(leadId: string, kind: string, body: string | null, actor: string | null, meta: Record<string, unknown> = {}) {
-	await getServiceClient().from('lead_activities').insert({ lead_id: leadId, kind, body, actor, meta });
+async function activity(
+	leadId: string,
+	kind: string,
+	body: string | null,
+	actor: string | null,
+	meta: Record<string, unknown> = {}
+) {
+	await getServiceClient()
+		.from('lead_activities')
+		.insert({ lead_id: leadId, kind, body, actor, meta });
 }
 
 /* ------------------------------------------------------------------------ */
@@ -147,17 +160,25 @@ export type CaptureInput = {
 	readonly consentEmail?: boolean;
 	readonly consentWhatsapp?: boolean;
 	/** What happened, for the history: "Notify me: Bone / M". */
-	readonly activity: { kind: 'created' | 'form' | 'message_in' | 'note'; body: string | null; meta?: Record<string, unknown> };
+	readonly activity: {
+		kind: 'created' | 'form' | 'message_in' | 'note';
+		body: string | null;
+		meta?: Record<string, unknown>;
+	};
 	readonly actor?: string | null;
 	readonly inbound?: boolean;
 };
 
 /** An open lead for the same email, phone or Instagram handle, if there is one. */
-async function findOpen(email: string | null, phone: string | null, instagram: string | null): Promise<Row | null> {
+async function findOpen(
+	email: string | null,
+	phone: string | null,
+	instagram: string | null
+): Promise<Row | null> {
 	const ors = [
-		email ? `email.eq.${email}` : null,
-		phone ? `phone.eq.${phone}` : null,
-		instagram ? `instagram.eq.${instagram}` : null
+		email ? eq('email', email) : null,
+		phone ? eq('phone', phone) : null,
+		instagram ? eq('instagram', instagram) : null
 	].filter(Boolean);
 	if (!ors.length) return null;
 	const { data } = await getServiceClient()
@@ -174,15 +195,22 @@ async function findOpen(email: string | null, phone: string | null, instagram: s
  * Records an enquiry. Returns the lead it landed on (new or existing) and
  * whether it was new. Redelivered webhooks are dropped by external_id.
  */
-export async function captureLead(input: CaptureInput): Promise<{ id: string; created: boolean } | null> {
+export async function captureLead(
+	input: CaptureInput
+): Promise<{ id: string; created: boolean } | null> {
 	const client = getServiceClient();
 	const email = input.email?.trim().toLowerCase() || null;
 	const phone = normalisePhone(input.phone);
 	const instagram = normaliseInstagram(input.instagram);
-	if (!email && !phone && !instagram) throw new LeadError('Give at least an email, a phone number or an Instagram handle.');
+	if (!email && !phone && !instagram)
+		throw new LeadError('Give at least an email, a phone number or an Instagram handle.');
 
 	if (input.externalId) {
-		const { data } = await client.from('leads').select('id').eq('external_id', input.externalId).maybeSingle();
+		const { data } = await client
+			.from('leads')
+			.select('id')
+			.eq('external_id', input.externalId)
+			.maybeSingle();
 		if (data) return { id: (data as { id: string }).id, created: false };
 		const { data: act } = await client
 			.from('lead_activities')
@@ -249,7 +277,13 @@ export async function captureLead(input: CaptureInput): Promise<{ id: string; cr
 		throw new Error(`lead create failed: ${error.message}`);
 	}
 	const id = (data as { id: string }).id;
-	await activity(id, input.activity.kind, input.activity.body, input.actor ?? null, input.activity.meta ?? {});
+	await activity(
+		id,
+		input.activity.kind,
+		input.activity.body,
+		input.actor ?? null,
+		input.activity.meta ?? {}
+	);
 	return { id, created: true };
 }
 
@@ -276,7 +310,11 @@ export type LeadFilter = {
 
 export const LEAD_PAGE_SIZE = 60;
 
-export async function listLeads(filter: LeadFilter, page: number, now: number): Promise<{ leads: Lead[]; total: number }> {
+export async function listLeads(
+	filter: LeadFilter,
+	page: number,
+	now: number
+): Promise<{ leads: Lead[]; total: number }> {
 	let query = getServiceClient().from('leads').select('*', { count: 'exact' });
 	if (filter.stage === 'open') query = query.not('stage', 'in', '(won,lost)');
 	else if (filter.stage) query = query.eq('stage', filter.stage);
@@ -284,7 +322,9 @@ export async function listLeads(filter: LeadFilter, page: number, now: number): 
 	if (filter.owner === 'none') query = query.is('owner', null);
 	else if (filter.owner) query = query.eq('owner', filter.owner);
 	if (filter.due) {
-		query = query.lte('next_follow_up_at', new Date(now).toISOString()).not('stage', 'in', '(won,lost)');
+		query = query
+			.lte('next_follow_up_at', new Date(now).toISOString())
+			.not('stage', 'in', '(won,lost)');
 	}
 	if (filter.search) {
 		const term = filter.search.replace(/[%,()*]/g, ' ').trim();
@@ -314,7 +354,9 @@ export async function listLeads(filter: LeadFilter, page: number, now: number): 
 export async function stageCounts(now: number): Promise<Record<string, number>> {
 	const client = getServiceClient();
 	const counts = await Promise.all(
-		LEAD_STAGES.map((stage) => client.from('leads').select('id', { count: 'exact', head: true }).eq('stage', stage))
+		LEAD_STAGES.map((stage) =>
+			client.from('leads').select('id', { count: 'exact', head: true }).eq('stage', stage)
+		)
 	);
 	const due = await client
 		.from('leads')
@@ -340,7 +382,13 @@ export type LeadActivity = {
 	readonly at: number;
 };
 
-export type LeadOrder = { readonly id: string; readonly number: string; readonly state: string; readonly total: Paise; readonly at: number };
+export type LeadOrder = {
+	readonly id: string;
+	readonly number: string;
+	readonly state: string;
+	readonly total: Paise;
+	readonly at: number;
+};
 
 export type LeadDetail = Lead & {
 	readonly activities: readonly LeadActivity[];
@@ -361,12 +409,19 @@ export async function getLead(id: string, now: number): Promise<LeadDetail | nul
 		for (const row of (c ?? []) as { id: string }[]) customerIds.add(row.id);
 	}
 	const orderQuery = [
-		customerIds.size ? `customer_id.in.(${[...customerIds].join(',')})` : null,
-		lead.phone ? `ship_phone.ilike.*${lead.phone.slice(-10)}*` : null
+		customerIds.size ? `customer_id.in.(${[...customerIds].map(literal).join(',')})` : null,
+		lead.phone && /^\d{6,}$/.test(lead.phone.slice(-10))
+			? `ship_phone.ilike.*${lead.phone.slice(-10)}*`
+			: null
 	].filter(Boolean);
 
 	const [activities, orders, messages] = await Promise.all([
-		client.from('lead_activities').select('*').eq('lead_id', id).order('created_at', { ascending: false }).limit(200),
+		client
+			.from('lead_activities')
+			.select('*')
+			.eq('lead_id', id)
+			.order('created_at', { ascending: false })
+			.limit(200),
 		orderQuery.length
 			? client
 					.from('orders')
@@ -375,16 +430,43 @@ export async function getLead(id: string, now: number): Promise<LeadDetail | nul
 					.neq('state', 'pending_payment')
 					.order('created_at', { ascending: false })
 			: Promise.resolve({ data: [] }),
-		client.from('message_outbox').select('*').eq('context_type', 'lead').eq('context_id', id).order('created_at', { ascending: false })
+		client
+			.from('message_outbox')
+			.select('*')
+			.eq('context_type', 'lead')
+			.eq('context_id', id)
+			.order('created_at', { ascending: false })
 	]);
 	const { toMessage } = await import('$lib/server/messaging/outbox');
 
 	return {
 		...lead,
-		activities: ((activities.data ?? []) as { id: string; kind: string; body: string | null; meta: Record<string, unknown>; actor: string | null; created_at: string }[]).map(
-			(a) => ({ id: a.id, kind: a.kind, body: a.body, meta: a.meta ?? {}, actor: a.actor, at: Date.parse(a.created_at) })
-		),
-		orders: ((orders.data ?? []) as { id: string; order_number: string; state: string; total_paise: number; created_at: string }[]).map((o) => ({
+		activities: (
+			(activities.data ?? []) as {
+				id: string;
+				kind: string;
+				body: string | null;
+				meta: Record<string, unknown>;
+				actor: string | null;
+				created_at: string;
+			}[]
+		).map((a) => ({
+			id: a.id,
+			kind: a.kind,
+			body: a.body,
+			meta: a.meta ?? {},
+			actor: a.actor,
+			at: Date.parse(a.created_at)
+		})),
+		orders: (
+			(orders.data ?? []) as {
+				id: string;
+				order_number: string;
+				state: string;
+				total_paise: number;
+				created_at: string;
+			}[]
+		).map((o) => ({
 			id: o.id,
 			number: o.order_number,
 			state: o.state,
@@ -412,7 +494,8 @@ export async function updateDetails(input: {
 	actor: string;
 }): Promise<void> {
 	const email = input.email?.trim().toLowerCase() || null;
-	if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new LeadError('That email address does not look right.');
+	if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+		throw new LeadError('That email address does not look right.');
 	const phone = normalisePhone(input.phone);
 	const instagram = normaliseInstagram(input.instagram);
 	if (!email && !phone && !instagram) throw new LeadError('Keep at least one way to reach them.');
@@ -432,10 +515,20 @@ export async function updateDetails(input: {
 	await writeAudit(input.actor, 'lead edited', 'lead', input.id);
 }
 
-export async function setStage(input: { id: string; stage: LeadStage; lostReason?: string | null; actor: string }): Promise<void> {
+export async function setStage(input: {
+	id: string;
+	stage: LeadStage;
+	lostReason?: string | null;
+	actor: string;
+}): Promise<void> {
 	if (!LEAD_STAGES.includes(input.stage)) throw new LeadError('Unknown stage.');
-	if (input.stage === 'lost' && !input.lostReason?.trim()) throw new LeadError('Say why it was lost; it helps to know later.');
-	const { data } = await getServiceClient().from('leads').select('stage').eq('id', input.id).single();
+	if (input.stage === 'lost' && !input.lostReason?.trim())
+		throw new LeadError('Say why it was lost; it helps to know later.');
+	const { data } = await getServiceClient()
+		.from('leads')
+		.select('stage')
+		.eq('id', input.id)
+		.single();
 	const before = (data as { stage: string } | null)?.stage;
 	if (before === input.stage) return;
 	await getServiceClient()
@@ -446,15 +539,34 @@ export async function setStage(input: { id: string; stage: LeadStage; lostReason
 			...(input.stage === 'won' || input.stage === 'lost' ? { next_follow_up_at: null } : {})
 		})
 		.eq('id', input.id);
-	await activity(input.id, 'stage', `${before} → ${input.stage}${input.lostReason ? `: ${input.lostReason}` : ''}`, input.actor);
+	await activity(
+		input.id,
+		'stage',
+		`${before} → ${input.stage}${input.lostReason ? `: ${input.lostReason}` : ''}`,
+		input.actor
+	);
 }
 
-export async function assign(input: { id: string; owner: string | null; actor: string }): Promise<void> {
+export async function assign(input: {
+	id: string;
+	owner: string | null;
+	actor: string;
+}): Promise<void> {
 	await getServiceClient().from('leads').update({ owner: input.owner }).eq('id', input.id);
-	await activity(input.id, 'assigned', input.owner ? `Assigned to ${input.owner}` : 'Unassigned', input.actor);
+	await activity(
+		input.id,
+		'assigned',
+		input.owner ? `Assigned to ${input.owner}` : 'Unassigned',
+		input.actor
+	);
 }
 
-export async function setFollowUp(input: { id: string; at: number | null; note: string | null; actor: string }): Promise<void> {
+export async function setFollowUp(input: {
+	id: string;
+	at: number | null;
+	note: string | null;
+	actor: string;
+}): Promise<void> {
 	await getServiceClient()
 		.from('leads')
 		.update({ next_follow_up_at: input.at ? new Date(input.at).toISOString() : null })
@@ -470,7 +582,12 @@ export async function setFollowUp(input: { id: string; at: number | null; note: 
 }
 
 /** A note or a logged call. A call counts as contact and moves a new lead on. */
-export async function log(input: { id: string; kind: 'note' | 'call'; body: string; actor: string }): Promise<void> {
+export async function log(input: {
+	id: string;
+	kind: 'note' | 'call';
+	body: string;
+	actor: string;
+}): Promise<void> {
 	if (!input.body.trim()) throw new LeadError('Write something first.');
 	await activity(input.id, input.kind, input.body.trim(), input.actor);
 	if (input.kind === 'call') await contacted(input.id, input.actor);
@@ -486,33 +603,56 @@ async function contacted(id: string, actor: string) {
 			...((data as { stage: string } | null)?.stage === 'new' ? { stage: 'contacted' } : {})
 		})
 		.eq('id', id);
-	if ((data as { stage: string } | null)?.stage === 'new') await activity(id, 'stage', 'new → contacted', actor);
+	if ((data as { stage: string } | null)?.stage === 'new')
+		await activity(id, 'stage', 'new → contacted', actor);
 }
 
 /**
  * A WhatsApp reply. Free text only works within 24 hours of their last
  * message (Meta's rule); outside it, staff must use an approved template.
  */
-export async function replyWhatsApp(input: { id: string; text: string; actor: string; now: number }): Promise<void> {
+export async function replyWhatsApp(input: {
+	id: string;
+	text: string;
+	actor: string;
+	now: number;
+}): Promise<void> {
 	const lead = await getLead(input.id, input.now);
 	if (!lead) throw new LeadError('That lead no longer exists.');
 	if (!lead.phone) throw new LeadError('There is no phone number on this lead.');
 	if (!input.text.trim()) throw new LeadError('Write the message first.');
 	if (!lead.whatsappWindowOpen) {
-		throw new LeadError('WhatsApp only allows a free reply within 24 hours of their last message. Send an email, or wait for them to write.');
+		throw new LeadError(
+			'WhatsApp only allows a free reply within 24 hours of their last message. Send an email, or wait for them to write.'
+		);
 	}
 	const provider = whatsAppProvider();
-	if (!provider) throw new LeadError('WhatsApp is not connected yet. Add the Cloud API settings first.');
-	const id = await sendWhatsApp(provider, { kind: 'text', to: lead.phone, text: input.text.trim() });
-	await activity(input.id, 'message_out', input.text.trim(), input.actor, { channel: 'whatsapp', provider_message_id: id });
+	if (!provider)
+		throw new LeadError('WhatsApp is not connected yet. Add the Cloud API settings first.');
+	const id = await sendWhatsApp(provider, {
+		kind: 'text',
+		to: lead.phone,
+		text: input.text.trim()
+	});
+	await activity(input.id, 'message_out', input.text.trim(), input.actor, {
+		channel: 'whatsapp',
+		provider_message_id: id
+	});
 	await contacted(input.id, input.actor);
 }
 
-export async function sendEmail(input: { id: string; subject: string; message: string; actor: string; now: number }): Promise<OutboxMessage> {
+export async function sendEmail(input: {
+	id: string;
+	subject: string;
+	message: string;
+	actor: string;
+	now: number;
+}): Promise<OutboxMessage> {
 	const lead = await getLead(input.id, input.now);
 	if (!lead) throw new LeadError('That lead no longer exists.');
 	if (!lead.email) throw new LeadError('There is no email address on this lead.');
-	if (!input.subject.trim() || !input.message.trim()) throw new LeadError('Write a subject and a message.');
+	if (!input.subject.trim() || !input.message.trim())
+		throw new LeadError('Write a subject and a message.');
 	const message = await enqueue({
 		template: 'direct_email',
 		to: lead.email,
@@ -521,10 +661,16 @@ export async function sendEmail(input: { id: string; subject: string; message: s
 		context: { type: 'lead', id: input.id },
 		createdBy: input.actor
 	});
-	await activity(input.id, 'message_out', `${input.subject.trim()}\n\n${input.message.trim()}`, input.actor, {
-		channel: 'email',
-		status: message.status
-	});
+	await activity(
+		input.id,
+		'message_out',
+		`${input.subject.trim()}\n\n${input.message.trim()}`,
+		input.actor,
+		{
+			channel: 'email',
+			status: message.status
+		}
+	);
 	if (['sent', 'queued'].includes(message.status)) await contacted(input.id, input.actor);
 	return message;
 }
@@ -532,20 +678,43 @@ export async function sendEmail(input: { id: string; subject: string; message: s
 /** When an order is paid, open leads for the same person are won. */
 export async function markWonByOrder(orderId: string): Promise<void> {
 	const client = getServiceClient();
-	const { data } = await client.from('orders').select('customer_id, ship_phone, order_number').eq('id', orderId).maybeSingle();
+	const { data } = await client
+		.from('orders')
+		.select('customer_id, ship_phone, order_number')
+		.eq('id', orderId)
+		.maybeSingle();
 	if (!data) return;
 	const order = data as { customer_id: string; ship_phone: string | null; order_number: string };
-	const { data: customer } = await client.from('customers').select('email').eq('id', order.customer_id).maybeSingle();
+	const { data: customer } = await client
+		.from('customers')
+		.select('email')
+		.eq('id', order.customer_id)
+		.maybeSingle();
 	const email = (customer as { email: string } | null)?.email?.toLowerCase() ?? null;
 	const phone = normalisePhone(order.ship_phone);
-	const ors = [email ? `email.eq.${email}` : null, phone ? `phone.eq.${phone}` : null, `customer_id.eq.${order.customer_id}`].filter(Boolean);
-	const { data: leads } = await client.from('leads').select('id').or(ors.join(',')).not('stage', 'in', '(won,lost)');
+	const ors = [
+		email ? eq('email', email) : null,
+		phone ? eq('phone', phone) : null,
+		eq('customer_id', order.customer_id)
+	].filter(Boolean);
+	const { data: leads } = await client
+		.from('leads')
+		.select('id')
+		.or(ors.join(','))
+		.not('stage', 'in', '(won,lost)');
 	for (const lead of (leads ?? []) as { id: string }[]) {
 		await client
 			.from('leads')
-			.update({ stage: 'won', won_order_id: orderId, customer_id: order.customer_id, next_follow_up_at: null })
+			.update({
+				stage: 'won',
+				won_order_id: orderId,
+				customer_id: order.customer_id,
+				next_follow_up_at: null
+			})
 			.eq('id', lead.id);
-		await activity(lead.id, 'order', `Paid order ${order.order_number}`, 'system', { order_id: orderId });
+		await activity(lead.id, 'order', `Paid order ${order.order_number}`, 'system', {
+			order_id: orderId
+		});
 	}
 }
 
@@ -553,14 +722,31 @@ export async function markWonByOrder(orderId: string): Promise<void> {
 /* Where leads and sales come from                                           */
 /* ------------------------------------------------------------------------ */
 
-export type SourceRow = { readonly source: string; readonly leads: number; readonly won: number; readonly revenue: Paise };
-export type CampaignRow = { readonly campaign: string; readonly orders: number; readonly revenue: Paise; readonly leads: number };
+export type SourceRow = {
+	readonly source: string;
+	readonly leads: number;
+	readonly won: number;
+	readonly revenue: Paise;
+};
+export type CampaignRow = {
+	readonly campaign: string;
+	readonly orders: number;
+	readonly revenue: Paise;
+	readonly leads: number;
+};
 
-export async function sourceReport(now: number, days: number): Promise<{ sources: SourceRow[]; campaigns: CampaignRow[] }> {
+export async function sourceReport(
+	now: number,
+	days: number
+): Promise<{ sources: SourceRow[]; campaigns: CampaignRow[] }> {
 	const client = getServiceClient();
 	const since = new Date(now - days * 86_400_000).toISOString();
 	const [{ data: leads }, { data: orders }] = await Promise.all([
-		client.from('leads').select('source, stage, won_order_id, utm').gte('created_at', since).limit(5000),
+		client
+			.from('leads')
+			.select('source, stage, won_order_id, utm')
+			.gte('created_at', since)
+			.limit(5000),
 		client
 			.from('orders')
 			.select('id, total_paise, attribution, state')
@@ -568,11 +754,19 @@ export async function sourceReport(now: number, days: number): Promise<{ sources
 			.in('state', ['paid', 'packed', 'dispatched', 'delivered'])
 			.limit(5000)
 	]);
-	const orderRows = (orders ?? []) as { id: string; total_paise: number; attribution: Attribution | null }[];
+	const orderRows = (orders ?? []) as {
+		id: string;
+		total_paise: number;
+		attribution: Attribution | null;
+	}[];
 	const revenueOf = new Map(orderRows.map((o) => [o.id, Number(o.total_paise)]));
 
 	const bySource = new Map<string, { leads: number; won: number; revenue: number }>();
-	for (const lead of (leads ?? []) as { source: string; stage: string; won_order_id: string | null }[]) {
+	for (const lead of (leads ?? []) as {
+		source: string;
+		stage: string;
+		won_order_id: string | null;
+	}[]) {
 		const row = bySource.get(lead.source) ?? { leads: 0, won: 0, revenue: 0 };
 		row.leads++;
 		if (lead.stage === 'won') {
@@ -602,14 +796,22 @@ export async function sourceReport(now: number, days: number): Promise<{ sources
 			.map(([source, r]) => ({ source, leads: r.leads, won: r.won, revenue: paise(r.revenue) }))
 			.sort((a, b) => b.leads - a.leads),
 		campaigns: [...byCampaign.entries()]
-			.map(([campaign, r]) => ({ campaign, orders: r.orders, revenue: paise(r.revenue), leads: r.leads }))
+			.map(([campaign, r]) => ({
+				campaign,
+				orders: r.orders,
+				revenue: paise(r.revenue),
+				leads: r.leads
+			}))
 			.sort((a, b) => Number(b.revenue) - Number(a.revenue) || b.leads - a.leads)
 	};
 }
 
 /** Staff who can work leads, for the owner picker. */
 export async function leadOwners(): Promise<string[]> {
-	const { data } = await getServiceClient().from('staff').select('email, is_owner, permissions, active').eq('active', true);
+	const { data } = await getServiceClient()
+		.from('staff')
+		.select('email, is_owner, permissions, active')
+		.eq('active', true);
 	return ((data ?? []) as { email: string | null; is_owner: boolean; permissions: string[] }[])
 		.filter((s) => s.email && (s.is_owner || s.permissions.includes('leads.edit')))
 		.map((s) => s.email!)
@@ -637,7 +839,12 @@ export async function leadFromForm(
 	const { catalogueSource } = await import('$lib/server/env');
 	if (catalogueSource() !== 'supabase') return;
 	const { readAttribution } = await import('$lib/server/attribution/touch');
-	const LABEL = { contact: 'Contact form', drop_request: 'Request this drop', notify_me: 'Notify me', preorder: 'Pre-order signup' };
+	const LABEL = {
+		contact: 'Contact form',
+		drop_request: 'Request this drop',
+		notify_me: 'Notify me',
+		preorder: 'Pre-order signup'
+	};
 	await captureQuietly({
 		name: input.name,
 		email: input.email,
@@ -651,7 +858,9 @@ export async function leadFromForm(
 		consentEmail: input.consent,
 		activity: {
 			kind: 'form',
-			body: [`${LABEL[input.kind]}${input.interest ? `: ${input.interest}` : ''}`, input.detail].filter(Boolean).join('\n'),
+			body: [`${LABEL[input.kind]}${input.interest ? `: ${input.interest}` : ''}`, input.detail]
+				.filter(Boolean)
+				.join('\n'),
 			meta: input.trackingId ? { external_id: input.trackingId } : {}
 		},
 		inbound: true
