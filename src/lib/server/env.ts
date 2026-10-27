@@ -33,11 +33,38 @@ export function required(name: string): string {
 	return value;
 }
 
+/**
+ * Supabase renamed its keys: the publishable key (sb_publishable_…) replaces
+ * the anon key, and the secret key (sb_secret_…) the service-role key. Either
+ * name works; the new one wins when both are set.
+ */
+const ANON_KEY_NAMES = ['PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'PUBLIC_SUPABASE_ANON_KEY'];
+const SERVICE_KEY_NAMES = ['SUPABASE_SECRET_KEY', 'SUPABASE_SERVICE_ROLE_KEY'];
+
+function firstOf(names: string[]): string | undefined {
+	for (const name of names) {
+		const value = optional(name);
+		if (value) return value;
+	}
+	return undefined;
+}
+
+function requiredOneOf(names: string[]): string {
+	const value = firstOf(names);
+	if (!value) {
+		throw new Error(
+			`Missing required environment variable ${names.join(' or ')}. ` +
+				`Copy .env.example to .env and fill it in.`
+		);
+	}
+	return value;
+}
+
 export const SUPABASE_URL = () => required('PUBLIC_SUPABASE_URL');
-export const SUPABASE_ANON_KEY = () => required('PUBLIC_SUPABASE_ANON_KEY');
+export const SUPABASE_ANON_KEY = () => requiredOneOf(ANON_KEY_NAMES);
 
 /** BYPASSES RLS. Server-only, and only for the paths that genuinely need it. */
-export const SUPABASE_SERVICE_ROLE_KEY = () => required('SUPABASE_SERVICE_ROLE_KEY');
+export const SUPABASE_SERVICE_ROLE_KEY = () => requiredOneOf(SERVICE_KEY_NAMES);
 
 export const CRON_SECRET = () => required('CRON_SECRET');
 
@@ -73,9 +100,9 @@ export function catalogueSource(): 'mock' | 'supabase' {
 }
 
 export function isSupabaseConfigured(): boolean {
-	return Boolean(optional('PUBLIC_SUPABASE_URL') && optional('PUBLIC_SUPABASE_ANON_KEY'));
+	return Boolean(optional('PUBLIC_SUPABASE_URL') && firstOf(ANON_KEY_NAMES));
 }
 
 export function isBackendConfigured(): boolean {
-	return Boolean(isSupabaseConfigured() && optional('SUPABASE_SERVICE_ROLE_KEY'));
+	return Boolean(isSupabaseConfigured() && firstOf(SERVICE_KEY_NAMES));
 }

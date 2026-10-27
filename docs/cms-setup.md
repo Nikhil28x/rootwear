@@ -5,8 +5,9 @@ The site is hosted on Cloudflare Workers and the database is Supabase.
 
 ## 1. Apply the database migrations
 
-Every file in `supabase/migrations` (0001 to 0029), in order, on a new
-Supabase project. Pick the Mumbai region (`ap-south-1`).
+Every file in `supabase/migrations` (0001 to 0030), in order, on a new
+Supabase project. The live project is `atoooqpjkesmnggyrmup` (Singapore),
+already migrated to 0030.
 
 1. Supabase → your project → **Connect** → **Session pooler**. Copy that
    connection string and put the database password in it. Don't use the
@@ -21,6 +22,11 @@ Supabase project. Pick the Mumbai region (`ap-south-1`).
    Each file runs in its own transaction and is recorded in Supabase's
    migration history, so running it again only applies new files.
 
+3. Supabase → Project Settings → **Data API** → **Exposed schemas**: add
+   `app` and save. The server reads orders, customers and everything else
+   private through it with the secret key. Only the secret key can use it:
+   `0030` gives the browser roles nothing in `app`.
+
 The CMS migrations, for reference:
 
 | File                         | What it adds                                                                                        |
@@ -33,6 +39,7 @@ The CMS migrations, for reference:
 | `0027_leads.sql`             | Leads and their history; turns every past form into a lead                                          |
 | `0028_growth.sql`            | Customer tags and consent, broadcasts, influencer seeding, digest                                   |
 | `0029_money_guards.sql`      | Refund cap and gap-free invoice numbers                                                             |
+| `0030_service_role_app.sql`  | Server access to `app` through the API; browser roles kept out                                      |
 
 The database tests run every migration on a throwaway local Postgres:
 
@@ -49,13 +56,13 @@ go in `.env`. `.env.example` lists them all with notes.
 
 **Required for the admin to work at all**
 
-| Variable                    | Where it comes from                                               |
-| --------------------------- | ----------------------------------------------------------------- |
-| `PUBLIC_SUPABASE_URL`       | Supabase → Project Settings → API (`https://….supabase.co`)       |
-| `PUBLIC_SUPABASE_ANON_KEY`  | Same page                                                         |
-| `SUPABASE_SERVICE_ROLE_KEY` | Same page. Server only; never in a `PUBLIC_` variable             |
-| `PUBLIC_SITE_URL`           | Already set in `wrangler.jsonc` to `https://rootwearclothing.com` |
-| `CRON_SECRET`               | Any long random string                                            |
+| Variable                          | Where it comes from                                                                      |
+| --------------------------------- | ---------------------------------------------------------------------------------------- |
+| `PUBLIC_SUPABASE_URL`             | Supabase → Project Settings → API (`https://….supabase.co`)                              |
+| `PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Project Settings → API Keys (`sb_publishable_…`)                                         |
+| `SUPABASE_SECRET_KEY`             | Same page, under Secret keys (`sb_secret_…`). Server only; never in a `PUBLIC_` variable |
+| `PUBLIC_SITE_URL`                 | Already set in `wrangler.jsonc` to `https://rootwearclothing.com`                        |
+| `CRON_SECRET`                     | Any long random string                                                                   |
 
 > Until both Supabase keys are set the site runs on built-in sample data and
 > admin is only the form inbox. Also fixed on this branch: the app previously

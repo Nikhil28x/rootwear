@@ -23,14 +23,14 @@ if (existsSync('.env')) {
 }
 
 const url = process.env.PUBLIC_SUPABASE_URL;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const serviceKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 const email = process.env.ADMIN_EMAIL;
 const password = process.env.ADMIN_PASSWORD;
 const role = process.env.ADMIN_ROLE ?? 'owner';
 
 const missing = Object.entries({
 	PUBLIC_SUPABASE_URL: url,
-	SUPABASE_SERVICE_ROLE_KEY: serviceKey,
+	'SUPABASE_SECRET_KEY (or SUPABASE_SERVICE_ROLE_KEY)': serviceKey,
 	ADMIN_EMAIL: email,
 	ADMIN_PASSWORD: password
 })

@@ -248,6 +248,9 @@ ANON_APP=$(Q -c "set role anon; select count(*) from app.orders;" 2>&1 | grep -c
 check "anon cannot address the app schema at all" "$ANON_APP" "1"
 AUTH_APP=$(Q -c "set role authenticated; select count(*) from app.orders;" 2>&1 | grep -c "permission denied for schema app" || true)
 check "authenticated cannot address the app schema either" "$AUTH_APP" "1"
+check "signed-in customer reads the catalogue (policy helpers run)" "$(Q -c "set role authenticated; select count(*) from public.drops;" 2>&1)" "1"
+AUTH_RPC=$(Q -c "set role authenticated; select app.commit_order(null);" 2>&1 | grep -c "permission denied" || true)
+check "authenticated cannot call app functions directly" "$AUTH_RPC" "1"
 
 # Layer 2 — grant the schema, so RLS itself is what is under test. This is the
 # defence-in-depth layer: if `app` were ever exposed through PostgREST, the

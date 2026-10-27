@@ -72,7 +72,7 @@ function selectRepository(): PolicyRepository {
 		if (!isSupabaseConfigured()) {
 			throw new Error(
 				'CATALOGUE_SOURCE=supabase but PUBLIC_SUPABASE_URL / ' +
-					'PUBLIC_SUPABASE_ANON_KEY are not set. See .env.example.'
+					'PUBLIC_SUPABASE_PUBLISHABLE_KEY are not set. See .env.example.'
 			);
 		}
 		return mergedPolicyRepository;
