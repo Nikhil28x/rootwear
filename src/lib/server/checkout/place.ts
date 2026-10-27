@@ -1,5 +1,6 @@
 import { fail, redirect, type Cookies } from '@sveltejs/kit';
 import { cartRepository, closeCart, holdUntil, loadCart, readCartToken } from '$lib/server/cart';
+import { catalogueIndex } from '$lib/server/cart/pricing';
 import { clearShipTo } from '$lib/server/cart/ship-session';
 import { cartKeyPrefix } from '$lib/server/cart/keys';
 import { expireUnpaidOrders } from '$lib/server/checkout/expiry';
@@ -85,6 +86,19 @@ export async function placeOrder({
 	// What is being bought, as stored, before the commit empties it.
 	const cart = await cartRepository.findCart(token);
 	const lines = cart ? await cartRepository.listLines(cart.id) : [];
+
+	// A piece whose price was hidden after it was carted is off sale until
+	// the price is shown again; it can't be ordered at a price the site hides.
+	const catalogue = await catalogueIndex();
+	const offSale = lines
+		.map((line) => catalogue.get(line.variantId)?.product)
+		.find((product) => product && !product.priceVisible);
+	if (offSale) {
+		return fail(409, {
+			problem: `${offSale.name} isn't on sale right now. Remove it from your cart to check out.`,
+			status: 'out_of_stock' as const
+		});
+	}
 
 	const keyPrefix = cartKeyPrefix(token);
 	const idempotencyKey = `${keyPrefix}${await fingerprint(lines, view.couponCode, ship)}`;

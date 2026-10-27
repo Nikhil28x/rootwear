@@ -162,7 +162,8 @@ export const DROP_01: Drop = {
 			colourways: [],
 			sizeChart: [],
 			launchPrice: LAUNCH_PRICE,
-			prelaunchPrice: PRELAUNCH_PRICE
+			prelaunchPrice: PRELAUNCH_PRICE,
+			priceVisible: true
 		}
 	]
 };

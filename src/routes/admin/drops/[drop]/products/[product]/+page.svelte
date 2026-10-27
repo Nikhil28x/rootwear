@@ -129,6 +129,26 @@
 
 	<aside class="flex flex-col gap-10">
 		<Section title="Price and tax">
+			<div class="q-card flex items-start justify-between gap-3 p-4">
+				<div class="flex flex-col gap-0.5">
+					<p class="text-[14px] font-medium text-q-text">
+						Price {product.priceVisible ? 'shown' : 'hidden'} on the site
+					</p>
+					<p class="text-[13px] leading-[18px] text-q-secondary">
+						{product.priceVisible
+							? 'Shoppers see the price and can buy.'
+							: 'The site says “Price at launch”, and the buy button takes notify-me signups instead of orders.'}
+					</p>
+				</div>
+				{#if data.canEdit}
+					<form method="POST" action="?/priceVisibility" use:enhance={submitter(toaster)}>
+						<input type="hidden" name="visible" value={product.priceVisible ? 'false' : 'true'} />
+						<button type="submit" class="q-btn q-btn-secondary q-btn-sm"
+							>{product.priceVisible ? 'Hide price' : 'Show price'}</button
+						>
+					</form>
+				{/if}
+			</div>
 			<form
 				method="POST"
 				action="?/price"

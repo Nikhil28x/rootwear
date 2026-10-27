@@ -84,6 +84,7 @@ export type AdminProduct = {
 	readonly styleCode: string;
 	readonly launchPrice: Paise;
 	readonly prelaunchPrice: Paise;
+	readonly priceVisible: boolean;
 	readonly status: ProductStatus;
 	readonly position: number;
 	readonly hsnCode: string;
@@ -156,6 +157,7 @@ type ProductRow = {
 	style_code: string | null;
 	launch_price_paise: number;
 	prelaunch_price_paise: number;
+	price_visible: boolean | null;
 	status: ProductStatus;
 	position: number;
 	hsn_code: string;
@@ -200,7 +202,7 @@ const DROP_COLUMNS =
 	'id, slug, number, name, story, state, launch_instant, archived_at, edition_size, published_at, preorder_mode, preview_token';
 const PRODUCT_COLUMNS =
 	'id, drop_id, slug, name, summary, fabric, gsm, care, fit, fit_note, model_height_cm, model_worn_size, style_code, ' +
-	'launch_price_paise, prelaunch_price_paise, status, position, hsn_code, gst_rate, size_chart';
+	'launch_price_paise, prelaunch_price_paise, price_visible, status, position, hsn_code, gst_rate, size_chart';
 
 const SOLD_STATES = ['paid', 'packed', 'dispatched', 'delivered'];
 
@@ -311,6 +313,7 @@ function toProduct(
 		styleCode: row.style_code ?? 'TEE',
 		launchPrice: paise(Number(row.launch_price_paise)),
 		prelaunchPrice: paise(Number(row.prelaunch_price_paise)),
+		priceVisible: row.price_visible ?? true,
 		status: row.status ?? 'active',
 		position: row.position ?? 0,
 		hsnCode: row.hsn_code ?? '6109',
@@ -862,6 +865,25 @@ export async function setProductStatus(input: {
 	await writeAudit(
 		input.actor,
 		`product ${input.status === 'active' ? 'made live' : input.status === 'draft' ? 'moved to draft' : 'archived'}`,
+		'product',
+		input.productId
+	);
+}
+
+/** Shows or hides the price on the site. Hidden also stops the piece being bought. */
+export async function setPriceVisible(input: {
+	productId: string;
+	visible: boolean;
+	actor: string;
+}): Promise<void> {
+	const { error } = await getCatalogueClient()
+		.from('products')
+		.update({ price_visible: input.visible })
+		.eq('id', input.productId);
+	if (error) fail('price visibility failed', error);
+	await writeAudit(
+		input.actor,
+		input.visible ? 'price shown' : 'price hidden',
 		'product',
 		input.productId
 	);

@@ -39,7 +39,9 @@
 	});
 
 	let product = $derived(data.product);
-	let price = $derived(formatInr(data.displayPrice));
+	let price = $derived(
+		data.displayPrice === null ? 'Price at launch' : formatInr(data.displayPrice)
+	);
 	let dropNumber = $derived(String(data.drop.number).padStart(2, '0'));
 
 	/** Images by the role they play on the record (§09). */
@@ -75,11 +77,13 @@
 	});
 
 	let priceNote = $derived(
-		data.isPreOrder
-			? `Ships after ${shortDate.format(data.drop.launchInstant)}`
-			: data.showPrelaunchPrice
-				? 'Pre-launch price'
-				: 'Incl. taxes'
+		data.displayPrice === null
+			? ''
+			: data.isPreOrder
+				? `Ships after ${shortDate.format(data.drop.launchInstant)}`
+				: data.showPrelaunchPrice
+					? 'Pre-launch price'
+					: 'Incl. taxes'
 	);
 
 	/** "30% hemp / 70% cotton" → segments for the ratio bar; empty if it does not add up. */
@@ -397,7 +401,9 @@
 									loading="lazy"
 								/>{/if}
 							<span>{item.name}</span>
-							<span class="tabular-nums">{formatInr(item.price)}</span>
+							<span class="tabular-nums"
+								>{item.price === null ? 'Price at launch' : formatInr(item.price)}</span
+							>
 						</a>
 					</li>
 				{/each}

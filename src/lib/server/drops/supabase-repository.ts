@@ -44,6 +44,8 @@ type Row = {
 		model_worn_size: Size | null;
 		launch_price_paise: number;
 		prelaunch_price_paise: number;
+		// From 0031; absent until that migration is applied.
+		price_visible?: boolean | null;
 		status: 'draft' | 'active' | 'archived';
 		position: number;
 		size_chart: { size: string; chest_cm: number; length_cm: number }[] | null;
@@ -83,7 +85,7 @@ const SELECT = `
 	products (
 		id, drop_id, slug, name, summary, fabric, gsm, care, fit,
 		model_height_cm, model_worn_size, launch_price_paise, prelaunch_price_paise,
-		status, position, size_chart,
+		price_visible, status, position, size_chart,
 		colourways ( id, name, code, swatch, position ),
 		product_images ( * ),
 		variants ( id, product_id, sku, size, colourway_id, stock_count, reserved_count )
@@ -152,7 +154,8 @@ function toDomain(row: Row): Drop {
 			})),
 			// bigint paise arrives as a number; re-brand it through the money module.
 			launchPrice: paise(Number(p.launch_price_paise)),
-			prelaunchPrice: paise(Number(p.prelaunch_price_paise))
+			prelaunchPrice: paise(Number(p.prelaunch_price_paise)),
+			priceVisible: p.price_visible ?? true
 		};
 	});
 

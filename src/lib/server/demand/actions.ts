@@ -192,7 +192,9 @@ export async function handleNotifyMe(
 
 	// Live availability, as the product page shows it: a size held in other
 	// carts reads as sold out there, so it must take a notify-me here too.
-	if (!acceptsNotifyMe(drop.state) && (await availableUnits(variant)) > 0) {
+	// A piece with its price hidden isn't on sale, so any size takes a notify-me.
+	const priceHidden = drop.products.some((p) => p.id === variant.productId && !p.priceVisible);
+	if (!priceHidden && !acceptsNotifyMe(drop.state) && (await availableUnits(variant)) > 0) {
 		return reject(
 			'notify',
 			variantId,

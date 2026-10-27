@@ -137,6 +137,7 @@
 											class="q-row-link truncate text-[14px]">{product.name}</a
 										>
 										<Chip label={status.label} tone={status.tone} />
+										{#if !product.priceVisible}<Chip label="Price hidden" />{/if}
 									</div>
 									<p class="text-[13px] text-q-secondary">
 										{[

@@ -9,6 +9,7 @@ import {
 	findProduct,
 	priceHistory,
 	removeColourway,
+	setPriceVisible,
 	setProductStatus,
 	setSizeChart,
 	setSizes,
@@ -107,6 +108,18 @@ export const actions: Actions = {
 		return (
 			result ?? { message: 'Price and tax saved. Carts already open re-price on their next view.' }
 		);
+	},
+
+	priceVisibility: async (event) => {
+		const { actor, product } = await editor(event);
+		const visible = (await event.request.formData()).get('visible') === 'true';
+		const refused = await attempt(() => setPriceVisible({ productId: product.id, visible, actor }));
+		if (refused) return refused;
+		return {
+			message: visible
+				? 'Price shown. The piece can be bought again.'
+				: 'Price hidden. The site says “Price at launch” and takes notify-me signups instead.'
+		};
 	},
 
 	sizes: async (event) => {

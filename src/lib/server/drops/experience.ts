@@ -30,6 +30,13 @@ export async function loadExperience(
 	const showPrelaunchPrice =
 		unitPrice === product.prelaunchPrice && unitPrice !== product.launchPrice;
 
+	// A hidden price is never sent to the browser, and the piece isn't for
+	// sale while it is hidden: the buy bar falls back to notify-me, which the
+	// cart and checkout enforce on their side too.
+	const priceShown = product.priceVisible;
+	// The page shows displayPrice; the raw prices stay on the server.
+	const { launchPrice: _launch, prelaunchPrice: _prelaunch, ...publicProduct } = product;
+
 	const offers = await sizeOffers(product);
 
 	const preLaunch = drop.state === 'TEASE' || drop.state === 'REVEALED';
@@ -43,18 +50,19 @@ export async function loadExperience(
 			state: drop.state,
 			story: drop.story,
 			editionSize: drop.editionSize,
-			preorderMode: drop.preorderMode,
+			preorderMode: priceShown && drop.preorderMode,
 			launchInstant: drop.launchInstant,
 			releasedAt: drop.archivedAt ?? drop.launchInstant
 		},
-		product,
+		product: publicProduct,
 		offers,
-		displayPrice: unitPrice,
-		showPrelaunchPrice,
-		isPreOrder,
-		onSale: isOnSale(drop.state),
+		/** Null while the price is hidden. */
+		displayPrice: priceShown ? unitPrice : null,
+		showPrelaunchPrice: priceShown && showPrelaunchPrice,
+		isPreOrder: priceShown && isPreOrder,
+		onSale: priceShown && isOnSale(drop.state),
 		finished: isFinished(drop.state),
-		notifyOpen: acceptsNotifyMe(drop.state),
+		notifyOpen: acceptsNotifyMe(drop.state) || (!priceShown && !isFinished(drop.state)),
 		canRequest: acceptsDropRequest(drop.state),
 		acceptsDeposits: acceptsDeposits(drop.state),
 		claimed: claimedCount(drop),
@@ -72,7 +80,11 @@ export async function loadExperience(
 				slug: item.slug,
 				name: item.name,
 				image: item.images.find((image) => image.role === 'lead') ?? item.images[0] ?? null,
-				price: showPrelaunchPrice ? item.prelaunchPrice : item.launchPrice
+				price: !item.priceVisible
+					? null
+					: showPrelaunchPrice
+						? item.prelaunchPrice
+						: item.launchPrice
 			}))
 	};
 }

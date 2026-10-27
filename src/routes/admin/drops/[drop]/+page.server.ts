@@ -72,6 +72,7 @@ export const load: PageServerLoad = async (event) => {
 				status: p.status,
 				price: formatInr(p.launchPrice),
 				prelaunchPrice: p.prelaunchPrice !== p.launchPrice ? formatInr(p.prelaunchPrice) : null,
+				priceVisible: p.priceVisible,
 				sizes: p.sizes,
 				colours: p.colourways.map((c) => ({ name: c.name, swatch: c.swatch })),
 				image: p.images[0]?.url ?? null,

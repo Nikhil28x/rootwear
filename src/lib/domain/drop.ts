@@ -104,6 +104,11 @@ export type Product = {
 	/** §10: two distinct prices so §08's locked-price behaviour has something to lock. */
 	readonly launchPrice: Paise;
 	readonly prelaunchPrice: Paise;
+	/**
+	 * False keeps the price off the site, and with it the means to buy: the
+	 * piece can't be carted or ordered until the price is shown.
+	 */
+	readonly priceVisible: boolean;
 };
 
 export type Drop = {

@@ -84,6 +84,10 @@ export const actions: Actions = {
 				problem: `${entry.drop.name} isn't open yet.`
 			});
 		}
+		// A hidden price means the piece isn't on sale yet, whatever the drop's state.
+		if (!entry.product.priceVisible) {
+			return fail(409, { problem: `${entry.product.name} isn't on sale yet.` });
+		}
 
 		const cart = await openCart(cookies, locals.now);
 		const existing = (await cartRepository.listLines(cart.id)).find(
@@ -129,7 +133,10 @@ export const actions: Actions = {
 
 		const token = readCartToken(cookies);
 		const cart = token ? await cartRepository.findCart(token) : null;
-		if (!cart) return fail(404, { problem: 'Your cart has expired. Please refresh the page and try again.' });
+		if (!cart)
+			return fail(404, {
+				problem: 'Your cart has expired. Please refresh the page and try again.'
+			});
 
 		const lines = await cartRepository.listLines(cart.id);
 		const line = lines.find((candidate) => candidate.variantId === variantId);
@@ -171,7 +178,10 @@ export const actions: Actions = {
 
 		const token = readCartToken(cookies);
 		const cart = token ? await cartRepository.findCart(token) : null;
-		if (!cart) return fail(404, { problem: 'Your cart has expired. Please refresh the page and try again.' });
+		if (!cart)
+			return fail(404, {
+				problem: 'Your cart has expired. Please refresh the page and try again.'
+			});
 
 		await cartRepository.removeLine(cart.id, variantId);
 
@@ -196,7 +206,10 @@ export const actions: Actions = {
 
 		const token = readCartToken(cookies);
 		const cart = token ? await cartRepository.findCart(token) : null;
-		if (!cart) return fail(404, { problem: 'Your cart has expired. Please refresh the page and try again.' });
+		if (!cart)
+			return fail(404, {
+				problem: 'Your cart has expired. Please refresh the page and try again.'
+			});
 
 		// Validated against the SERVER's subtotal, recomputed a moment ago from
 		// the catalogue — never against a figure the browser sent.
@@ -221,7 +234,10 @@ export const actions: Actions = {
 	removeCoupon: async ({ cookies }) => {
 		const token = readCartToken(cookies);
 		const cart = token ? await cartRepository.findCart(token) : null;
-		if (!cart) return fail(404, { problem: 'Your cart has expired. Please refresh the page and try again.' });
+		if (!cart)
+			return fail(404, {
+				problem: 'Your cart has expired. Please refresh the page and try again.'
+			});
 
 		await cartRepository.setCoupon(cart.id, null);
 		return { updated: true };
