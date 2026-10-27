@@ -1,6 +1,16 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { ArrowDown, ArrowUp, Check, Copy, ExternalLink, Image, Link, Plus } from '@lucide/svelte';
+	import {
+		ArrowDown,
+		ArrowUp,
+		Check,
+		ChevronRight,
+		Copy,
+		ExternalLink,
+		Image,
+		Link,
+		Plus
+	} from '@lucide/svelte';
 	import Chip from '$lib/components/admin/ui/Chip.svelte';
 	import EmptyState from '$lib/components/admin/ui/EmptyState.svelte';
 	import Field from '$lib/components/admin/ui/Field.svelte';
@@ -85,7 +95,7 @@
 		<div class="flex min-w-0 flex-col gap-10">
 			<Section
 				title="Products"
-				description="Pieces in this drop, in the order the site shows them. Drafts stay off the site."
+				description="Open a product to change its price, sizes, stock or photos. The site shows them in this order; drafts stay off it."
 			>
 				{#if drop.products.length === 0}
 					<div class="q-card">
@@ -104,10 +114,10 @@
 						</EmptyState>
 					</div>
 				{:else}
-					<ul class="q-card q-divide">
+					<ul class="q-card q-divide overflow-hidden">
 						{#each drop.products as product, index (product.id)}
 							{@const status = PRODUCT_STATUS[product.status]}
-							<li class="flex items-center gap-4 p-3 pr-4">
+							<li class="q-list-row flex items-center gap-4 p-3 pr-4">
 								{#if product.image}
 									<img
 										src={product.image}
@@ -124,8 +134,7 @@
 									<div class="flex flex-wrap items-center gap-2">
 										<a
 											href="/admin/drops/{drop.slug}/products/{product.id}"
-											class="truncate text-[14px] font-medium text-q-text hover:underline"
-											>{product.name}</a
+											class="q-row-link truncate text-[14px]">{product.name}</a
 										>
 										<Chip label={status.label} tone={status.tone} />
 									</div>
@@ -171,6 +180,13 @@
 										>
 									</form>
 								{/if}
+								<span
+									class="flex flex-none items-center gap-1 text-[13px] font-medium text-q-secondary"
+									aria-hidden="true"
+								>
+									{data.canEdit ? 'Edit' : 'View'}
+									<ChevronRight size={16} strokeWidth={1.5} class="text-q-tertiary" />
+								</span>
 							</li>
 						{/each}
 					</ul>
