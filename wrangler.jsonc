@@ -10,8 +10,12 @@
 		"directory": ".svelte-kit/cloudflare"
 	},
 	"observability": { "enabled": true },
+	"routes": [
+		{ "pattern": "rootwearclothing.com", "custom_domain": true },
+		{ "pattern": "www.rootwearclothing.com", "custom_domain": true }
+	],
 	// Non-secret settings. Keys and tokens go in as secrets, never here.
 	"vars": {
-		"PUBLIC_SITE_URL": "https://rootwear.in"
+		"PUBLIC_SITE_URL": "https://rootwearclothing.com"
 	}
 }

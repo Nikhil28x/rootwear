@@ -21,7 +21,7 @@
 <svelte:head>
 	<title>{data.policy.title} — Rootwear</title>
 	<meta name="description" content={data.policy.summary} />
-	<link rel="canonical" href="https://rootwear.in/policies/{data.policy.slug}" />
+	<link rel="canonical" href="https://rootwearclothing.com/policies/{data.policy.slug}" />
 </svelte:head>
 
 <main class="relative isolate overflow-hidden bg-paper text-forest">

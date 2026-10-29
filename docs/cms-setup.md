@@ -54,7 +54,7 @@ go in `.env`. `.env.example` lists them all with notes.
 | `PUBLIC_SUPABASE_URL`       | Supabase → Project Settings → API (`https://….supabase.co`) |
 | `PUBLIC_SUPABASE_ANON_KEY`  | Same page                                                   |
 | `SUPABASE_SERVICE_ROLE_KEY` | Same page. Server only; never in a `PUBLIC_` variable       |
-| `PUBLIC_SITE_URL`           | Already set in `wrangler.jsonc` to `https://rootwear.in`    |
+| `PUBLIC_SITE_URL`           | Already set in `wrangler.jsonc` to `https://rootwearclothing.com`    |
 | `CRON_SECRET`               | Any long random string                                      |
 
 > Until both Supabase keys are set the site runs on built-in sample data and
@@ -73,7 +73,7 @@ Workers can't open mail connections, so on Cloudflare email needs ZeptoMail.
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Only when running on a Node server, not on Cloudflare      |
 
 For ZeptoMail, add the domain verification and the SPF/DKIM records it shows
-to the `rootwear.in` DNS, and wait for them to verify.
+to the `rootwearclothing.com` DNS, and wait for them to verify.
 
 **WhatsApp and Meta**
 
@@ -88,6 +88,29 @@ to the `rootwear.in` DNS, and wait for them to verify.
 Settings → Email & WhatsApp in admin shows what is connected and can send a
 test of each.
 
+**Payments: Razorpay**
+
+Leave `PAYMENT_PROVIDER` unset and checkout uses the built-in mock gateway.
+Switch to Razorpay once the account is approved (KYC cleared). Use test-mode
+keys first, then swap in live keys.
+
+| Variable                  | Notes                                                                 |
+| ------------------------- | --------------------------------------------------------------------- |
+| `PAYMENT_PROVIDER`        | `razorpay`                                                            |
+| `RAZORPAY_KEY_ID`         | Razorpay Dashboard → Account & Settings → API Keys (`rzp_test_…`)     |
+| `RAZORPAY_KEY_SECRET`     | Shown once when the key is generated. Server only                     |
+| `RAZORPAY_WEBHOOK_SECRET` | The secret you type when creating the webhook below. Not the key secret |
+
+Create the webhook in Razorpay → Account & Settings → Webhooks:
+
+- URL: `https://rootwearclothing.com/api/webhooks/razorpay`
+- Secret: a long random string, also saved as `RAZORPAY_WEBHOOK_SECRET`
+- Events: `payment.captured` and `order.paid`
+
+The webhook, not the browser redirect, is what marks an order paid. If test
+payments succeed but orders stay unpaid, the webhook secret is the first thing
+to check.
+
 ## 3. Deploy to Cloudflare
 
 ```sh
@@ -95,8 +118,8 @@ npx wrangler login
 npm run deploy          # builds and deploys the site as the "rootwear" Worker
 ```
 
-Then Workers & Pages → rootwear → Settings → Domains & Routes → Add →
-Custom domain → `rootwear.in` (and `www.rootwear.in`). The domain's DNS has
+The custom domains `rootwearclothing.com` and `www.rootwearclothing.com` are
+declared in `wrangler.jsonc`, so a deploy attaches them. The domain's DNS has
 to be on the same Cloudflare account.
 
 ## 4. Scheduled jobs
@@ -132,7 +155,7 @@ Meta reviews parts of this, so start early.
    `whatsapp_business_messaging` (and `whatsapp_business_management`). That is
    `WHATSAPP_ACCESS_TOKEN`.
 4. Webhooks: in the app, set the callback URL to
-   `https://rootwear.in/api/webhooks/meta` with your `META_VERIFY_TOKEN`, then
+   `https://rootwearclothing.com/api/webhooks/meta` with your `META_VERIFY_TOKEN`, then
    subscribe WhatsApp to **messages**. For lead ads, also subscribe the
    Facebook Page to **leadgen**.
 5. Submit these message templates in WhatsApp Manager. The name, language

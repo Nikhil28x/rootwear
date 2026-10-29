@@ -6,7 +6,7 @@
 	"main": "index.js",
 	"compatibility_date": "2026-09-01",
 	"vars": {
-		"SITE_URL": "https://rootwear.in"
+		"SITE_URL": "https://rootwearclothing.com"
 	},
 	"triggers": {
 		// Times are UTC. 02:30 UTC is 08:00 IST.

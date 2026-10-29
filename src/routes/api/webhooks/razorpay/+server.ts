@@ -96,7 +96,7 @@ async function settle(facts: WebhookFacts): Promise<void> {
 	}
 }
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, platform }) => {
 	// 1 — RAW BYTES, before anything parses them.
 	const raw = await request.text();
 	const signature = request.headers.get('x-razorpay-signature');
@@ -135,10 +135,12 @@ export const POST: RequestHandler = async ({ request }) => {
 		return new Response('duplicate', { status: 200 });
 	}
 
-	// 4 — acknowledge now, process after. On a platform that offers one, this
-	// is where `waitUntil` belongs; on a long-running Node server the floating
-	// promise is the same thing without the ceremony. It carries its own catch.
-	void settle(facts);
+	// 4 — acknowledge now, process after. On Cloudflare a floating promise is
+	// cancelled once the response is sent, so the work is handed to
+	// `waitUntil`; off Cloudflare (vite dev) the floating promise is the same
+	// thing without the ceremony. It carries its own catch.
+	const work = settle(facts);
+	platform?.context?.waitUntil(work);
 
 	return new Response('ok', { status: 200 });
 };

@@ -35,7 +35,11 @@ declare global {
 		}
 
 		// interface PageState {}
-		// interface Platform {}
+
+		/** Cloudflare Workers, via adapter-cloudflare. Absent under vite dev. */
+		interface Platform {
+			context?: { waitUntil(promise: Promise<unknown>): void };
+		}
 	}
 }
 
