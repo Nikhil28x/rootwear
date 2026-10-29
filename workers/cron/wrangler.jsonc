@@ -9,8 +9,8 @@
 		"SITE_URL": "https://rootwearclothing.com"
 	},
 	"triggers": {
-		// Times are UTC. 02:30 UTC is 08:00 IST.
-		"crons": ["*/2 * * * *", "*/15 * * * *", "30 2 * * *"]
+		// One tick; index.js decides what runs on it. Times are UTC.
+		"crons": ["*/15 * * * *"]
 	},
 	"observability": { "enabled": true }
 }

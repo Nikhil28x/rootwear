@@ -49,13 +49,13 @@ go in `.env`. `.env.example` lists them all with notes.
 
 **Required for the admin to work at all**
 
-| Variable                    | Where it comes from                                         |
-| --------------------------- | ----------------------------------------------------------- |
-| `PUBLIC_SUPABASE_URL`       | Supabase → Project Settings → API (`https://….supabase.co`) |
-| `PUBLIC_SUPABASE_ANON_KEY`  | Same page                                                   |
-| `SUPABASE_SERVICE_ROLE_KEY` | Same page. Server only; never in a `PUBLIC_` variable       |
-| `PUBLIC_SITE_URL`           | Already set in `wrangler.jsonc` to `https://rootwearclothing.com`    |
-| `CRON_SECRET`               | Any long random string                                      |
+| Variable                    | Where it comes from                                               |
+| --------------------------- | ----------------------------------------------------------------- |
+| `PUBLIC_SUPABASE_URL`       | Supabase → Project Settings → API (`https://….supabase.co`)       |
+| `PUBLIC_SUPABASE_ANON_KEY`  | Same page                                                         |
+| `SUPABASE_SERVICE_ROLE_KEY` | Same page. Server only; never in a `PUBLIC_` variable             |
+| `PUBLIC_SITE_URL`           | Already set in `wrangler.jsonc` to `https://rootwearclothing.com` |
+| `CRON_SECRET`               | Any long random string                                            |
 
 > Until both Supabase keys are set the site runs on built-in sample data and
 > admin is only the form inbox. Also fixed on this branch: the app previously
@@ -94,11 +94,11 @@ Leave `PAYMENT_PROVIDER` unset and checkout uses the built-in mock gateway.
 Switch to Razorpay once the account is approved (KYC cleared). Use test-mode
 keys first, then swap in live keys.
 
-| Variable                  | Notes                                                                 |
-| ------------------------- | --------------------------------------------------------------------- |
-| `PAYMENT_PROVIDER`        | `razorpay`                                                            |
-| `RAZORPAY_KEY_ID`         | Razorpay Dashboard → Account & Settings → API Keys (`rzp_test_…`)     |
-| `RAZORPAY_KEY_SECRET`     | Shown once when the key is generated. Server only                     |
+| Variable                  | Notes                                                                   |
+| ------------------------- | ----------------------------------------------------------------------- |
+| `PAYMENT_PROVIDER`        | `razorpay`                                                              |
+| `RAZORPAY_KEY_ID`         | Razorpay Dashboard → Account & Settings → API Keys (`rzp_test_…`)       |
+| `RAZORPAY_KEY_SECRET`     | Shown once when the key is generated. Server only                       |
 | `RAZORPAY_WEBHOOK_SECRET` | The secret you type when creating the webhook below. Not the key secret |
 
 Create the webhook in Razorpay → Account & Settings → Webhooks:
@@ -127,12 +127,15 @@ to be on the same Cloudflare account.
 A second small Worker, `rootwear-cron` (`workers/cron`), calls these on a
 schedule. Each takes `Authorization: Bearer <CRON_SECRET>`.
 
-| Endpoint                  | How often        | What it does                             |
-| ------------------------- | ---------------- | ---------------------------------------- |
-| `/api/cron/expire-orders` | every 2 min      | Frees stock from unpaid orders           |
-| `/api/cron/outbox`        | every 2 min      | Retries messages a provider was down for |
-| `/api/cron/carts`         | every 15 min     | Automatic cart reminders, if switched on |
-| `/api/cron/digest`        | daily, 02:30 UTC | The 08:00 IST morning email              |
+| Endpoint                  | How often                  | What it does                             |
+| ------------------------- | -------------------------- | ---------------------------------------- |
+| `/api/cron/expire-orders` | every 15 min, always first | Fails unpaid orders, frees their stock   |
+| `/api/cron/outbox`        | every 15 min               | Retries messages a provider was down for |
+| `/api/cron/carts`         | hourly                     | Automatic cart reminders, if switched on |
+| `/api/cron/digest`        | off                        | The morning email; not scheduled         |
+
+An abandoned order can hold its stock for up to about 25 minutes: the
+10-minute payment window plus up to 15 minutes until the next sweep.
 
 ```sh
 npx wrangler secret put CRON_SECRET -c workers/cron/wrangler.jsonc   # same value as the site's
