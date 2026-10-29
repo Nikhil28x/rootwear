@@ -10,6 +10,10 @@
 		"directory": ".svelte-kit/cloudflare"
 	},
 	"observability": { "enabled": true },
+	// Run next to Supabase (Singapore), not next to the visitor: a page makes
+	// several database round trips and each one would otherwise cross the
+	// India–Singapore link. Static assets are still served from the edge.
+	"placement": { "mode": "targeted", "region": "aws:ap-southeast-1" },
 	"routes": [
 		{ "pattern": "rootwearclothing.com", "custom_domain": true },
 		{ "pattern": "www.rootwearclothing.com", "custom_domain": true }

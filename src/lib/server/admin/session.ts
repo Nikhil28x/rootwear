@@ -54,17 +54,19 @@ export function previewAvailable(): boolean {
 
 /**
  * Resolved once per request. Several loads on one page each want the actor,
- * and each resolution costs a round trip to the Auth server; keyed on the
- * event object so nothing outlives the request (unlike a module-level cache,
- * which would leak one visitor's identity into another's request).
+ * and each resolution costs a round trip to the Auth server plus a staff
+ * lookup. Keyed on `locals`, which is the one object shared by every load in
+ * a request (each load gets its own `event`, so keying on that never hit), and
+ * nothing outlives the request (unlike a module-level cache, which would leak
+ * one visitor's identity into another's request).
  */
-const perRequest = new WeakMap<RequestEvent, Promise<AdminAuth>>();
+const perRequest = new WeakMap<App.Locals, Promise<AdminAuth>>();
 
 export function resolveAdminAuth(event: RequestEvent): Promise<AdminAuth> {
-	const cached = perRequest.get(event);
+	const cached = perRequest.get(event.locals);
 	if (cached) return cached;
 	const pending = resolve(event);
-	perRequest.set(event, pending);
+	perRequest.set(event.locals, pending);
 	return pending;
 }
 

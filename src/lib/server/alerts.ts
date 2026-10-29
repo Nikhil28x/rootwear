@@ -41,84 +41,106 @@ function istDay(ms: number): string {
 	return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(ms);
 }
 
-export async function today(now: number): Promise<Today> {
-	const client = getServiceClient();
-	const catalogue = getCatalogueClient();
-	const settings = await getSetting('alerts');
-	const head = (table: string) => client.from(table).select('id', { count: 'exact', head: true });
-
-	const [toPack, stuck, overdue, leadsDue, returns, failed, recentOrders, abandoned] =
-		await Promise.all([
-			head('orders').eq('state', 'paid'),
-			head('orders')
-				.eq('state', 'packed')
-				.lte('packed_at', new Date(now - DAY).toISOString()),
-			head('reservations')
-				.eq('state', 'balance_due')
-				.lte('balance_due_by', new Date(now).toISOString()),
-			head('leads')
-				.lte('next_follow_up_at', new Date(now).toISOString())
-				.not('stage', 'in', '(won,lost)'),
-			head('returns').in('status', ['requested', 'received']),
-			head('message_outbox')
-				.eq('status', 'failed')
-				.gte('created_at', new Date(now - DAY).toISOString()),
-			client
-				.from('orders')
-				.select('total_paise, created_at, state')
-				.gte('created_at', new Date(now - 14 * DAY).toISOString())
-				.in('state', PAID),
-			checkouts(now, 2).catch(() => [])
-		]);
-
-	// Low stock: published drops that are on sale or about to be.
-	const { data: drops } = await catalogue
-		.from('drops')
-		.select('id, slug')
-		.not('published_at', 'is', null)
-		.in('state', ['TEASE', 'REVEALED', 'LIVE', 'PARTIAL', 'RE_DROP']);
+/** Low stock: published drops that are on sale or about to be. */
+async function findLowStock(
+	catalogue: ReturnType<typeof getCatalogueClient>,
+	alertSettings: ReturnType<typeof getSetting<'alerts'>>
+): Promise<LowStock[]> {
+	const [settings, { data: drops }] = await Promise.all([
+		alertSettings,
+		catalogue
+			.from('drops')
+			.select('id, slug')
+			.not('published_at', 'is', null)
+			.in('state', ['TEASE', 'REVEALED', 'LIVE', 'PARTIAL', 'RE_DROP'])
+	]);
 	const dropIds = ((drops ?? []) as { id: string; slug: string }[]).map((d) => d.id);
 	const slugOf = new Map(
 		((drops ?? []) as { id: string; slug: string }[]).map((d) => [d.id, d.slug])
 	);
 	const lowStock: LowStock[] = [];
-	if (dropIds.length) {
-		const { data: products } = await catalogue
-			.from('products')
-			.select('id, name, drop_id')
-			.in('drop_id', dropIds)
-			.eq('status', 'active');
-		const ps = (products ?? []) as { id: string; name: string; drop_id: string }[];
-		if (ps.length) {
-			const { data: variants } = await catalogue
-				.from('variants')
-				.select('sku, size, product_id, stock_count, reserved_count')
-				.in(
-					'product_id',
-					ps.map((p) => p.id)
-				);
-			for (const v of (variants ?? []) as {
-				sku: string;
-				size: string;
-				product_id: string;
-				stock_count: number;
-				reserved_count: number;
-			}[]) {
-				const left = v.stock_count - v.reserved_count;
-				if (left <= settings.lowStock) {
-					const p = ps.find((x) => x.id === v.product_id)!;
-					lowStock.push({
-						sku: v.sku,
-						product: p.name,
-						size: v.size,
-						left,
-						href: `/admin/drops/${slugOf.get(p.drop_id)}/products/${p.id}/stock`
-					});
-				}
-			}
-			lowStock.sort((a, b) => a.left - b.left);
+	if (!dropIds.length) return lowStock;
+
+	const { data: products } = await catalogue
+		.from('products')
+		.select('id, name, drop_id')
+		.in('drop_id', dropIds)
+		.eq('status', 'active');
+	const ps = (products ?? []) as { id: string; name: string; drop_id: string }[];
+	if (!ps.length) return lowStock;
+
+	const { data: variants } = await catalogue
+		.from('variants')
+		.select('sku, size, product_id, stock_count, reserved_count')
+		.in(
+			'product_id',
+			ps.map((p) => p.id)
+		);
+	for (const v of (variants ?? []) as {
+		sku: string;
+		size: string;
+		product_id: string;
+		stock_count: number;
+		reserved_count: number;
+	}[]) {
+		const left = v.stock_count - v.reserved_count;
+		if (left <= settings.lowStock) {
+			const p = ps.find((x) => x.id === v.product_id)!;
+			lowStock.push({
+				sku: v.sku,
+				product: p.name,
+				size: v.size,
+				left,
+				href: `/admin/drops/${slugOf.get(p.drop_id)}/products/${p.id}/stock`
+			});
 		}
 	}
+	return lowStock.sort((a, b) => a.left - b.left);
+}
+
+export async function today(now: number): Promise<Today> {
+	const client = getServiceClient();
+	const catalogue = getCatalogueClient();
+	const alertSettings = getSetting('alerts');
+	const head = (table: string) => client.from(table).select('id', { count: 'exact', head: true });
+
+	// Everything below is independent, so it goes out at once: the low-stock
+	// chain (settings, drops, products, variants) runs alongside the counts.
+	const [
+		toPack,
+		stuck,
+		overdue,
+		leadsDue,
+		returns,
+		failed,
+		recentOrders,
+		abandoned,
+		lowStock,
+		settings
+	] = await Promise.all([
+		head('orders').eq('state', 'paid'),
+		head('orders')
+			.eq('state', 'packed')
+			.lte('packed_at', new Date(now - DAY).toISOString()),
+		head('reservations')
+			.eq('state', 'balance_due')
+			.lte('balance_due_by', new Date(now).toISOString()),
+		head('leads')
+			.lte('next_follow_up_at', new Date(now).toISOString())
+			.not('stage', 'in', '(won,lost)'),
+		head('returns').in('status', ['requested', 'received']),
+		head('message_outbox')
+			.eq('status', 'failed')
+			.gte('created_at', new Date(now - DAY).toISOString()),
+		client
+			.from('orders')
+			.select('total_paise, created_at, state')
+			.gte('created_at', new Date(now - 14 * DAY).toISOString())
+			.in('state', PAID),
+		checkouts(now, 2).catch(() => []),
+		findLowStock(catalogue, alertSettings),
+		alertSettings
+	]);
 
 	const orders = (recentOrders.data ?? []) as { total_paise: number; created_at: string }[];
 	const yesterdayKey = istDay(now - DAY);
