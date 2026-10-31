@@ -37,7 +37,7 @@ export type CatalogueIndex = {
  * its own source per call.
  */
 export async function loadCatalogueIndex(): Promise<CatalogueIndex> {
-	const all = await drops.listDrops();
+	const all = await drops.listStorefrontDrops();
 	const index = new Map<string, VariantFacts>();
 
 	for (const drop of all) {

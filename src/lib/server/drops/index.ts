@@ -5,6 +5,7 @@
  * uses the in-repo fixtures, so the app runs with no database configured.
  * No route or component changes between the two.
  */
+import type { Drop } from '$lib/domain/drop';
 import type { DropRepository } from './repository';
 import { mockDropRepository } from './mock-repository';
 import { supabaseDropRepository } from './supabase-repository';
@@ -39,7 +40,9 @@ function selectRepository(): DropRepository {
  * must show the STORED state, so an operator can see what is actually written
  * rather than what the clock is currently presenting.
  */
-export const drops: DropRepository = {
+export const drops: DropRepository & {
+	listStorefrontDrops(): Promise<Drop[]>;
+} = {
 	listDrops: async () => {
 		const now = serverNow();
 		return (await selectRepository().listDrops()).map((drop) => withResolvedState(drop, now));
@@ -52,7 +55,19 @@ export const drops: DropRepository = {
 		const drop = await selectRepository().findLiveDrop();
 		return drop ? withResolvedState(drop, serverNow()) : null;
 	},
-	previewToken: (slug) => selectRepository().previewToken(slug)
+	previewToken: (slug) => selectRepository().previewToken(slug),
+
+	/**
+	 * Every drop the storefront sells: the published ones, plus the drop the
+	 * homepage stands in when nothing live is published (findLiveDrop's
+	 * fallback, the same rule requireVisible applies). The cart and order
+	 * history read this, so a drop whose sizes are on the page is never then
+	 * refused by the cart as "no longer available".
+	 */
+	listStorefrontDrops: async () => {
+		const [published, live] = await Promise.all([drops.listDrops(), drops.findLiveDrop()]);
+		return live && !published.some((d) => d.id === live.id) ? [...published, live] : published;
+	}
 };
 
 export type { DropRepository };

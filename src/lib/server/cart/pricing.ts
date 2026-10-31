@@ -50,7 +50,7 @@ export type CatalogueEntry = {
  */
 export async function catalogueIndex(): Promise<Map<string, CatalogueEntry>> {
 	const index = new Map<string, CatalogueEntry>();
-	for (const drop of await drops.listDrops()) {
+	for (const drop of await drops.listStorefrontDrops()) {
 		for (const product of drop.products) {
 			for (const variant of product.variants) {
 				index.set(variant.id, { drop, product, variant });
