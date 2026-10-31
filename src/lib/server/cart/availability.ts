@@ -1,51 +1,32 @@
 /**
  * What a shopper can actually add, size by size.
  *
- * ONE answer for every surface. The product page used to read the raw
- * catalogue count while the cart subtracted live holds in other carts, so a
- * size could show "2 left" on the page and be refused by the cart. Both now
- * call this.
+ * ONE answer for every surface: the product page and the cart both call
+ * this, so a size can never show "2 left" on the page and be refused by the
+ * cart.
  */
-import type { Cookies } from '@sveltejs/kit';
 import { sellableStock, type Product, type Variant } from '$lib/domain/drop';
 import type { SizeOffer } from '$lib/components/drop/types';
-import { cartRepository, readCartToken } from './index';
+import { cartRepository } from './index';
 
 /**
- * Stands in for "no cart yet" in the holds query. A real uuid, so the
- * Postgres comparison against cart_lines.cart_id stays well-typed.
+ * Units of one variant open to this cart: stock, less committed orders.
+ *
+ * A cart holds nothing. Stock is checked and taken when the order is placed,
+ * just before payment (app.commit_order locks the variant, verifies stock and
+ * decrements it), and an unpaid order gives it back when its payment window
+ * lapses. Other people's carts never make a size look sold out.
  */
-const NO_CART = '00000000-0000-0000-0000-000000000000';
-
-/** Units of one variant open to this cart: stock, less other carts' live holds and committed orders. */
-export async function availableUnits(
-	variant: Variant,
-	nowMs: number,
-	cartId: string | null
-): Promise<number> {
-	const [heldElsewhere, committed] = await Promise.all([
-		cartRepository.countHoldsElsewhere(variant.id, nowMs, cartId ?? NO_CART),
-		cartRepository.committedUnits(variant.id)
-	]);
-	return Math.max(0, sellableStock(variant) - heldElsewhere - committed);
-}
-
-/** The visitor's cart id, without minting one — a page load must never create a cart. */
-export async function currentCartId(cookies: Cookies): Promise<string | null> {
-	const token = readCartToken(cookies);
-	if (!token) return null;
-	return (await cartRepository.findCart(token))?.id ?? null;
+export async function availableUnits(variant: Variant): Promise<number> {
+	const committed = await cartRepository.committedUnits(variant.id);
+	return Math.max(0, sellableStock(variant) - committed);
 }
 
 /** Every size of a product with its live availability. Sold-out sizes stay in the list. */
-export async function sizeOffers(
-	product: Product,
-	nowMs: number,
-	cartId: string | null
-): Promise<SizeOffer[]> {
+export async function sizeOffers(product: Product): Promise<SizeOffer[]> {
 	return Promise.all(
 		product.variants.map(async (variant) => {
-			const remaining = await availableUnits(variant, nowMs, cartId);
+			const remaining = await availableUnits(variant);
 			return {
 				variantId: variant.id,
 				size: variant.size,

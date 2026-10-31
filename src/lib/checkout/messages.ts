@@ -39,9 +39,5 @@ export const COMMIT_MESSAGE = {
 	empty_cart: 'Your cart is empty.'
 } as const;
 
-/** §10: a short cart-reservation window, released automatically. */
-export const HOLD_EXPIRED_MESSAGE =
-	"Your reservation expired — we've updated your cart with what's still available.";
-
 export const PAYMENT_NOT_CONFIGURED_MESSAGE =
 	"Online payment isn't available right now. We'll email you a payment link.";

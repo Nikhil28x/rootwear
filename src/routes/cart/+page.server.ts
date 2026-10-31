@@ -27,9 +27,9 @@ import type { CouponStatus } from '$lib/server/cart/types';
  *
  *  §04  The client never supplies a price or a quantity the server does not
  *       re-check. Adding names a VARIANT; the price is resolved on read.
- *  §10  Stock is held for CART_HOLD_MINUTES from add-to-cart and released
- *       automatically. A hold in one cart removes the piece from open sale in
- *       every other cart until it lapses.
+ *  §10  Adding checks stock but holds none. Stock is checked again and taken
+ *       when the order is placed, just before payment (app.commit_order), and
+ *       an unpaid order releases it when its payment window lapses.
  *  §06  A drop that is not on sale cannot be added to, whatever the page that
  *       posted here believed. The PDP hides the form; this refuses the post.
  */
@@ -92,7 +92,7 @@ export const actions: Actions = {
 
 		// §10: what is genuinely available to THIS cart — the same figure the
 		// product page shows.
-		const available = await availableUnits(entry.variant, locals.now, cart.id);
+		const available = await availableUnits(entry.variant);
 		const wanted = (existing?.quantity ?? 0) + quantity;
 
 		if (available < wanted) {
@@ -146,7 +146,7 @@ export const actions: Actions = {
 		const entry = (await catalogueIndex()).get(variantId);
 		if (!entry) return fail(404, { problem: 'This piece is no longer available.' });
 
-		const available = await availableUnits(entry.variant, locals.now, cart.id);
+		const available = await availableUnits(entry.variant);
 
 		if (available < quantity) {
 			return fail(409, { problem: `Only ${available} left in size ${entry.variant.size}.` });

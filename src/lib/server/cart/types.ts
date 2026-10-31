@@ -70,7 +70,7 @@ export type PricedCartLine = {
 	readonly holdActive: boolean;
 	/** Units this cart could hold right now, its own quantity included. */
 	readonly availableNow: number;
-	/** True when other carts or other buyers took the stock this line wanted. */
+	/** True when other buyers' orders took the stock this line wanted. */
 	readonly overSubscribed: boolean;
 };
 
@@ -113,9 +113,6 @@ export type CartView = {
 	readonly couponCode: string | null;
 	/** Set when a previously applied coupon stopped validating server-side. */
 	readonly couponProblem: CouponStatus | null;
-	/** Earliest live hold across the cart, or null when nothing is held. */
-	readonly soonestHoldMs: number | null;
-	readonly holdMinutes: number;
 	readonly hasPreOrderLine: boolean;
 	/** The instant this view was priced, from the request-scoped server clock. */
 	readonly pricedAtMs: number;

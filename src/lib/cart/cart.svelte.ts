@@ -21,8 +21,6 @@ export type CartLineView = {
 	quantity: number;
 	unitPrice: Paise;
 	image: string | null;
-	/** §10: the cart-reservation window. Null when nothing is held. */
-	heldUntil: number | null;
 };
 
 export class CartState {
@@ -44,14 +42,6 @@ export class CartState {
 	lines = $derived(this.#source());
 	count = $derived(this.lines.reduce((n, l) => n + l.quantity, 0));
 	subtotal = $derived(this.lines.reduce((n, l) => n + l.unitPrice * l.quantity, 0));
-
-	/** Earliest hold expiry across the cart — what the countdown shows. */
-	soonestHold = $derived(
-		this.lines.reduce<number | null>((soonest, line) => {
-			if (line.heldUntil === null) return soonest;
-			return soonest === null ? line.heldUntil : Math.min(soonest, line.heldUntil);
-		}, null)
-	);
 
 	constructor(source: () => CartLineView[]) {
 		this.#source = source;

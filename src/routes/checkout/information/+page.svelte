@@ -16,7 +16,6 @@
 	import CheckoutSteps from '$lib/components/checkout/CheckoutSteps.svelte';
 	import Field from '$lib/components/ui/Field.svelte';
 	import CartSummary from '$lib/components/cart/CartSummary.svelte';
-	import HoldTimer from '$lib/components/cart/HoldTimer.svelte';
 	import OrderPanel from '$lib/components/checkout/OrderPanel.svelte';
 	import { formatInr } from '$lib/money';
 	import { RETURNS_WORDING } from '$lib/content/returns';
@@ -30,7 +29,6 @@
 		STATE_OPTIONS,
 		type AddressValues
 	} from '$lib/checkout/address';
-	import { invalidateAll } from '$app/navigation';
 	import { srcsetOf } from '$lib/media/responsive';
 	import type { ActionData, PageData } from './$types';
 
@@ -323,14 +321,6 @@
 				<section aria-labelledby="items-heading">
 					<div class="co-head">
 						<h2 id="items-heading">In this order</h2>
-						{#if data.cart.soonestHoldMs !== null}
-							<HoldTimer
-								expiresAtMs={data.cart.soonestHoldMs}
-								serverNowMs={data.cart.pricedAtMs}
-								onexpire={() => invalidateAll()}
-								surface="light"
-							/>
-						{/if}
 					</div>
 					<ul class="co-lines">
 						{#each data.cart.lines as line (line.variantId)}

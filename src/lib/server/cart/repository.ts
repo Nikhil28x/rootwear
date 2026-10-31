@@ -48,14 +48,6 @@ export interface CartRepository {
 	renewHold(cartId: string, heldUntilMs: number): Promise<void>;
 
 	/**
-	 * §10 — what makes the hold real rather than decorative: units currently
-	 * held inside OTHER carts. Subtracted from sellable stock before an add is
-	 * accepted, so a live hold genuinely removes a piece from open sale until
-	 * it lapses, and lapses on its own with no sweeper.
-	 */
-	countHoldsElsewhere(variantId: string, nowMs: number, exceptCartId: string): Promise<number>;
-
-	/**
 	 * Units already committed to orders that the CATALOGUE source has not yet
 	 * reflected.
 	 *

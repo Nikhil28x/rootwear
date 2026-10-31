@@ -323,16 +323,6 @@ export const mockCartRepository: CartRepository = {
 		}
 	},
 
-	async countHoldsElsewhere(variantId, nowMs, exceptCartId) {
-		let held = 0;
-		for (const [cartId, map] of cartLines) {
-			if (cartId === exceptCartId) continue;
-			const line = map.get(variantId);
-			if (line && line.heldUntilMs > nowMs) held += line.quantity;
-		}
-		return held;
-	},
-
 	async committedUnits(variantId) {
 		return sold.get(variantId) ?? 0;
 	},

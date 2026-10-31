@@ -52,8 +52,6 @@ export const cartRepository: CartRepository = {
 		selectRepository().setQuantity(cartId, variantId, quantity, heldUntilMs),
 	removeLine: (cartId, variantId) => selectRepository().removeLine(cartId, variantId),
 	renewHold: (cartId, heldUntilMs) => selectRepository().renewHold(cartId, heldUntilMs),
-	countHoldsElsewhere: (variantId, nowMs, exceptCartId) =>
-		selectRepository().countHoldsElsewhere(variantId, nowMs, exceptCartId),
 	committedUnits: (variantId) => selectRepository().committedUnits(variantId),
 	setCoupon: (cartId, code) => selectRepository().setCoupon(cartId, code),
 	validateCoupon: (code, subtotal, kind, cartToken) =>
@@ -103,7 +101,10 @@ export function readCartToken(cookies: Cookies): string | null {
 	return cookies.get(CART_COOKIE) ?? null;
 }
 
-/** The hold window, in ms, from `now`. §10: released automatically on expiry. */
+/**
+ * When a cart line counts as recently active, in ms from `now`. Admin and cart
+ * reminders read it; it holds no stock (stock is taken when the order is placed).
+ */
 export function holdUntil(nowMs: number): number {
 	return nowMs + CART_HOLD_MINUTES * 60_000;
 }
@@ -175,8 +176,7 @@ export async function loadCartView(
 		size: line.size,
 		quantity: line.quantity,
 		unitPrice: line.unitPrice,
-		image: line.image,
-		heldUntil: line.holdActive ? line.heldUntilMs : null
+		image: line.image
 	}));
 }
 

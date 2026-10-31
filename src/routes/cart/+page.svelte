@@ -7,20 +7,16 @@
 	 *
 	 * Nothing on this page is computed in the browser. The prices were resolved
 	 * server-side a moment ago (app.cart_lines carries no price), the discount
-	 * came back from app.apply_coupon(), and the hold expiry is a server
-	 * instant. The client's only jobs are to render it and to ask again when
-	 * the hold runs out.
+	 * came back from app.apply_coupon(). The cart holds no stock: it is
+	 * checked and taken when the order is placed, just before payment.
 	 */
-	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import '$lib/components/checkout/checkout.css';
 	import CheckoutSteps from '$lib/components/checkout/CheckoutSteps.svelte';
 	import CartLine from '$lib/components/cart/CartLine.svelte';
 	import CartSummary from '$lib/components/cart/CartSummary.svelte';
 	import CouponField from '$lib/components/cart/CouponField.svelte';
-	import HoldTimer from '$lib/components/cart/HoldTimer.svelte';
 	import { RETURNS_WORDING } from '$lib/content/returns';
-	import { HOLD_EXPIRED_MESSAGE } from '$lib/checkout/messages';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -32,18 +28,6 @@
 
 	let problem = $derived(form && 'problem' in form ? form.problem : '');
 	let couponStatus = $derived(form && 'coupon' in form ? form.coupon : null);
-
-	/** Set once a hold lapses, so the page says why it just changed. */
-	let holdLapsed = $state(false);
-
-	/**
-	 * §10 — when the window closes the client does NOT decide the stock is
-	 * gone. It re-asks the server, which is the only thing that knows.
-	 */
-	async function onHoldExpired() {
-		holdLapsed = true;
-		await invalidateAll();
-	}
 </script>
 
 <svelte:head>
@@ -78,21 +62,18 @@
 				<CheckoutSteps current="cart" />
 			</header>
 			<div class="co-main">
-				{#if problem || holdLapsed || restored}
+				{#if problem || restored}
 					<div class="cart-notices">
 						{#if restored}
 							<p role="status" class="co-note">
 								{restored === 'partial'
 									? 'Welcome back. Some of what you chose has sold since, so your cart holds what is still available.'
-									: 'Welcome back. Your pieces are in your cart and held for you again.'}
+									: 'Welcome back. Your pieces are in your cart.'}
 							</p>
 						{/if}
 						{#if problem}
 							<!-- Announced, not merely coloured. -->
 							<p role="alert" class="co-alert">{problem}</p>
-						{/if}
-						{#if holdLapsed && !empty}
-							<p role="status" class="co-note">{HOLD_EXPIRED_MESSAGE}</p>
 						{/if}
 					</div>
 				{/if}
@@ -100,14 +81,6 @@
 				<div>
 					<div class="co-head">
 						<h2>Pieces</h2>
-						{#if cart.soonestHoldMs !== null}
-							<HoldTimer
-								expiresAtMs={cart.soonestHoldMs}
-								serverNowMs={cart.pricedAtMs}
-								onexpire={onHoldExpired}
-								surface="light"
-							/>
-						{/if}
 					</div>
 
 					<ul class="co-lines">

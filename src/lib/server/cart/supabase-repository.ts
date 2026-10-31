@@ -174,20 +174,6 @@ export const supabaseCartRepository: CartRepository = {
 		if (error) throw new Error(`renewHold failed: ${error.message}`);
 	},
 
-	async countHoldsElsewhere(variantId, nowMs, exceptCartId) {
-		// Only LIVE holds count. An expired hold releases itself — §10 — so
-		// there is no sweeper to wait for and no row to delete.
-		const { data, error } = await getServiceClient()
-			.from('cart_lines')
-			.select('quantity')
-			.eq('variant_id', variantId)
-			.gt('held_until', iso(nowMs))
-			.neq('cart_id', exceptCartId);
-
-		if (error) throw new Error(`countHoldsElsewhere failed: ${error.message}`);
-		return (data as unknown as { quantity: number }[]).reduce((n, row) => n + row.quantity, 0);
-	},
-
 	async committedUnits() {
 		// app.commit_order() decrements public.variants.stock_count inside the
 		// same transaction, so the catalogue read already accounts for every

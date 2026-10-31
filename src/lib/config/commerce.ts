@@ -37,7 +37,10 @@ export const COD_ENABLED = false;
 /** §10: India only. Enforced at the address form AND at order creation. */
 export const ALLOWED_COUNTRIES = ['IN'] as const;
 
-/** §10: short cart-reservation window during the drop rush, released automatically. */
+/**
+ * How long a cart line counts as recently active (admin, cart reminders).
+ * It holds no stock: stock is checked and taken when the order is placed.
+ */
 export const CART_HOLD_MINUTES = 15;
 
 /**

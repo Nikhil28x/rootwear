@@ -18,7 +18,7 @@ import { acceptsDropRequest, isFinished } from '$lib/components/drop/marks';
 import { resolveStage } from '$lib/drop/stage-resolver';
 import { DROP_01_SCHEDULE } from '$lib/drop/schedule';
 import { resolvePrice } from '$lib/server/cart/pricing';
-import { currentCartId, sizeOffers } from '$lib/server/cart/availability';
+import { sizeOffers } from '$lib/server/cart/availability';
 
 export async function loadExperience(
 	drop: Drop,
@@ -30,8 +30,7 @@ export async function loadExperience(
 	const showPrelaunchPrice =
 		unitPrice === product.prelaunchPrice && unitPrice !== product.launchPrice;
 
-	const cartId = await currentCartId(cookies);
-	const offers = await sizeOffers(product, now, cartId);
+	const offers = await sizeOffers(product);
 
 	const preLaunch = drop.state === 'TEASE' || drop.state === 'REVEALED';
 	const single = drop.products.length === 1;

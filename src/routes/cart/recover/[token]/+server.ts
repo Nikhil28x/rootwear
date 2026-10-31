@@ -43,7 +43,7 @@ export const GET: RequestHandler = async ({ params, cookies, locals }) => {
 			short = true;
 			continue;
 		}
-		const available = await availableUnits(entry.variant, locals.now, cart.id);
+		const available = await availableUnits(entry.variant);
 		const quantity = Math.min(line.quantity, available);
 		if (quantity < line.quantity) short = true;
 		if (quantity > 0)

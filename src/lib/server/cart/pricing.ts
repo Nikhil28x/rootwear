@@ -20,7 +20,6 @@ import type { Drop, Product, Variant } from '$lib/domain/drop';
 import { sellableStock, colourOf, variantLabel } from '$lib/domain/drop';
 import { drops } from '$lib/server/drops';
 import { ZERO, addPaise, multiplyPaise, paise, subPaise, type Paise } from '$lib/money';
-import { CART_HOLD_MINUTES } from '$lib/config/commerce';
 import type { CartRepository } from './repository';
 import type {
 	CartTotals,
@@ -120,8 +119,6 @@ export function emptyCartView(nowMs: number): CartView {
 		shipping: EMPTY_SHIPPING,
 		couponCode: null,
 		couponProblem: null,
-		soonestHoldMs: null,
-		holdMinutes: CART_HOLD_MINUTES,
 		hasPreOrderLine: false,
 		pricedAtMs: nowMs
 	};
@@ -160,11 +157,10 @@ export async function buildCartView(
 		const { unitPrice, priceSource, isPreOrder } = resolvePrice(drop, product, nowMs);
 		const image = leadImage(product);
 
-		// §10 — what makes the hold real rather than decorative: stock already
-		// held in OTHER carts is not available to this one.
-		const heldElsewhere = await repo.countHoldsElsewhere(line.variantId, nowMs, cart.id);
+		// Carts hold nothing; stock is taken when the order is placed. Only
+		// placed orders reduce what this line can have.
 		const committed = await repo.committedUnits(line.variantId);
-		const availableNow = Math.max(0, sellableStock(variant) - heldElsewhere - committed);
+		const availableNow = Math.max(0, sellableStock(variant) - committed);
 
 		priced.push({
 			variantId: line.variantId,
@@ -207,8 +203,6 @@ export async function buildCartView(
 	const shipping = await repo.shippingFor(subtotal);
 	const total = subPaise(addPaise(subtotal, shipping.rate), discount);
 
-	const liveHolds = priced.filter((line) => line.holdActive).map((line) => line.heldUntilMs);
-
 	return {
 		token: cart.token,
 		lines: priced,
@@ -216,8 +210,6 @@ export async function buildCartView(
 		shipping,
 		couponCode: cart.couponCode,
 		couponProblem,
-		soonestHoldMs: liveHolds.length > 0 ? Math.min(...liveHolds) : null,
-		holdMinutes: CART_HOLD_MINUTES,
 		hasPreOrderLine: priced.some((line) => line.isPreOrder),
 		pricedAtMs: nowMs
 	};

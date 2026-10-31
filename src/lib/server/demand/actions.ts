@@ -192,7 +192,7 @@ export async function handleNotifyMe(
 
 	// Live availability, as the product page shows it: a size held in other
 	// carts reads as sold out there, so it must take a notify-me here too.
-	if (!acceptsNotifyMe(drop.state) && (await availableUnits(variant, event.locals.now, null)) > 0) {
+	if (!acceptsNotifyMe(drop.state) && (await availableUnits(variant)) > 0) {
 		return reject(
 			'notify',
 			variantId,
