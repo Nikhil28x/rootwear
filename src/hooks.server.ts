@@ -4,6 +4,7 @@ import { serverNow } from '$lib/server/clock';
 import { createAnonClient } from '$lib/server/db/clients';
 import { isSupabaseConfigured } from '$lib/server/env';
 import { recordTouch, touchFrom } from '$lib/server/attribution/touch';
+import { overLimit, tooManyRequests } from '$lib/server/ratelimit';
 
 /**
  * RW-019 — Request-scoped server clock.
@@ -62,6 +63,12 @@ const auth: Handle = async ({ event, resolve }) => {
 	});
 };
 
+/** Form posts over their per-visitor limit stop here, before any database work. */
+const limits: Handle = async ({ event, resolve }) => {
+	if (await overLimit(event)) return tooManyRequests(event);
+	return resolve(event);
+};
+
 /**
  * Campaign attribution: a landing tagged with utm_* (or a Meta / Google click
  * id) is remembered in a first-party cookie, so the lead or order it leads
@@ -88,10 +95,18 @@ const security: Handle = async ({ event, resolve }) => {
 		'geolocation=(), microphone=(), camera=(), interest-cohort=()'
 	);
 
-	// CSP is deliberately not set yet: it needs the Razorpay checkout origins
-	// (RW-096), which are blocked on RW-005 (account confirmed in writing).
+	// The parts of a CSP that can't break the Razorpay checkout (its script
+	// and iframes are untouched): no framing of this site, no plugins, and
+	// forms and <base> can only point back here.
+	response.headers.set(
+		'Content-Security-Policy',
+		"frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'"
+	);
+	if (event.url.protocol === 'https:') {
+		response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+	}
 
 	return response;
 };
 
-export const handle = sequence(clock, touch, auth, security);
+export const handle = sequence(clock, limits, touch, auth, security);

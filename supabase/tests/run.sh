@@ -27,6 +27,9 @@ Q() { psql -h "$SOCK" -p $PORT -U postgres -d rw -q -tA "$@"; }
 psql -h "$SOCK" -p $PORT -U postgres -q -c "create database rw;" >/dev/null
 Q -v ON_ERROR_STOP=1 >/dev/null <<'SQL'
 create schema if not exists auth;
+-- As on Supabase: extensions live in their own schema, not public.
+create schema if not exists extensions;
+create extension if not exists pgcrypto schema extensions;
 create table auth.users (id uuid primary key default gen_random_uuid(), email text);
 create or replace function auth.uid() returns uuid language sql stable as $fn$ select null::uuid $fn$;
 do $$ begin
@@ -34,6 +37,11 @@ do $$ begin
   if not exists (select 1 from pg_roles where rolname='authenticated') then create role authenticated; end if;
   if not exists (select 1 from pg_roles where rolname='service_role') then create role service_role; end if;
 end $$;
+-- Supabase's defaults: the API roles get everything in public, RLS decides.
+grant usage on schema public to anon, authenticated, service_role;
+alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
+alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
+alter default privileges in schema public grant execute on functions to anon, authenticated, service_role;
 SQL
 
 echo "Applying migrations"
@@ -238,6 +246,10 @@ check "issuing twice returns the same invoice" "$([ "$D1" = "$D2" ] && echo same
 check "and takes only one number" "$(Q -c "select last from app.document_sequences where series='invoice:T:26-27';")" "1"
 
 # --- RLS --------------------------------------------------------------------
+# Layer 0 — 0033: the browser roles hold no privileges on the shop's tables.
+check "anon has no select on products (hidden prices)" "$(Q -c "select has_table_privilege('anon','public.products','select');")" "f"
+check "authenticated has no write on policies" "$(Q -c "select has_table_privilege('authenticated','public.policies','update');")" "f"
+check "service_role still reads products" "$(Q -c "select has_table_privilege('service_role','public.products','select');")" "t"
 Q -c "grant usage on schema public to anon, authenticated;
       grant select on all tables in schema public to anon, authenticated;" >/dev/null
 check "anon cannot read an unpublished drop" "$(Q -c "set role anon; select count(*) from public.drops;")" "0"

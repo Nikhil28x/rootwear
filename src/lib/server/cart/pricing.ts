@@ -40,6 +40,19 @@ export type CatalogueEntry = {
 };
 
 /**
+ * Why this piece can't be bought right now, or null when it can. The one
+ * rule for adding to a cart, restoring a cart and placing an order, so a line
+ * carted while a drop was open can't be ordered after it closes, after the
+ * piece is taken off the site, or while its price is hidden.
+ */
+export function purchaseRefusal(entry: CatalogueEntry | undefined): string | null {
+	if (!entry) return 'This piece is no longer available.';
+	if (!isOnSale(entry.drop.state)) return `${entry.drop.name} isn't on sale right now.`;
+	if (!entry.product.priceVisible) return `${entry.product.name} isn't on sale yet.`;
+	return null;
+}
+
+/**
  * variantId -> the drop, product and variant it belongs to.
  *
  * Built from the SAME DropRepository the storefront reads, so a cart can never

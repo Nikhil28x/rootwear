@@ -5,9 +5,9 @@ The site is hosted on Cloudflare Workers and the database is Supabase.
 
 ## 1. Apply the database migrations
 
-Every file in `supabase/migrations` (0001 to 0030), in order, on a new
+Every file in `supabase/migrations` (0001 to 0033), in order, on a new
 Supabase project. The live project is `atoooqpjkesmnggyrmup` (Singapore),
-already migrated to 0030.
+already migrated to 0031; 0032 and 0033 are in this release.
 
 1. Supabase → your project → **Connect** → **Session pooler**. Copy that
    connection string and put the database password in it. Don't use the
@@ -29,17 +29,20 @@ already migrated to 0030.
 
 The CMS migrations, for reference:
 
-| File                         | What it adds                                                                                        |
-| ---------------------------- | --------------------------------------------------------------------------------------------------- |
-| `0022_staff_permissions.sql` | Per-person permissions, owner guard, settings table                                                 |
-| `0023_messaging.sql`         | Message templates and the send queue (outbox)                                                       |
-| `0024_catalogue_cms.sql`     | Editable sizes, colourways, draft products, stock history, tax fields, the `catalogue` image bucket |
-| `0025_orders_cms.sql`        | Order notes, invoices and credit notes, returns                                                     |
-| `0026_cart_recovery.sql`     | Abandoned-checkout reminders                                                                        |
-| `0027_leads.sql`             | Leads and their history; turns every past form into a lead                                          |
-| `0028_growth.sql`            | Customer tags and consent, broadcasts, influencer seeding, digest                                   |
-| `0029_money_guards.sql`      | Refund cap and gap-free invoice numbers                                                             |
-| `0030_service_role_app.sql`  | Server access to `app` through the API; browser roles kept out                                      |
+| File                                | What it adds                                                                                        |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `0022_staff_permissions.sql`        | Per-person permissions, owner guard, settings table                                                 |
+| `0023_messaging.sql`                | Message templates and the send queue (outbox)                                                       |
+| `0024_catalogue_cms.sql`            | Editable sizes, colourways, draft products, stock history, tax fields, the `catalogue` image bucket |
+| `0025_orders_cms.sql`               | Order notes, invoices and credit notes, returns                                                     |
+| `0026_cart_recovery.sql`            | Abandoned-checkout reminders                                                                        |
+| `0027_leads.sql`                    | Leads and their history; turns every past form into a lead                                          |
+| `0028_growth.sql`                   | Customer tags and consent, broadcasts, influencer seeding, digest                                   |
+| `0029_money_guards.sql`             | Refund cap and gap-free invoice numbers                                                             |
+| `0030_service_role_app.sql`         | Server access to `app` through the API; browser roles kept out                                      |
+| `0031_price_visible.sql`            | A product price can be hidden; hidden pieces can't be bought                                        |
+| `0032_commit_order_search_path.sql` | Fixes checkout on Supabase: order tokens use pgcrypto from `extensions`                             |
+| `0033_close_public_api.sql`         | The public API key reads and writes nothing; the server alone reads the shop                        |
 
 The database tests run every migration on a throwaway local Postgres:
 
@@ -97,9 +100,10 @@ test of each.
 
 **Payments: Razorpay**
 
-Leave `PAYMENT_PROVIDER` unset and checkout uses the built-in mock gateway.
-Switch to Razorpay once the account is approved (KYC cleared). Use test-mode
-keys first, then swap in live keys.
+A deployed site always uses Razorpay, and refuses to place orders until the
+three Razorpay values below are set. Use test-mode keys first (no real money
+moves), then swap in live keys once the account is approved (KYC cleared).
+The built-in mock gateway only runs on a developer's machine (`npm run dev`).
 
 | Variable                  | Notes                                                                   |
 | ------------------------- | ----------------------------------------------------------------------- |
@@ -208,3 +212,53 @@ a drop form, or were marked as agreeing by staff.
   should float the garment over the name, as Drop 01 does.
 - Policy pages: they are served from the code until someone edits one in
   Layout → Pages.
+- **Supabase → Authentication → Sign In / Providers → Email: "Confirm email"
+  is on.** The site only links a guest's past orders to an account whose
+  email has been confirmed; with confirmation off, anyone could sign up as a
+  customer's address.
+- **Razorpay keys work.** A deployed site refuses to take orders without all
+  three Razorpay values, so a missing or rejected key stops sales rather than
+  letting anything through. Check them with one test-mode payment.
+- **Rate limits.** `wrangler.jsonc` limits each visitor to 10 sign-in,
+  checkout and contact posts a minute, and 30 cart and sign-up posts.
+  Cloudflare applies them on deploy; nothing to set up.
+
+## 8. Testing before a deploy
+
+The end-to-end suite (`tests/e2e`) runs the whole shop against a **local**
+Supabase: admin opens a drop, a shopper buys, Razorpay's webhook pays (signed
+the way Razorpay signs it), then fulfilment, refunds, coupons, leads, crons,
+every admin screen, and attacks on all of it (API access with the public key,
+staff without permission, forged and short payments, lookalike accounts,
+tampered quantities, bad uploads). It wipes the local database each run and
+refuses to run against anything else.
+
+One-time setup:
+
+1. A container runtime (Docker, or Podman with
+   `DOCKER_HOST=unix:///run/user/$UID/podman/podman.sock`), then
+   `npx supabase start`. It applies every migration; `npx supabase status`
+   prints the local keys.
+2. Create `.env.e2e` (git-ignored) with the local URL and keys, Razorpay
+   **test** keys, `ZEPTOMAIL_TOKEN=test`,
+   `ZEPTOMAIL_API_URL=http://127.0.0.1:54399/v1.1/email`, a `CRON_SECRET`,
+   and an `ADMIN_EMAIL` / `ADMIN_PASSWORD` for the test owner.
+3. `playwright-core` installed anywhere; set `PLAYWRIGHT_CORE` to its path if
+   it isn't next to the repo.
+
+Each run:
+
+```sh
+node tests/e2e/fakezepto.mjs &               # records emails instead of sending
+npx vite dev --mode e2e --port 5199 &        # the site, on .env.e2e
+tests/e2e/run.sh                             # resets the local DB, runs all suites
+```
+
+To test the production build (stricter: cross-site form checks, rate limits,
+no mock gateway), `npm run build`, then
+`npx wrangler dev --local --port 8799 --env-file .env.e2e --infer-origin-from-routes=false`
+and run with `BASE=http://127.0.0.1:8799`. Pass `--env-file`: without it
+wrangler reads `.env`, which holds the live keys.
+
+The database's own checks still run on their own throwaway Postgres:
+`PGBIN=/usr/sbin ./supabase/tests/run.sh`.

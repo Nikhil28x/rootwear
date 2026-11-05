@@ -52,7 +52,8 @@ export const actions: Actions = {
 				name,
 				isOwner,
 				permissions,
-				actor: actorLabel(actor)
+				actor: actorLabel(actor),
+				actorIsOwner: actor.isOwner
 			});
 
 			if (emailProvider()) {

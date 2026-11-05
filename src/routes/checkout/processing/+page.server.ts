@@ -2,7 +2,7 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { orderPaymentWindowMs } from '$lib/server/env';
 import { cartRepository } from '$lib/server/cart';
-import { settleCheckout } from '$lib/server/checkout/place';
+import { openPaymentIntent, settleCheckout } from '$lib/server/checkout/place';
 import {
 	checkoutKeyId,
 	mockWebhookDelivery,
@@ -41,7 +41,12 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
 		redirect(303, `/order/${order.publicToken}`);
 	}
 
-	const intent = await cartRepository.findPaymentIntent({ orderId: order.id });
+	let intent = await cartRepository.findPaymentIntent({ orderId: order.id });
+	// The gateway was unreachable when the order was placed: try again now,
+	// so the customer can still pay for the order they placed.
+	if (!intent && (await openPaymentIntent(order))) {
+		intent = await cartRepository.findPaymentIntent({ orderId: order.id });
+	}
 
 	return {
 		order: {
@@ -160,7 +165,9 @@ export const actions: Actions = {
 		});
 
 		if (!response.ok) {
-			return fail(502, { problem: `The test payment didn't go through (${response.status}). Please try again.` });
+			return fail(502, {
+				problem: `The test payment didn't go through (${response.status}). Please try again.`
+			});
 		}
 
 		return { settled: true };

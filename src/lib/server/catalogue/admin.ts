@@ -18,6 +18,7 @@ import { compareSizes, isSize } from '$lib/drop/sizes';
 import { legalTransitionsFrom, type DropState } from '$lib/domain/drop-state';
 import { paise, type Paise } from '$lib/money';
 import { getCatalogueClient, getServiceClient } from '$lib/server/db/clients';
+import { SUPABASE_URL } from '$lib/server/env';
 import { writeAudit } from '$lib/server/admin/audit';
 
 export class CatalogueError extends Error {}
@@ -1260,6 +1261,19 @@ const IMAGE_TYPES: Record<string, string> = {
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
 /** Width and height from the file header, so the shop can hold the frame's shape. */
+/**
+ * The image type the bytes actually are, from their signature, or null. The
+ * browser's declared type is only a label; this is what is checked.
+ */
+export function sniffImageType(bytes: Uint8Array): string | null {
+	const ascii = (from: number, to: number) => String.fromCharCode(...bytes.slice(from, to));
+	if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return 'image/jpeg';
+	if (bytes[0] === 0x89 && ascii(1, 4) === 'PNG') return 'image/png';
+	if (ascii(0, 4) === 'RIFF' && ascii(8, 12) === 'WEBP') return 'image/webp';
+	if (ascii(4, 8) === 'ftyp' && ['avif', 'avis'].includes(ascii(8, 12))) return 'image/avif';
+	return null;
+}
+
 export function imageSize(bytes: Uint8Array): { width: number; height: number } | null {
 	const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 	// PNG: IHDR at byte 16.
@@ -1329,6 +1343,10 @@ export async function uploadImage(input: {
 
 	const product = await productById(input.productId);
 	const bytes = new Uint8Array(await input.file.arrayBuffer());
+	if (sniffImageType(bytes) !== input.file.type)
+		throw new CatalogueError(
+			'That file isn’t a working JPG, PNG, WebP or AVIF photo. Export it again and upload that.'
+		);
 	const size = imageSize(bytes);
 	const path = `${product.dropId}/${product.id}/${crypto.randomUUID()}.${extension}`;
 
@@ -1436,9 +1454,16 @@ export async function restoreImage(input: {
 	image: Omit<AdminImage, 'id'>;
 	actor: string;
 }): Promise<void> {
+	// Undo puts back a photo this shop stored, never an address someone posts.
+	const ownStorage = `${SUPABASE_URL()}/storage/v1/object/public/${BUCKET}/`;
+	const url = String(input.image.url ?? '');
+	const ownStatic = /^\/images\/[\w./-]+$/.test(url) && !url.includes('..');
+	if (!url.startsWith(ownStorage) && !ownStatic) {
+		throw new CatalogueError('That photo can’t be restored. Upload it again instead.');
+	}
 	const { error } = await getCatalogueClient().from('product_images').insert({
 		product_id: input.productId,
-		url: input.image.url,
+		url,
 		alt: input.image.alt,
 		role: input.image.role,
 		caption: input.image.caption,

@@ -287,10 +287,12 @@ export const supabaseAccountRepository: AccountRepository = {
 
 		if (!email) return null;
 
+		// Exact match: ilike would treat `_` and `%` in an address as wildcards,
+		// letting priya_sharma@… claim priya.sharma@…'s orders.
 		const byEmail = await db
 			.from('customers')
 			.select(columns)
-			.ilike('email', email)
+			.eq('email', email.trim().toLowerCase())
 			.maybeSingle<CustomerRow>();
 
 		if (byEmail.data) {
@@ -637,7 +639,7 @@ export const supabaseAccountRepository: AccountRepository = {
 		const { data } = await getServiceClient()
 			.from('notify_requests')
 			.select('id, variant_id, email, consented_at, notified_at')
-			.ilike('email', email)
+			.eq('email', email.trim().toLowerCase())
 			.order('consented_at', { ascending: false })
 			.returns<NotifyRow[]>();
 
@@ -674,7 +676,7 @@ export const supabaseAccountRepository: AccountRepository = {
 			.from('notify_requests')
 			.delete()
 			.eq('id', subscriptionId)
-			.ilike('email', email)
+			.eq('email', email.trim().toLowerCase())
 			.select('id')
 			.maybeSingle<{ id: string }>();
 

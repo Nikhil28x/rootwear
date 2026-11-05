@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { cartRepository, holdUntil, openCart } from '$lib/server/cart';
-import { catalogueIndex } from '$lib/server/cart/pricing';
+import { catalogueIndex, purchaseRefusal } from '$lib/server/cart/pricing';
 import { availableUnits } from '$lib/server/cart/availability';
 import { getServiceClient } from '$lib/server/db/clients';
 import { catalogueSource } from '$lib/server/env';
@@ -39,7 +39,7 @@ export const GET: RequestHandler = async ({ params, cookies, locals }) => {
 	let short = false;
 	for (const line of (lines ?? []) as { variant_id: string; quantity: number }[]) {
 		const entry = index.get(line.variant_id);
-		if (!entry) {
+		if (purchaseRefusal(entry) || !entry) {
 			short = true;
 			continue;
 		}

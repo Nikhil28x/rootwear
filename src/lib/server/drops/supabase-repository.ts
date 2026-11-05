@@ -93,9 +93,10 @@ const SELECT = `
 `;
 
 function toDomain(row: Row): Drop {
-	// Draft products are being prepared in admin and never reach the shop.
+	// Only live products reach the shop: drafts are being prepared in admin,
+	// and archived ones are taken off the site (their orders stay).
 	const visible = row.products
-		.filter((p) => (p.status ?? 'active') !== 'draft')
+		.filter((p) => (p.status ?? 'active') === 'active')
 		.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
 
 	const products: Product[] = visible.map((p) => {

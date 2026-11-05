@@ -1,12 +1,13 @@
 /**
  * The one place the payment gateway is chosen.
  *
- * PAYMENT_PROVIDER=razorpay switches to the real gateway; anything else (the
- * default) uses the mock, so the app runs, typechecks and builds with no keys
- * while RW-005 is open. §10's "secondary gateway as a configurable option,
- * hidden at launch unless Razorpay wobbles" is this switch plus one more
- * implementation of the same interface.
+ * A deployed build always uses Razorpay. The mock settles orders for free (it
+ * signs its own webhooks with a secret in this file), so it only ever runs
+ * under `vite dev`, and there only when PAYMENT_PROVIDER isn't `razorpay`.
+ * Without Razorpay keys a deployed site refuses to take orders rather than
+ * falling back to anything that could mark one paid.
  */
+import { dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
 import { mockPaymentProvider } from './mock';
 import { razorpayPaymentProvider } from './razorpay';
@@ -14,6 +15,7 @@ import type { PaymentProvider, PaymentProviderName } from './types';
 import type { Paise } from '$lib/money';
 
 export function paymentProviderName(): PaymentProviderName {
+	if (!dev) return 'razorpay';
 	return env.PAYMENT_PROVIDER === 'razorpay' ? 'razorpay' : 'mock';
 }
 
@@ -48,7 +50,10 @@ export async function verifyRedirect(
 	form: FormData,
 	intent: { gatewayOrderId: string; amount: Paise } | null
 ): Promise<
-	| { ok: true; captured: { gatewayOrderId: string; gatewayPaymentId: string; amount: Paise } | null }
+	| {
+			ok: true;
+			captured: { gatewayOrderId: string; gatewayPaymentId: string; amount: Paise } | null;
+	  }
 	| { ok: false; status: 400; problem: string }
 > {
 	const gatewayOrderId = (form.get('razorpay_order_id') ?? '').toString();
@@ -56,7 +61,11 @@ export async function verifyRedirect(
 	const signature = (form.get('razorpay_signature') ?? '').toString();
 
 	if (!gatewayOrderId || !gatewayPaymentId || !signature) {
-		return { ok: false, status: 400, problem: 'Something went wrong with your payment. Please try again.' };
+		return {
+			ok: false,
+			status: 400,
+			problem: 'Something went wrong with your payment. Please try again.'
+		};
 	}
 
 	const provider = paymentProvider();
@@ -66,7 +75,12 @@ export async function verifyRedirect(
 		(await provider.verifySignature({ gatewayOrderId, gatewayPaymentId, signature }));
 
 	if (!valid) {
-		return { ok: false, status: 400, problem: "We couldn't verify your payment. If you were charged, contact us and we'll sort it out." };
+		return {
+			ok: false,
+			status: 400,
+			problem:
+				"We couldn't verify your payment. If you were charged, contact us and we'll sort it out."
+		};
 	}
 
 	try {
@@ -75,7 +89,10 @@ export async function verifyRedirect(
 			payment.captured &&
 			payment.gatewayOrderId === intent.gatewayOrderId &&
 			payment.amount === intent.amount;
-		return { ok: true, captured: settles ? { gatewayOrderId, gatewayPaymentId, amount: payment.amount } : null };
+		return {
+			ok: true,
+			captured: settles ? { gatewayOrderId, gatewayPaymentId, amount: payment.amount } : null
+		};
 	} catch (cause) {
 		// Verified but unconfirmed: the webhook will settle it.
 		console.error('[checkout] payment lookup failed', cause);

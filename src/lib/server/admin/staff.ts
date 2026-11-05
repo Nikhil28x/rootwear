@@ -109,22 +109,43 @@ function cleanPermissions(permissions: readonly string[]): PermissionKey[] {
  * the existing one when the email already has an account. Returns the
  * password so the screen can show it once; it is never stored by the app.
  */
+/** The Auth user with this email, looking through every page of users. */
+async function findAuthUser(email: string) {
+	const client = getServiceClient();
+	for (let page = 1; ; page++) {
+		const { data, error } = await client.auth.admin.listUsers({ page, perPage: 1000 });
+		if (error) throw new Error(`auth read failed: ${error.message}`);
+		const found = data.users.find((user) => user.email?.toLowerCase() === email);
+		if (found) return found;
+		if (data.users.length < 1000) return null;
+	}
+}
+
 export async function inviteStaff(input: {
 	email: string;
 	name: string | null;
 	isOwner: boolean;
 	permissions: readonly string[];
 	actor: string;
+	/** Whether the person adding them is an owner. */
+	actorIsOwner: boolean;
 }): Promise<{ userId: string; password: string | null }> {
 	const client = getServiceClient();
 	const email = input.email.trim().toLowerCase();
 
-	const { data: list, error: listError } = await client.auth.admin.listUsers({ perPage: 1000 });
-	if (listError) throw new Error(`auth read failed: ${listError.message}`);
-	const existing = list.users.find((user) => user.email?.toLowerCase() === email);
+	const existing = await findAuthUser(email);
 
 	const already = existing ? await findStaff(existing.id) : null;
 	if (already?.active) throw new StaffError(`${email} is already on the team.`);
+
+	// An existing account is usually a customer's. Adding it to staff lets
+	// whoever manages staff reset its password and sign in as that customer,
+	// so only an owner may bring an existing account onto the team.
+	if (existing && !already && !input.actorIsOwner) {
+		throw new StaffError(
+			`${email} already has a Rootwear account, so only an owner can add it to the team. Ask an owner, or use a different email.`
+		);
+	}
 
 	let userId: string;
 	let password: string | null = null;

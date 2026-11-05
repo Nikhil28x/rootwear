@@ -39,6 +39,11 @@ declare global {
 		/** Cloudflare Workers, via adapter-cloudflare. Absent under vite dev. */
 		interface Platform {
 			context?: { waitUntil(promise: Promise<unknown>): void };
+			/** Rate limiting bindings from wrangler.jsonc; see $lib/server/ratelimit. */
+			env?: {
+				LIMIT_STRICT?: { limit(options: { key: string }): Promise<{ success: boolean }> };
+				LIMIT_FORMS?: { limit(options: { key: string }): Promise<{ success: boolean }> };
+			};
 		}
 	}
 }

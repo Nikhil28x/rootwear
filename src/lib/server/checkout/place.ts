@@ -1,6 +1,6 @@
 import { fail, redirect, type Cookies } from '@sveltejs/kit';
 import { cartRepository, closeCart, holdUntil, loadCart, readCartToken } from '$lib/server/cart';
-import { catalogueIndex } from '$lib/server/cart/pricing';
+import { catalogueIndex, purchaseRefusal } from '$lib/server/cart/pricing';
 import { clearShipTo } from '$lib/server/cart/ship-session';
 import { cartKeyPrefix } from '$lib/server/cart/keys';
 import { expireUnpaidOrders } from '$lib/server/checkout/expiry';
@@ -59,6 +59,15 @@ export async function placeOrder({
 	const token = readCartToken(cookies);
 	if (!token) redirect(303, '/cart');
 
+	// No gateway, no order: placing one would hold stock nobody can pay for.
+	if (!paymentProvider().isConfigured) {
+		return fail(503, {
+			problem:
+				"We can't take payments right now, so your order hasn't been placed. Please try again shortly.",
+			status: 'out_of_stock' as const
+		});
+	}
+
 	// Lapsed unpaid orders give their stock back before this one is checked.
 	await expireUnpaidOrders({ force: true });
 
@@ -87,17 +96,18 @@ export async function placeOrder({
 	const cart = await cartRepository.findCart(token);
 	const lines = cart ? await cartRepository.listLines(cart.id) : [];
 
-	// A piece whose price was hidden after it was carted is off sale until
-	// the price is shown again; it can't be ordered at a price the site hides.
+	// Every line must still be for sale now, not only when it was carted: the
+	// drop may have closed, the piece come off the site, or its price been
+	// hidden since.
 	const catalogue = await catalogueIndex();
-	const offSale = lines
-		.map((line) => catalogue.get(line.variantId)?.product)
-		.find((product) => product && !product.priceVisible);
-	if (offSale) {
-		return fail(409, {
-			problem: `${offSale.name} isn't on sale right now. Remove it from your cart to check out.`,
-			status: 'out_of_stock' as const
-		});
+	for (const line of lines) {
+		const refusal = purchaseRefusal(catalogue.get(line.variantId));
+		if (refusal) {
+			return fail(409, {
+				problem: `${refusal} Remove it from your cart to check out.`,
+				status: 'out_of_stock' as const
+			});
+		}
 	}
 
 	const keyPrefix = cartKeyPrefix(token);
@@ -188,34 +198,9 @@ export async function placeOrder({
 	}
 
 	if (outcome.status === 'committed' && outcome.orderId) {
-		const provider = paymentProvider();
-		if (provider.isConfigured) {
-			// The amount comes off the ORDER, which the database computed.
-			const order = await cartRepository.findOrderByToken(outcome.publicToken);
-			if (order) {
-				try {
-					const gatewayOrder = await provider.createOrder({
-						amount: order.total,
-						reference: order.orderNumber,
-						kind: 'order',
-						email: order.email
-					});
-
-					await cartRepository.recordPaymentIntent({
-						orderId: outcome.orderId,
-						reservationId: null,
-						kind: 'order',
-						gateway: gatewayOrder.gateway,
-						gatewayOrderId: gatewayOrder.gatewayOrderId,
-						amount: gatewayOrder.amount
-					});
-				} catch (cause) {
-					// The order exists and is unpaid, which is a recoverable state.
-					// Losing the gateway handoff must not lose the order.
-					console.error('[checkout] gateway order failed', cause);
-				}
-			}
-		}
+		// The amount comes off the ORDER, which the database computed.
+		const order = await cartRepository.findOrderByToken(outcome.publicToken);
+		if (order) await openPaymentIntent(order);
 	}
 
 	cookies.set(PENDING_COOKIE, `${outcome.publicToken}.${await linesSignature(lines)}`, {
@@ -226,6 +211,37 @@ export async function placeOrder({
 	});
 
 	redirect(303, `/checkout/processing?order=${outcome.publicToken}`);
+}
+
+/**
+ * Opens the gateway order a customer pays into, and records it. Called when
+ * the order is placed, and again from the payment page if that first call
+ * failed (Razorpay briefly down), so a placed order can always be paid.
+ * Never throws: an unpaid order with no intent yet is a recoverable state.
+ */
+export async function openPaymentIntent(order: OrderRecord): Promise<boolean> {
+	const provider = paymentProvider();
+	if (!provider.isConfigured) return false;
+	try {
+		const gatewayOrder = await provider.createOrder({
+			amount: order.total,
+			reference: order.orderNumber,
+			kind: 'order',
+			email: order.email
+		});
+		await cartRepository.recordPaymentIntent({
+			orderId: order.id,
+			reservationId: null,
+			kind: 'order',
+			gateway: gatewayOrder.gateway,
+			gatewayOrderId: gatewayOrder.gatewayOrderId,
+			amount: gatewayOrder.amount
+		});
+		return true;
+	} catch (cause) {
+		console.error('[checkout] gateway order failed', cause);
+		return false;
+	}
 }
 
 /** The order this browser's cart is waiting to pay for. */

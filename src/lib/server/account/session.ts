@@ -91,7 +91,10 @@ async function resolve(event: RequestEvent): Promise<AccountAuth> {
 	if (!user) return { status: 'anonymous' };
 
 	const email = user.email ?? '';
-	const customer = await account.findCustomerForUser(user.id, email);
+	// Only a verified address can claim the orders placed under it. Without
+	// this, signing up as someone's email (with confirmation off) would open
+	// their order history and addresses.
+	const customer = await account.findCustomerForUser(user.id, user.email_confirmed_at ? email : '');
 
 	return {
 		status: 'signed_in',
@@ -112,9 +115,17 @@ async function resolve(event: RequestEvent): Promise<AccountAuth> {
  * glance, which is exactly why it is the one people miss.
  */
 export function safeRedirect(value: string | null | undefined, fallback = '/account'): string {
-	if (!value) return fallback;
-	if (!value.startsWith('/')) return fallback;
-	if (value.startsWith('//')) return fallback;
-	if (value.startsWith('/\\')) return fallback;
-	return value;
+	if (!value || !value.startsWith('/')) return fallback;
+	// Parsed the way a browser will parse it: browsers drop tabs and newlines
+	// and treat `\` as `/`, so `/\t/evil.example` is really `//evil.example`.
+	// Only what still lands on this site is honoured.
+	const base = 'https://rootwear.invalid';
+	let url: URL;
+	try {
+		url = new URL(value, base);
+	} catch {
+		return fallback;
+	}
+	if (url.origin !== base) return fallback;
+	return url.pathname + url.search + url.hash;
 }

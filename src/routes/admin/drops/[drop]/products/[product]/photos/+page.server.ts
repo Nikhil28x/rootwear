@@ -112,7 +112,12 @@ export const actions: Actions = {
 		} catch {
 			return fail(400, { error: 'Could not restore that photo.' });
 		}
-		await restoreImage({ productId: product.id, image, actor });
+		try {
+			await restoreImage({ productId: product.id, image, actor });
+		} catch (err) {
+			if (err instanceof CatalogueError) return fail(400, { error: err.message });
+			throw err;
+		}
 		return { message: 'Photo restored.' };
 	}
 };

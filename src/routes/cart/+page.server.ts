@@ -8,8 +8,7 @@ import {
 	openCart,
 	readCartToken
 } from '$lib/server/cart';
-import { catalogueIndex } from '$lib/server/cart/pricing';
-import { isOnSale } from '$lib/domain/drop-state';
+import { catalogueIndex, purchaseRefusal } from '$lib/server/cart/pricing';
 import { availableUnits } from '$lib/server/cart/availability';
 import { expireUnpaidOrders } from '$lib/server/checkout/expiry';
 import { LAUNCH_INSTANT } from '$lib/drop/schedule';
@@ -74,20 +73,11 @@ export const actions: Actions = {
 			return fail(400, { problem: 'Please enter a valid quantity.' });
 		}
 
-		const entry = (await catalogueIndex()).get(variantId);
-		if (!entry) return fail(404, { problem: 'This piece is no longer available.' });
-
 		// §06: the drop's own state decides, not the page that posted. During a
 		// tease a visitor reserves with a deposit (§08); they do not buy.
-		if (!isOnSale(entry.drop.state)) {
-			return fail(409, {
-				problem: `${entry.drop.name} isn't open yet.`
-			});
-		}
-		// A hidden price means the piece isn't on sale yet, whatever the drop's state.
-		if (!entry.product.priceVisible) {
-			return fail(409, { problem: `${entry.product.name} isn't on sale yet.` });
-		}
+		const entry = (await catalogueIndex()).get(variantId);
+		const refusal = purchaseRefusal(entry);
+		if (refusal || !entry) return fail(entry ? 409 : 404, { problem: refusal });
 
 		const cart = await openCart(cookies, locals.now);
 		const existing = (await cartRepository.listLines(cart.id)).find(
@@ -151,7 +141,8 @@ export const actions: Actions = {
 		}
 
 		const entry = (await catalogueIndex()).get(variantId);
-		if (!entry) return fail(404, { problem: 'This piece is no longer available.' });
+		const refusal = purchaseRefusal(entry);
+		if (refusal || !entry) return fail(entry ? 409 : 404, { problem: refusal });
 
 		const available = await availableUnits(entry.variant);
 
