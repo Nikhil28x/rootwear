@@ -1,6 +1,5 @@
 <script lang="ts">
 	import './layout.css';
-	import favicon from '$lib/assets/favicon.svg';
 	import { page } from '$app/state';
 	import { onNavigate } from '$app/navigation';
 	import { setCart } from '$lib/cart/cart.svelte';
@@ -101,7 +100,13 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<!-- The Rootwear tree, in the browser's own theme: dark ink on light tabs,
+	     cream on dark ones. PNGs first for browsers without SVG icons (Safari);
+	     the SVG last, so browsers that can use it prefer it. -->
+	<link rel="icon" href="/favicon-dark.png" sizes="32x32" media="(prefers-color-scheme: light)" />
+	<link rel="icon" href="/favicon-light.png" sizes="32x32" media="(prefers-color-scheme: dark)" />
+	<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+	<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 	<meta name="theme-color" content={isAdmin ? '#ffffff' : BRAND_THEME_COLOR} />
 </svelte:head>
 
