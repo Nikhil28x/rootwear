@@ -85,7 +85,7 @@
 
 					<ul class="co-lines">
 						{#each cart.lines as line (line.variantId)}
-							<CartLine {line} launchInstant={data.launchInstant} />
+							<CartLine {line} launchInstant={line.dropLaunchInstant} />
 						{/each}
 					</ul>
 				</div>

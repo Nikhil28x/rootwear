@@ -82,18 +82,19 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
 
 export const actions: Actions = {
 	/**
-	 * The buyer closed the payment window without paying: the order is
-	 * cancelled at once and its stock goes back on sale. The cart is kept, so
-	 * checking out again places a fresh order. A payment that already went
-	 * through is never touched (the cancellation guards on it).
+	 * The buyer closed the payment window. The order is deliberately NOT
+	 * cancelled here: closing the window does not mean no payment is coming —
+	 * a UPI collect request can still be approved on the phone minutes later.
+	 * Cancelling at once put the stock back on sale and turned that payment
+	 * into a captured-against-cancelled refund. The order lapses with the
+	 * payment window (expire_unpaid_orders), or is superseded the moment the
+	 * buyer checks out again, whichever is first.
 	 */
 	abandon: async ({ request }) => {
 		const data = await request.formData();
 		const order = await cartRepository.findOrderByToken(String(data.get('order') ?? ''));
 		if (!order) return fail(404, { problem: "We couldn't find that order." });
-		if (order.state !== 'pending_payment') return { cancelled: false };
-		const cancelled = await cartRepository.cancelUnpaidOrder(order.id);
-		return { cancelled };
+		return { cancelled: false };
 	},
 
 	/**

@@ -656,5 +656,10 @@ export const supabaseCartRepository: CartRepository = {
 			.eq('event_id', eventId);
 
 		if (error) throw new Error(`markWebhookProcessed failed: ${error.message}`);
+	},
+
+	async forgetWebhookEvent(eventId) {
+		const { error } = await getServiceClient().from('webhook_events').delete().eq('event_id', eventId);
+		if (error) throw new Error(`forgetWebhookEvent failed: ${error.message}`);
 	}
 };

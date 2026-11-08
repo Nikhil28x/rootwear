@@ -687,6 +687,10 @@ export const mockCartRepository: CartRepository = {
 			row.processedAtMs = Date.now();
 			row.error = errorMessage;
 		}
+	},
+
+	async forgetWebhookEvent(eventId) {
+		webhookEvents.delete(eventId);
 	}
 };
 

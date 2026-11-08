@@ -58,6 +58,8 @@ export type PricedCartLine = {
 	readonly dropSlug: string;
 	readonly dropName: string;
 	readonly dropState: DropState;
+	/** The line's own drop opens at this instant (epoch ms): "ships after" copy. */
+	readonly dropLaunchInstant: number;
 
 	readonly image: string | null;
 	readonly imageAlt: string;

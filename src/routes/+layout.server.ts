@@ -12,7 +12,7 @@ import { loadCartView } from '$lib/server/cart';
 export const load: LayoutServerLoad = async ({ locals, cookies }) => {
 	const [footerPolicies, cart] = await Promise.all([
 		policies.listFooterLinks(),
-		loadCartView(cookies)
+		loadCartView(cookies, locals.now)
 	]);
 
 	return {

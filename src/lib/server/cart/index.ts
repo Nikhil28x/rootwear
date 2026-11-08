@@ -77,7 +77,8 @@ export const cartRepository: CartRepository = {
 	findReservation: (id) => selectRepository().findReservation(id),
 	recordWebhookEvent: (input) => selectRepository().recordWebhookEvent(input),
 	markWebhookProcessed: (eventId, errorMessage) =>
-		selectRepository().markWebhookProcessed(eventId, errorMessage)
+		selectRepository().markWebhookProcessed(eventId, errorMessage),
+	forgetWebhookEvent: (eventId) => selectRepository().forgetWebhookEvent(eventId)
 };
 
 /**
@@ -156,6 +157,26 @@ export async function loadCart(
 }
 
 /**
+ * One priced cart per request, shared by the root layout and the page loads
+ * that render it (/cart, the checkout address step). SvelteKit runs those
+ * loads in parallel, and each used to price the cart in full — the catalogue
+ * read, shipping and the coupon check — twice over.
+ *
+ * LOADS ONLY. Form actions change the cart and must read it fresh, so they
+ * call loadCart directly. Keyed on the request's Cookies object, which is
+ * unique to the request, so nothing is shared between requests.
+ */
+const sharedViews = new WeakMap<Cookies, Promise<Awaited<ReturnType<typeof loadCart>>>>();
+export function loadCartShared(cookies: Cookies, nowMs: number) {
+	let view = sharedViews.get(cookies);
+	if (!view) {
+		view = loadCart(cookies, nowMs);
+		sharedViews.set(cookies, view);
+	}
+	return view;
+}
+
+/**
  * What the root layout puts in `data.cartLines` and CartState renders as the
  * header badge. READ-ONLY, and deliberately the narrow shape: the header needs
  * a count and a hold, not a priced, stock-checked cart.
@@ -168,7 +189,7 @@ export async function loadCartView(
 	cookies: Cookies,
 	nowMs: number = serverNow()
 ): Promise<CartLineView[]> {
-	const view = await loadCart(cookies, nowMs);
+	const view = await loadCartShared(cookies, nowMs);
 	return view.lines.map((line) => ({
 		variantId: line.variantId,
 		sku: line.sku,

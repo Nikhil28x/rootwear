@@ -297,6 +297,10 @@ export const supabaseAccountRepository: AccountRepository = {
 
 		if (byEmail.data) {
 			const row = byEmail.data;
+			// A record already linked to a DIFFERENT login is that person's, even
+			// if this login now holds the same address (an email change, or an
+			// address reused later). Never hand it over.
+			if (row.user_id && row.user_id !== userId) return null;
 			if (!row.user_id) {
 				await db.from('customers').update({ user_id: userId }).eq('id', row.id);
 			}
@@ -311,7 +315,7 @@ export const supabaseAccountRepository: AccountRepository = {
 
 		const created = await db
 			.from('customers')
-			.insert({ user_id: userId, email })
+			.insert({ user_id: userId, email: email.trim().toLowerCase() })
 			.select(columns)
 			.maybeSingle<CustomerRow>();
 
@@ -428,22 +432,26 @@ export const supabaseAccountRepository: AccountRepository = {
 
 		const ids = rows.map((row) => row.id);
 
-		// Captured payments only. These are REPORTING figures beside the state;
-		// §08 forbids inferring the state from them.
-		const { data: payments } = await db
-			.from('payments')
-			.select('reservation_id, kind, amount_paise, state')
-			.in('reservation_id', ids)
-			.eq('state', 'captured')
-			.returns<PaymentRow[]>();
-
-		// §08: the order a reservation became is the SAME record, reached
-		// through the order line that carries its id.
-		const { data: closingLines } = await db
-			.from('order_lines')
-			.select('order_id, reservation_id')
-			.in('reservation_id', ids)
-			.returns<Array<{ order_id: string; reservation_id: string | null }>>();
+		// Three independent reads at once, all depending only on the ids:
+		//  - captured payments only. These are REPORTING figures beside the
+		//    state; §08 forbids inferring the state from them;
+		//  - §08: the order a reservation became is the SAME record, reached
+		//    through the order line that carries its id;
+		//  - the catalogue, to name each reservation's piece.
+		const [{ data: payments }, { data: closingLines }, catalogue] = await Promise.all([
+			db
+				.from('payments')
+				.select('reservation_id, kind, amount_paise, state')
+				.in('reservation_id', ids)
+				.eq('state', 'captured')
+				.returns<PaymentRow[]>(),
+			db
+				.from('order_lines')
+				.select('order_id, reservation_id')
+				.in('reservation_id', ids)
+				.returns<Array<{ order_id: string; reservation_id: string | null }>>(),
+			loadCatalogueIndex()
+		]);
 
 		const orderIds = [...new Set((closingLines ?? []).map((line) => line.order_id))];
 		const { data: closingOrders } = orderIds.length
@@ -474,8 +482,6 @@ export const supabaseAccountRepository: AccountRepository = {
 			if (payment.kind === 'balance') bucket.balance = paise(bucket.balance + amount);
 			paidByReservation.set(payment.reservation_id, bucket);
 		}
-
-		const catalogue = await loadCatalogueIndex();
 
 		return rows.map<PreOrder>((row) => {
 			const facts = catalogue.byVariantId(row.variant_id);

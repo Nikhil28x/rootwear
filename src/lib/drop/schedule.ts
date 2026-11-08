@@ -50,6 +50,19 @@ export type StageSchedule = {
 	readonly stageDurationMs: number;
 };
 
+/**
+ * Any drop's tease run, counted back from its own launch instant: one stage
+ * per day. (Drop 01's constants below are the same rule at a fixed instant.)
+ */
+export function scheduleFor(launchInstant: number): StageSchedule {
+	return {
+		teaseStart: launchInstant - STAGE_COUNT * STAGE_DURATION_MS,
+		launchInstant,
+		stageCount: STAGE_COUNT,
+		stageDurationMs: STAGE_DURATION_MS
+	};
+}
+
 export const DROP_01_SCHEDULE: StageSchedule = {
 	teaseStart: TEASE_START,
 	launchInstant: LAUNCH_INSTANT,

@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { cartRepository, loadCart, readCartToken } from '$lib/server/cart';
+import { cartRepository, loadCartShared, readCartToken } from '$lib/server/cart';
 import { readShipValues, toShipTo, writeShipTo } from '$lib/server/cart/ship-session';
 import { placeOrder } from '$lib/server/checkout/place';
 import { rememberOptIn } from '$lib/server/customers/consent';
@@ -38,23 +38,28 @@ import type { SavedAddress } from '$lib/server/cart/types';
 const field = (data: FormData, key: string) => (data.get(key) ?? '').toString().trim();
 
 export const load: PageServerLoad = async ({ cookies, locals }) => {
+	// §10: a signed-in visitor may pick a saved address. Read through THIS
+	// module's own repository — the account area owns its own tree, and two
+	// routes reaching into each other's data layer is how they drift. Started
+	// now, alongside the cart: it depends on nothing the cart reads.
+	const account = (async () => {
+		const { user } = await locals.safeGetSession();
+		if (!user) return { user, saved: [] as SavedAddress[] };
+		const customerId = await cartRepository.findCustomerIdForUser(user.id);
+		return { user, saved: customerId ? await cartRepository.listAddresses(customerId) : [] };
+	})();
+	// The empty-cart redirect below may leave this unawaited; never unhandled.
+	account.catch(() => undefined);
+
 	// Lapsed unpaid orders give their stock back before availability is read.
 	await expireUnpaidOrders();
-	const cart = await loadCart(cookies, locals.now);
+	const cart = await loadCartShared(cookies, locals.now);
 
 	// Nothing to check out. Sending them to the cart is the honest destination:
 	// it explains the empty state rather than showing an address form for air.
 	if (cart.lines.length === 0) redirect(303, '/cart');
 
-	// §10: a signed-in visitor may pick a saved address. Read through THIS
-	// module's own repository — the account area owns its own tree, and two
-	// routes reaching into each other's data layer is how they drift.
-	let saved: SavedAddress[] = [];
-	const { user } = await locals.safeGetSession();
-	if (user) {
-		const customerId = await cartRepository.findCustomerIdForUser(user.id);
-		if (customerId) saved = await cartRepository.listAddresses(customerId);
-	}
+	const { user, saved } = await account;
 
 	const previous = readShipValues(cookies);
 	const provider = paymentProvider();
@@ -63,7 +68,8 @@ export const load: PageServerLoad = async ({ cookies, locals }) => {
 		cart,
 		saved,
 		values: previous ?? { ...EMPTY_ADDRESS, email: user?.email ?? '' },
-		launchInstant: LAUNCH_INSTANT,
+		// The cart's own drop, not a fixed date (a pre-order ships after it opens).
+		launchInstant: cart.lines[0]?.dropLaunchInstant ?? LAUNCH_INSTANT,
 		serverNow: locals.now,
 		/** §10: COD is off for Drop 01. The toggle exists either way. */
 		codEnabled: COD_ENABLED,

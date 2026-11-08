@@ -21,6 +21,16 @@
 import { fail, type ActionFailure } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
 import { drops } from '$lib/server/drops';
+
+/**
+ * The drop a public form may write against: a published one. A draft is
+ * treated exactly like a drop that does not exist, so these forms can neither
+ * record leads for it nor reveal that it is there.
+ */
+async function publicDrop(slug: string): Promise<Drop | null> {
+	const drop = await drops.findBySlug(slug);
+	return drop?.published ? drop : null;
+}
 import { demand } from './index';
 import { isConsentSource, type ConsentSource } from './types';
 import { isValidEmail, normaliseEmail } from './email';
@@ -89,7 +99,7 @@ export async function handleRequestDrop(
 	const variantId = String(data.get('variantId') ?? '');
 	const email = normaliseEmail(String(data.get('email') ?? ''));
 
-	const drop = await drops.findBySlug(dropSlug);
+	const drop = await publicDrop(dropSlug);
 	if (!drop) {
 		return reject('request', dropSlug, 'form', 'That drop no longer exists.', email, variantId);
 	}
@@ -184,7 +194,7 @@ export async function handleNotifyMe(
 	const variantId = String(data.get('variantId') ?? '');
 	const email = normaliseEmail(String(data.get('email') ?? ''));
 
-	const drop = await drops.findBySlug(dropSlug);
+	const drop = await publicDrop(dropSlug);
 	const variant = drop && variantId ? findVariant(drop, variantId) : null;
 	if (!drop || !variant) {
 		return reject('notify', variantId, 'form', 'That piece no longer exists.', email, variantId);
@@ -281,11 +291,17 @@ export async function handlePreOrder(
 		phone
 	});
 
-	const drop = await drops.findBySlug(dropSlug);
+	const drop = await publicDrop(dropSlug);
 	const variant = drop && variantId ? findVariant(drop, variantId) : null;
 	if (!drop || !variant) return fail_('form', 'That piece no longer exists.');
-	// The drop's own switch decides, not the page that posted (set in admin).
-	if (!drop.preorderMode) return fail_('form', 'Pre-orders are not open for this drop.');
+	// The drop's own switch decides, not the page that posted (set in admin) —
+	// and only where the page itself would offer Pre-order: a drop still
+	// running, and a piece whose price is shown.
+	const finished = drop.state === 'SOLD_OUT' || drop.state === 'ARCHIVED';
+	const priceShown = drop.products.some((p) => p.id === variant.productId && p.priceVisible);
+	if (!drop.preorderMode || finished || !priceShown) {
+		return fail_('form', 'Pre-orders are not open for this drop.');
+	}
 
 	if (!variantId) return fail_('size', 'Choose a size.');
 	if (name.length < 2) return fail_('name', 'Tell us who to put the piece aside for.');

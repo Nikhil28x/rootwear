@@ -127,5 +127,8 @@ export function safeRedirect(value: string | null | undefined, fallback = '/acco
 		return fallback;
 	}
 	if (url.origin !== base) return fallback;
+	// Dot segments collapse during parsing: `/.//evil.example` has a pathname of
+	// `//evil.example`, which a browser then reads as protocol-relative.
+	if (url.pathname.startsWith('//')) return fallback;
 	return url.pathname + url.search + url.hash;
 }

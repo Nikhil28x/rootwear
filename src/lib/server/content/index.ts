@@ -12,7 +12,7 @@
  */
 import type { Policy, PolicyRepository } from './types';
 import { mockPolicyRepository } from './mock-repository';
-import { supabasePolicyRepository } from './supabase-repository';
+import { listPolicyLinkRows, supabasePolicyRepository } from './supabase-repository';
 import { catalogueSource, isSupabaseConfigured } from '$lib/server/env';
 import { POLICIES } from '$lib/content/policies';
 import { blocksToText, headingsOf, scorePolicy } from './text';
@@ -32,11 +32,35 @@ async function merged(): Promise<Policy[]> {
 	);
 }
 
+/**
+ * The footer's links, on every request — so read light (no policy bodies) and
+ * kept for a minute per isolate. A policy edit reaches the footer within 60 s.
+ *
+ * Only the FINISHED value is cached, never an in-flight promise: on Cloudflare
+ * Workers, a request awaiting I/O started by another request can fail.
+ */
+const FOOTER_TTL_MS = 60_000;
+let footerCache: { at: number; links: { slug: string; title: string }[] } | null = null;
+async function footerLinks() {
+	const edited = await listPolicyLinkRows();
+	const bySlug = new Map(
+		POLICIES.map((p) => [p.slug, { slug: p.slug, title: p.title, navOrder: p.navOrder, showInFooter: p.showInFooter }])
+	);
+	for (const row of edited) bySlug.set(row.slug, row);
+	return [...bySlug.values()]
+		.sort((a, b) => a.navOrder - b.navOrder || a.title.localeCompare(b.title))
+		.filter((p) => p.showInFooter)
+		.map(({ slug, title }) => ({ slug, title }));
+}
+
 const mergedPolicyRepository: PolicyRepository = {
 	async listFooterLinks() {
-		return (await merged())
-			.filter((p) => p.showInFooter)
-			.map(({ slug, title }) => ({ slug, title }));
+		const now = Date.now();
+		if (footerCache && now - footerCache.at <= FOOTER_TTL_MS) return footerCache.links;
+		// A failed read throws and caches nothing: the next request tries again.
+		const links = await footerLinks();
+		footerCache = { at: now, links };
+		return links;
 	},
 	async findBySlug(slug) {
 		return (

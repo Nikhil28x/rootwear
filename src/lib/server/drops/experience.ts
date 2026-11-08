@@ -16,7 +16,7 @@ import { claimedCount, variantLabel } from '$lib/domain/drop';
 import { acceptsDeposits, acceptsNotifyMe, isOnSale } from '$lib/domain/drop-state';
 import { acceptsDropRequest, isFinished } from '$lib/components/drop/marks';
 import { resolveStage } from '$lib/drop/stage-resolver';
-import { DROP_01_SCHEDULE } from '$lib/drop/schedule';
+import { scheduleFor } from '$lib/drop/schedule';
 import { resolvePrice } from '$lib/server/cart/pricing';
 import { sizeOffers } from '$lib/server/cart/availability';
 
@@ -67,7 +67,8 @@ export async function loadExperience(
 		acceptsDeposits: acceptsDeposits(drop.state),
 		claimed: claimedCount(drop),
 		showCountdown: preLaunch,
-		stage: resolveStage(DROP_01_SCHEDULE, now),
+		// This drop's own tease run, from its own launch instant.
+		stage: resolveStage(scheduleFor(drop.launchInstant), now),
 		sizeOptions: product.variants.map((variant) => ({
 			value: variant.id,
 			label: variantLabel(product, variant)

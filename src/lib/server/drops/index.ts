@@ -58,16 +58,11 @@ export const drops: DropRepository & {
 	previewToken: (slug) => selectRepository().previewToken(slug),
 
 	/**
-	 * Every drop the storefront sells: the published ones, plus the drop the
-	 * homepage stands in when nothing live is published (findLiveDrop's
-	 * fallback, the same rule requireVisible applies). The cart and order
-	 * history read this, so a drop whose sizes are on the page is never then
-	 * refused by the cart as "no longer available".
+	 * Every drop the storefront sells: the published ones. (The live drop is
+	 * always published — findLiveDrop no longer falls back to a draft — so it
+	 * needs no second read.) The cart and order history read this.
 	 */
-	listStorefrontDrops: async () => {
-		const [published, live] = await Promise.all([drops.listDrops(), drops.findLiveDrop()]);
-		return live && !published.some((d) => d.id === live.id) ? [...published, live] : published;
-	}
+	listStorefrontDrops: () => drops.listDrops()
 };
 
 export type { DropRepository };

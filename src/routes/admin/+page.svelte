@@ -7,8 +7,6 @@
 	import { formatInr, paise } from '$lib/money';
 
 	let { data } = $props();
-	let t = $derived(data.today);
-	let fortnight = $derived(t.daily.reduce((n, d) => n + d.revenue, 0));
 	let hour = $derived(
 		Number(
 			new Intl.DateTimeFormat('en-GB', {
@@ -32,6 +30,14 @@
 		description="Yesterday’s sales and what is waiting today."
 	/>
 
+	{#await data.today}
+		<!-- The figures stream in: a quiet placeholder of the same shape meanwhile. -->
+		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-busy="true" aria-label="Loading the figures">
+			{#each [0, 1, 2, 3] as i (i)}<div class="q-card h-[118px] animate-pulse bg-q-muted"></div>{/each}
+		</div>
+		<div class="q-card h-[260px] animate-pulse bg-q-muted"></div>
+	{:then t}
+	{@const fortnight = t.daily.reduce((n, d) => n + d.revenue, 0)}
 	<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 		<StatTile
 			label="Yesterday"
@@ -121,6 +127,9 @@
 			</div>
 		</Section>
 	{/if}
+	{:catch}
+		<p class="q-card p-4 text-[14px] text-q-body">The figures could not be loaded. Reload the page to try again.</p>
+	{/await}
 
 	<p class="text-[13px] text-q-secondary">
 		Drop performance, the pre-order ledger and revenue by drop are in <a

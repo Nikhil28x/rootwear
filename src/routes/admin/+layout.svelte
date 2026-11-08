@@ -65,7 +65,12 @@
 	);
 </script>
 
-<div class="admin-theme" data-theme={theme === 'system' ? undefined : theme}>
+<!-- Admin pages are heavy (whole-table reports): preload on press, not on every hover. -->
+<div
+	class="admin-theme"
+	data-theme={theme === 'system' ? undefined : theme}
+	data-sveltekit-preload-data="tap"
+>
 	{#if !actor}
 		{@render children()}
 	{:else}

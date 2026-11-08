@@ -48,6 +48,9 @@ export type CatalogueEntry = {
 export function purchaseRefusal(entry: CatalogueEntry | undefined): string | null {
 	if (!entry) return 'This piece is no longer available.';
 	if (!isOnSale(entry.drop.state)) return `${entry.drop.name} isn't on sale right now.`;
+	// Pre-order mode (admin) takes signups instead of selling: the page offers
+	// Pre-order, and a cart post made around it must not buy.
+	if (entry.drop.preorderMode) return `${entry.drop.name} is taking pre-orders, not sales.`;
 	if (!entry.product.priceVisible) return `${entry.product.name} isn't on sale yet.`;
 	return null;
 }
@@ -188,6 +191,7 @@ export async function buildCartView(
 			dropSlug: drop.slug,
 			dropName: drop.name,
 			dropState: drop.state,
+			dropLaunchInstant: drop.launchInstant,
 			image: image?.url ?? null,
 			imageAlt: image?.alt ?? `${product.name}, ${variantLabel(product, variant)}`,
 			priceSource,
@@ -206,14 +210,18 @@ export async function buildCartView(
 	// dropped — the visitor is told why their code no longer applies.
 	let discount: Paise = ZERO;
 	let couponProblem: CouponStatus | null = null;
-	if (cart.couponCode) {
-		// The cart's own unpaid order does not count against its own code.
-		const outcome = await repo.validateCoupon(cart.couponCode, subtotal, kind, cart.token);
+	// The coupon check and the shipping rate both depend only on the subtotal:
+	// asked at once. The cart's own unpaid order does not count against its code.
+	const [outcome, shipping] = await Promise.all([
+		cart.couponCode
+			? repo.validateCoupon(cart.couponCode, subtotal, kind, cart.token)
+			: Promise.resolve(null),
+		repo.shippingFor(subtotal)
+	]);
+	if (outcome) {
 		if (outcome.status === 'ok') discount = outcome.discount;
 		else couponProblem = outcome.status;
 	}
-
-	const shipping = await repo.shippingFor(subtotal);
 	const total = subPaise(addPaise(subtotal, shipping.rate), discount);
 
 	return {

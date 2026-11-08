@@ -105,17 +105,19 @@ export async function listCustomers(
 	const client = getServiceClient();
 	let query = client.from('customers').select('*').limit(5000);
 	if (filter.tag) query = query.contains('tags', [filter.tag]);
-	const { data, error } = await query;
+	// The customers and their orders are independent reads: asked at once.
+	const [{ data, error }, { data: orderData }] = await Promise.all([
+		query,
+		client
+			.from('orders')
+			.select(
+				'id, order_number, customer_id, state, total_paise, ship_name, ship_phone, ship_city, ship_state, created_at, attribution'
+			)
+			.neq('state', 'pending_payment')
+			.limit(20000)
+	]);
 	if (error) throw new Error(`customers read failed: ${error.message}`);
 	const customers = (data ?? []) as CustomerRow[];
-
-	const { data: orderData } = await client
-		.from('orders')
-		.select(
-			'id, order_number, customer_id, state, total_paise, ship_name, ship_phone, ship_city, ship_state, created_at, attribution'
-		)
-		.neq('state', 'pending_payment')
-		.limit(20000);
 	const orders = (orderData ?? []) as OrderRow[];
 
 	let rows = customers.map((c) => summarise(c, orders));

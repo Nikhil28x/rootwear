@@ -15,12 +15,15 @@ export const load: PageServerLoad = async (event) => {
 	requireSection(actor, 'customers');
 	const customer = await getCustomer(event.params.id);
 	if (!customer) error(404, 'No such customer.');
+	const canLeads = can(actor, 'leads.view');
 	return {
-		customer,
+		// Page data reaches the browser whole: what this person may not see is
+		// left out here, not merely left unrendered.
+		customer: canLeads ? customer : { ...customer, leads: [] },
 		now: event.locals.now,
 		canEdit: can(actor, 'customers.edit'),
 		canOrders: can(actor, 'orders.view'),
-		canLeads: can(actor, 'leads.view')
+		canLeads
 	};
 };
 

@@ -203,23 +203,22 @@ export const supabaseDropRepository: DropRepository = {
 	async findLiveDrop() {
 		// §06: the model permits two live drops; the storefront resolves one.
 		//
-		// The newest PUBLISHED one. A drop being prepared in admin is created
-		// unpublished, so it can never take over the homepage before it is
-		// ready. Only when nothing live is published does an unpublished drop
-		// stand in, and then the earliest — the one that was there first —
-		// never the draft that was just created.
+		// The newest PUBLISHED one, and only a published one. A drop being
+		// prepared in admin is created unpublished; it reaches the storefront
+		// when it is published (admin's go-live checklist), never before. There
+		// used to be a fallback to an unpublished drop here, which made a new
+		// draft public and purchasable whenever nothing else was live.
 		const { data, error } = await getCatalogueClient()
 			.from('drops')
 			.select(SELECT)
 			.in('state', ['TEASE', 'REVEALED', 'LIVE', 'PARTIAL', 'RE_DROP'])
-			.order('launch_instant', { ascending: false });
+			.not('published_at', 'is', null)
+			.order('launch_instant', { ascending: false })
+			.limit(1);
 
 		if (error) throw new Error(`findLiveDrop failed: ${error.message}`);
 		const rows = (data ?? []) as unknown as Row[];
-		const pick =
-			rows.find((row) => row.published_at !== null) ??
-			[...rows].sort((a, b) => Date.parse(a.launch_instant) - Date.parse(b.launch_instant))[0];
-		return pick ? toDomain(pick) : null;
+		return rows[0] ? toDomain(rows[0]) : null;
 	},
 
 	async previewToken(slug: string) {

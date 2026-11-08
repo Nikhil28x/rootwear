@@ -12,10 +12,13 @@ import { DEFAULT_NEXT_DROP, getSetting, saveSetting } from '$lib/server/settings
 export const load: PageServerLoad = async (event) => {
 	const actor = await staffActor(event);
 	requireSection(actor, 'drops');
-	const drops = await listDrops();
+	const [drops, nextDrop] = await Promise.all([
+		listDrops(),
+		getSetting('nextDrop').catch(() => DEFAULT_NEXT_DROP)
+	]);
 	return {
 		canEdit: can(actor, 'catalogue.edit'),
-		nextDrop: await getSetting('nextDrop').catch(() => DEFAULT_NEXT_DROP),
+		nextDrop,
 		drops: drops.map((drop) => ({
 			id: drop.id,
 			slug: drop.slug,

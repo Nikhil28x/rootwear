@@ -67,6 +67,14 @@ export const actions: Actions = {
 		if (reservation.balance <= 0) {
 			return fail(409, { problem: 'Your balance is already paid.' });
 		}
+		// Only a held piece has a balance to pay. A cancelled, released or
+		// refunded reservation must not open a gateway order: the capture would
+		// mark it paid with no piece behind it.
+		if (reservation.state !== 'reserved' && reservation.state !== 'balance_due') {
+			return fail(409, {
+				problem: 'This reservation can no longer be paid. Write to us and we’ll sort it out.'
+			});
+		}
 
 		const existing = await cartRepository.findPaymentIntent({ reservationId: reservation.id });
 		// One live intent per reservation. Minting a second is how a customer

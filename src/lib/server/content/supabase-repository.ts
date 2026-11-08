@@ -40,6 +40,24 @@ function toDomain(row: Row): Policy {
 	};
 }
 
+/**
+ * The published policies' link fields only — no bodies. What the footer needs
+ * to merge database edits over the code versions, on every request.
+ */
+export async function listPolicyLinkRows(): Promise<
+	{ slug: string; title: string; navOrder: number; showInFooter: boolean }[]
+> {
+	const { data, error } = await getCatalogueClient()
+		.from('policies')
+		.select('slug, title, nav_order, show_in_footer')
+		.not('published_at', 'is', null)
+		.lte('published_at', new Date().toISOString());
+	if (error) throw new Error(`listPolicyLinkRows failed: ${error.message}`);
+	return ((data ?? []) as { slug: string; title: string; nav_order: number; show_in_footer: boolean }[]).map(
+		(row) => ({ slug: row.slug, title: row.title, navOrder: row.nav_order, showInFooter: row.show_in_footer })
+	);
+}
+
 export const supabasePolicyRepository: PolicyRepository = {
 	async listFooterLinks(): Promise<PolicyLink[]> {
 		const { data, error } = await getCatalogueClient()

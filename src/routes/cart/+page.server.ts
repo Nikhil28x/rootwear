@@ -5,13 +5,13 @@ import {
 	closeCart,
 	holdUntil,
 	loadCart,
+	loadCartShared,
 	openCart,
 	readCartToken
 } from '$lib/server/cart';
 import { catalogueIndex, purchaseRefusal } from '$lib/server/cart/pricing';
 import { availableUnits } from '$lib/server/cart/availability';
 import { expireUnpaidOrders } from '$lib/server/checkout/expiry';
-import { LAUNCH_INSTANT } from '$lib/drop/schedule';
 import type { CouponStatus } from '$lib/server/cart/types';
 
 /**
@@ -48,12 +48,10 @@ export const load: PageServerLoad = async ({ cookies, locals }) => {
 
 	// READ-ONLY. Mints nothing — a visitor who has never added anything must
 	// not acquire a cart cookie merely by looking at this page.
-	const cart = await loadCart(cookies, locals.now);
+	const cart = await loadCartShared(cookies, locals.now);
 
 	return {
 		cart,
-		/** §08: what a pre-order line dispatches after. */
-		launchInstant: LAUNCH_INSTANT,
 		serverNow: locals.now
 	};
 };

@@ -186,4 +186,10 @@ export interface CartRepository {
 		payload: unknown;
 	}): Promise<boolean>;
 	markWebhookProcessed(eventId: string, errorMessage: string | null): Promise<void>;
+	/**
+	 * Remove an event from the ledger, so a redelivery is processed afresh. Used
+	 * only when processing failed for a transient reason and the webhook answered
+	 * non-2xx, asking the gateway to retry.
+	 */
+	forgetWebhookEvent(eventId: string): Promise<void>;
 }

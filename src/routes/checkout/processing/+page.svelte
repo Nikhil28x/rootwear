@@ -50,9 +50,9 @@
 	let givenUp = $derived(elapsed > GIVE_UP_MS);
 
 	/**
-	 * Closing the payment window cancels this order straight away, so its
-	 * pieces go back on sale. The cart is kept; the checkout page explains and
-	 * places a fresh order on the next Pay.
+	 * Closing the payment window returns to checkout. The order is left to
+	 * lapse with its payment window (a UPI approval may still be on its way);
+	 * the next Pay supersedes it with a fresh order. The cart is kept.
 	 */
 	async function abandon() {
 		if (handedOff) return;

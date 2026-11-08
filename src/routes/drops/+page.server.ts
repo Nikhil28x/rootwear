@@ -91,7 +91,13 @@ async function demandSummary(dropId: string) {
 }
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const all = await drops.listDrops();
+	// Both reads at once: the drops, and the closing "next drop" teaser as set
+	// in admin. A settings read must never take the shop down: fall back to
+	// the defaults.
+	const [all, nextDrop] = await Promise.all([
+		drops.listDrops(),
+		getSetting('nextDrop').catch(() => DEFAULT_NEXT_DROP)
+	]);
 
 	// listDrops() already returns newest first; sorting again here would be a
 	// second opinion about chronology and the repository owns that.
@@ -99,10 +105,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 	// One card per drop, and nothing else. The page used to also compute a
 	// "growing now" highlight and a separate history with demand summaries,
 	// which listed every drop up to three times on one screen.
-
-	// The closing "next drop" teaser, as set in admin. A settings read must
-	// never take the shop down: fall back to the defaults.
-	const nextDrop = await getSetting('nextDrop').catch(() => DEFAULT_NEXT_DROP);
 
 	return {
 		cards: all.map(toCard),

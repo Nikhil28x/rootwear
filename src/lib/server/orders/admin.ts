@@ -537,8 +537,10 @@ export async function getOrder(id: string): Promise<OrderDetail | null> {
 			note: string | null;
 			created_by: string | null;
 			created_at: string;
+			gateway_refund_id: string | null;
 		}[]
 	).map((r) => ({
+		unsent: r.reason === 'cap_race' && !r.gateway_refund_id,
 		id: r.id,
 		paymentId: r.payment_id,
 		amount: money(r.amount_paise),
@@ -552,8 +554,12 @@ export async function getOrder(id: string): Promise<OrderDetail | null> {
 	const captured = payments
 		.filter((p) => p.state === 'captured' || p.state === 'refunded')
 		.reduce((n, p) => n + Number(p.amount), 0);
+	// A cap_race row (money captured on an order that had already lapsed) is a
+	// refund TO SEND, recorded by the database with no gateway refund behind it
+	// yet. Counting it as refunded left nothing refundable, so the refund could
+	// never actually be sent. Only money really on its way back counts.
 	const refunded = refunds
-		.filter((r) => r.state !== 'failed')
+		.filter((r) => r.state !== 'failed' && !r.unsent)
 		.reduce((n, r) => n + Number(r.amount), 0);
 
 	const returnRows = (returnsRes.data ?? []) as {
