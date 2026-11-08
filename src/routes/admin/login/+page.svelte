@@ -12,7 +12,6 @@
 	let email = $state('');
 	$effect(() => {
 		if (form?.email) email = form.email;
-		else if (!email && data.loginId) email = data.loginId;
 	});
 </script>
 

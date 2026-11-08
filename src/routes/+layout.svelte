@@ -6,6 +6,7 @@
 	import { setCart } from '$lib/cart/cart.svelte';
 	import SiteHeader from '$lib/components/SiteHeader.svelte';
 	import SiteFooter from '$lib/components/SiteFooter.svelte';
+	import NavLoader from '$lib/components/NavLoader.svelte';
 	import { BRAND_THEME_COLOR } from '$lib/brand';
 
 	let { children, data } = $props();
@@ -144,6 +145,9 @@
 
 	<SiteFooter policies={data.footerPolicies ?? []} />
 {/if}
+
+<!-- Between pages, on every route: a top bar and a breathing veil. -->
+<NavLoader />
 
 <!-- One footer for every route, the landing lockup included. -->
 {#if isHome}

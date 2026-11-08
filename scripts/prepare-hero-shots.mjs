@@ -8,7 +8,7 @@
  * outline lands where the front's does when the cloth turns round.
  *
  * For each side it writes:
- *   tee-<side>.webp          the cutout, 1152 px wide, with alpha;
+ *   tee-cutout-<side>.webp   the cutout, 1152 px wide, with alpha;
  *   tee-<side>-normal.webp   a tangent-space normal map of the FINE detail —
  *                            knit, rib, embroidery — read from a high-pass of
  *                            brightness, so the studio's soft light isn't
@@ -147,7 +147,7 @@ const HEIGHT = Math.round((WIDTH * front.box.height) / front.box.width);
 
 for (const [side, crop] of [['front', front], ['back', back]]) {
 	const fitted = await sharp(crop.buffer).resize(WIDTH, HEIGHT, { fit: 'fill' }).png().toBuffer();
-	await sharp(fitted).webp({ quality: 90, alphaQuality: 95, effort: 6 }).toFile(`${outDir}/tee-${side}.webp`);
+	await sharp(fitted).webp({ quality: 90, alphaQuality: 95, effort: 6 }).toFile(`${outDir}/tee-cutout-${side}.webp`);
 	await normalMap(fitted, `${outDir}/tee-${side}-normal.webp`);
 	await heightMap(fitted, `${outDir}/tee-${side}-height.webp`);
 }

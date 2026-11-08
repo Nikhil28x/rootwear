@@ -16,7 +16,7 @@
 	let {
 		poster = '/images/pineapple-haze-poster.jpg',
 		posterAlt = 'Rootwear Drop 01 poster: botanical pineapple studies on deep green, with the line “Grown, Not Manufactured”.',
-		piece = '/images/pineapple-haze-shirt-cutout.png',
+		piece = '/images/drop-01/tee-cutout-front.webp',
 		pieceAlt = 'The Pineapple Haze tee, hemp-cotton waffle with the chest script and the tree mark.'
 	}: { poster?: string; posterAlt?: string; piece?: string; pieceAlt?: string } = $props();
 </script>

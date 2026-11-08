@@ -5,6 +5,7 @@ import { handleRequestDrop } from '$lib/server/demand/actions';
 import { acceptsDropRequest, isFinished } from '$lib/components/drop/marks';
 import type { ArchiveCard } from '$lib/components/drop/types';
 import { variantLabel, type Drop } from '$lib/domain/drop';
+import { DEFAULT_NEXT_DROP, getSetting } from '$lib/server/settings';
 
 /**
  * RW-026 — §03 template 03: the drop archive. "The index of every drop
@@ -99,8 +100,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 	// "growing now" highlight and a separate history with demand summaries,
 	// which listed every drop up to three times on one screen.
 
+	// The closing "next drop" teaser, as set in admin. A settings read must
+	// never take the shop down: fall back to the defaults.
+	const nextDrop = await getSetting('nextDrop').catch(() => DEFAULT_NEXT_DROP);
+
 	return {
 		cards: all.map(toCard),
+		nextDrop,
 		// Card copy says "Opens" or "Was live" depending on the drop's instant,
 		// so it needs the request clock rather than the visitor's (§04).
 		now: locals.now

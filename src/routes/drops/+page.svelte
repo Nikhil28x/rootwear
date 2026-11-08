@@ -12,9 +12,8 @@
 	 */
 	import { onMount } from 'svelte';
 	import RequestDropForm from '$lib/components/drop/RequestDropForm.svelte';
-	import { INSTAGRAM_HANDLE, INSTAGRAM_URL } from '$lib/content/business';
 	import { isOnSale } from '$lib/domain/drop-state';
-	import { srcsetOf } from '$lib/media/responsive';
+	import { isCutout, srcsetOf } from '$lib/media/responsive';
 	import type { PageData, ActionData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -40,7 +39,7 @@
 	let tints = $state<Record<string, string>>({});
 
 	function sampleTint(card: Card): Promise<string | null> {
-		const cut = card.images.find((image) => image.url.endsWith('.png'));
+		const cut = card.images.find((image) => isCutout(image.url));
 		const source = cut ?? card.cover;
 		if (!source) return Promise.resolve(null);
 		return new Promise((resolve) => {
@@ -107,7 +106,7 @@
 	}
 
 	/** The strip shows photographs only; the cutout stays out of it. */
-	const photosOf = (card: Card) => card.images.filter((image) => !image.url.endsWith('.png'));
+	const photosOf = (card: Card) => card.images.filter((image) => !isCutout(image.url));
 
 	const issueNo = (card: Card) => String(card.number).padStart(2, '0');
 
@@ -115,9 +114,13 @@
 	let nextNo = $derived(
 		String(Math.max(0, ...data.cards.map((card) => card.number)) + 1).padStart(2, '0')
 	);
+	/** The "next drop" teaser, as set in admin (/admin/drops). */
+	let next = $derived(data.nextDrop);
 	let hint = $derived(
-		data.cards[0]?.images.find((image) => image.url.endsWith('.png')) ?? data.cards[0]?.cover ?? null
+		data.cards[0]?.images.find((image) => isCutout(image.url)) ?? data.cards[0]?.cover ?? null
 	);
+	/** The teaser's picture: the one set in admin, else a glimpse of the latest piece. */
+	let nextImage = $derived(next.image || hint?.url || null);
 
 	/** Where a drop sits in time, in a few words. */
 	function status(card: Card, now: number) {
@@ -219,11 +222,11 @@
 										{#each photosOf(card) as image (`${copy}-${image.url}`)}
 											<a
 												class="strip__frame"
-												class:strip__frame--cut={image.url.endsWith('.png')}
+												class:strip__frame--cut={isCutout(image.url)}
 												class:strip__frame--dup={copy > 0}
 												href="/drops/{card.slug}"
 												tabindex="-1"
-												style={image.width && image.height && !image.url.endsWith('.png')
+												style={image.width && image.height && !isCutout(image.url)
 													? `--ar: ${image.width} / ${image.height}`
 													: undefined}
 											>
@@ -244,27 +247,31 @@
 					{/if}
 				</li>
 			{/each}
+			{#if next.show}
 			<li class="row row--next">
 				<div class="row__line">
 					<div class="row__main">
 						<span class="row__no">{nextNo}</span>
 						<span class="row__thumb tease">
-							{#if hint}<img src={hint.url} alt="" loading="lazy" decoding="async" />{/if}
+							{#if nextImage}<img src={nextImage} alt="" loading="lazy" decoding="async" />{/if}
 						</span>
-						<span class="row__name">Next issue</span>
+						<span class="row__name">{next.title}</span>
 						<span class="row__facts">
 							<span class="row__status">
 								<span class="dot dot--next" aria-hidden="true"></span>
-								Coming soon
+								{next.status}
 							</span>
-							<span class="row__edition">Growing</span>
+							<span class="row__edition">{next.note}</span>
 						</span>
 					</div>
-					<div class="row__action">
-						<a class="link" href={INSTAGRAM_URL} rel="noreferrer noopener">Follow {INSTAGRAM_HANDLE}</a>
-					</div>
+					{#if next.linkUrl && next.linkLabel}
+						<div class="row__action">
+							<a class="link" href={next.linkUrl} rel="noreferrer noopener">{next.linkLabel}</a>
+						</div>
+					{/if}
 				</div>
 			</li>
+			{/if}
 		</ol>
 	{:else}
 		<!-- ───────── Grid: cover turns to the back on hover ───────── -->
@@ -309,26 +316,30 @@
 					</div>
 				</li>
 			{/each}
+			{#if next.show}
 			<li class="card card--next">
 				<div class="card__frame tease">
-					{#if hint}<img class="card__img" src={hint.url} alt="" loading="lazy" decoding="async" />{/if}
+					{#if nextImage}<img class="card__img" src={nextImage} alt="" loading="lazy" decoding="async" />{/if}
 					<span class="tease__mark" aria-hidden="true">{nextNo}</span>
 				</div>
 				<div class="card__text">
 					<p class="card__meta">
 						<span>Issue {nextNo}</span>
-						<span>Growing</span>
+						<span>{next.note}</span>
 					</p>
-					<p class="card__name">Next issue</p>
+					<p class="card__name">{next.title}</p>
 					<p class="card__status">
 						<span class="dot dot--next" aria-hidden="true"></span>
-						Coming soon
+						{next.status}
 					</p>
-					<div class="card__action">
-						<a class="link" href={INSTAGRAM_URL} rel="noreferrer noopener">Follow {INSTAGRAM_HANDLE}</a>
-					</div>
+					{#if next.linkUrl && next.linkLabel}
+						<div class="card__action">
+							<a class="link" href={next.linkUrl} rel="noreferrer noopener">{next.linkLabel}</a>
+						</div>
+					{/if}
 				</div>
 			</li>
+			{/if}
 		</ul>
 	{/if}
 

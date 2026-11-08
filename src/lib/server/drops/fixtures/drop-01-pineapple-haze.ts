@@ -78,10 +78,10 @@ export const DROP_01: Drop = {
 					caption: 'Back'
 				},
 				{
-					url: '/images/pineapple-haze-shirt-cutout.png',
+					url: '/images/drop-01/tee-cutout-front.webp',
 					width: 1152,
-					height: 1366,
-					alt: 'The Pineapple Haze tee, laid flat',
+					height: 1254,
+					alt: 'The Pineapple Haze tee, laid flat: the script and the tree embroidered on the chest',
 					role: 'fabric',
 					caption: 'The piece'
 				},

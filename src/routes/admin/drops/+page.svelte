@@ -1,5 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { enhance } from '$app/forms';
+	import Field from '$lib/components/admin/ui/Field.svelte';
+	import Section from '$lib/components/admin/ui/Section.svelte';
+	import Notice from '$lib/components/admin/Notice.svelte';
+	import { submitter } from '$lib/components/admin/enhance';
+	import { getToaster } from '$lib/components/admin/toast.svelte';
 	import { CircleAlert, Package, Plus } from '@lucide/svelte';
 	import Chip from '$lib/components/admin/ui/Chip.svelte';
 	import EmptyState from '$lib/components/admin/ui/EmptyState.svelte';
@@ -8,7 +14,9 @@
 	import { storefrontStatus } from '$lib/components/admin/storefront';
 	import { shortDateTime } from '$lib/components/admin/tone';
 
-	let { data } = $props();
+	let { data, form } = $props();
+	const toaster = getToaster();
+	const next = $derived(data.nextDrop);
 
 	type Filter = 'all' | 'open' | 'hidden' | 'finished';
 	let filter = $state<Filter>('all');
@@ -200,4 +208,45 @@
 			</div>
 		{/if}
 	{/if}
+
+	<Section
+		title="Next drop in the shop"
+		description="The teaser that closes the shop's list of drops. It shows the next issue number on its own; everything else is set here."
+	>
+		{#if form && 'error' in form && form.error}<Notice kind="error">{form.error}</Notice>{/if}
+		<form
+			method="POST"
+			action="?/nextDrop"
+			class="q-card flex flex-col gap-4 p-5"
+			use:enhance={submitter(toaster)}
+		>
+			<fieldset disabled={!data.canEdit} class="flex flex-col gap-4">
+				<label class="flex items-center gap-3 text-[14px]">
+					<input type="checkbox" class="q-check" name="show" checked={next.show} />
+					Show the teaser in the shop
+				</label>
+				<div class="grid gap-4 sm:grid-cols-2">
+					<Field label="Title" id="nd-title">
+						{#snippet children({ describedBy })}<input id="nd-title" name="title" class="q-input" maxlength="60" required value={next.title} aria-describedby={describedBy} />{/snippet}
+					</Field>
+					<Field label="Status line" id="nd-status" help="Beside the dot, e.g. Coming soon, or Opens 1 December.">
+						{#snippet children({ describedBy })}<input id="nd-status" name="status" class="q-input" maxlength="60" value={next.status} aria-describedby={describedBy} />{/snippet}
+					</Field>
+					<Field label="Note" id="nd-note" help="Where a drop shows its piece count, e.g. Growing.">
+						{#snippet children({ describedBy })}<input id="nd-note" name="note" class="q-input" maxlength="40" value={next.note} aria-describedby={describedBy} />{/snippet}
+					</Field>
+					<Field label="Image" id="nd-image" help="A web address or a site path. Empty shows a glimpse of the latest piece.">
+						{#snippet children({ describedBy })}<input id="nd-image" name="image" class="q-input" maxlength="500" placeholder="/images/…" value={next.image} aria-describedby={describedBy} />{/snippet}
+					</Field>
+					<Field label="Link text" id="nd-link-label" help="Empty hides the link.">
+						{#snippet children({ describedBy })}<input id="nd-link-label" name="linkLabel" class="q-input" maxlength="60" value={next.linkLabel} aria-describedby={describedBy} />{/snippet}
+					</Field>
+					<Field label="Link" id="nd-link" help="A web address, or a path like /contact.">
+						{#snippet children({ describedBy })}<input id="nd-link" name="linkUrl" class="q-input" maxlength="500" value={next.linkUrl} aria-describedby={describedBy} />{/snippet}
+					</Field>
+				</div>
+			</fieldset>
+			{#if data.canEdit}<div><button type="submit" class="q-btn q-btn-primary">Save teaser</button></div>{/if}
+		</form>
+	</Section>
 </div>

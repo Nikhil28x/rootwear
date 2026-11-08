@@ -61,7 +61,7 @@
 		<figure class="open__fig">
 			<div class="open__frame">
 				<img
-					src="/images/pineapple-haze-shirt-cutout.png"
+					src="/images/drop-01/tee-cutout-front.webp"
 					alt="The Rootwear tee, laid flat"
 					fetchpriority="high"
 					decoding="async"

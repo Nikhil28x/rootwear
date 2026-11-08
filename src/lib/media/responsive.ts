@@ -15,3 +15,12 @@ export function srcsetOf(url: string | null | undefined): string | undefined {
 		.map((width) => `${base}-${width}.webp ${width}w`)
 		.join(', ');
 }
+
+/**
+ * A cutout: the garment on transparency (a laid-flat piece), rather than a
+ * photograph. Old cutouts are PNGs; current ones are WebPs named "…cutout…".
+ * Pages show cutouts with `contain` and keep them out of photo strips.
+ */
+export function isCutout(url: string | null | undefined): boolean {
+	return !!url && (url.endsWith('.png') || /cutout[^/]*$/.test(url));
+}

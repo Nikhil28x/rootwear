@@ -360,8 +360,8 @@ export const ROOTS_CLOSE = {
 /** The page's two photographs, captioned as figures. */
 export const ROOTS_PLATES = {
 	opening: {
-		src: '/images/rootwear-tree-seedling.jpg',
-		alt: 'A single seedling in a clearing of a misty forest',
+		src: '/images/roots-2400.webp',
+		alt: 'Old roots spreading across dark, cracked earth, close to the ground',
 		caption: 'Before we build, we listen.'
 	},
 	cloth: {

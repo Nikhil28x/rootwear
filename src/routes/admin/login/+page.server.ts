@@ -5,7 +5,6 @@ import { safeNext } from '$lib/server/admin/roles';
 import { isSupabaseConfigured } from '$lib/server/env';
 import {
 	localAdminAvailable,
-	localAdminLoginId,
 	setLocalAdminSession,
 	verifyLocalAdmin
 } from '$lib/server/admin/local-session';
@@ -38,8 +37,8 @@ export const load: PageServerLoad = async ({ url }) => {
 		next: url.searchParams.get('next'),
 		configured: isSupabaseConfigured(),
 		canPreview: previewAvailable(),
-		canLocal: localAdminAvailable(),
-		loginId: localAdminLoginId()
+		// The user ID is never sent to the page: the field starts empty.
+		canLocal: localAdminAvailable()
 	};
 };
 

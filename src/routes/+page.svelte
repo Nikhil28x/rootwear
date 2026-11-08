@@ -18,7 +18,8 @@
 	import SiteHeader from '$lib/components/SiteHeader.svelte';
 	import SizeSelector from '$lib/components/drop/SizeSelector.svelte';
 	import { SIZE_RANGE_LABEL } from '$lib/drop/sizes';
-	import { srcsetOf } from '$lib/media/responsive';
+	import { isCutout, srcsetOf } from '$lib/media/responsive';
+	import { driftSlider } from '$lib/media/drift-slider';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -27,12 +28,6 @@
 	let product = $derived(feature?.product ?? null);
 	let dropHref = $derived(feature ? `/drops/${feature.drop.slug}` : '/drops');
 	let issue = $derived(feature ? String(feature.drop.number).padStart(2, '0') : '');
-
-	const month = new Intl.DateTimeFormat('en-IN', {
-		month: 'long',
-		year: 'numeric',
-		timeZone: 'Asia/Kolkata'
-	});
 
 	let byRole = $derived.by(() => {
 		const images = product?.images ?? [];
@@ -58,7 +53,8 @@
 	}
 	let details = $derived.by(() => {
 		const images = product?.images ?? [];
-		const photos = images.filter((image) => !image.url.endsWith('.png'));
+		// The worn shot has its own place on the drop page; the strip is the piece itself.
+		const photos = images.filter((image) => !isCutout(image.url) && image.role !== 'worn');
 		const list: Detail[] = photos.map((image) => ({
 			url: image.url,
 			alt: image.alt,
@@ -159,10 +155,6 @@
 					<span><span>{feature.drop.name}</span></span>
 				</h1>
 				<div class="nameplate__side">
-					<p class="nameplate__meta">
-						<span class="nameplate__dot" aria-hidden="true"></span>
-						Issue {issue} · {month.format(feature.drop.launchInstant)} · {feature.status}
-					</p>
 					<a class="cta" href={dropHref}>Shop the issue</a>
 				</div>
 			</div>
@@ -178,7 +170,7 @@
 		<!-- ───────── The piece: straight on from the cover. ───────── -->
 		<section id="piece" class="piece" aria-labelledby="piece-title">
 			{#if featurePhoto}
-				<figure class="piece__photo" class:piece__photo--cut={featurePhoto.url.endsWith('.png')}>
+				<figure class="piece__photo" class:piece__photo--cut={isCutout(featurePhoto.url)}>
 					<img
 						src={featurePhoto.url}
 						srcset={srcsetOf(featurePhoto.url)}
@@ -207,11 +199,7 @@
 				<div class="piece__sizes">
 					<div class="piece__sizes-head">
 						<span>Available sizes</span>
-						<span>
-							{feature.remaining > 0
-								? `${feature.remaining} of ${feature.drop.editionSize} left`
-								: 'Sold out'}
-						</span>
+						<span>Limited run · {feature.drop.editionSize} pieces</span>
 					</div>
 					<SizeSelector offers={feature.offers} selectable={false} surface="light" />
 				</div>
@@ -226,10 +214,10 @@
 		<!-- ───────── The details: a slow slider, on without a break. ───────── -->
 		{#if details.length > 0}
 			<section id="details" class="details" aria-label="Details">
-				<div class="slider">
+				<div class="slider" use:driftSlider>
 					<ul class="slider__track">
 						{#each [0, 1] as copy (copy)}
-							{#each details as detail, index (`${copy}-${detail.caption}`)}
+							{#each details as detail (`${copy}-${detail.url}`)}
 								<li class="fig fig--{detail.shape}" aria-hidden={copy > 0}>
 									<a href={dropHref} class="fig__frame" tabindex={copy > 0 ? -1 : 0}>
 										<img
@@ -241,7 +229,6 @@
 											decoding="async"
 										/>
 									</a>
-									<p class="fig__cap"><span>Fig. {index + 1}</span> {detail.caption}</p>
 								</li>
 							{/each}
 						{/each}
@@ -525,16 +512,14 @@
 		margin: 0;
 		padding: 0 var(--gutter);
 		list-style: none;
-		animation: drift 95s linear infinite;
+		/* Moved by driftSlider: drifts, follows a drag, answers the page's scroll. */
+		will-change: transform;
+		cursor: grab;
+		user-select: none;
+		-webkit-user-select: none;
 	}
-	.slider:hover .slider__track,
-	.slider:focus-within .slider__track {
-		animation-play-state: paused;
-	}
-	@keyframes drift {
-		to {
-			transform: translateX(-50%);
-		}
+	.slider__track :global(img) {
+		-webkit-user-drag: none;
 	}
 	.fig {
 		display: flex;
@@ -571,14 +556,6 @@
 	.fig--cut .fig__frame img {
 		object-fit: contain;
 		padding: 10%;
-	}
-	.fig__cap {
-		font-size: 13px;
-		color: var(--soft);
-	}
-	.fig__cap span {
-		margin-right: 8px;
-		color: var(--ink);
 	}
 
 	/* ── Phone ────────────────────────────────────────────────── */
@@ -656,12 +633,8 @@
 		.spread__half,
 		.nameplate__title > span > span,
 		.nameplate__side,
-		.nameplate__dot,
-		.slider__track {
+		.nameplate__dot {
 			animation: none;
-		}
-		.slider {
-			overflow-x: auto;
 		}
 	}
 </style>

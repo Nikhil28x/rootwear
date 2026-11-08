@@ -15,8 +15,10 @@ type LocalConfig = {
 function config(): LocalConfig | null {
 	if (isSupabaseConfigured()) return null;
 
-	const loginId = env.ADMIN_LOGIN_ID || (dev ? 'admin@rootwear' : '');
-	const password = env.ADMIN_PASSWORD || (dev ? 'rootwear' : '');
+	// No user ID or password is built in, not even for development: both come
+	// from the environment (ADMIN_LOGIN_ID, ADMIN_PASSWORD) or local admin is off.
+	const loginId = env.ADMIN_LOGIN_ID || '';
+	const password = env.ADMIN_PASSWORD || '';
 	const secret = env.ADMIN_SESSION_SECRET || (dev ? 'rootwear-local-development-session' : '');
 	return loginId && password && secret ? { loginId, password, secret } : null;
 }
@@ -47,10 +49,6 @@ async function signature(payload: string, secret: string): Promise<string> {
 
 export function localAdminAvailable(): boolean {
 	return config() !== null;
-}
-
-export function localAdminLoginId(): string {
-	return config()?.loginId ?? env.ADMIN_LOGIN_ID ?? 'admin@rootwear';
 }
 
 export function verifyLocalAdmin(loginId: string, password: string): boolean {

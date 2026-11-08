@@ -19,13 +19,13 @@ export type HeroShots = {
 const SHOTS: Record<string, HeroShots> = {
 	'01-pineapple-haze/tee': {
 		front: {
-			src: '/images/drop-01/tee-front.webp',
+			src: '/images/drop-01/tee-cutout-front.webp',
 			alt: 'The Pineapple Haze tee from the front: the script and the tree embroidered on the chest',
 			width: 1152,
 			height: 1254
 		},
 		back: {
-			src: '/images/drop-01/tee-back.webp',
+			src: '/images/drop-01/tee-cutout-back.webp',
 			alt: 'The Pineapple Haze tee from the back: the embroidered bud between the shoulders'
 		},
 		maps: {

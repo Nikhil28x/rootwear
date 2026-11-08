@@ -10,6 +10,7 @@ import {
 	ENTITY_TYPE,
 	GST_POSITION,
 	INSTAGRAM_HANDLE,
+	INSTAGRAM_URL,
 	SUPPORT_EMAIL
 } from '$lib/content/business';
 import { getServiceClient } from '$lib/server/db/clients';
@@ -79,16 +80,46 @@ export type AlertSettings = {
 
 export const DEFAULT_ALERTS: AlertSettings = { lowStock: 2 };
 
+/**
+ * The "next drop" teaser that closes the shop's list of drops. Edited from
+ * /admin/drops. The defaults are what the shop showed before it was editable.
+ */
+export type NextDropSettings = {
+	/** Show the teaser at all. */
+	readonly show: boolean;
+	readonly title: string;
+	/** The line beside the dot, e.g. "Coming soon" or "Opens 1 December". */
+	readonly status: string;
+	/** The small note in place of a piece count, e.g. "Growing". */
+	readonly note: string;
+	/** A teaser image URL; empty uses a glimpse of the latest drop's piece. */
+	readonly image: string;
+	readonly linkLabel: string;
+	readonly linkUrl: string;
+};
+
+export const DEFAULT_NEXT_DROP: NextDropSettings = {
+	show: true,
+	title: 'Next issue',
+	status: 'Coming soon',
+	note: 'Growing',
+	image: '',
+	linkLabel: `Follow ${INSTAGRAM_HANDLE}`,
+	linkUrl: INSTAGRAM_URL
+};
+
 type Defaults = {
 	business: BusinessSettings;
 	carts: CartSettings;
 	alerts: AlertSettings;
+	nextDrop: NextDropSettings;
 };
 
 const DEFAULTS: Defaults = {
 	business: DEFAULT_BUSINESS,
 	carts: DEFAULT_CARTS,
-	alerts: DEFAULT_ALERTS
+	alerts: DEFAULT_ALERTS,
+	nextDrop: DEFAULT_NEXT_DROP
 };
 
 export async function getSetting<K extends keyof Defaults>(key: K): Promise<Defaults[K]> {

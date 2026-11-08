@@ -76,7 +76,14 @@
 
 		<figure class="plate">
 			<div class="plate__frame">
-				<img src={plates.opening.src} alt={plates.opening.alt} fetchpriority="high" decoding="async" />
+				<img
+					src={plates.opening.src}
+					srcset={srcsetOf(plates.opening.src)}
+					sizes="100vw"
+					alt={plates.opening.alt}
+					fetchpriority="high"
+					decoding="async"
+				/>
 			</div>
 			<figcaption class="cap"><span>Fig. 1</span>{plates.opening.caption}</figcaption>
 		</figure>

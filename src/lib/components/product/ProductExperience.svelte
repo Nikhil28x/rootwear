@@ -4,19 +4,17 @@
 	 *
 	 * The page is pictures; the buying lives in the bar fixed to the bottom.
 	 * Everything the old drop page and piece page carried is here: story,
-	 * countdown, gallery, poster, fabric and edition facts, size guide, care,
+	 * countdown, gallery, size guide, fabric and edition facts, care,
 	 * returns, notify-me, the restock request and cross-sell (§03, §06, §09).
 	 *
 	 * Palette and type are the brand's own. The one addition is the cloth
-	 * ground — the khaki sampled from the garment itself — behind the label.
+	 * ground — the beige of the garment itself — behind the label.
 	 */
 	import BuyBar from './BuyBar.svelte';
 	import ClothHero from './ClothHero.svelte';
 	import { heroShotsFor } from '$lib/drop/hero-shots';
 	import { srcsetOf } from '$lib/media/responsive';
 	import DropCountdown from '$lib/DropCountdown.svelte';
-	import DropStateMark from '$lib/components/drop/DropStateMark.svelte';
-	import PosterShowcase from '$lib/components/drop/PosterShowcase.svelte';
 	import RequestDropForm from '$lib/components/drop/RequestDropForm.svelte';
 	import PreOrderForm from '$lib/components/drop/PreOrderForm.svelte';
 	import { resultFor } from '$lib/components/drop/demand-result';
@@ -67,12 +65,6 @@
 	/** "Pineapple Haze Tee" → the drop name set large, "Tee" kept for the h1. */
 	let pieceWord = $derived(product.name.replace(data.drop.name, '').trim());
 
-	const released = new Intl.DateTimeFormat('en-IN', {
-		day: 'numeric',
-		month: 'long',
-		year: 'numeric',
-		timeZone: 'Asia/Kolkata'
-	});
 	const shortDate = new Intl.DateTimeFormat('en-IN', {
 		day: 'numeric',
 		month: 'long',
@@ -142,14 +134,6 @@
 <main class="exp">
 	<!-- ───────── Hero: the name, set large, with the piece floating over it. -->
 	<section class="hero" data-header-theme="dark" aria-labelledby="exp-title">
-		<div class="hero__meta">
-			<span>Drop {dropNumber}</span>
-			<DropStateMark state={data.drop.state} surface="dark" />
-			<time datetime={new Date(data.drop.releasedAt).toISOString()}
-				>{released.format(data.drop.releasedAt)}</time
-			>
-		</div>
-
 		<h1 id="exp-title" class="hero__title">
 			<!-- Letters are split for the entrance; the real words are read once. -->
 			<span class="sr-only">{data.drop.name}{pieceWord ? ` ${pieceWord}` : ''}</span>
@@ -196,11 +180,6 @@
 			</p>
 		</div>
 
-		{#if data.acceptsDeposits}
-			<p class="hero__claimed">
-				<span class="tabular-nums">{data.claimed}</span> of {data.drop.editionSize} reserved
-			</p>
-		{/if}
 	</section>
 
 	{#if data.showCountdown}
@@ -268,56 +247,6 @@
 		</section>
 	{/if}
 
-	<!-- ───────── The cloth: what it is made of, drawn to scale, on its own colour. -->
-	<section class="cloth" aria-labelledby="cloth-title">
-		<div class="cloth__head">
-			<h2 id="cloth-title" class="cloth__title">The cloth</h2>
-			<p class="cloth__no" aria-label="Each piece is numbered out of {data.drop.editionSize}">
-				Nº <span class="cloth__blank"></span> / {data.drop.editionSize}
-			</p>
-		</div>
-
-		{#if fibres.length > 0}
-			<div class="ratio" role="img" aria-label={product.fabric}>
-				{#each fibres as fibre, index (fibre.name)}
-					<div class="ratio__seg ratio__seg--{index % 2}" style="--w: {fibre.pct}">
-						<span class="ratio__pct">{fibre.pct}%</span>
-						<span class="ratio__name">{fibre.name}</span>
-					</div>
-				{/each}
-			</div>
-		{:else}
-			<p class="cloth__fabric">{product.fabric}</p>
-		{/if}
-
-		<dl class="facts">
-			<div>
-				<dt>Weight</dt>
-				<dd><span class="facts__big">{product.gsm}</span> GSM</dd>
-			</div>
-			<div>
-				<dt>Fit</dt>
-				<dd><span class="facts__big facts__big--word">{product.fit}</span></dd>
-			</div>
-			<div>
-				<dt>Edition</dt>
-				<dd>
-					<span class="facts__big">{data.drop.editionSize}</span> pieces, each numbered by hand
-				</dd>
-			</div>
-		</dl>
-	</section>
-
-	<!-- ───────── The poster. -->
-	<section class="poster" data-header-theme="dark" aria-labelledby="poster-title">
-		<!-- The poster prints "Grown, Not Manufactured" itself; the heading only
-		     names the section, so the line is not set twice. -->
-		<h2 id="poster-title" class="sr-only">The Drop {dropNumber} poster</h2>
-		<div class="poster__art">
-			<PosterShowcase />
-		</div>
-	</section>
-
 	<!-- ───────── Find your size: pick one, see it measured. -->
 	<section id="size-guide" class="fit" aria-labelledby="fit-title" tabindex="-1">
 		<div class="fit__head">
@@ -360,6 +289,44 @@
 				</dl>
 			</div>
 		</div>
+	</section>
+
+	<!-- ───────── The cloth: what it is made of, drawn to scale, on its own colour. -->
+	<section class="cloth" aria-labelledby="cloth-title">
+		<div class="cloth__head">
+			<h2 id="cloth-title" class="cloth__title">The cloth</h2>
+			<p class="cloth__no">Limited run · {data.drop.editionSize} pieces</p>
+		</div>
+
+		{#if fibres.length > 0}
+			<div class="ratio" role="img" aria-label={product.fabric}>
+				{#each fibres as fibre, index (fibre.name)}
+					<div class="ratio__seg ratio__seg--{index % 2}" style="--w: {fibre.pct}">
+						<span class="ratio__pct">{fibre.pct}%</span>
+						<span class="ratio__name">{fibre.name}</span>
+					</div>
+				{/each}
+			</div>
+		{:else}
+			<p class="cloth__fabric">{product.fabric}</p>
+		{/if}
+
+		<dl class="facts">
+			<div>
+				<dt>Weight</dt>
+				<dd><span class="facts__big">{product.gsm}</span> GSM</dd>
+			</div>
+			<div>
+				<dt>Fit</dt>
+				<dd><span class="facts__big facts__big--word">{product.fit}</span></dd>
+			</div>
+			<div>
+				<dt>Edition</dt>
+				<dd>
+					<span class="facts__big">{data.drop.editionSize}</span> pieces, each numbered by hand
+				</dd>
+			</div>
+		</dl>
 	</section>
 
 	<!-- ───────── Care, returns, shipping: one line each. -->
@@ -469,11 +436,11 @@
 <style>
 	/*
 	 * Layout: a single scroll of full-bleed bands — dark hero, white story,
-	 * offset pair, edge-to-edge worn shot, khaki cloth, poster green, white
+	 * offset pair, edge-to-edge worn shot, size guide, beige cloth, white
 	 * details — with the buy bar pinned over all of it.
 	 */
 	.exp {
-		--cloth: #c29b6a;
+		--cloth: #e6dccb;
 		--ink: var(--color-forest);
 		--night: var(--color-forest-black);
 		--paper: var(--color-paper);
@@ -495,17 +462,6 @@
 			radial-gradient(80% 60% at 50% 55%, rgb(194 155 106 / 0.16), transparent 70%), var(--night);
 		color: #f3efe6;
 		overflow: hidden;
-	}
-	.hero__meta {
-		position: absolute;
-		top: calc(112px + env(safe-area-inset-top, 0px));
-		left: var(--gutter);
-		display: flex;
-		align-items: center;
-		gap: 14px;
-		font-size: 13px;
-		color: rgb(243 239 230 / 0.7);
-		z-index: 2;
 	}
 	.hero__title {
 		align-self: center;
@@ -540,9 +496,7 @@
 			filter: blur(14px);
 		}
 	}
-	.hero__meta,
-	.hero__foot,
-	.hero__claimed {
+	.hero__foot {
 		animation: rise-in 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) 1.15s both;
 	}
 	.hero__foot {
@@ -611,14 +565,6 @@
 		font-size: 30px;
 		color: #f3efe6;
 		font-variant-numeric: tabular-nums;
-	}
-	.hero__claimed {
-		position: absolute;
-		right: var(--gutter);
-		top: calc(112px + env(safe-area-inset-top, 0px));
-		font-size: 13px;
-		color: var(--color-gold);
-		z-index: 2;
 	}
 
 	/* ── Story ────────────────────────────────────────────── */
@@ -698,11 +644,11 @@
 		flex-direction: column;
 		gap: clamp(32px, 5vw, 64px);
 		padding: clamp(96px, 12vw, 168px) var(--gutter);
-		color: var(--color-forest-black);
-		/* A fine waffle knit, drawn rather than photographed, over the garment's khaki. */
+		color: #141414;
+		/* A fine waffle knit, drawn rather than photographed, over the garment's beige. */
 		background:
-			repeating-linear-gradient(0deg, rgb(70 45 15 / 0.07) 0 1px, transparent 1px 7px),
-			repeating-linear-gradient(90deg, rgb(70 45 15 / 0.07) 0 1px, transparent 1px 7px),
+			repeating-linear-gradient(0deg, rgb(60 45 30 / 0.06) 0 1px, transparent 1px 7px),
+			repeating-linear-gradient(90deg, rgb(60 45 30 / 0.06) 0 1px, transparent 1px 7px),
 			radial-gradient(120% 90% at 20% 0%, rgb(255 250 240 / 0.18), transparent 60%), var(--cloth);
 	}
 	.cloth__head {
@@ -722,13 +668,7 @@
 	.cloth__no {
 		font-family: var(--font-display);
 		font-size: clamp(1.2rem, 2vw, 1.8rem);
-		color: rgb(11 15 11 / 0.75);
-	}
-	.cloth__blank {
-		display: inline-block;
-		width: 1.8em;
-		border-bottom: 1px solid currentColor;
-		vertical-align: -2px;
+		color: rgb(20 20 20 / 0.75);
 	}
 	.cloth__fabric {
 		font-family: var(--font-display);
@@ -753,12 +693,12 @@
 		transform-origin: left center;
 	}
 	.ratio__seg--0 {
-		background: var(--color-forest);
+		background: #141414;
 		color: #f3efe6;
 	}
 	.ratio__seg--1 {
 		background: #f6f1e7;
-		color: var(--color-forest);
+		color: #141414;
 	}
 	.ratio__pct {
 		font-family: var(--font-display);
@@ -800,11 +740,11 @@
 		flex-direction: column;
 		gap: 8px;
 		padding-top: 18px;
-		border-top: 1px solid rgb(11 15 11 / 0.25);
+		border-top: 1px solid rgb(20 20 20 / 0.25);
 	}
 	.facts dt {
 		font-size: 13px;
-		color: rgb(11 15 11 / 0.7);
+		color: rgb(20 20 20 / 0.7);
 	}
 	.facts dd {
 		margin: 0;
@@ -842,7 +782,7 @@
 		max-width: 36ch;
 		font-size: 15px;
 		line-height: 1.6;
-		color: rgb(31 56 42 / 0.8);
+		color: rgb(20 20 20 / 0.8);
 	}
 	.fit__title,
 	.details__title {
@@ -852,7 +792,7 @@
 		line-height: 1;
 		letter-spacing: -0.03em;
 		margin: 0 0 14px;
-		color: var(--ink);
+		color: #141414;
 	}
 	.fit__tool {
 		display: flex;
@@ -862,27 +802,27 @@
 	.fit__sizes {
 		display: grid;
 		grid-template-columns: repeat(5, minmax(0, 1fr));
-		border: 1px solid rgb(31 56 42 / 0.2);
+		border: 1px solid rgb(20 20 20 / 0.2);
 	}
 	.fit__sizes button {
 		height: 52px;
 		font-size: 13px;
 		font-weight: 500;
 		letter-spacing: 0.12em;
-		color: var(--ink);
+		color: #141414;
 		transition:
 			background-color 0.25s,
 			color 0.25s;
 	}
 	.fit__sizes button + button {
-		border-left: 1px solid rgb(31 56 42 / 0.2);
+		border-left: 1px solid rgb(20 20 20 / 0.2);
 	}
 	.fit__sizes button:hover {
-		background: rgb(31 56 42 / 0.06);
+		background: rgb(20 20 20 / 0.06);
 	}
 	.fit__sizes .fit__size--on,
 	.fit__sizes .fit__size--on:hover {
-		background: var(--ink);
+		background: #141414;
 		color: #f3efe6;
 	}
 	.fit__stage {
@@ -891,7 +831,7 @@
 		align-items: center;
 		gap: clamp(20px, 4vw, 56px);
 		padding: clamp(20px, 3vw, 40px);
-		background: rgb(31 56 42 / 0.04);
+		background: rgb(20 20 20 / 0.04);
 	}
 	.fit__tee {
 		width: 100%;
@@ -904,13 +844,13 @@
 	}
 	.fit__outline {
 		fill: var(--cloth);
-		stroke: rgb(31 56 42 / 0.55);
+		stroke: rgb(20 20 20 / 0.55);
 		stroke-width: 1.2;
 		stroke-linejoin: round;
 		vector-effect: non-scaling-stroke;
 	}
 	.fit__measure {
-		stroke: var(--color-forest);
+		stroke: #141414;
 		stroke-width: 1.5;
 		stroke-dasharray: 4 4;
 		vector-effect: non-scaling-stroke;
@@ -923,12 +863,12 @@
 	}
 	.fit__nums dt {
 		font-size: 13px;
-		color: rgb(31 56 42 / 0.7);
+		color: rgb(20 20 20 / 0.7);
 	}
 	.fit__nums dd {
 		margin: 0;
 		font-size: 15px;
-		color: var(--ink);
+		color: #141414;
 	}
 	.fit__num {
 		font-family: var(--font-display);
@@ -1039,15 +979,6 @@
 			align-self: start;
 			text-align: left;
 		}
-		.hero__meta,
-		.hero__claimed {
-			top: calc(96px + env(safe-area-inset-top, 0px));
-		}
-		.hero__claimed {
-			top: calc(124px + env(safe-area-inset-top, 0px));
-			left: var(--gutter);
-			right: auto;
-		}
 		.hero__name {
 			font-size: clamp(3.6rem, 21vw, 8rem);
 			line-height: 0.86;
@@ -1114,9 +1045,7 @@
 	@media (prefers-reduced-motion: reduce) {
 		.hero__piece,
 		.hero__ch,
-		.hero__meta,
-		.hero__foot,
-		.hero__claimed {
+		.hero__foot {
 			animation: none !important;
 		}
 	}
