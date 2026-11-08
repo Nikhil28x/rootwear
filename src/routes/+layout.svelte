@@ -42,7 +42,8 @@
 		'/checkout',
 		'/drops',
 		'/impact',
-		'/order'
+		'/order',
+		'/track'
 	];
 	/** The colours shown when the page is pulled past its top or bottom edge. */
 	let edgeTop = $derived(isExperience ? '#0b0f0b' : '#ffffff');

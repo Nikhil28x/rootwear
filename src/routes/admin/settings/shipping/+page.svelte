@@ -19,6 +19,48 @@
 	{#if form && 'error' in form && form.error}<Notice kind="error">{form.error}</Notice>{/if}
 
 	<Section
+		title="Delivery"
+		description="What customers are told on their order page and when they look an order up: “arriving in about N days”, counted from the order (or from dispatch, once dispatched)."
+	>
+		<form
+			method="POST"
+			action="?/delivery"
+			class="q-card flex flex-wrap items-end gap-4 p-4"
+			use:enhance={submitter(toaster)}
+		>
+			<Field label="Delivery time (days)" id="dl-days">
+				{#snippet children({ describedBy })}<input
+						id="dl-days"
+						name="days"
+						type="number"
+						min="1"
+						max="30"
+						class="q-input w-24"
+						value={data.delivery.days}
+						aria-describedby={describedBy}
+					/>{/snippet}
+			</Field>
+			<div class="min-w-[280px] flex-1">
+				<Field
+					label="Courier tracking link"
+					id="dl-url"
+					help="With {'{ref}'} where the tracking number goes. Empty shows the number without a link."
+				>
+					{#snippet children({ describedBy })}<input
+							id="dl-url"
+							name="trackingUrl"
+							class="q-input q-mono"
+							placeholder="https://www.delhivery.com/track/package/{'{ref}'}"
+							value={data.delivery.trackingUrl}
+							aria-describedby={describedBy}
+						/>{/snippet}
+				</Field>
+			</div>
+			<button type="submit" class="q-btn q-btn-primary">Save</button>
+		</form>
+	</Section>
+
+	<Section
 		title="Rates"
 		description="Charged by order value. The first active rate whose range fits the order applies. No rates means free shipping everywhere."
 	>

@@ -48,7 +48,7 @@
 				<p class="foot__head">Help</p>
 				<ul>
 					<li><a href="/contact">Contact</a></li>
-					<li><a href="/policies/track-order">Track your order</a></li>
+					<li><a href="/track">Track your order</a></li>
 					{#each policies.filter( (policy) => ['shipping', 'returns', 'size-guide', 'faq'].includes(policy.slug) ) as policy (policy.slug)}
 						<li><a href="/policies/{policy.slug}">{policy.title}</a></li>
 					{/each}

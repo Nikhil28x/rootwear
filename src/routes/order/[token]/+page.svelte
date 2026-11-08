@@ -22,6 +22,8 @@
 		SUPPORT_EMAIL
 	} from '$lib/content/business';
 	import { SHIP_COUNTRY_LABEL } from '$lib/checkout/address';
+	import { deliveryOutlook } from '$lib/checkout/delivery';
+	import DeliveryStatus from '$lib/components/checkout/DeliveryStatus.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -68,6 +70,15 @@
 
 	let shortLabel = $derived(STATE_LABEL[order.state] ?? order.state);
 	let stateNote = $derived(STATE_NOTE[order.state] ?? '');
+	/** Where it is, in plain words: "arriving in about 2 days" (null if cancelled). */
+	let outlook = $derived(
+		deliveryOutlook(order, {
+			days: data.delivery.days,
+			trackingUrl: data.delivery.trackingUrl,
+			launchInstant: data.launchInstant,
+			now: data.serverNow
+		})
+	);
 </script>
 
 <svelte:head>
@@ -87,10 +98,15 @@
 		</header>
 
 		<div class="co-main">
-			<p class="co-lede">
-				{stateNote} We've sent the details to {order.email}. Bookmark this page to check your order
-				anytime.
-			</p>
+			{#if outlook}
+				<DeliveryStatus {outlook} courierName={order.courierName} trackingRef={order.trackingRef} />
+				<p class="co-fine">
+					Bookmark this page to check your order anytime, or look it up at
+					<a class="link" href="/track">Track an order</a>.
+				</p>
+			{:else}
+				<p class="co-lede">{stateNote}</p>
+			{/if}
 
 			<section aria-labelledby="pieces-heading">
 				<div class="co-head"><h2 id="pieces-heading">Pieces</h2></div>
@@ -143,15 +159,6 @@
 				{/if}
 			</section>
 
-			{#if order.trackingRef}
-				<section aria-labelledby="tracking-heading">
-					<div class="co-head"><h2 id="tracking-heading">Tracking</h2></div>
-					<p class="order-tracking">
-						{order.courierName ?? 'Courier'} ·
-						<span class="co-num">{order.trackingRef}</span>
-					</p>
-				</section>
-			{/if}
 
 			<!-- §11: the SAME returns wording as the product page, at checkout
 			     and on the returns policy page. One constant, four places. -->
@@ -255,10 +262,6 @@
 	}
 	.order-notes {
 		margin-top: 20px;
-	}
-	.order-tracking {
-		margin-top: 16px;
-		font-size: 15px;
 	}
 	.order-returns {
 		max-width: 60ch;

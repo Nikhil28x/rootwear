@@ -20,7 +20,9 @@ const STRICT = [
 	'/checkout/information',
 	'/checkout/processing',
 	'/checkout/balance',
-	'/contact'
+	'/contact',
+	// Order lookup: guessing an order's contact details (see orders/lookup.ts).
+	'/track'
 ];
 
 /** Webhooks and crons are called by Razorpay, Meta and the cron Worker. */

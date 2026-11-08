@@ -526,6 +526,9 @@ export const mockCartRepository: CartRepository = {
 				courierName: null,
 				trackingRef: null,
 				placedAtMs: nowMs,
+				packedAtMs: null,
+				dispatchedAtMs: null,
+				deliveredAtMs: null,
 				hasPreOrderLine
 			});
 			ordersByToken.set(publicToken, orderId);

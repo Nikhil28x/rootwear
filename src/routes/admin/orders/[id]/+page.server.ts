@@ -3,6 +3,7 @@ import type { Actions, PageServerLoad, RequestEvent } from './$types';
 import { can, requirePermission, requireSection } from '$lib/server/admin/roles';
 import { actorLabel, staffActor } from '$lib/server/admin/session';
 import type { PermissionKey } from '$lib/admin/permissions';
+import { DEFAULT_DELIVERY, getSetting } from '$lib/server/settings';
 import {
 	addNote,
 	cancelOrder,
@@ -33,12 +34,15 @@ export const load: PageServerLoad = async (event) => {
 	requireSection(actor, 'orders');
 	const order = await getOrder(event.params.id);
 	if (!order) error(404, 'No such order.');
-	const [history, exchange] = await Promise.all([
+	const [history, exchange, delivery] = await Promise.all([
 		orderHistory(order.id),
-		['dispatched', 'delivered'].includes(order.state) ? exchangeOptions(order) : Promise.resolve([])
+		['dispatched', 'delivered'].includes(order.state) ? exchangeOptions(order) : Promise.resolve([]),
+		getSetting('delivery').catch(() => DEFAULT_DELIVERY)
 	]);
 	return {
 		order,
+		/** The delivery promise, to show staff what the customer is told. */
+		delivery,
 		history,
 		exchange,
 		returnReasons: RETURN_REASONS,

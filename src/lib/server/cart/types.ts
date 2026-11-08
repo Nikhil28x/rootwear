@@ -181,6 +181,10 @@ export type OrderRecord = {
 	readonly courierName: string | null;
 	readonly trackingRef: string | null;
 	readonly placedAtMs: number;
+	/** When it reached each stage (epoch ms), or null if it has not yet. */
+	readonly packedAtMs: number | null;
+	readonly dispatchedAtMs: number | null;
+	readonly deliveredAtMs: number | null;
 	readonly hasPreOrderLine: boolean;
 };
 

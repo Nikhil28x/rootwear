@@ -221,7 +221,7 @@
 				<section class="contact-block">
 					<div class="co-head"><h2>Before you write</h2></div>
 					<ul class="contact-list contact-list--links">
-						<li><a href="/policies/track-order">Tracking an order</a></li>
+						<li><a href="/track">Tracking an order</a></li>
 						<li><a href="/policies/size-guide">Choosing a size</a></li>
 						<li><a href="/policies/returns">{RETURNS_SHORT}</a></li>
 						<li><a href="/policies/faq">FAQ</a></li>

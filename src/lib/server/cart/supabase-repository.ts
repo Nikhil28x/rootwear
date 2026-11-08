@@ -361,7 +361,7 @@ export const supabaseCartRepository: CartRepository = {
 				'id, order_number, public_token, state, subtotal_paise, shipping_paise, ' +
 					'discount_paise, total_paise, ship_name, ship_line1, ship_line2, ship_city, ' +
 					'ship_state, ship_pincode, ship_phone, notes, courier_name, tracking_ref, ' +
-					'created_at, customer_id'
+					'created_at, packed_at, dispatched_at, delivered_at, customer_id'
 			)
 			.eq('public_token', token)
 			.maybeSingle();
@@ -446,6 +446,9 @@ export const supabaseCartRepository: CartRepository = {
 			courierName: (order.courier_name as string | null) ?? null,
 			trackingRef: (order.tracking_ref as string | null) ?? null,
 			placedAtMs: Date.parse(order.created_at as string),
+			packedAtMs: order.packed_at ? Date.parse(order.packed_at as string) : null,
+			dispatchedAtMs: order.dispatched_at ? Date.parse(order.dispatched_at as string) : null,
+			deliveredAtMs: order.delivered_at ? Date.parse(order.delivered_at as string) : null,
 			hasPreOrderLine: lines.some((line) => line.priceSource === 'prelaunch_locked')
 		};
 	},

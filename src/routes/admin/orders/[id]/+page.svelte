@@ -33,6 +33,8 @@
 	} from '$lib/components/admin/labels';
 	import { shortDateTime, timeAgo } from '$lib/components/admin/tone';
 	import { formatInr, paise } from '$lib/money';
+	import { deliveryOutlook } from '$lib/checkout/delivery';
+	import { LAUNCH_INSTANT } from '$lib/drop/schedule';
 
 	let { data, form } = $props();
 	const toaster = getToaster();
@@ -59,6 +61,30 @@
 		{ label: 'Dispatched', at: order.dispatchedAt },
 		{ label: 'Delivered', at: order.deliveredAt }
 	]);
+
+	/** Exactly what the customer's order page tells them, for staff to see. */
+	let customerSees = $derived(
+		deliveryOutlook(
+			{
+				state: order.state,
+				email: order.email,
+				shipping: Number(order.shipping),
+				placedAtMs: order.createdAt,
+				packedAtMs: order.packedAt,
+				dispatchedAtMs: order.dispatchedAt,
+				deliveredAtMs: order.deliveredAt,
+				hasPreOrderLine: order.isPreOrder,
+				courierName: order.courierName,
+				trackingRef: order.trackingRef
+			},
+			{
+				days: data.delivery.days,
+				trackingUrl: data.delivery.trackingUrl,
+				launchInstant: LAUNCH_INSTANT,
+				now: Date.now()
+			}
+		)
+	);
 
 	let rupees = (value: number) => (value / 100).toFixed(value % 100 ? 2 : 0);
 	let canCancel = $derived(
@@ -211,10 +237,22 @@
 								</li>
 							{/each}
 						</ol>
+						{#if customerSees}
+							<p class="text-[13px] text-q-secondary">
+								The customer sees: <span class="text-q-text">“{customerSees.headline}”</span>
+								<a class="q-link ml-1" href="/admin/settings/shipping">Change the estimate</a>
+							</p>
+						{/if}
 						{#if order.trackingRef}
 							<p class="text-[14px] text-q-body">
 								<Truck size={16} strokeWidth={1.5} class="mr-1 inline text-q-tertiary" />
 								{order.courierName} · <span class="q-mono">{order.trackingRef}</span>
+								{#if customerSees?.trackingHref}<a
+										class="q-link ml-2 text-[13px]"
+										href={customerSees.trackingHref}
+										target="_blank"
+										rel="noopener noreferrer">Track</a
+									>{/if}
 								{#if data.can.edit && order.state === 'dispatched'}
 									<button
 										type="button"

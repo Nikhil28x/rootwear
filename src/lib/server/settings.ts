@@ -108,18 +108,36 @@ export const DEFAULT_NEXT_DROP: NextDropSettings = {
 	linkUrl: INSTAGRAM_URL
 };
 
+/**
+ * What customers are told about delivery (order page, order lookup), edited
+ * from Admin → Settings → Shipping.
+ */
+export type DeliverySettings = {
+	/** Days from placing an order (or dispatch) to the door, as promised. */
+	readonly days: number;
+	/**
+	 * The courier's tracking page, with {ref} where the tracking number goes,
+	 * e.g. https://www.delhivery.com/track/package/{ref}. Empty: no link.
+	 */
+	readonly trackingUrl: string;
+};
+
+export const DEFAULT_DELIVERY: DeliverySettings = { days: 2, trackingUrl: '' };
+
 type Defaults = {
 	business: BusinessSettings;
 	carts: CartSettings;
 	alerts: AlertSettings;
 	nextDrop: NextDropSettings;
+	delivery: DeliverySettings;
 };
 
 const DEFAULTS: Defaults = {
 	business: DEFAULT_BUSINESS,
 	carts: DEFAULT_CARTS,
 	alerts: DEFAULT_ALERTS,
-	nextDrop: DEFAULT_NEXT_DROP
+	nextDrop: DEFAULT_NEXT_DROP,
+	delivery: DEFAULT_DELIVERY
 };
 
 export async function getSetting<K extends keyof Defaults>(key: K): Promise<Defaults[K]> {
