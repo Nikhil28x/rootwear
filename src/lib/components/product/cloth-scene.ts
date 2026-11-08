@@ -37,17 +37,19 @@ export type ClothScene = {
 	ready: Promise<void>;
 	/** Starts a held entrance (the puff waits for this, frozen flat). */
 	reveal(): void;
+	/** Turn to show the front or the back (only with a photographed back). */
+	face(side: 'front' | 'back'): void;
 	destroy(): void;
 };
 
 /** Mask resolution across the tee's width. Higher = finer silhouette, more vertices. */
-const GRID = 150;
+const GRID = 200;
 /** World width of the tee. Height follows the photograph's aspect. */
 const WIDTH = 2;
 /** How far the body is pillowed out, front and back, in world units. */
-const DEPTH = 0.25;
+const DEPTH = 0.17;
 /** Distance from the edge, in mask cells, at which the pillow reaches full depth. */
-const PLATEAU = 22;
+const PLATEAU = 34;
 /** How many ripples can run at once. More slots = longer wakes, more GPU work. */
 const RIPPLES = 10;
 
@@ -75,9 +77,13 @@ const BOUNCE_STIFFNESS = 70;
 const BOUNCE_DAMPING = 0.48;
 /** How far a scroll turns the piece about its vertical axis. */
 const SCROLL_TILT = 2;
-/** Turn limits — the back is not photographed. */
-const MAX_YAW = 0.75;
-const MAX_PITCH = 0.32;
+/**
+ * Turn and tilt limits around the face shown. The piece is never turned by
+ * hand: it shows its front or its back (face()), and the hover lean, idle
+ * sway and scroll tilt only ever move it this far from square-on.
+ */
+const MAX_YAW = 0.3;
+const MAX_PITCH = 0.16;
 
 /* ---- The puff entrance. ---- */
 /** The puff waits this long after the swap, so the flat card is on screen first. */
@@ -105,8 +111,16 @@ const VERTEX_HEAD = /* glsl */ `
 	uniform float uFront;   // how far the air has spread from the chest, 0 → 1
 	varying float vPuff;
 
+	// The back's own folds, when the back is photographed (mirrored: seen from behind).
+	uniform sampler2D uFoldMapBack;
+	uniform float uHasBack;
+
 	float foldAt(vec2 p) {
-		return texture2D(uFoldMap, p / uSize + 0.5).r * 2.0 - 1.0;
+		vec2 uv = p / uSize + 0.5;
+		// One expression, no early return: both faces sampled, the back chosen by side.
+		float front = texture2D(uFoldMap, uv).r;
+		float back = texture2D(uFoldMapBack, vec2(1.0 - uv.x, uv.y)).r;
+		return mix(front, back, step(uSide, 0.0) * uHasBack) * 2.0 - 1.0;
 	}
 
 	float clothDisp(vec2 p) {
@@ -158,7 +172,12 @@ const VERTEX_HEAD = /* glsl */ `
 	}
 `;
 
-function maskFromImage(image: HTMLImageElement) {
+/**
+ * The silhouette the mesh covers. With a photographed back it is the union of
+ * the front's alpha and the back's alpha mirrored (the back is seen from
+ * behind), so neither face has a hole where the other's outline is wider.
+ */
+function maskFromImage(image: HTMLImageElement, back?: HTMLImageElement | null) {
 	const cols = GRID;
 	const rows = Math.round((GRID * image.naturalHeight) / image.naturalWidth);
 	const canvas = document.createElement('canvas');
@@ -168,6 +187,18 @@ function maskFromImage(image: HTMLImageElement) {
 	if (!context) throw new Error('2d context unavailable');
 	context.drawImage(image, 0, 0, cols, rows);
 	const { data } = context.getImageData(0, 0, cols, rows);
+	if (back) {
+		const other = document.createElement('canvas');
+		other.width = cols;
+		other.height = rows;
+		const backContext = other.getContext('2d', { willReadFrequently: true });
+		if (!backContext) throw new Error('2d context unavailable');
+		backContext.translate(cols, 0);
+		backContext.scale(-1, 1);
+		backContext.drawImage(back, 0, 0, cols, rows);
+		const mirrored = backContext.getImageData(0, 0, cols, rows).data;
+		for (let i = 3; i < data.length; i += 4) data[i] = Math.max(data[i], mirrored[i]);
+	}
 
 	// `cover` is generous so the mesh fully covers the alpha edge (the texture's
 	// own alpha then cuts the exact silhouette); `solid` drives the inflation.
@@ -223,12 +254,53 @@ function maskFromImage(image: HTMLImageElement) {
 		}
 	}
 
-	return { cols, rows, cover, distance };
+	/**
+	 * The pillow's profile, bevelled. A raw distance field has sharp ridges
+	 * along every centre line (the medial axis: down the sleeves, across the
+	 * shoulders), which read as triangles and creases once lit. So the profile
+	 * is taken from it, then softened by repeated blurring inside the garment
+	 * only: every bend becomes a broad, rounded one. The outline stays pinned
+	 * at zero, so front and back still close tightly at the edge.
+	 */
+	let puff = new Float32Array(cols * rows);
+	for (let i = 0; i < cols * rows; i++) {
+		const t = Math.min(distance[i] / PLATEAU, 1);
+		puff[i] = t * t * (3 - 2 * t);
+	}
+	const radius = Math.max(2, Math.round(cols / 50));
+	for (let pass = 0; pass < 4; pass++) {
+		for (const horizontal of [true, false]) {
+			const next = new Float32Array(cols * rows);
+			for (let y = 0; y < rows; y++) {
+				for (let x = 0; x < cols; x++) {
+					const i = y * cols + x;
+					if (distance[i] === 0) continue;
+					let sum = 0;
+					let n = 0;
+					for (let k = -radius; k <= radius; k++) {
+						const xx = horizontal ? x + k : x;
+						const yy = horizontal ? y : y + k;
+						if (xx < 0 || yy < 0 || xx >= cols || yy >= rows) continue;
+						// Outside the garment counts as flat (0): the edge stays down.
+						sum += puff[yy * cols + xx];
+						n++;
+					}
+					next[i] = sum / n;
+				}
+			}
+			puff = next;
+		}
+	}
+
+	return { cols, rows, cover, distance, puff };
 }
 
-/** One shell of the garment. `side` +1 is the front, −1 the back. */
-function shellGeometry(mask: ReturnType<typeof maskFromImage>, side: 1 | -1) {
-	const { cols, rows, cover, distance } = mask;
+/**
+ * One shell of the garment. `side` +1 is the front, −1 the back. A
+ * photographed back is seen from behind, so its texture runs mirrored.
+ */
+function shellGeometry(mask: ReturnType<typeof maskFromImage>, side: 1 | -1, mirror = false) {
+	const { cols, rows, cover, puff: profile } = mask;
 	const height = (WIDTH * rows) / cols;
 	const positions: number[] = [];
 	const uvs: number[] = [];
@@ -240,13 +312,11 @@ function shellGeometry(mask: ReturnType<typeof maskFromImage>, side: 1 | -1) {
 			if (!cover[cell]) continue;
 			const u = (x + 0.5) / cols;
 			const v = 1 - (y + 0.5) / rows;
-			const t = Math.min(distance[cell] / PLATEAU, 1);
-			// Smoothstep: zero slope at the outline, so front and back close
-			// tightly there and no stair-stepped edge shows when it turns.
-			const puff = t * t * (3 - 2 * t);
+			// The bevelled profile (see maskFromImage): soft everywhere, zero at the outline.
+			const puff = profile[cell];
 			indexOf[cell] = positions.length / 3;
 			positions.push((u - 0.5) * WIDTH, (v - 0.5) * height, side * DEPTH * puff);
-			uvs.push(u, v);
+			uvs.push(mirror ? 1 - u : u, v);
 		}
 	}
 
@@ -284,7 +354,7 @@ function shellGeometry(mask: ReturnType<typeof maskFromImage>, side: 1 | -1) {
  * height drives a roughness map, so raised threads are a touch duller than
  * the hollows between them.
  */
-export function surfaceMapsFromImage(image: HTMLImageElement, maxWidth = 640) {
+function surfaceMapsFromImage(image: HTMLImageElement, maxWidth = 640) {
 	const scale = Math.min(1, maxWidth / image.naturalWidth);
 	const w = Math.round(image.naturalWidth * scale);
 	const h = Math.round(image.naturalHeight * scale);
@@ -467,22 +537,27 @@ function flatFoldMap() {
 	return texture;
 }
 
+/** A face's fine relief: a normal map, and (when derived at runtime) a roughness map. */
+type Surface = { normalMap: THREE.Texture; roughnessMap: THREE.Texture | null };
+
 function clothMaterial(
 	texture: THREE.Texture,
 	side: 1 | -1,
 	uniforms: Record<string, THREE.IUniform>,
 	backColor: THREE.Color,
-	surface: ReturnType<typeof surfaceMapsFromImage> | null
+	surface: Surface | null,
+	/** The back has its own photograph (and maps); otherwise it is plain cloth. */
+	photographed = side === 1
 ) {
 	// Physical, for sheen: the soft rim brightening cloth has at grazing angles.
 	const material = new THREE.MeshPhysicalMaterial({
 		map: texture,
-		// The knit relief belongs to the photographed face only; on the back it
-		// would show the chest embroidery embossed in mirror image.
-		normalMap: side === 1 && surface ? surface.normalMap : null,
+		// The relief belongs to a photographed face only: on an unphotographed
+		// back it would show the chest embroidery embossed in mirror image.
+		normalMap: photographed && surface ? surface.normalMap : null,
 		normalScale: new THREE.Vector2(0.75, 0.75),
-		roughnessMap: side === 1 && surface ? surface.roughnessMap : null,
-		roughness: side === 1 && surface ? 1 : 0.92,
+		roughnessMap: photographed && surface ? surface.roughnessMap : null,
+		roughness: photographed && surface?.roughnessMap ? 1 : 0.92,
 		sheen: 0.3,
 		sheenRoughness: 0.8,
 		sheenColor: new THREE.Color('#f3dfbf'),
@@ -572,9 +647,9 @@ function clothMaterial(
 				#include <opaque_fragment>`
 			);
 
-		if (side === -1) {
-			// The back keeps the photograph's alpha (so the silhouette matches)
-			// but not its pixels — the chest print must not show through mirrored.
+		if (side === -1 && !photographed) {
+			// An unphotographed back keeps the photograph's alpha (so the silhouette
+			// matches) but not its pixels — the chest print must not show through mirrored.
 			shader.fragmentShader = shader.fragmentShader
 				.replace('#include <common>', '#include <common>\nuniform vec3 uBackColor;')
 				.replace(
@@ -591,7 +666,7 @@ export type ClothIntro = 'dissolve' | 'puff' | null;
 
 
 /** The average colour of the piece: its opaque pixels, sampled small. */
-export function clothColour(image: HTMLImageElement): THREE.Color | null {
+function clothColour(image: HTMLImageElement): THREE.Color | null {
 	try {
 		const size = 32;
 		const canvas = document.createElement('canvas');
@@ -619,19 +694,74 @@ export function clothColour(image: HTMLImageElement): THREE.Color | null {
 	}
 }
 
+/** Surface maps baked offline (scripts/prepare-hero-shots.mjs), one set per face. */
+export type ClothMaps = {
+	frontNormal: string;
+	frontHeight: string;
+	backNormal?: string;
+	backHeight?: string;
+};
+
+function loadImage(url: string): Promise<HTMLImageElement> {
+	return new Promise((resolve, reject) => {
+		const image = new Image();
+		image.decoding = 'async';
+		image.onload = () => resolve(image);
+		image.onerror = () => reject(new Error(`image failed: ${url}`));
+		image.src = url;
+	});
+}
+
+function waitFor(image: HTMLImageElement): Promise<void> {
+	if (image.complete && image.naturalWidth) return Promise.resolve();
+	return new Promise<void>((resolve, reject) => {
+		image.addEventListener('load', () => resolve(), { once: true });
+		image.addEventListener('error', () => reject(new Error('image failed')), { once: true });
+	});
+}
+
+/** A baked map as a data texture (not colour), mipmapped. */
+function mapTexture(image: HTMLImageElement, anisotropy: number) {
+	const texture = new THREE.Texture(image);
+	texture.colorSpace = THREE.NoColorSpace;
+	texture.anisotropy = anisotropy;
+	texture.needsUpdate = true;
+	return texture;
+}
+
 export async function mountCloth(
 	canvas: HTMLCanvasElement,
 	image: HTMLImageElement,
-	{ reducedMotion = false, intro = null }: { reducedMotion?: boolean; intro?: ClothIntro } = {}
+	{
+		reducedMotion = false,
+		intro = null,
+		back = null,
+		maps = null
+	}: {
+		reducedMotion?: boolean;
+		intro?: ClothIntro;
+		/** The back's own photograph: the piece then turns to show it (face()). */
+		back?: HTMLImageElement | null;
+		/** Baked normal and displacement maps; derived from the photo when absent. */
+		maps?: ClothMaps | null;
+	} = {}
 ): Promise<ClothScene> {
 	const dissolve = intro === 'dissolve';
 	const puffIn = intro === 'puff';
-	if (!image.complete || !image.naturalWidth) {
-		await new Promise<void>((resolve, reject) => {
-			image.addEventListener('load', () => resolve(), { once: true });
-			image.addEventListener('error', () => reject(new Error('image failed')), { once: true });
-		});
-	}
+	await waitFor(image);
+	if (back) await waitFor(back);
+	const baked = maps
+		? await Promise.all([
+				loadImage(maps.frontNormal),
+				loadImage(maps.frontHeight),
+				maps.backNormal ? loadImage(maps.backNormal) : null,
+				maps.backHeight ? loadImage(maps.backHeight) : null
+			]).catch((cause) => {
+				// The photograph's own derived maps still work.
+				console.warn('[cloth] baked maps unavailable', cause);
+				return null;
+			})
+		: null;
 
 	const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
 	renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -641,28 +771,48 @@ export async function mountCloth(
 	const scene = new THREE.Scene();
 	const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 50);
 
-	const mask = maskFromImage(image);
-	const texture = new THREE.Texture(image);
-	texture.colorSpace = THREE.SRGBColorSpace;
-	texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
-	texture.needsUpdate = true;
+	const mask = maskFromImage(image, back);
+	const anisotropy = renderer.capabilities.getMaxAnisotropy();
+	const photoTexture = (source: HTMLImageElement) => {
+		const t = new THREE.Texture(source);
+		t.colorSpace = THREE.SRGBColorSpace;
+		t.anisotropy = anisotropy;
+		t.needsUpdate = true;
+		return t;
+	};
+	const texture = photoTexture(image);
+	const backTexture = back ? photoTexture(back) : null;
 
-	let surface: ReturnType<typeof surfaceMapsFromImage> | null = null;
-	try {
-		surface = surfaceMapsFromImage(image);
-		surface.normalMap.anisotropy = texture.anisotropy;
-	} catch (cause) {
-		// Flat cloth still looks right; relief is a bonus.
-		console.warn('[cloth] surface maps unavailable', cause);
+	/**
+	 * Each face's fine relief: the baked normal map when there is one (knit,
+	 * rib, embroidery, prepared offline), else derived from the photograph.
+	 */
+	let surface: Surface | null = null;
+	let backSurface: Surface | null = null;
+	if (baked) {
+		surface = { normalMap: mapTexture(baked[0], anisotropy), roughnessMap: null };
+		if (baked[2]) backSurface = { normalMap: mapTexture(baked[2], anisotropy), roughnessMap: null };
+	} else {
+		try {
+			surface = surfaceMapsFromImage(image);
+			surface.normalMap.anisotropy = anisotropy;
+			if (back) backSurface = surfaceMapsFromImage(back);
+		} catch (cause) {
+			// Flat cloth still looks right; relief is a bonus.
+			console.warn('[cloth] surface maps unavailable', cause);
+		}
 	}
 
 	const front = shellGeometry(mask, 1);
-	const back = shellGeometry(mask, -1);
+	const backShell = shellGeometry(mask, -1, !!back);
 	const top = front.height / 2;
 
-	let foldMap: THREE.DataTexture;
+	/** Each face's folds (displacement): baked when given, else read from the photo. */
+	let foldMap: THREE.Texture;
+	let backFoldMap: THREE.Texture | null = null;
 	try {
-		foldMap = foldMapFromImage(image);
+		foldMap = baked ? mapTexture(baked[1], 1) : foldMapFromImage(image);
+		if (back) backFoldMap = baked?.[3] ? mapTexture(baked[3], 1) : foldMapFromImage(back);
 	} catch (cause) {
 		console.warn('[cloth] fold map unavailable', cause);
 		foldMap = flatFoldMap();
@@ -696,6 +846,8 @@ export async function mountCloth(
 		uWind: { value: 1 },
 		uRipples: { value: ripples },
 		uFoldMap: { value: foldMap },
+		uFoldMapBack: { value: backFoldMap ?? foldMap },
+		uHasBack: { value: backFoldMap ? 1 : 0 },
 		uSize: { value: new THREE.Vector2(WIDTH, front.height) },
 		uTop: { value: top },
 		uCrumple: { value: dissolve ? 1 : 0 },
@@ -715,7 +867,12 @@ export async function mountCloth(
 
 	const piece = new THREE.Group();
 	const frontMesh = new THREE.Mesh(front.geometry, clothMaterial(texture, 1, uniforms, backColor, surface));
-	const backMesh = new THREE.Mesh(back.geometry, clothMaterial(texture, -1, uniforms, backColor, surface));
+	const backMesh = new THREE.Mesh(
+		backShell.geometry,
+		backTexture
+			? clothMaterial(backTexture, -1, uniforms, backColor, backSurface, true)
+			: clothMaterial(texture, -1, uniforms, backColor, surface)
+	);
 	piece.add(frontMesh, backMesh);
 	scene.add(piece);
 
@@ -786,7 +943,14 @@ export async function mountCloth(
 	const body = { x: 0, y: 0, vx: 0, vy: 0, goalX: 0, goalY: 0 };
 	/** A scroll also turns the piece about its vertical axis, sprung home. */
 	const tip = { yaw: 0, vyaw: 0 };
-	let dragging: { id: number; x: number; y: number; yaw: number; pitch: number } | null = null;
+	/**
+	 * Which face is shown: 0 (front) or π (back), and only by face(). There is
+	 * no turning by hand — the piece is always presenting one face or the
+	 * other, and the lean, idle sway and scroll tilt stay within small limits
+	 * around it. The turn between faces is a spring with a little overshoot,
+	 * like a hanger swung round and settling.
+	 */
+	const faceTurn = { value: 0, velocity: 0, target: 0 };
 
 	const raycaster = new THREE.Raycaster();
 	const ndc = new THREE.Vector2();
@@ -803,11 +967,11 @@ export async function mountCloth(
 		return true;
 	}
 
+	/** A touch ripples the cloth; it never turns the piece (the toggle does that). */
 	function onPointerDown(event: PointerEvent) {
-		if (!ripple(event, 1)) return;
-		dragging = { id: event.pointerId, x: event.clientX, y: event.clientY, yaw: target.yaw, pitch: target.pitch };
-		canvas.setPointerCapture(event.pointerId);
-		canvas.style.cursor = 'grabbing';
+		// No text selection or image drag starting on the piece.
+		if (event.pointerType === 'mouse') event.preventDefault();
+		ripple(event, 1);
 	}
 	/** The last trail ripple, so a moving pointer leaves a wake, not a flood. */
 	let trail = { t: 0, x: 0, y: 0 };
@@ -825,12 +989,6 @@ export async function mountCloth(
 
 	function onPointerMove(event: PointerEvent) {
 		const rect = canvas.getBoundingClientRect();
-		if (dragging && event.pointerId === dragging.id) {
-			wake(event, 0.35);
-			target.yaw = THREE.MathUtils.clamp(dragging.yaw + (event.clientX - dragging.x) * 0.006, -MAX_YAW, MAX_YAW);
-			target.pitch = THREE.MathUtils.clamp(dragging.pitch + (event.clientY - dragging.y) * 0.004, -MAX_PITCH, MAX_PITCH);
-			return;
-		}
 		if (event.pointerType === 'mouse') {
 			// Lean only while the pointer is over the piece. Measured against a
 			// canvas scrolled far off screen, the offset is huge — and it once
@@ -874,14 +1032,6 @@ export async function mountCloth(
 		tip.vyaw += kick * SCROLL_TILT * 1;
 	}
 	window.addEventListener('scroll', onScroll, { passive: true });
-	function onPointerUp(event: PointerEvent) {
-		if (!dragging || event.pointerId !== dragging.id) return;
-		dragging = null;
-		canvas.style.cursor = '';
-		// Let go: the spring carries it home, overshooting a little.
-		target.yaw = 0;
-		target.pitch = 0;
-	}
 	function onPointerLeave() {
 		lean.yaw = 0;
 		lean.pitch = 0;
@@ -890,8 +1040,6 @@ export async function mountCloth(
 	}
 	canvas.addEventListener('pointerdown', onPointerDown);
 	window.addEventListener('pointermove', onPointerMove, { passive: true });
-	window.addEventListener('pointerup', onPointerUp);
-	window.addEventListener('pointercancel', onPointerUp);
 	canvas.addEventListener('pointerleave', onPointerLeave);
 
 	/* ---- Only animate while the hero is on screen and the tab is visible. */
@@ -916,22 +1064,19 @@ export async function mountCloth(
 		last = now;
 		clock += reducedMotion ? 0 : dt;
 
-		// Idle sway plus a lean toward the pointer, unless a hand has hold of it.
-		const idle = reducedMotion ? 0 : Math.sin(clock * 0.45) * 0.1;
-		const goalYaw = THREE.MathUtils.clamp(
-			dragging ? target.yaw : target.yaw + lean.yaw + idle,
-			-MAX_YAW,
-			MAX_YAW
-		);
-		const goalPitch = THREE.MathUtils.clamp(
-			dragging ? target.pitch : target.pitch + lean.pitch,
-			-MAX_PITCH,
-			MAX_PITCH
-		);
+		// The face: a spring onto front (0) or back (π), with a small overshoot.
+		const fk = 22;
+		faceTurn.velocity += (fk * (faceTurn.target - faceTurn.value) - 2 * Math.sqrt(fk) * 0.62 * faceTurn.velocity) * dt;
+		faceTurn.value += faceTurn.velocity * dt;
+
+		// Idle sway plus a lean toward the pointer — small, around the face shown.
+		const idle = reducedMotion ? 0 : Math.sin(clock * 0.45) * 0.08;
+		const goalYaw = THREE.MathUtils.clamp(target.yaw + lean.yaw + idle, -MAX_YAW, MAX_YAW);
+		const goalPitch = THREE.MathUtils.clamp(target.pitch + lean.pitch, -MAX_PITCH, MAX_PITCH);
 
 		// Slightly under-damped: it settles with a small overshoot, like cloth on a hanger.
-		const stiffness = dragging ? 160 : 34;
-		const damping = dragging ? 2 * Math.sqrt(stiffness) : 2 * Math.sqrt(stiffness) * 0.42;
+		const stiffness = 34;
+		const damping = 2 * Math.sqrt(stiffness) * 0.42;
 		spring.vyaw += (stiffness * (goalYaw - spring.yaw) - damping * spring.vyaw) * dt;
 		spring.vpitch += (stiffness * (goalPitch - spring.pitch) - damping * spring.vpitch) * dt;
 		spring.yaw += spring.vyaw * dt;
@@ -1009,14 +1154,19 @@ export async function mountCloth(
 		const tipK = BOUNCE_STIFFNESS * 0.7;
 		const tipDamp = 2 * Math.sqrt(tipK) * 0.25;
 		tip.vyaw += (-tipK * tip.yaw - tipDamp * tip.vyaw) * dt;
-		// Capped well short of the unphotographed back.
-		tip.yaw = THREE.MathUtils.clamp(tip.yaw + tip.vyaw * dt, -0.6, 0.6);
-		const yaw = THREE.MathUtils.clamp(spring.yaw + tip.yaw, -(MAX_YAW + 0.12), MAX_YAW + 0.12);
+		// Small: a tilt, never a turn.
+		tip.yaw = THREE.MathUtils.clamp(tip.yaw + tip.vyaw * dt, -0.25, 0.25);
+		// Every offset — lean, sway, tilt — stays within the limit around the face.
+		const offset = THREE.MathUtils.clamp(spring.yaw + tip.yaw, -(MAX_YAW + 0.08), MAX_YAW + 0.08);
+		const yaw = faceTurn.value + offset;
 
-		piece.rotation.set(spring.pitch, yaw, entry.roll + yaw * -0.06);
-		// Turning fast stirs the cloth.
+		piece.rotation.set(spring.pitch, yaw, entry.roll + offset * -0.06);
+		// Turning stirs the cloth: a flip between faces sets the hem swinging.
 		const stir = Math.min(
-			Math.abs(spring.vyaw) * 1.8 + Math.abs(spring.vpitch) * 1.2 + Math.abs(body.vy) * 2.2,
+			Math.abs(spring.vyaw) * 1.8 +
+				Math.abs(faceTurn.velocity) * 0.9 +
+				Math.abs(spring.vpitch) * 1.2 +
+				Math.abs(body.vy) * 2.2,
 			2.6
 		);
 		const gust = 0.85 + Math.sin(clock * 0.31) * 0.25 + Math.sin(clock * 0.83) * 0.12;
@@ -1048,6 +1198,14 @@ export async function mountCloth(
 		reveal() {
 			held = false;
 		},
+		face(side) {
+			if (!back) return;
+			const goal = side === 'back' ? Math.PI : 0;
+			if (goal === faceTurn.target) return;
+			faceTurn.target = goal;
+			// The swing starts a breath of air through the cloth from the chest.
+			startRipple(0, top * 0.2, 0.9);
+		},
 		destroy() {
 			cancelAnimationFrame(frame);
 			resizeObserver.disconnect();
@@ -1056,17 +1214,19 @@ export async function mountCloth(
 			canvas.removeEventListener('pointerdown', onPointerDown);
 			window.removeEventListener('pointermove', onPointerMove);
 			window.removeEventListener('scroll', onScroll);
-			window.removeEventListener('pointerup', onPointerUp);
-			window.removeEventListener('pointercancel', onPointerUp);
 			canvas.removeEventListener('pointerleave', onPointerLeave);
 			front.geometry.dispose();
-			back.geometry.dispose();
+			backShell.geometry.dispose();
 			(frontMesh.material as THREE.Material).dispose();
 			(backMesh.material as THREE.Material).dispose();
 			texture.dispose();
+			backTexture?.dispose();
 			foldMap.dispose();
-			surface?.normalMap.dispose();
-			surface?.roughnessMap.dispose();
+			backFoldMap?.dispose();
+			for (const s of [surface, backSurface]) {
+				s?.normalMap.dispose();
+				s?.roughnessMap?.dispose();
+			}
 			renderer.dispose();
 		}
 	};

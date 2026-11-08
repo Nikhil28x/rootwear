@@ -12,8 +12,7 @@
 	 */
 	import BuyBar from './BuyBar.svelte';
 	import ClothHero from './ClothHero.svelte';
-	import TeeHero from './TeeHero.svelte';
-	import { teeShotsFor } from '$lib/drop/tee-shots';
+	import { heroShotsFor } from '$lib/drop/hero-shots';
 	import { srcsetOf } from '$lib/media/responsive';
 	import DropCountdown from '$lib/DropCountdown.svelte';
 	import DropStateMark from '$lib/components/drop/DropStateMark.svelte';
@@ -41,8 +40,8 @@
 	});
 
 	let product = $derived(data.product);
-	/** Studio front and back shots, when this piece has them: the 3D hero. */
-	let teeShots = $derived(teeShotsFor(data.drop.slug, product.slug));
+	/** Front and back cutouts with baked maps, when this piece has them. */
+	let heroShots = $derived(heroShotsFor(data.drop.slug, product.slug));
 	let price = $derived(
 		data.displayPrice === null ? 'Price at launch' : formatInr(data.displayPrice)
 	);
@@ -166,9 +165,17 @@
 			</span>
 		</h1>
 
-		{#if teeShots}
-			<div class="hero__piece hero__piece--tee">
-				<TeeHero shots={teeShots} />
+		{#if heroShots}
+			<!-- Front and back cutouts with baked maps: the cloth shows one face at a time. -->
+			<div class="hero__piece hero__piece--shots">
+				<ClothHero
+					src={heroShots.front.src}
+					alt={heroShots.front.alt}
+					width={heroShots.front.width}
+					height={heroShots.front.height}
+					back={heroShots.back}
+					maps={heroShots.maps}
+				/>
 			</div>
 		{:else if byRole.piece}
 			<div class="hero__piece">
@@ -558,9 +565,10 @@
 		z-index: 1;
 		filter: drop-shadow(0 40px 50px rgb(0 0 0 / 0.55));
 	}
-	/* The 3D hero casts its own shadow; a CSS filter over a live canvas is costly. */
-	.hero__piece--tee {
-		filter: none;
+	/* With front and back shots the Front / Back toggle sits under the hem: lift
+	   the piece so the toggle clears the buy bar. */
+	.hero__piece--shots {
+		top: 48%;
 	}
 	/* The piece drifts up as the hero scrolls away — where the browser can. */
 	@supports (animation-timeline: view()) {
@@ -1050,10 +1058,8 @@
 			bottom: 104px;
 			transform: translate(-50%, 0);
 		}
-		/* The worn 3D tee is taller than the flat photo: lift it clear of the buy bar. */
-		.hero__piece--tee {
-			width: min(66vw, 36svh);
-			bottom: max(190px, 24svh);
+		.hero__piece--shots {
+			bottom: 144px;
 		}
 		@keyframes piece-drift {
 			to {
