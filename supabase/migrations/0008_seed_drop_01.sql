@@ -39,7 +39,7 @@ values (
   180,
   array['Wash cold', 'Line dry', 'No bleach'],
   'Relaxed oversized',
-  178,
+  183,
   'M',
   410000,   -- §10 ₹4,100 at launch
   340000    -- §10 ₹3,400 pre-launch, locked for tease reservers

@@ -12,6 +12,8 @@
 	 */
 	import BuyBar from './BuyBar.svelte';
 	import ClothHero from './ClothHero.svelte';
+	import TeeHero from './TeeHero.svelte';
+	import { teeShotsFor } from '$lib/drop/tee-shots';
 	import { srcsetOf } from '$lib/media/responsive';
 	import DropCountdown from '$lib/DropCountdown.svelte';
 	import DropStateMark from '$lib/components/drop/DropStateMark.svelte';
@@ -39,6 +41,8 @@
 	});
 
 	let product = $derived(data.product);
+	/** Studio front and back shots, when this piece has them: the 3D hero. */
+	let teeShots = $derived(teeShotsFor(data.drop.slug, product.slug));
 	let price = $derived(
 		data.displayPrice === null ? 'Price at launch' : formatInr(data.displayPrice)
 	);
@@ -162,7 +166,11 @@
 			</span>
 		</h1>
 
-		{#if byRole.piece}
+		{#if teeShots}
+			<div class="hero__piece hero__piece--tee">
+				<TeeHero shots={teeShots} />
+			</div>
+		{:else if byRole.piece}
 			<div class="hero__piece">
 				<ClothHero
 					src={byRole.piece.url}
@@ -549,6 +557,10 @@
 		transform: translate(-50%, -50%);
 		z-index: 1;
 		filter: drop-shadow(0 40px 50px rgb(0 0 0 / 0.55));
+	}
+	/* The 3D hero casts its own shadow; a CSS filter over a live canvas is costly. */
+	.hero__piece--tee {
+		filter: none;
 	}
 	/* The piece drifts up as the hero scrolls away — where the browser can. */
 	@supports (animation-timeline: view()) {
@@ -1037,6 +1049,11 @@
 			top: auto;
 			bottom: 104px;
 			transform: translate(-50%, 0);
+		}
+		/* The worn 3D tee is taller than the flat photo: lift it clear of the buy bar. */
+		.hero__piece--tee {
+			width: min(66vw, 36svh);
+			bottom: max(190px, 24svh);
 		}
 		@keyframes piece-drift {
 			to {

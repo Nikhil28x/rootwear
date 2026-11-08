@@ -284,7 +284,7 @@ function shellGeometry(mask: ReturnType<typeof maskFromImage>, side: 1 | -1) {
  * height drives a roughness map, so raised threads are a touch duller than
  * the hollows between them.
  */
-function surfaceMapsFromImage(image: HTMLImageElement, maxWidth = 640) {
+export function surfaceMapsFromImage(image: HTMLImageElement, maxWidth = 640) {
 	const scale = Math.min(1, maxWidth / image.naturalWidth);
 	const w = Math.round(image.naturalWidth * scale);
 	const h = Math.round(image.naturalHeight * scale);
@@ -591,7 +591,7 @@ export type ClothIntro = 'dissolve' | 'puff' | null;
 
 
 /** The average colour of the piece: its opaque pixels, sampled small. */
-function clothColour(image: HTMLImageElement): THREE.Color | null {
+export function clothColour(image: HTMLImageElement): THREE.Color | null {
 	try {
 		const size = 32;
 		const canvas = document.createElement('canvas');

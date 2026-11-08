@@ -5,7 +5,6 @@
 	 *   Cover     the piece, front and back, then its name — nothing on the images
 	 *   Piece     straight on from the cover: the cutout and a spec sheet
 	 *   Details   a slow, drifting slider of every photograph and close crop
-	 *   Roots     who makes it, as a short essay with a plate
 	 *
 	 * The cover, piece and details run as one unbroken page — no rules or
 	 * headings between them — and no price is shown anywhere here; the
@@ -129,7 +128,7 @@
 				<div class="spread__track" bind:this={spreadTrack} onscroll={onSpreadScroll}>
 					{#each spread as half, index (half.url)}
 						<!-- The front keeps the face; the back sits lower so the whole back of the tee shows. -->
-						<figure class="spread__half" style="--i: {index}; --pos: {index === 0 ? '50% 18%' : '50% 62%'}">
+						<figure class="spread__half" style="--i: {index}; --pos: {index === 0 ? '50% 18%' : '42% 50%'}">
 							<img
 								src={half.url}
 								srcset={srcsetOf(half.url)}
@@ -252,54 +251,6 @@
 		{/if}
 	{/if}
 
-	<!-- ───────── Our roots: the question, three short notes, the plate. ───────── -->
-	<section id="roots" class="roots" aria-labelledby="roots-title">
-		<p class="section-no">Our roots</p>
-		<h2 id="roots-title" class="roots__title">
-			What if the clothes closest to us could feel good without asking the earth for more than it can
-			give?
-		</h2>
-		<p class="roots__byline">Founded by Aaron Mishra · Bengaluru · Est. 2026</p>
-
-		<div class="roots__notes">
-			<article>
-				<h3>Before we build, we listen.</h3>
-				<p>Rootwear began with that one question, and every piece still starts there.</p>
-			</article>
-			<article>
-				<h3>A small team.</h3>
-				<p>
-					Designers, material obsessives and culture builders, making everyday uniforms from
-					hemp-led fabrics.
-				</p>
-			</article>
-			<article>
-				<h3>Fewer, better pieces.</h3>
-				<p>
-					Every drop starts with the fibre and ends with a small, numbered run, made to gather
-					character over time.
-				</p>
-			</article>
-		</div>
-
-		<figure class="roots__plate">
-			<div class="roots__frame">
-				<img
-					src="/images/rootwear-brand-story.jpg"
-					alt="Rootwear, established in process: the tree, with the lines before we build, we listen, and built from the ground up"
-					loading="lazy"
-				/>
-				<!-- The artwork's own tagline is overprinted with the brand line, as in the footer. -->
-				<span class="roots__tm" aria-hidden="true">TM</span>
-				<span class="roots__tagline" aria-hidden="true">Established in Process</span>
-			</div>
-			<figcaption>
-				<span><span class="roots__plate-no">Plate</span> Rootwear — Established in Process.</span>
-				<a class="link" href="/know-your-roots">Read the full story</a>
-			</figcaption>
-		</figure>
-	</section>
-
 </main>
 
 <style>
@@ -346,11 +297,6 @@
 	}
 	.link:hover {
 		text-decoration-thickness: 2px;
-	}
-	.section-no {
-		font-size: 12px;
-		letter-spacing: 0.04em;
-		color: var(--soft);
 	}
 
 	/* ── Cover ────────────────────────────────────────────────── */
@@ -635,107 +581,6 @@
 		color: var(--ink);
 	}
 
-	/* ── Our roots ────────────────────────────────────────────── */
-	.roots {
-		padding: clamp(80px, 10vw, 144px) var(--gutter);
-		border-top: 1px solid var(--rule);
-		scroll-margin-top: 60px;
-	}
-	/* The founding question is the headline. */
-	.roots__title {
-		margin: 22px 0 0;
-		max-width: 27ch;
-		font-family: var(--font-display);
-		font-weight: 400;
-		font-size: clamp(2.4rem, 5.2vw, 5.6rem);
-		line-height: 1;
-		letter-spacing: -0.04em;
-		text-wrap: balance;
-	}
-	.roots__byline {
-		margin-top: 26px;
-		font-size: 13px;
-		color: var(--soft);
-	}
-	.roots__notes {
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: clamp(24px, 4vw, 64px);
-		margin-top: clamp(48px, 6vw, 88px);
-	}
-	.roots__notes article {
-		display: flex;
-		flex-direction: column;
-		gap: 12px;
-		padding-top: 18px;
-		border-top: 1px solid var(--ink);
-	}
-	.roots__notes h3 {
-		margin: 0;
-		font-family: var(--font-display);
-		font-weight: 400;
-		font-size: clamp(1.4rem, 1.9vw, 1.8rem);
-		line-height: 1.1;
-		letter-spacing: -0.015em;
-	}
-	.roots__notes p {
-		max-width: 36ch;
-		font-size: 15px;
-		line-height: 1.65;
-		color: rgb(11 15 11 / 0.75);
-	}
-	.roots__plate {
-		position: relative;
-		margin: clamp(48px, 6vw, 88px) 0 0;
-	}
-	.roots__frame {
-		position: relative;
-		overflow: hidden;
-		background: #1c3023;
-	}
-	.roots__frame img {
-		display: block;
-		width: 100%;
-		height: auto;
-		filter: saturate(0.88) contrast(1.04);
-	}
-	.roots__tm {
-		position: absolute;
-		top: 68.5%;
-		right: 2.1%;
-		font-size: clamp(0.45rem, 0.72vw, 0.95rem);
-		font-weight: 500;
-		letter-spacing: 0.08em;
-		color: rgb(246 239 221 / 0.9);
-	}
-	.roots__tagline {
-		position: absolute;
-		top: 82%;
-		left: 72%;
-		width: 21%;
-		padding: 0.25em 0;
-		background: #1c3023;
-		font-family: var(--font-display);
-		font-size: clamp(0.75rem, 1.65vw, 2.3rem);
-		font-style: italic;
-		line-height: 1.3;
-		text-align: center;
-		color: #f6efdd;
-	}
-	.roots__plate figcaption {
-		display: flex;
-		justify-content: space-between;
-		align-items: baseline;
-		gap: 20px;
-		margin-top: 12px;
-		font-size: 13px;
-		color: var(--soft);
-	}
-	.roots__plate-no {
-		margin-right: 8px;
-		color: var(--ink);
-	}
-
 	/* ── Phone ────────────────────────────────────────────────── */
 	@media (max-width: 860px) {
 		.piece {
@@ -804,26 +649,6 @@
 		}
 		.fig__frame {
 			height: 52svh;
-		}
-		.roots__notes {
-			grid-template-columns: minmax(0, 1fr);
-		}
-		.roots__plate figcaption {
-			flex-direction: column;
-			gap: 8px;
-		}
-		/* A phone shows the left of the artwork: the mark, the tree and the first line. */
-		.roots__frame {
-			aspect-ratio: 4 / 3;
-		}
-		.roots__frame img {
-			height: 100%;
-			object-fit: cover;
-			object-position: 0% 50%;
-		}
-		.roots__tm,
-		.roots__tagline {
-			display: none;
 		}
 	}
 

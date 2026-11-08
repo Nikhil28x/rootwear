@@ -56,7 +56,7 @@ export const DROP_01: Drop = {
 			gsm: 180,
 			care: ['Wash cold', 'Line dry', 'No bleach'],
 			fit: 'Relaxed oversized',
-			modelHeightCm: 178,
+			modelHeightCm: 183,
 			modelWornSize: 'M',
 			// The campaign shoot. The first image of each role is the one a page
 			// asks for; the further details fill the galleries in order.
@@ -72,7 +72,7 @@ export const DROP_01: Drop = {
 				{
 					url: '/images/drop-01/back-1600.webp',
 					width: 1600,
-					height: 2000,
+					height: 1280,
 					alt: 'The back of the Pineapple Haze tee, with the embroidered bud between the shoulders',
 					role: 'detail',
 					caption: 'Back'
