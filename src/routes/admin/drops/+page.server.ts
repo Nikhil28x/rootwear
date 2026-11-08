@@ -26,6 +26,7 @@ export const load: PageServerLoad = async (event) => {
 			products: drop.products.length,
 			drafts: drop.products.filter((p) => p.status === 'draft').length,
 			lead: drop.products[0]?.images[0]?.url ?? null,
+			liveProducts: drop.products.filter((p) => p.status === 'active').length,
 			totals: drop.totals
 		}))
 	};

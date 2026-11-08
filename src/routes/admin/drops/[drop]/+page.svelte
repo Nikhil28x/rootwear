@@ -28,6 +28,8 @@
 	} from '$lib/components/admin/drop-labels';
 	import { istInputValue, relativeDays, shortDateTime } from '$lib/components/admin/tone';
 	import { DROP_STATE_DESCRIPTION } from '$lib/domain/drop-state';
+	import { goLiveChecks, storefrontStatus } from '$lib/components/admin/storefront';
+	import { CircleAlert, CircleCheck, Eye, EyeOff, Rocket } from '@lucide/svelte';
 
 	let { data, form } = $props();
 	const toaster = getToaster();
@@ -45,7 +47,32 @@
 	let launchMoved = $derived(launchValue !== istInputValue(drop.launchInstant));
 	let launchPassed = $derived(drop.launchInstant <= data.now);
 	let goingLive = $derived(['LIVE', 'RE_DROP', 'PARTIAL'].includes(nextState));
-	let hasLive = $derived(drop.products.some((p) => p.status === 'active'));
+	let liveCount = $derived(drop.products.filter((p) => p.status === 'active').length);
+	let hasLive = $derived(liveCount > 0);
+	let input = $derived({
+		state: drop.state,
+		published: drop.published,
+		preorderMode: drop.preorderMode,
+		liveProducts: liveCount,
+		stock: drop.totals.stock
+	});
+	let shop = $derived(storefrontStatus(input));
+	let checks = $derived(goLiveChecks(input));
+	let ready = $derived(checks.every((c) => c.ok));
+	let doneCount = $derived(checks.filter((c) => c.ok).length);
+	let sold = $derived(drop.totals.sold);
+	let claimed = $derived(
+		drop.editionSize > 0
+			? Math.min(100, Math.round(((sold + drop.totals.reserved) / drop.editionSize) * 100))
+			: 0
+	);
+
+	/** Hiding a drop that is on sale takes it away from buyers mid-sale. */
+	function confirmHide(e: MouseEvent) {
+		if (drop.published && shop.open && !confirm('Hide this drop? Visitors will lose access to it.')) {
+			e.preventDefault();
+		}
+	}
 
 	async function copyPreview() {
 		if (!data.previewUrl) return;
@@ -65,15 +92,17 @@
 		back={{ href: '/admin/drops', label: 'Drops' }}
 	>
 		{#snippet meta()}
-			<Chip label={status.label} tone={status.tone} />
-			{#if drop.published}<Chip label="Published" tone="success" />{:else}<Chip
-					label="Hidden"
-				/>{/if}
+			<Chip label={shop.label} tone={shop.tone} />
+			<Chip label={status.label} tone={status.tone} dot={false} title="Drop state" />
 		{/snippet}
 		{#snippet actions()}
 			{#if drop.published}
 				<a class="q-btn q-btn-secondary" href="/drops/{drop.slug}" target="_blank" rel="noopener"
 					><ExternalLink /> View on site</a
+				>
+			{:else if data.previewUrl}
+				<a class="q-btn q-btn-secondary" href={data.previewUrl} target="_blank" rel="noopener"
+					><Eye /> Preview</a
 				>
 			{/if}
 			{#if data.canEdit}
@@ -90,6 +119,110 @@
 			>Drop created. Add its first product, then preview it before publishing.</Notice
 		>
 	{/if}
+
+	<!-- ───────── Storefront: what visitors see, and what is left to do ───────── -->
+	<section class="q-card overflow-hidden" aria-labelledby="shop-h">
+		<div class="grid gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+			<div class="flex flex-col gap-4 p-5 lg:border-r lg:border-q-border">
+				<div class="flex items-start gap-3">
+					<span
+						class="flex size-10 flex-none items-center justify-center rounded-full {shop.visible
+							? 'bg-q-muted text-q-text'
+							: 'bg-q-muted text-q-tertiary'}"
+					>
+						{#if shop.visible}<Eye size={18} strokeWidth={1.5} />{:else}<EyeOff
+								size={18}
+								strokeWidth={1.5}
+							/>{/if}
+					</span>
+					<div class="flex min-w-0 flex-col gap-1">
+						<h2 id="shop-h" class="text-[16px] leading-[24px] font-semibold text-q-text">
+							{shop.label}
+						</h2>
+						<p class="text-[14px] leading-[20px] text-q-secondary">{shop.headline}</p>
+						{#if shop.hint}
+							<p class="text-[13px] leading-[18px] font-medium text-q-text">{shop.hint}</p>
+						{/if}
+					</div>
+				</div>
+
+				<dl class="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+					{#each [{ k: 'Live pieces', v: `${liveCount} / ${drop.products.length}` }, { k: 'In stock', v: drop.totals.stock }, { k: 'Reserved', v: drop.totals.reserved }, { k: 'Sold', v: drop.totals.sold }] as stat (stat.k)}
+						<div>
+							<dt class="text-[12px] text-q-tertiary">{stat.k}</dt>
+							<dd class="text-[18px] font-semibold text-q-text tabular-nums">{stat.v}</dd>
+						</div>
+					{/each}
+				</dl>
+
+				<div class="flex flex-col gap-1.5">
+					<div class="flex items-center justify-between text-[12px] text-q-secondary">
+						<span>Edition of {drop.editionSize}</span>
+						<span class="tabular-nums">{sold + drop.totals.reserved} claimed · {claimed}%</span>
+					</div>
+					<div
+						class="h-1.5 overflow-hidden rounded-full bg-q-muted"
+						role="progressbar"
+						aria-label="Edition claimed"
+						aria-valuemin="0"
+						aria-valuemax="100"
+						aria-valuenow={claimed}
+					>
+						<div class="h-full rounded-full bg-q-text" style:width="{claimed}%"></div>
+					</div>
+				</div>
+			</div>
+
+			<div class="flex flex-col gap-3 border-t border-q-border p-5 lg:border-t-0">
+				<div class="flex items-center justify-between gap-3">
+					<h3 class="text-[14px] font-semibold text-q-text">
+						{ready ? 'Ready — everything is in place' : 'Before visitors can order'}
+					</h3>
+					<span class="text-[12px] text-q-tertiary tabular-nums">{doneCount} of {checks.length}</span>
+				</div>
+				<ul class="flex flex-col gap-2.5">
+					{#each checks as check (check.key)}
+						<li class="flex items-start gap-2.5">
+							{#if check.ok}
+								<CircleCheck size={18} strokeWidth={1.75} class="mt-0.5 flex-none text-q-success" />
+							{:else}
+								<CircleAlert size={18} strokeWidth={1.75} class="mt-0.5 flex-none text-q-warning" />
+							{/if}
+							<div class="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-3 gap-y-1">
+								<div class="flex min-w-0 flex-col">
+									<p class="text-[14px] leading-[20px] {check.ok ? 'text-q-secondary' : 'font-medium text-q-text'}">
+										{check.label}
+									</p>
+									{#if !check.ok}<p class="text-[13px] leading-[18px] text-q-secondary">{check.fix}</p>{/if}
+								</div>
+								{#if !check.ok && data.canEdit}
+									{#if check.action === 'publish' && hasLive}
+										<form method="POST" action="?/publish" use:enhance={submitter(toaster)}>
+											<input type="hidden" name="published" value="true" />
+											<button type="submit" class="q-btn q-btn-primary q-btn-sm"
+												><Rocket /> Publish now</button
+											>
+										</form>
+									{:else if check.action === 'state' && drop.legalTransitions.includes('LIVE')}
+										<form method="POST" action="?/transition" use:enhance={submitter(toaster)}>
+											<input type="hidden" name="to" value="LIVE" />
+											<button type="submit" class="q-btn q-btn-secondary q-btn-sm">Move to Live</button>
+										</form>
+									{:else if check.action === 'products'}
+										<a
+											class="q-btn q-btn-secondary q-btn-sm"
+											href="/admin/drops/{drop.slug}/products/{drop.products[0]?.id ?? 'new'}"
+											>{drop.products.length ? 'Open product' : 'Add product'}</a
+										>
+									{/if}
+								{/if}
+							</div>
+						</li>
+					{/each}
+				</ul>
+			</div>
+		</div>
+	</section>
 
 	<div class="grid grid-cols-1 gap-10 xl:grid-cols-[minmax(0,1fr)_360px]">
 		<div class="flex min-w-0 flex-col gap-10">
@@ -247,16 +380,16 @@
 		</div>
 
 		<aside class="flex flex-col gap-10">
-			<Section title="On the site">
+			<Section title="Visibility and sale">
 				<div class="q-card q-divide">
 					<div class="flex items-start justify-between gap-3 p-4">
 						<div class="flex flex-col gap-0.5">
 							<p class="text-[14px] font-medium text-q-text">
-								{drop.published ? 'Published' : 'Hidden'}
+								{drop.published ? 'Shown in the shop' : 'Hidden from the shop'}
 							</p>
 							<p class="text-[13px] leading-[18px] text-q-secondary">
 								{drop.published
-									? 'In the archive and open to buy when its state allows.'
+									? 'In the shop and the archive.'
 									: hasLive
 										? 'Only you and people with the preview link can see it.'
 										: 'Make a product live before publishing.'}
@@ -269,35 +402,47 @@
 									type="submit"
 									class="q-btn q-btn-sm {drop.published ? 'q-btn-secondary' : 'q-btn-primary'}"
 									disabled={!drop.published && !hasLive}
+									onclick={confirmHide}
 								>
-									{drop.published ? 'Hide' : 'Publish'}
+									{#if drop.published}<EyeOff /> Hide{:else}<Rocket /> Publish{/if}
 								</button>
 							</form>
 						{/if}
 					</div>
-					<div class="flex items-start justify-between gap-3 p-4">
+					<div class="flex flex-col gap-3 p-4">
 						<div class="flex flex-col gap-0.5">
-							<p class="text-[14px] font-medium text-q-text">
-								Pre-order mode {drop.preorderMode ? 'on' : 'off'}
-							</p>
+							<p class="text-[14px] font-medium text-q-text">When the sale is open, visitors can</p>
 							<p class="text-[13px] leading-[18px] text-q-secondary">
-								{drop.preorderMode
-									? 'The button reads Pre-order and takes signups, not payment.'
-									: 'The button reads Buy now and sells through the cart.'}
+								This sets the button on every product page in this drop.
 							</p>
 						</div>
-						{#if data.canEdit}
-							<form method="POST" action="?/preorderMode" use:enhance={submitter(toaster)}>
-								<input
-									type="hidden"
+						<form
+							method="POST"
+							action="?/preorderMode"
+							class="grid grid-cols-2 gap-1 rounded-[10px] bg-q-muted p-1"
+							role="group"
+							aria-label="Sale mode"
+							use:enhance={submitter(toaster)}
+						>
+							{#each [{ on: true, label: 'Pre-order', note: 'Signup, no payment' }, { on: false, label: 'Buy now', note: 'Cart and checkout' }] as mode (mode.label)}
+								{@const active = drop.preorderMode === mode.on}
+								<button
+									type="submit"
 									name="preorderMode"
-									value={drop.preorderMode ? 'false' : 'true'}
-								/>
-								<button type="submit" class="q-btn q-btn-secondary q-btn-sm"
-									>Turn {drop.preorderMode ? 'off' : 'on'}</button
+									value={mode.on ? 'true' : 'false'}
+									aria-pressed={active}
+									disabled={!data.canEdit || active}
+									class="flex flex-col items-start gap-0.5 rounded-[8px] px-3 py-2 text-left transition-colors disabled:opacity-100 {active
+										? 'bg-q-surface shadow-sm'
+										: 'hover:bg-q-surface/60'}"
 								>
-							</form>
-						{/if}
+									<span class="flex items-center gap-1.5 text-[14px] font-medium text-q-text"
+										>{mode.label}{#if active}<Check size={14} />{/if}</span
+									>
+									<span class="text-[12px] text-q-secondary">{mode.note}</span>
+								</button>
+							{/each}
+						</form>
 					</div>
 					{#if !drop.published}
 						<div class="flex flex-col gap-3 p-4">
