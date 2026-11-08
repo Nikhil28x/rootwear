@@ -1055,10 +1055,6 @@
 			grid-column: 1 / -1;
 			margin-top: 0 !important;
 		}
-		.pair__back {
-			width: 72%;
-			justify-self: end;
-		}
 		.worn {
 			height: 80svh;
 		}
