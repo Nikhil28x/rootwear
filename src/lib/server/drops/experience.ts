@@ -26,16 +26,23 @@ export async function loadExperience(
 	{ now, cookies }: { now: number; cookies: Cookies }
 ) {
 	// §10 — the same price authority the cart uses, so page and basket agree.
-	const { unitPrice, isPreOrder } = resolvePrice(drop, product, now);
+	const { unitPrice, isPreOrder, priceSource, regularPrice } = resolvePrice(drop, product, now);
 	const showPrelaunchPrice =
-		unitPrice === product.prelaunchPrice && unitPrice !== product.launchPrice;
+		priceSource === 'prelaunch_locked' && unitPrice !== product.launchPrice;
+	// 0036: a founder's price shows the launch price struck through under it.
+	const offer = priceSource === 'offer' && product.offer ? product.offer : null;
 
 	// A hidden price is never sent to the browser, and the piece isn't for
 	// sale while it is hidden: the buy bar falls back to notify-me, which the
 	// cart and checkout enforce on their side too.
 	const priceShown = product.priceVisible;
 	// The page shows displayPrice; the raw prices stay on the server.
-	const { launchPrice: _launch, prelaunchPrice: _prelaunch, ...publicProduct } = product;
+	const {
+		launchPrice: _launch,
+		prelaunchPrice: _prelaunch,
+		offer: _offer,
+		...publicProduct
+	} = product;
 
 	const offers = await sizeOffers(product);
 
@@ -59,6 +66,11 @@ export async function loadExperience(
 		/** Null while the price is hidden. */
 		displayPrice: priceShown ? unitPrice : null,
 		showPrelaunchPrice: priceShown && showPrelaunchPrice,
+		/** While a founder's price applies: the price it replaces, and its copy. */
+		offer:
+			priceShown && offer && regularPrice !== null
+				? { regularPrice, label: offer.label, note: offer.note }
+				: null,
 		isPreOrder: priceShown && isPreOrder,
 		onSale: priceShown && isOnSale(drop.state),
 		finished: isFinished(drop.state),
@@ -81,11 +93,7 @@ export async function loadExperience(
 				slug: item.slug,
 				name: item.name,
 				image: item.images.find((image) => image.role === 'lead') ?? item.images[0] ?? null,
-				price: !item.priceVisible
-					? null
-					: showPrelaunchPrice
-						? item.prelaunchPrice
-						: item.launchPrice
+				price: !item.priceVisible ? null : resolvePrice(drop, item, now).unitPrice
 			}))
 	};
 }

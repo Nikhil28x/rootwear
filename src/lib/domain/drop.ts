@@ -109,7 +109,29 @@ export type Product = {
 	 * piece can't be carted or ordered until the price is shown.
 	 */
 	readonly priceVisible: boolean;
+	/** A founder's price for the first few pieces, or null. See ProductOffer. */
+	readonly offer: ProductOffer | null;
 };
+
+/**
+ * The first `pieces` pieces sell at `price` instead of the launch price, then
+ * the launch price takes over by itself (app.commit_order, 0036). `taken`
+ * counts pieces on orders that aren't cancelled.
+ */
+export type ProductOffer = {
+	readonly price: Paise;
+	readonly pieces: number;
+	readonly taken: number;
+	/** Short, for the buy bar, e.g. "Founder's price". */
+	readonly label: string;
+	/** The line under the price on the product page. */
+	readonly note: string;
+};
+
+/** Founder's pieces still at the offer price. */
+export function offerRemaining(offer: ProductOffer | null): number {
+	return offer ? Math.max(0, offer.pieces - offer.taken) : 0;
+}
 
 export type Drop = {
 	readonly id: string;

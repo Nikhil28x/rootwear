@@ -163,7 +163,8 @@ export const DROP_01: Drop = {
 			sizeChart: [],
 			launchPrice: LAUNCH_PRICE,
 			prelaunchPrice: PRELAUNCH_PRICE,
-			priceVisible: true
+			priceVisible: true,
+			offer: null
 		}
 	]
 };

@@ -40,7 +40,8 @@ export type StoredCartLine = {
 	readonly heldUntilMs: number;
 };
 
-export type PriceSource = 'prelaunch_locked' | 'launch';
+/** 'offer' is a founder's price (0036): the first few pieces at launch. */
+export type PriceSource = 'prelaunch_locked' | 'launch' | 'offer';
 
 /** A line as rendered: catalogue facts + a price resolved a moment ago. */
 export type PricedCartLine = {

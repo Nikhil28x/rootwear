@@ -16,7 +16,7 @@
 import { buildSku } from '$lib/catalogue/sku';
 import { compareSizes, isSize } from '$lib/drop/sizes';
 import { legalTransitionsFrom, type DropState } from '$lib/domain/drop-state';
-import { paise, type Paise } from '$lib/money';
+import { formatInr, paise, type Paise } from '$lib/money';
 import { getCatalogueClient, getServiceClient } from '$lib/server/db/clients';
 import { SUPABASE_URL } from '$lib/server/env';
 import { writeAudit } from '$lib/server/admin/audit';
@@ -86,6 +86,14 @@ export type AdminProduct = {
 	readonly launchPrice: Paise;
 	readonly prelaunchPrice: Paise;
 	readonly priceVisible: boolean;
+	/** Founder's price (0036): the first `pieces` sell at `price`. */
+	readonly offer: {
+		readonly price: Paise;
+		readonly pieces: number;
+		readonly taken: number;
+		readonly label: string;
+		readonly note: string;
+	} | null;
 	readonly status: ProductStatus;
 	readonly position: number;
 	readonly hsnCode: string;
@@ -159,6 +167,11 @@ type ProductRow = {
 	launch_price_paise: number;
 	prelaunch_price_paise: number;
 	price_visible: boolean | null;
+	offer_price_paise: number | null;
+	offer_pieces: number | null;
+	offer_label: string | null;
+	offer_note: string | null;
+	offer_taken: number | null;
 	status: ProductStatus;
 	position: number;
 	hsn_code: string;
@@ -203,7 +216,8 @@ const DROP_COLUMNS =
 	'id, slug, number, name, story, state, launch_instant, archived_at, edition_size, published_at, preorder_mode, preview_token';
 const PRODUCT_COLUMNS =
 	'id, drop_id, slug, name, summary, fabric, gsm, care, fit, fit_note, model_height_cm, model_worn_size, style_code, ' +
-	'launch_price_paise, prelaunch_price_paise, price_visible, status, position, hsn_code, gst_rate, size_chart';
+	'launch_price_paise, prelaunch_price_paise, price_visible, status, position, hsn_code, gst_rate, size_chart, ' +
+	'offer_price_paise, offer_pieces, offer_label, offer_note, offer_taken';
 
 const SOLD_STATES = ['paid', 'packed', 'dispatched', 'delivered'];
 
@@ -315,6 +329,16 @@ function toProduct(
 		launchPrice: paise(Number(row.launch_price_paise)),
 		prelaunchPrice: paise(Number(row.prelaunch_price_paise)),
 		priceVisible: row.price_visible ?? true,
+		offer:
+			row.offer_price_paise !== null && row.offer_pieces !== null
+				? {
+						price: paise(Number(row.offer_price_paise)),
+						pieces: row.offer_pieces,
+						taken: Number(row.offer_taken ?? 0),
+						label: row.offer_label ?? '',
+						note: row.offer_note ?? ''
+					}
+				: null,
 		status: row.status ?? 'active',
 		position: row.position ?? 0,
 		hsnCode: row.hsn_code ?? '6109',
@@ -887,6 +911,52 @@ export async function setPriceVisible(input: {
 		input.visible ? 'price shown' : 'price hidden',
 		'product',
 		input.productId
+	);
+}
+
+/**
+ * Sets or clears a product's founder's price. `offer: null` ends it: every
+ * piece after that sells at the launch price. Orders already placed keep the
+ * price they were placed at.
+ */
+export async function setOffer(input: {
+	productId: string;
+	offer: { price: number; pieces: number; label: string; note: string } | null;
+	actor: string;
+}): Promise<void> {
+	const product = await productById(input.productId);
+	const offer = input.offer;
+	if (offer) {
+		if (!Number.isInteger(offer.price) || offer.price <= 0)
+			throw new CatalogueError("Enter the founder's price in rupees, e.g. 3600.");
+		if (offer.price >= Number(product.launchPrice))
+			throw new CatalogueError(
+				`The founder's price must be below the launch price (${formatInr(product.launchPrice)}).`
+			);
+		if (!Number.isInteger(offer.pieces) || offer.pieces <= 0)
+			throw new CatalogueError('Enter how many pieces sell at this price, e.g. 10.');
+		if (offer.label.length > 40)
+			throw new CatalogueError('Keep the label under 40 characters so it fits the buy bar.');
+		if (offer.note.length > 160) throw new CatalogueError('Keep the note under 160 characters.');
+	}
+	const { error } = await getCatalogueClient()
+		.from('products')
+		.update({
+			offer_price_paise: offer?.price ?? null,
+			offer_pieces: offer?.pieces ?? null,
+			offer_label: offer?.label.trim() || null,
+			offer_note: offer?.note.trim() || null
+		})
+		.eq('id', input.productId);
+	if (error) fail('offer update failed', error);
+	await writeAudit(
+		input.actor,
+		offer ? "founder's price set" : "founder's price ended",
+		'product',
+		input.productId,
+		offer
+			? { price: offer.price, pieces: offer.pieces, before: product.offer?.price ?? null }
+			: undefined
 	);
 }
 

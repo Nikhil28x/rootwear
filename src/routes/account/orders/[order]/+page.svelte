@@ -26,7 +26,7 @@
 	<meta name="robots" content="noindex, nofollow" />
 </svelte:head>
 
-<p class="text-[11px] tracking-[0.2em] uppercase font-medium">
+<p class="text-[11px] font-medium tracking-[0.2em] uppercase">
 	<a
 		class="text-forest/70 underline-offset-4 hover:text-forest hover:underline"
 		href="/account/orders"
@@ -51,7 +51,10 @@
 
 <!-- §11: no carrier API in this phase. We show the reference we were given. -->
 <section class="mt-14 border border-forest/20 px-6 py-7 sm:px-8" aria-labelledby="tracking-title">
-	<h2 id="tracking-title" class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">
+	<h2
+		id="tracking-title"
+		class="text-[11px] font-medium tracking-[0.28em] text-forest/65 uppercase"
+	>
 		Tracking
 	</h2>
 	{#if order.trackingRef}
@@ -76,7 +79,7 @@
 </section>
 
 <section class="mt-14" aria-labelledby="lines-title">
-	<h2 id="lines-title" class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">
+	<h2 id="lines-title" class="text-[11px] font-medium tracking-[0.28em] text-forest/65 uppercase">
 		Items
 	</h2>
 	<p class="mt-4 max-w-[54ch] text-[13px] leading-relaxed text-forest/70">{FIT_DISCLAIMER}</p>
@@ -87,21 +90,33 @@
 				<caption class="sr-only">The pieces on order {order.orderNumber}</caption>
 				<thead>
 					<tr class="border-b border-forest/20 text-left">
-						<th scope="col" class="px-5 py-4 text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">
+						<th
+							scope="col"
+							class="px-5 py-4 text-[11px] font-medium tracking-[0.2em] text-forest/70 uppercase"
+						>
 							Piece
 						</th>
-						<th scope="col" class="px-5 py-4 text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">
+						<th
+							scope="col"
+							class="px-5 py-4 text-[11px] font-medium tracking-[0.2em] text-forest/70 uppercase"
+						>
 							Size
 						</th>
-						<th scope="col" class="px-5 py-4 text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">
+						<th
+							scope="col"
+							class="px-5 py-4 text-[11px] font-medium tracking-[0.2em] text-forest/70 uppercase"
+						>
 							Price
 						</th>
-						<th scope="col" class="px-5 py-4 text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium">
+						<th
+							scope="col"
+							class="px-5 py-4 text-[11px] font-medium tracking-[0.2em] text-forest/70 uppercase"
+						>
 							Qty
 						</th>
 						<th
 							scope="col"
-							class="px-5 py-4 text-right text-[11px] tracking-[0.2em] text-forest/70 uppercase font-medium"
+							class="px-5 py-4 text-right text-[11px] font-medium tracking-[0.2em] text-forest/70 uppercase"
 						>
 							Line total
 						</th>
@@ -123,7 +138,11 @@
 							<td class="px-5 py-5 whitespace-nowrap text-forest">
 								{formatInr(line.unitPrice)}
 								<span class="block text-[13px] text-forest/70">
-									{line.priceSource === 'prelaunch_locked' ? 'Pre-launch, locked' : 'Launch price'}
+									{line.priceSource === 'prelaunch_locked'
+										? 'Pre-launch, locked'
+										: line.priceSource === 'offer'
+											? "Founder's price"
+											: 'Launch price'}
 								</span>
 							</td>
 							<td class="px-5 py-5 text-forest/70">{line.quantity}</td>
@@ -136,12 +155,16 @@
 			</table>
 		</div>
 	</div>
-
 </section>
 
 <div class="mt-14 grid gap-14 lg:grid-cols-2 lg:gap-20">
 	<section aria-labelledby="totals-title">
-		<h2 id="totals-title" class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">Total</h2>
+		<h2
+			id="totals-title"
+			class="text-[11px] font-medium tracking-[0.28em] text-forest/65 uppercase"
+		>
+			Total
+		</h2>
 		<dl class="mt-6 flex flex-col gap-px border-t border-forest/15">
 			<div class="flex items-baseline justify-between gap-6 border-b border-forest/15 py-4">
 				<dt class="text-[15px] text-forest/70">Pieces</dt>
@@ -160,7 +183,7 @@
 				</div>
 			{/if}
 			<div class="flex items-baseline justify-between gap-6 border-b border-forest/15 py-5">
-				<dt class="text-[11px] tracking-[0.2em] text-forest uppercase font-medium">Paid</dt>
+				<dt class="text-[11px] font-medium tracking-[0.2em] text-forest uppercase">Paid</dt>
 				<dd class="display text-[1.6rem] leading-none text-forest">{formatInr(order.total)}</dd>
 			</div>
 		</dl>
@@ -174,7 +197,10 @@
 	</section>
 
 	<section aria-labelledby="address-title">
-		<h2 id="address-title" class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">
+		<h2
+			id="address-title"
+			class="text-[11px] font-medium tracking-[0.28em] text-forest/65 uppercase"
+		>
 			Delivered to
 		</h2>
 		<address class="mt-6 text-[15px] leading-[1.9] text-forest/80 not-italic">
@@ -188,7 +214,9 @@
 		</address>
 		{#if order.notes}
 			<p class="mt-6 max-w-[46ch] text-[13px] leading-[1.9] text-forest/75">
-				<span class="block text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">Your note</span>
+				<span class="block text-[11px] font-medium tracking-[0.28em] text-forest/65 uppercase"
+					>Your note</span
+				>
 				{order.notes}
 			</p>
 		{/if}
@@ -197,7 +225,9 @@
 
 <!-- §11: the SAME returns wording as the product page, checkout and policy. -->
 <section class="mt-16 border-t border-forest/15 pt-10" aria-labelledby="returns-title">
-	<h2 id="returns-title" class="text-[11px] tracking-[0.28em] text-forest/65 uppercase font-medium">Returns</h2>
+	<h2 id="returns-title" class="text-[11px] font-medium tracking-[0.28em] text-forest/65 uppercase">
+		Returns
+	</h2>
 	<p class="mt-5 max-w-[62ch] text-[15px] leading-[1.9] text-forest/70">{RETURNS_WORDING}</p>
 	<p class="mt-4 text-[13px] text-forest/70">
 		To start a return, email

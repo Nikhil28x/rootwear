@@ -76,9 +76,11 @@
 			? ''
 			: data.isPreOrder
 				? `Ships after ${shortDate.format(data.drop.launchInstant)}`
-				: data.showPrelaunchPrice
-					? 'Pre-launch price'
-					: 'Incl. taxes'
+				: data.offer
+					? data.offer.label
+					: data.showPrelaunchPrice
+						? 'Pre-launch price'
+						: 'Incl. taxes'
 	);
 
 	/** "30% hemp / 70% cotton" → segments for the ratio bar; empty if it does not add up. */
@@ -177,9 +179,14 @@
 			<p class="hero__price">
 				<span>{pieceWord || product.name}</span>
 				<strong>{price}</strong>
+				{#if data.offer}
+					<s class="hero__was"
+						><span class="sr-only">Was </span>{formatInr(data.offer.regularPrice)}</s
+					>
+					{#if data.offer.note}<span class="hero__offer">{data.offer.note}</span>{/if}
+				{/if}
 			</p>
 		</div>
-
 	</section>
 
 	{#if data.showCountdown}
@@ -419,6 +426,8 @@
 	productName={product.name}
 	{price}
 	{priceNote}
+	wasPrice={data.offer ? formatInr(data.offer.regularPrice) : ''}
+	offerNote={data.offer?.note ?? ''}
 	thumb={byRole.lead}
 	dropSlug={data.drop.slug}
 	onSale={data.onSale}
@@ -565,6 +574,17 @@
 		font-size: 30px;
 		color: #f3efe6;
 		font-variant-numeric: tabular-nums;
+	}
+	.hero__was {
+		font-size: 15px;
+		font-variant-numeric: tabular-nums;
+		text-decoration-thickness: 1px;
+	}
+	.hero__offer {
+		max-width: 28ch;
+		text-align: right;
+		line-height: 1.45;
+		color: var(--color-gold);
 	}
 
 	/* ── Story ────────────────────────────────────────────── */

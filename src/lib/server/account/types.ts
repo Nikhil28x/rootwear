@@ -84,7 +84,7 @@ export type OrderLine = {
 	/** §06 PRICE SNAPSHOT — `order_lines.unit_price_paise`, never re-derived. */
 	readonly unitPrice: Paise;
 	readonly lineTotal: Paise;
-	readonly priceSource: 'prelaunch_locked' | 'launch';
+	readonly priceSource: 'prelaunch_locked' | 'launch' | 'offer';
 	readonly pieceNumber: number | null;
 	/** §08: set when this line fulfils a pre-order, closing the one record. */
 	readonly reservationId: string | null;

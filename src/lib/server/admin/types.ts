@@ -249,7 +249,7 @@ export type AdminOrderLine = {
 	readonly size: Size | null;
 	readonly quantity: number;
 	readonly unitPrice: Paise;
-	readonly priceSource: 'prelaunch_locked' | 'launch';
+	readonly priceSource: 'prelaunch_locked' | 'launch' | 'offer';
 	readonly pieceNumber: number | null;
 	readonly reservationId: string | null;
 };

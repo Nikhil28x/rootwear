@@ -32,6 +32,8 @@
 		productName,
 		price,
 		priceNote = '',
+		wasPrice = '',
+		offerNote = '',
 		thumb = null,
 		dropSlug,
 		onSale,
@@ -49,6 +51,10 @@
 		/** Already formatted, e.g. ₹4,100. */
 		price: string;
 		priceNote?: string;
+		/** The price a founder's price replaces, struck through. Formatted. */
+		wasPrice?: string;
+		/** The founder's-price line. Shown here on a phone, where the hero hides it. */
+		offerNote?: string;
 		thumb?: { url: string; alt: string } | null;
 		dropSlug: string;
 		onSale: boolean;
@@ -224,7 +230,7 @@
 
 		<form
 			method="POST"
-			action="/cart?/add"
+			action="/cart?/buy"
 			class="buybar__row"
 			class:buybar__row--open={panelOpen}
 			use:enhance={addToCart}
@@ -239,8 +245,11 @@
 				<div class="buybar__name">
 					<span class="buybar__title">{productName}</span>
 					<span class="buybar__price">
-						{price}{#if priceNote}<span class="buybar__note">{` · ${priceNote}`}</span>{/if}
+						{price}{#if wasPrice}
+							<s class="buybar__was"><span class="sr-only">Was </span>{wasPrice}</s
+							>{/if}{#if priceNote}<span class="buybar__note">{` · ${priceNote}`}</span>{/if}
 					</span>
+					{#if offerNote}<span class="buybar__offer">{offerNote}</span>{/if}
 				</div>
 			</div>
 
@@ -407,6 +416,17 @@
 	.buybar__note {
 		color: var(--color-gold);
 	}
+	.buybar__was {
+		margin-left: 4px;
+		color: rgb(243 239 230 / 0.55);
+		text-decoration-thickness: 1px;
+	}
+	/* The hero carries the founder's line on a wide screen; a phone hides the hero. */
+	.buybar__offer {
+		font-size: 12px;
+		line-height: 1.35;
+		color: rgb(243 239 230 / 0.7);
+	}
 
 	/* Sizes: hidden on a phone until the panel opens. */
 	.buybar__sizes {
@@ -563,6 +583,9 @@
 
 	/* Desktop: everything on one line, sizes always visible. */
 	@media (min-width: 900px) {
+		.buybar__offer {
+			display: none;
+		}
 		.buybar {
 			padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
 		}

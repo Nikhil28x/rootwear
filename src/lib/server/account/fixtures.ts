@@ -100,7 +100,7 @@ export type StoredOrderLine = {
 	reservationId: string | null;
 	quantity: number;
 	unitPrice: Paise;
-	priceSource: 'prelaunch_locked' | 'launch';
+	priceSource: 'prelaunch_locked' | 'launch' | 'offer';
 	pieceNumber: number | null;
 	skuSnapshot: string;
 	nameSnapshot: string;

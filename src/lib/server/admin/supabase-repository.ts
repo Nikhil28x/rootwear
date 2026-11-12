@@ -129,7 +129,7 @@ type OrderLineRow = {
 	reservation_id: string | null;
 	quantity: number;
 	unit_price_paise: number;
-	price_source: 'prelaunch_locked' | 'launch';
+	price_source: 'prelaunch_locked' | 'launch' | 'offer';
 	piece_number: number | null;
 	sku_snapshot: string;
 	name_snapshot: string;

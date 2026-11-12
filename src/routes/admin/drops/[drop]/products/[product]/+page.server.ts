@@ -9,6 +9,7 @@ import {
 	findProduct,
 	priceHistory,
 	removeColourway,
+	setOffer,
 	setPriceVisible,
 	setProductStatus,
 	setSizeChart,
@@ -108,6 +109,27 @@ export const actions: Actions = {
 		return (
 			result ?? { message: 'Price and tax saved. Carts already open re-price on their next view.' }
 		);
+	},
+
+	offer: async (event) => {
+		const { actor, product } = await editor(event);
+		const form = await event.request.formData();
+		if (form.get('end') === 'true') {
+			const refused = await attempt(() => setOffer({ productId: product.id, offer: null, actor }));
+			if (refused) return refused;
+			return { message: "Founder's price ended. Every piece now sells at the launch price." };
+		}
+		const rupees = Number(String(form.get('offerPrice') ?? '').replace(/[₹,\s]/g, ''));
+		const offer = {
+			price: Math.round(rupees * 100),
+			pieces: Number(form.get('offerPieces')),
+			label: String(form.get('offerLabel') ?? '').trim(),
+			note: String(form.get('offerNote') ?? '').trim()
+		};
+		if (!rupees) return fail(400, { error: "Enter the founder's price in rupees, e.g. 3600." });
+		const refused = await attempt(() => setOffer({ productId: product.id, offer, actor }));
+		if (refused) return refused;
+		return { message: "Founder's price saved. The site shows it straight away." };
 	},
 
 	priceVisibility: async (event) => {

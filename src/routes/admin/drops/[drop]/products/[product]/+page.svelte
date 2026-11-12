@@ -178,6 +178,108 @@
 		</Section>
 
 		<Section
+			title="Founder's price"
+			description="The first few pieces sell cheaper, then the launch price takes over by itself."
+		>
+			{#if product.offer}
+				{@const left = Math.max(0, product.offer.pieces - product.offer.taken)}
+				<div class="q-card flex items-start justify-between gap-3 p-4">
+					<div class="flex flex-col gap-0.5">
+						<p class="text-[14px] font-medium text-q-text tabular-nums">
+							{left > 0
+								? `${left} of ${product.offer.pieces} left at ${formatInr(product.offer.price)}`
+								: `All ${product.offer.pieces} taken. Now selling at ${formatInr(product.launchPrice)}`}
+						</p>
+						<p class="text-[13px] leading-[18px] text-q-secondary">
+							Unpaid orders hold a piece until they expire.
+						</p>
+					</div>
+					{#if data.canEdit}
+						<form method="POST" action="?/offer" use:enhance={submitter(toaster)}>
+							<input type="hidden" name="end" value="true" />
+							<button type="submit" class="q-btn q-btn-secondary q-btn-sm">End offer</button>
+						</form>
+					{/if}
+				</div>
+			{/if}
+			<form
+				method="POST"
+				action="?/offer"
+				class="flex flex-col gap-4"
+				use:enhance={submitter(toaster)}
+			>
+				<fieldset disabled={!data.canEdit} class="flex flex-col gap-4">
+					<div class="grid gap-4 sm:grid-cols-2">
+						<Field
+							label="Founder's price (₹)"
+							id="o-price"
+							help={`Below the launch price, ${formatInr(product.launchPrice)}, which shows struck through.`}
+						>
+							{#snippet children({ describedBy })}
+								<input
+									id="o-price"
+									name="offerPrice"
+									inputmode="decimal"
+									class="q-input tabular-nums"
+									value={product.offer ? rupees(product.offer.price) : ''}
+									required
+									aria-describedby={describedBy}
+								/>
+							{/snippet}
+						</Field>
+						<Field label="Pieces" id="o-pieces" help="How many sell at this price.">
+							{#snippet children({ describedBy })}
+								<input
+									id="o-pieces"
+									name="offerPieces"
+									inputmode="numeric"
+									class="q-input tabular-nums"
+									value={product.offer ? String(product.offer.pieces) : ''}
+									required
+									aria-describedby={describedBy}
+								/>
+							{/snippet}
+						</Field>
+					</div>
+					<Field label="Label" id="o-label" optional help="Next to the price in the buy bar.">
+						{#snippet children({ describedBy })}
+							<input
+								id="o-label"
+								name="offerLabel"
+								class="q-input"
+								maxlength="40"
+								placeholder="Founder's price"
+								value={product.offer?.label ?? ''}
+								aria-describedby={describedBy}
+							/>
+						{/snippet}
+					</Field>
+					<Field
+						label="Note"
+						id="o-note"
+						optional
+						help="One line under the price on the product page."
+					>
+						{#snippet children({ describedBy })}
+							<textarea
+								id="o-note"
+								name="offerNote"
+								class="q-textarea min-h-[72px]"
+								maxlength="160"
+								aria-describedby={describedBy}>{product.offer?.note ?? ''}</textarea
+							>
+						{/snippet}
+					</Field>
+				</fieldset>
+				{#if data.canEdit}<div>
+						<button type="submit" class="q-btn q-btn-secondary"
+							>{product.offer ? "Save founder's price" : "Start founder's price"}</button
+						>
+					</div>{/if}
+			</form>
+		</Section>
+
+		<Section
 			title="Sizes"
 			description="Removing a size deletes it only if nobody has bought, reserved or carted it."
 		>

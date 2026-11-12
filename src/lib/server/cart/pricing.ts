@@ -17,7 +17,7 @@
  */
 import { isOnSale, acceptsDeposits } from '$lib/domain/drop-state';
 import type { Drop, Product, Variant } from '$lib/domain/drop';
-import { sellableStock, colourOf, variantLabel } from '$lib/domain/drop';
+import { sellableStock, colourOf, variantLabel, offerRemaining } from '$lib/domain/drop';
 import { drops } from '$lib/server/drops';
 import { ZERO, addPaise, multiplyPaise, paise, subPaise, type Paise } from '$lib/money';
 import type { CartRepository } from './repository';
@@ -80,19 +80,32 @@ export type ResolvedPrice = {
 	readonly priceSource: PriceSource;
 	/** §07/§08: bought before the drop opens, so it is made for the drop. */
 	readonly isPreOrder: boolean;
+	/** The launch price, to strike through while a founder's price applies. */
+	readonly regularPrice: Paise | null;
+	/** Founder's pieces left at unitPrice, before this purchase. */
+	readonly offerLeft: number;
 };
 
-/** The one price rule. Mirrors app.commit_order() line for line. */
-export function resolvePrice(drop: Drop, product: Product, nowMs: number): ResolvedPrice {
+/**
+ * The one price rule. Mirrors app.commit_order() line for line.
+ *
+ * `offerUsed` is how many founder's pieces earlier lines of the same cart
+ * already take, so the cart allocates them in the order commit_order does.
+ */
+export function resolvePrice(
+	drop: Drop,
+	product: Product,
+	nowMs: number,
+	offerUsed = 0
+): ResolvedPrice {
 	/**
 	 * Price follows the drop's STATE, not the clock alone.
 	 *
 	 * These two normally agree, because RW-041 opens a drop the moment its
 	 * launch instant passes. They disagree on a MANUAL PUSH — §06 state 2's
 	 * override, where an operator opens a drop early. Keying on the clock there
-	 * sold openly at the pre-launch price: §08 locks ₹3,400 for someone who
-	 * RESERVES DURING THE TEASE, not for a walk-up buyer, so every early sale
-	 * gave away the difference and was recorded as a pre-order besides.
+	 * sold openly at the pre-launch price: §08 locks the pre-launch price for
+	 * someone who RESERVES DURING THE TEASE, not for a walk-up buyer.
 	 *
 	 * isPreOrder is likewise a property of the tease, not of the calendar: a
 	 * deposit reserves a piece only while the drop is actually in TEASE (§08).
@@ -105,10 +118,24 @@ export function resolvePrice(drop: Drop, product: Product, nowMs: number): Resol
 	const pastInstant = nowMs >= drop.launchInstant;
 	const atLaunchPrice = onSale || pastInstant;
 
+	// 0036: at launch, the founder's pieces go first, then the launch price.
+	const offerLeft = atLaunchPrice ? Math.max(0, offerRemaining(product.offer) - offerUsed) : 0;
+	if (offerLeft > 0 && product.offer) {
+		return {
+			unitPrice: product.offer.price,
+			priceSource: 'offer',
+			isPreOrder: preOrder,
+			regularPrice: product.launchPrice,
+			offerLeft
+		};
+	}
+
 	return {
 		unitPrice: atLaunchPrice ? product.launchPrice : product.prelaunchPrice,
 		priceSource: atLaunchPrice ? 'launch' : 'prelaunch_locked',
-		isPreOrder: preOrder
+		isPreOrder: preOrder,
+		regularPrice: null,
+		offerLeft: 0
 	};
 }
 
@@ -161,8 +188,11 @@ export async function buildCartView(
 
 	const index = await catalogueIndex();
 	const priced: PricedCartLine[] = [];
+	// Founder's pieces this cart has allocated so far, per product. Lines are
+	// walked in variant id order, as app.commit_order() walks them.
+	const offerUsed = new Map<string, number>();
 
-	for (const line of lines) {
+	for (const line of [...lines].sort((a, b) => (a.variantId < b.variantId ? -1 : 1))) {
 		const entry = index.get(line.variantId);
 		// A line whose variant has left the catalogue is dropped from the view
 		// rather than rendered half-built. Nothing is deleted in the database —
@@ -170,7 +200,22 @@ export async function buildCartView(
 		if (!entry) continue;
 
 		const { drop, product, variant } = entry;
-		const { unitPrice, priceSource, isPreOrder } = resolvePrice(drop, product, nowMs);
+		const used = offerUsed.get(product.id) ?? 0;
+		const resolved = resolvePrice(drop, product, nowMs, used);
+		const { isPreOrder } = resolved;
+		// A line that crosses the last founder's piece is charged as
+		// commit_order splits it: some at the offer, the rest at launch.
+		const atOffer = Math.min(line.quantity, resolved.offerLeft);
+		offerUsed.set(product.id, used + atOffer);
+		const mixed = atOffer > 0 && atOffer < line.quantity;
+		const unitPrice = mixed ? product.launchPrice : resolved.unitPrice;
+		const priceSource: PriceSource = mixed ? 'launch' : resolved.priceSource;
+		const lineTotal = mixed
+			? addPaise(
+					multiplyPaise(resolved.unitPrice, atOffer),
+					multiplyPaise(product.launchPrice, line.quantity - atOffer)
+				)
+			: multiplyPaise(unitPrice, line.quantity);
 		const image = leadImage(product);
 
 		// Carts hold nothing; stock is taken when the order is placed. Only
@@ -185,7 +230,7 @@ export async function buildCartView(
 			colour: colourOf(product, variant),
 			quantity: line.quantity,
 			unitPrice,
-			lineTotal: multiplyPaise(unitPrice, line.quantity),
+			lineTotal,
 			productName: product.name,
 			productSlug: product.slug,
 			dropSlug: drop.slug,

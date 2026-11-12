@@ -274,6 +274,41 @@ check "with the schema granted, RLS still hides customers" "$(Q -c "set role aut
 check "with the schema granted, RLS still hides reservations" "$(Q -c "set role authenticated; select count(*) from app.reservations;")" "0"
 check "with the schema granted, RLS still hides payments" "$(Q -c "set role authenticated; select count(*) from app.payments;")" "0"
 
+# --- founder's price (0036) -------------------------------------------------
+# Launched, 2 founder's pieces at ₹3,600, launch ₹4,300. A cart of 3 takes the
+# two offer pieces and pays launch for the third; the next buyer pays launch.
+Q >/dev/null <<'SQL'
+update public.drops set launch_instant = now() - interval '1 day', state = 'LIVE' where id = 'drop-01';
+update public.variants set stock_count = 20, reserved_count = 0 where id = 'variant-01-tee-s';
+update public.products set launch_price_paise = 430000, offer_price_paise = 360000, offer_pieces = 2
+ where id = 'product-01-tee';
+insert into app.carts (id,token,expires_at) values
+ ('77777777-0000-0000-0000-000000000001','offer1', now()+interval '1 hour'),
+ ('77777777-0000-0000-0000-000000000002','offer2', now()+interval '1 hour');
+insert into app.cart_lines (cart_id,variant_id,quantity,held_until) values
+ ('77777777-0000-0000-0000-000000000001','variant-01-tee-s',3, now()+interval '15 minutes'),
+ ('77777777-0000-0000-0000-000000000002','variant-01-tee-s',1, now()+interval '15 minutes');
+SQL
+OFFER_TAKEN() { Q -c "select public.offer_taken(p) from public.products p where id='product-01-tee';"; }
+T0=$(OFFER_TAKEN)
+check "offer: no founder's pieces taken before the drop's offer orders" "$T0" "0"
+check "offer: cart of 3 commits" \
+  "$(Q -c "select (app.commit_order('of1','offer1','o@e.com','O','L1',null,'Goa','GA','403001','9999999999',null,0)).status;")" "committed"
+OF1=$(Q -c "select order_id from app.order_idempotency where key='of1';")
+check "offer: line split 2 at offer, 1 at launch" \
+  "$(Q -c "select string_agg(quantity||'x'||unit_price_paise||'/'||price_source, ' ' order by price_source desc) from app.order_lines where order_id='$OF1';")" \
+  "2x360000/offer 1x430000/launch"
+check "offer: order subtotal is 2×3600 + 4300" "$(Q -c "select subtotal_paise from app.orders where id='$OF1';")" "1150000"
+check "offer: both founder's pieces counted" "$(OFFER_TAKEN)" "2"
+check "offer: next buyer commits" \
+  "$(Q -c "select (app.commit_order('of2','offer2','p@e.com','P','L1',null,'Goa','GA','403001','9999999999',null,0)).status;")" "committed"
+check "offer: next buyer pays launch" \
+  "$(Q -c "select unit_price_paise||'/'||price_source from app.order_lines ol join app.order_idempotency i on i.order_id=ol.order_id where i.key='of2';")" "430000/launch"
+Q -c "update app.orders set state='cancelled' where id='$OF1';" >/dev/null
+check "offer: a cancelled order frees its founder's pieces" "$(OFFER_TAKEN)" "0"
+check "offer: price must be below launch" \
+  "$(Q -c "update public.products set offer_price_paise = 500000 where id='product-01-tee';" 2>&1 | grep -c products_offer_complete)" "1"
+
 echo
 echo "  $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

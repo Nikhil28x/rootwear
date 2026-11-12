@@ -112,6 +112,50 @@ export const actions: Actions = {
 		redirect(303, '/cart');
 	},
 
+	/**
+	 * Buy now: the cart becomes exactly this piece, then checkout. Anything
+	 * left over from an earlier visit is cleared, so the checkout total is
+	 * the price the shopper just saw and nothing else.
+	 */
+	buy: async ({ request, cookies, locals }) => {
+		const data = await request.formData();
+		const variantId = field(data, 'variantId');
+		const quantity = parseQuantity(field(data, 'quantity') || '1');
+
+		if (!variantId) return fail(400, { problem: 'Choose a size first.' });
+		if (quantity === null || quantity < 1) {
+			return fail(400, { problem: 'Please enter a valid quantity.' });
+		}
+
+		const entry = (await catalogueIndex()).get(variantId);
+		const refusal = purchaseRefusal(entry);
+		if (refusal || !entry) return fail(entry ? 409 : 404, { problem: refusal });
+
+		const available = await availableUnits(entry.variant);
+		if (available < quantity) {
+			return fail(409, {
+				problem:
+					available <= 0
+						? `Size ${entry.variant.size} just sold out.`
+						: `Only ${available} left in size ${entry.variant.size}.`
+			});
+		}
+
+		const cart = await openCart(cookies, locals.now);
+		for (const line of await cartRepository.listLines(cart.id)) {
+			await cartRepository.removeLine(cart.id, line.variantId);
+		}
+		await cartRepository.addLine(cart.id, variantId, quantity, holdUntil(locals.now));
+
+		const { user } = await locals.safeGetSession();
+		if (user) {
+			const customerId = await cartRepository.findCustomerIdForUser(user.id);
+			if (customerId) await cartRepository.attachCartToCustomer(cart.id, customerId);
+		}
+
+		redirect(303, '/checkout/information');
+	},
+
 	updateQuantity: async ({ request, cookies, locals }) => {
 		const data = await request.formData();
 		const variantId = field(data, 'variantId');

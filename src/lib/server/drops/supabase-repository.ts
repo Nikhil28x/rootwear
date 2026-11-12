@@ -46,6 +46,12 @@ type Row = {
 		prelaunch_price_paise: number;
 		// From 0031; absent until that migration is applied.
 		price_visible?: boolean | null;
+		// From 0036.
+		offer_price_paise: number | null;
+		offer_pieces: number | null;
+		offer_label: string | null;
+		offer_note: string | null;
+		offer_taken: number | null;
 		status: 'draft' | 'active' | 'archived';
 		position: number;
 		size_chart: { size: string; chest_cm: number; length_cm: number }[] | null;
@@ -85,7 +91,8 @@ const SELECT = `
 	products (
 		id, drop_id, slug, name, summary, fabric, gsm, care, fit,
 		model_height_cm, model_worn_size, launch_price_paise, prelaunch_price_paise,
-		price_visible, status, position, size_chart,
+		price_visible, offer_price_paise, offer_pieces, offer_label, offer_note, offer_taken,
+		status, position, size_chart,
 		colourways ( id, name, code, swatch, position ),
 		product_images ( * ),
 		variants ( id, product_id, sku, size, colourway_id, stock_count, reserved_count )
@@ -156,7 +163,17 @@ function toDomain(row: Row): Drop {
 			// bigint paise arrives as a number; re-brand it through the money module.
 			launchPrice: paise(Number(p.launch_price_paise)),
 			prelaunchPrice: paise(Number(p.prelaunch_price_paise)),
-			priceVisible: p.price_visible ?? true
+			priceVisible: p.price_visible ?? true,
+			offer:
+				p.offer_price_paise !== null && p.offer_pieces !== null
+					? {
+							price: paise(Number(p.offer_price_paise)),
+							pieces: p.offer_pieces,
+							taken: Number(p.offer_taken ?? 0),
+							label: p.offer_label?.trim() || "Founder's price",
+							note: p.offer_note?.trim() ?? ''
+						}
+					: null
 		};
 	});
 
